@@ -1,0 +1,54 @@
+scene load+build: 6100 ms (software renderer; phones differ)
+perf[lab_root]: draw calls 94, primitives 182529, objects 123, video mem 412 MB, texture mem 357 MB
+shot 01_lab_dark_start.png
+shot 02_desk_view.png
+shot 03_drawer_closeup_locked.png
+shot 04_drawer_open_0317.png
+✓ P1 drawer 0317 → UV lamp
+shot 05_gearbox_closeup.png
+shot 06_gearbox_open.png
+✓ P2 gear box → battery
+✓ P3 combine → UV lamp
+shot 07_uv_desk_mark.png
+shot 08_notebook_uv_page.png
+✓ UV reveals (page + desk)
+shot 09_shard_under_desk.png
+shot 10_shard_radiator.png
+shot 11_shard_coat_pocket.png
+shot 12_poster_resonances.png
+shot 13_safe_keypad.png
+shot 14_safe_open.png
+✓ P4 safe 7294 → key, lens, letter, valve
+shot 15_desk_compartment_open.png
+✓ P5 compartment → breaker handle
+shot 16_panel_power_restored.png
+✓ P6 circuits → power
+shot 17_lab_powered.png
+perf[lab_powered]: draw calls 99, primitives 175093, objects 179, video mem 422 MB, texture mem 361 MB
+shot 18_chalkboard.png
+shot 19_radio_tuned_41m.png
+✓ P7/P8 radio valve + 41 m
+shot 20_encyclopedia.png
+shot 21_bookcase_open.png
+✓ P9 books II-VI-III → darkroom
+shot 22_shard_bookshelf_top.png
+shot 23_darkroom.png
+shot 24_shard_darkroom.png
+shot 25_shadow_misaligned.png
+shot 26_shadow_emblem_recorded.png
+✓ P10 shadow lock + emblem recorded + mirror
+shot 27_vials_densities.png
+shot 28_projector_rings_closeup.png
+shot 29_projector_tuned.png
+shot 30_projector_beam_on.png
+✓ P11 projector tuned → beam
+shot 31_beam_first_mirror.png
+  P12 state: mirrors [5, 1], B mounted true, beam true, trace lock, emblem true
+shot 32_finale_echo_1979.png
+shot 33_finale_door.png
+shot 34_finale_choice.png
+✓ P12 mirrors → light lock → door
+shot 35_chapter_complete.png
+✓ Finale choice → chapter complete
+✓ Lumen shards 5/5
+taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0

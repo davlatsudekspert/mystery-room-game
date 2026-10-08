@@ -10,6 +10,10 @@ UI_ONLY = ("assets/ui/", "decals/notebook_page", "decals/uv_desk_mark")  # stay 
 BIG = ("textures/wood_floor/albedo", "textures/plaster_wall/albedo")
 SMALL = ("round_spectacles", "magnifying_glass", "seadogs_compass", "retro_multimeter", "tea_set",
          "old_gas_mask", "vintage_electric_kettle", "marble_bust", "metal_stool")  # small props: 512 px
+# read up close (hero brass, digits, dials, photos): high-quality compression (BPTC desktop / ASTC 4x4 phones)
+# instead of DXT1/ETC2, whose 4x4 blocks show in macro views
+HQ = ("textures/brass_aged/", "textures/brass_polished/", "decals/drawer_digits", "decals/clock_face",
+      "decals/radio_dial", "decals/photo_")
 IMG = (".png", ".jpg", ".jpeg", ".webp")
 
 changed = 0
@@ -31,6 +35,7 @@ for dirpath, _, files in os.walk(os.path.join(ROOT, "assets")):
             "compress/normal_map": "1" if is_normal else "0",
             "process/size_limit": "0" if ui else ("2048" if any(k in rel for k in BIG) else ("512" if any(k in rel for k in SMALL) else "1024")),
             "detect_3d/compress_to": "0",
+            "compress/high_quality": "true" if (not ui and any(k in rel for k in HQ)) else "false",
         }
         new = s
         for k, v in want.items():

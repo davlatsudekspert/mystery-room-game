@@ -3,8 +3,8 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://q05qv0h64rb2"
-path.s3tc="res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.s3tc.ctex"
-path.etc2="res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.etc2.ctex"
+path.bptc="res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.bptc.ctex"
+path.astc="res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.astc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -13,12 +13,12 @@ metadata={
 [deps]
 
 source_file="res://assets/textures/decals/radio_dial.jpg"
-dest_files=["res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.s3tc.ctex", "res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.etc2.ctex"]
+dest_files=["res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.bptc.ctex", "res://.godot/imported/radio_dial.jpg-5d0799d0fb94b598544d2a5025d90788.astc.ctex"]
 
 [params]
 
 compress/mode=2
-compress/high_quality=false
+compress/high_quality=true
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0

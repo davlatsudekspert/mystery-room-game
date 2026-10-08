@@ -10,4 +10,16 @@
 | `scene_tree.txt` | Node tree plus the list of placed and missing models |
 
 The `_dark` renders show the state before power is restored: moonlight, the desk lamp and the red maglock. The `_powered` renders show the state after Panel 7 is solved.
-Boxes labelled **[placeholder]** are temporary stand-ins for models that are still being built in Blender.
+All models are final Chapter 1 models now; there are no placeholder boxes left.
+
+## `playthrough/`: the automated 3D playthrough (`qa/playthrough.tscn`, 2026-10-08)
+Frames from a run that finished Chapter 1 entirely through taps on the real scene: 13/13 steps and 5/5 Lumen shards, 100 taps, 0 logic fallbacks (`playthrough_report.txt`). The highlights are:
+- `04_drawer_open_0317`: the drawer lock showing 0317;
+- `21_bookcase_open`: the bookcase reveal, filmed from outside the swing arc;
+- `26_shadow_emblem_recorded`: Light Memory;
+- `30_projector_beam_on`: the Lumen beam;
+- `32_finale_echo_1979`: Leyla's light echo at her desk, closed as in 1979;
+- `35_chapter_complete`.
+
+## `ui/`: menus and overlays in EN / RU / UZ (`qa/ui_screens.tscn`)
+These cover the trilingual language picker, the dimmed settings panel, the main menus, a hint, the pause menu, the inspect view, the notebook, the finale choice and the chapter-complete screen.
