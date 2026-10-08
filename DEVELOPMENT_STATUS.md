@@ -31,11 +31,11 @@ The QA work fixed these problems:
 | Metric | Lab root (dark) | After power |
 |---|---|---|
 | Draw calls | 94 | 99 |
-| Primitives | ~183k | ~175k |
+| Primitives (including shadow passes) | ~183k | ~175k |
 | Video / texture memory | 412 / 357 MB | 422 / 361 MB |
 | Scene build time | ~6 s (llvmpipe CPU renderer) | |
 
-Budget: ≤ 150 draw calls (OK). Primitives are about 20% over the 150k target, and LOD/occlusion work is planned. The texture memory figure is for uncompressed desktop textures; phones use ETC2/ASTC.
+Budget: ≤ 150 draw calls (OK). Primitives are about 20% over the 150k target. The count includes the moon and spot-light shadow passes; one instance of every model is 245k triangles in total, and the darkroom set (~31k) is culled while unseen. LOD and shadow-caster trimming are planned. The texture memory figure is for uncompressed desktop textures; phones use ETC2/ASTC.
 
 ## CI status
 - `tests.yml`, `android.yml` and `ios.yml` are manual (`workflow_dispatch`), within the free quota only.
