@@ -1,0 +1,297 @@
+keys,en,ru,uz
+game.title,MYSTERY ROOM,MYSTERY ROOM,MYSTERY ROOM
+game.subtitle,The Forgotten Institute,Забытый институт,Unutilgan institut
+chapter.label,Chapter %d,Глава %d,%d-bob
+chapter.ch1.title,The Locked Laboratory,Запертая лаборатория,Qulflangan laboratoriya
+chapter.ch1.subtitle,Laboratory 7,Лаборатория 7,7-laboratoriya
+chapter.ch2.title,The Missing Scientist,Пропавший учёный,Gʻoyib boʻlgan olim
+chapter.ch2.subtitle,The Archive,Архив,Arxiv
+chapter.ch3.title,The Underground Facility,Подземный комплекс,Yer osti majmuasi
+chapter.ch3.subtitle,Below the Institute,Под институтом,Institut ostida
+chapter.ch4.title,The Experiment,Эксперимент,Tajriba
+chapter.ch4.subtitle,The Array Hall,Зал Решётки,Panjara zali
+ui.continue,Continue,Продолжить,Davom etish
+ui.new_game,New Game,Новая игра,Yangi oʻyin
+ui.chapters,Chapters,Главы,Boblar
+ui.settings,Settings,Настройки,Sozlamalar
+ui.credits,Credits,Авторы,Mualliflar
+ui.quit,Quit,Выход,Chiqish
+ui.back,Back,Назад,Orqaga
+ui.close,Close,Закрыть,Yopish
+ui.resume,Resume,Продолжить,Davom etish
+ui.pause,Pause,Пауза,Pauza
+ui.main_menu,Main Menu,Главное меню,Bosh menyu
+ui.yes,Yes,Да,Ha
+ui.no,No,Нет,Yoʻq
+ui.confirm,Confirm,Подтвердить,Tasdiqlash
+ui.cancel,Cancel,Отмена,Bekor qilish
+ui.on,On,Вкл.,Yoqilgan
+ui.off,Off,Выкл.,Oʻchirilgan
+ui.tap_to_continue,Tap to continue,"Нажмите, чтобы продолжить",Davom etish uchun bosing
+ui.skip,Skip,Пропустить,Oʻtkazib yuborish
+ui.new_game_confirm,Start a new game? Your current progress will be lost.,Начать новую игру? Текущий прогресс будет потерян.,Yangi oʻyin boshlansinmi? Joriy natijalar oʻchib ketadi.
+ui.choose_language,Choose your language,Выберите язык,Tilni tanlang
+ui.language,Language,Язык,Til
+ui.music,Music,Музыка,Musiqa
+ui.sfx,Sound effects,Звуковые эффекты,Tovush effektlari
+ui.ambience,Ambience,Атмосфера,Muhit tovushlari
+ui.text_size,Text size,Размер текста,Matn oʻlchami
+ui.haptics,Vibration,Вибрация,Tebranish
+ui.reduce_motion,Reduce camera motion,Меньше движения камеры,Kamera harakatini kamaytirish
+ui.look_sensitivity,Look sensitivity,Чувствительность обзора,Qarash sezgirligi
+ui.reset_settings,Reset settings,Сбросить настройки,Sozlamalarni tiklash
+ui.delete_save,Delete progress,Удалить прогресс,Natijalarni oʻchirish
+ui.delete_save_confirm,Delete all saved progress? This cannot be undone.,Удалить весь сохранённый прогресс? Это действие необратимо.,Barcha saqlangan natijalar oʻchirilsinmi? Buni qaytarib boʻlmaydi.
+ui.restore,Restore purchases,Восстановить покупки,Xaridlarni tiklash
+ui.restored,Purchases restored.,Покупки восстановлены.,Xaridlar tiklandi.
+ui.unlock,Unlock the full game,Открыть полную игру,Toʻliq oʻyinni ochish
+ui.unlock_desc,"One purchase unlocks every chapter. No ads, no subscriptions.",Одна покупка открывает все главы. Без рекламы и подписок.,Bitta xarid barcha boblarni ochadi. Reklama va obunasiz.
+ui.store_unavailable,The store is not available yet. New chapters are coming soon.,Магазин пока недоступен. Новые главы скоро появятся.,Doʻkon hozircha mavjud emas. Yangi boblar tez orada chiqadi.
+ui.purchase_ok,Thank you! The full game is unlocked.,Спасибо! Полная игра открыта.,Rahmat! Toʻliq oʻyin ochildi.
+ui.free,Free,Бесплатно,Bepul
+ui.locked,Locked,Закрыто,Yopiq
+ui.coming_soon,Coming soon,Скоро,Tez orada
+ui.completed,Completed,Пройдено,Yakunlangan
+ui.play,Play,Играть,Oʻynash
+ui.saved,Progress saved,Прогресс сохранён,Jarayon saqlandi
+ui.save_failed,Could not save progress,Не удалось сохранить прогресс,Jarayonni saqlab boʻlmadi
+ui.loading,Loading…,Загрузка…,Yuklanmoqda…
+ui.version,Version %s,Версия %s,Versiya %s
+ui.hint,Hint,Подсказка,Maslahat
+ui.hint_more,Stronger hint,Подсказка яснее,Aniqroq maslahat
+ui.hint_level,Hint %d of 3,Подсказка %d из 3,Maslahat: %d / 3
+ui.inspect,Inspect,Осмотреть,Koʻrib chiqish
+ui.combine,Combine,Объединить,Birlashtirish
+ui.use,Use,Использовать,Ishlatish
+ui.read,Read,Читать,Oʻqish
+ui.inventory_empty,Your pockets are empty.,Карманы пусты.,Choʻntaklaringiz boʻsh.
+ui.combine_prompt,Tap an item to combine with: %s,Выберите предмет для объединения с: %s,Birlashtirish uchun buyumni tanlang: %s
+ui.use_prompt,Tap where to use: %s,"Нажмите, где использовать: %s",Qayerda ishlatishni tanlang: %s
+ui.uv_on,UV light,УФ-свет,UB nur
+ui.uv_drag,Drag to shine the UV lamp,"Ведите пальцем, чтобы светить УФ-лампой",UB chiroqni yoritish uchun barmoqni suring
+ui.page,Page %d / %d,Стр. %d / %d,%d / %d-sahifa
+ui.notebook,Notebook,Блокнот,Daftar
+ui.journal,Journal,Журнал,Jurnal
+ui.new_entry,New note in the journal,Новая запись в журнале,Jurnalda yangi yozuv
+ui.item_added,Found: %s,Найдено: %s,Topildi: %s
+ui.shard_found,Lumen shard %d / 5,Осколок Люмена %d / 5,Lumen boʻlagi %d / 5
+ui.puzzle_solved,Solved,Решено,Yechildi
+ui.choice_prompt,The crystal lens hums softly in the projector. Leyla's light is fading.,Кристаллическая линза тихо гудит в проекторе. Свет Лейлы угасает.,Billur linza proyektorda sekin gʻuvillaydi. Leylaning nuri soʻnmoqda.
+ui.take_lens,Take the lens,Забрать линзу,Linzani olish
+ui.leave_lens,Leave it for her,Оставить её ей,Unga qoldirish
+ui.chapter_complete,Chapter complete,Глава пройдена,Bob yakunlandi
+ui.time,Time,Время,Vaqt
+ui.hints_used,Hints used,Подсказок,Maslahatlar
+ui.puzzles,Puzzles solved,Головоломок решено,Yechilgan jumboqlar
+ui.shards,Lumen shards,Осколки Люмена,Lumen boʻlaklari
+ui.next_chapter,Next chapter,Следующая глава,Keyingi bob
+ui.to_be_continued,To be continued…,Продолжение следует…,Davomi bor…
+ui.achievement,Achievement: %s,Достижение: %s,Yutuq: %s
+ach.light_remembers,Light Remembers,Свет помнит,Yorugʻlik eslaydi
+ach.no_hints_ch1,Clear Mind,Ясный ум,Tiniq aql
+tut.look,Drag to look around.,"Проведите пальцем, чтобы осмотреться.",Atrofga qarash uchun barmoqni suring.
+tut.tap,Tap objects to examine them.,"Нажимайте на предметы, чтобы рассмотреть их.",Buyumlarni koʻrish uchun ularga bosing.
+tut.zoom,Pinch to zoom.,"Сведите пальцы, чтобы приблизить.",Yaqinlashtirish uchun ikki barmoq bilan torting.
+tut.back,Tap the back arrow in the corner to step back.,"Нажмите стрелку «назад» в углу, чтобы вернуться.",Orqaga qaytish uchun burchakdagi strelkani bosing.
+tut.inventory,"Found items appear here. Tap to select, tap again to inspect.","Найденные предметы появляются здесь. Нажмите, чтобы выбрать; ещё раз — чтобы осмотреть.","Topilgan buyumlar shu yerda chiqadi. Tanlash uchun bosing, koʻrish uchun yana bosing."
+tut.use,"With an item selected, tap the place where you want to use it.","Выбрав предмет, нажмите туда, где хотите его использовать.","Buyumni tanlab, uni ishlatmoqchi boʻlgan joyga bosing."
+tut.combine,"Select an item, press Combine, then tap another item.","Выберите предмет, нажмите «Объединить», затем другой предмет.","Buyumni tanlang, «Birlashtirish»ni bosing, soʻng boshqa buyumni tanlang."
+tut.hint,Stuck? The lamp icon gives a hint — gently at first.,Застряли? Значок лампы даст подсказку — сначала мягкую.,Qiyin boʻldimi? Chiroq belgisi maslahat beradi — avval yengilroq.
+intro.1,Meridian Institute of Resonant Physics.\nSealed since 14 November 1979.,Институт резонансной физики «Меридиан».\nЗакрыт с 14 ноября 1979 года.,«Meridian» rezonans fizikasi instituti.\n1979-yil 14-noyabrdan beri yopiq.
+intro.2,A parcel came for you. Inside: an old laboratory badge and a single line.\n“Laboratory 7. Please finish what I could not.”,"Вам пришла посылка. Внутри — старый пропуск лаборатории и одна строка:\n«Лаборатория 7. Пожалуйста, закончи то, что не смогла я».","Sizga posilka keldi. Ichida — eski laboratoriya guvohnomasi va bir qator yozuv:\n«7-laboratoriya. Iltimos, men tugata olmagan ishni tugating»."
+outro.echo,"For a moment, the laboratory is 1979 again.",На мгновение лаборатория снова в 1979 году.,Bir lahzaga laboratoriya yana 1979-yilga qaytadi.
+outro.listening,The Array is listening again.,Решётка снова слушает.,Panjara yana tinglamoqda.
+epi.take,"You pocket the crystal lens. It is warm — and somewhere far below, something answers its hum.",Вы прячете линзу в карман. Она тёплая — и где-то глубоко внизу что-то отвечает на её гул.,Billur linzani choʻntagingizga solasiz. U iliq — va qayerdadir chuqurda nimadir uning gʻuvillashiga javob beradi.
+epi.leave,"You leave the lens to her. As the door closes behind you, the desk lamp flickers once, like a goodbye.","Вы оставляете линзу ей. Когда дверь закрывается за вами, настольная лампа мигает — словно прощаясь.",Linzani unga qoldirasiz. Eshik ortingizdan yopilganda stol chirogʻi bir bor miltillaydi — xuddi xayrlashgandek.
+epi.shards,Five shards — five fragments of a single night. The Array knows you now.,Пять осколков — пять фрагментов одной ночи. Теперь Решётка знает вас.,Beshta boʻlak — bitta tunning besh parchasi. Endi Panjara sizni taniydi.
+epi.postmark,On the train home you look at the parcel again. The postmark reads: 14 XI 1979.,В поезде вы снова смотрите на посылку. На штемпеле: 14 XI 1979.,Uyga qaytayotgan poyezdda posilkaga yana qaraysiz. Pochta muhrida: 14 XI 1979.
+epi.next,Chapter 2 — The Missing Scientist,Глава 2 — Пропавший учёный,2-bob — Gʻoyib boʻlgan olim
+item.notebook.name,Leyla's notebook,Блокнот Лейлы,Leylaning daftari
+item.notebook.desc,A lab journal in Leyla Rahimova's handwriting. One page looks oddly blank.,"Лабораторный журнал, исписанный рукой Лейлы Рахимовой. Одна страница странно пуста.",Leyla Rahimovaning qoʻli bilan yozilgan laboratoriya jurnali. Bir sahifasi gʻalati darajada boʻm-boʻsh.
+item.uv_lamp_empty.name,UV lamp (empty),УФ-лампа (пустая),UB chiroq (boʻsh)
+item.uv_lamp_empty.desc,A lamp with a violet lens. Its battery bay is empty.,Фонарь с фиолетовым стеклом. Отсек для батареи пуст.,Binafsha shishali chiroq. Batareya joyi boʻsh.
+item.battery_cell.name,Battery cell,Батарея,Batareya
+item.battery_cell.desc,"A heavy old cell. Surprisingly, it still holds a charge.","Тяжёлая старая батарея. Как ни странно, ещё держит заряд.","Ogʻir eski batareya. Hayratlanarlisi, hali ham quvvati bor."
+item.uv_lamp.name,UV lamp,УФ-лампа,UB chiroq
+item.uv_lamp.desc,"Shines ultraviolet light. Invisible ink glows under it. Select it, then drag across surfaces.",Светит ультрафиолетом — невидимые чернила начинают светиться. Выберите её и ведите по поверхностям.,Ultrabinafsha nur sochadi — koʻrinmas siyoh yorishadi. Uni tanlang va yuzalar boʻylab suring.
+item.brass_key.name,Brass key,Латунный ключ,Jez kalit
+item.brass_key.desc,A small ornate key. Too small for any door.,Маленький резной ключ. Слишком мал для двери.,Kichkina naqshli kalit. Eshik uchun juda kichik.
+item.crystal_lens.name,Crystal lens,Кристаллическая линза,Billur linza
+item.crystal_lens.desc,"A flawless crystal in a brass ring, faintly warm. The Lumen crystal remembers the light that falls on it.","Безупречный кристалл в латунной оправе, едва тёплый. Кристалл Люмена помнит свет, который на него падает.","Jez halqadagi benuqson billur, biroz iliq. Lumen billuri ustiga tushgan yorugʻlikni eslab qoladi."
+item.crystal_lens.desc_recorded,The crystal glows softly from within: it holds the Institute's mark.,Кристалл мягко светится изнутри: в нём хранится знак института.,Billur ichidan mayin yogʻdu sochadi: unda institut belgisi saqlangan.
+item.strand_letter.name,Strand's letter,Письмо Странда,Strandning maktubi
+item.strand_letter.desc,Sealed with red wax and addressed to Leyla.,"Запечатано красным сургучом, адресовано Лейле.","Qizil surgʻuch bilan muhrlangan, Leylaga atalgan."
+item.radio_valve.name,Radio valve,Радиолампа,Radiolampa
+item.radio_valve.desc,A glass vacuum tube for an old valve radio.,Стеклянная электронная лампа для старого радиоприёмника.,Eski radiopriyomnik uchun shisha elektron lampa.
+item.breaker_handle.name,Breaker handle,Рукоять рубильника,Uzgich dastasi
+item.breaker_handle.desc,A bakelite handle torn from a main breaker.,"Бакелитовая рукоять, снятая с главного рубильника.",Asosiy uzgichdan yechib olingan bakelit dasta.
+item.leyla_photo.name,Photograph,Фотография,Surat
+item.leyla_photo.desc,Leyla in Laboratory 7. Something is written on the back.,Лейла в Лаборатории 7. На обороте что-то написано.,Leyla 7-laboratoriyada. Orqasida nimadir yozilgan.
+item.mirror_item.name,Round mirror,Круглое зеркало,Dumaloq koʻzgu
+item.mirror_item.desc,A brass-framed mirror with a mounting pin. It fits a mirror stand.,Зеркало в латунной оправе со штифтом. Подходит к зеркальной стойке.,"Jez gardishli, mahkamlash qoziqchali koʻzgu. Koʻzgu tirgagiga mos keladi."
+doc.notebook.p1,12 November 1979\n\nStrand wants full resonance on Thursday. The crystal readings are wrong.\n\nIt is not replaying the light.\nIt is keeping it.,12 ноября 1979\n\nСтранд хочет полный резонанс в четверг. Показания кристалла неверны.\n\nОн не воспроизводит свет.\nОн его удерживает.,1979-yil 12-noyabr\n\nStrand payshanba kuni toʻliq rezonans istaydi. Billur koʻrsatkichlari notoʻgʻri.\n\nU yorugʻlikni takrorlamayapti.\nU uni ushlab qolyapti.
+doc.notebook.p2,"14 November 1979, night\n\nEvery clock in the building stopped at the same moment.\n\nI set the lock of my desk drawer to that moment, so that I will never forget it.","14 ноября 1979, ночь\n\nВсе часы в здании остановились в одно и то же мгновение.\n\nЯ установила замок ящика стола на это мгновение, чтобы никогда его не забыть.","1979-yil 14-noyabr, tun\n\nBinodagi barcha soatlar bir lahzada toʻxtadi.\n\nOʻsha lahzani hech qachon unutmaslik uchun stol tortmamning qulfini shu lahzaga oʻrnatdim."
+doc.notebook.p3,"Strand gave each of us one of his gear boxes.\n“Turn one wheel and its neighbour follows — like people,” he said.\n\nI keep the cell for my lamp inside mine.","Странд подарил каждому из нас свою шкатулку с шестернями.\n«Поверни одно колесо — и сосед последует за ним, как люди», — сказал он.\n\nВ своей я храню батарею для лампы.","Strand har birimizga oʻzining tishli gʻildirakli qutichasidan sovgʻa qilgan.\n«Bitta gʻildirakni bursang, qoʻshnisi ham ergashadi — xuddi odamlardek», degandi u.\n\nMen oʻzimnikida chirogʻim batareyasini saqlayman."
+doc.notebook.p4,"Panel 7.\nLOCK, LIGHT and ARRAY must be live.\nThe VENT line must stay dead — or the dust from the Array Hall will reach us.","Щит 7.\nЗАМОК, СВЕТ и РЕШЁТКА должны быть под током.\nЛиния ВЕНТИЛЯЦИИ должна оставаться обесточенной — иначе пыль из Зала Решётки дойдёт до нас.","7-panel.\nQULF, YORUGʻLIK va PANJARA tok ostida boʻlishi kerak.\nSHAMOLLATISH liniyasi oʻchiq qolsin — aks holda Panjara zalidagi chang bizgacha yetib keladi."
+doc.notebook.p5,,,
+doc.notebook.p5_uv,The safe answers in Strand's symbols:,Сейф отвечает символами Странда:,Seyf Strandning belgilari bilan javob beradi:
+doc.notebook.p6,I took the handle of the main breaker and hid it where only my lamp can show the way.,"Я сняла рукоять главного рубильника и спрятала её там, куда дорогу укажет только моя лампа.",Asosiy uzgichning dastasini yechib oldim va uni faqat chirogʻim yoʻl koʻrsata oladigan joyga yashirdim.
+doc.notebook.p7,"Strand's beacon still calls on his old band — three numbers, over and over.\n\nMy encyclopedia remembers them.","Маяк Странда всё ещё зовёт на его старой волне — три числа, снова и снова.\n\nМоя энциклопедия их помнит.","Strandning mayogʻi hali ham oʻsha eski toʻlqinda chaqiryapti — uchta son, qayta-qayta.\n\nMening ensiklopediyam ularni eslaydi."
+doc.notebook.p8,If someone reads this: the Array must wake once more to open the door.\n\nThe door's eye opens only for the Institute's mark carried in Lumen light.\n\nTune it exactly as Strand wrote — or it will keep you too.,"Если кто-то читает это: Решётка должна проснуться ещё раз, чтобы открыть дверь.\n\nГлаз двери откроется только перед знаком института, несомым светом Люмена.\n\nНастрой её точно так, как писал Странд, — иначе она удержит и тебя.",Agar buni kimdir oʻqiyotgan boʻlsa: eshikni ochish uchun Panjara yana bir bor uygʻonishi kerak.\n\nEshik koʻzi faqat Lumen nuri olib kelgan institut belgisiga ochiladi.\n\nUni Strand yozganidek aniq sozla — aks holda u seni ham ushlab qoladi.
+doc.letter,"Leyla —\n\nThe light opens any door when the three rings sing with the three samples, the heaviest first.\n\nDo not be afraid of it.\n\n— E. S.","Лейла —\n\nСвет откроет любую дверь, когда три кольца запоют в лад с тремя образцами — начиная с самого тяжёлого.\n\nНе бойся его.\n\n— Э. С.",Leyla —\n\nUch halqa uch namuna bilan hamohang kuylaganda — eng ogʻiridan boshlab — yorugʻlik har qanday eshikni ochadi.\n\nUndan qoʻrqma.\n\n— E. S.
+doc.photo,"Lab 7, spring 1977.\nFor Mira — so she remembers my face.","Лаб. 7, весна 1977.\nДля Миры — чтобы она помнила моё лицо.","7-lab., 1977-yil bahori.\nMira uchun — yuzimni eslab qolsin."
+doc.darkroom_note,Only light and shadow may draw the Institute's mark.\nThe crystal remembers what falls on it.,"Знак института могут нарисовать только свет и тень.\nКристалл помнит то, что на него падает.",Institut belgisini faqat yorugʻlik va soya chiza oladi.\nBillur ustiga tushgan narsani eslab qoladi.
+doc.evidence,"Forty-one photographs. Forty-one names.\nA clipping, 1979: “Institute closed after ventilation accident.”\nA clipping, 1998: “Former researcher seen at the sealed Institute.”","Сорок одна фотография. Сорок одно имя.\nВырезка, 1979: «Институт закрыт после аварии вентиляции».\nВырезка, 1998: «Бывшую сотрудницу видели у закрытого института».","Qirq bitta surat. Qirq bitta ism.\nGazeta qirqimi, 1979: «Shamollatish avariyasidan soʻng institut yopildi».\nGazeta qirqimi, 1998: «Sobiq xodima yopiq institut yonida koʻrilgan»."
+obj.door,Laboratory door — sealed by a magnetic lock,Дверь лаборатории — заперта магнитным замком,Laboratoriya eshigi — magnit qulf bilan yopilgan
+obj.desk,Leyla's desk,Стол Лейлы,Leylaning stoli
+obj.drawer,Drawer lock — four brass wheels,Замок ящика — четыре латунных колеса,Tortma qulfi — toʻrtta jez gʻildirak
+obj.clock,"A flip clock, stopped",Перекидные часы — остановились,Varaqli soat — toʻxtab qolgan
+obj.gearbox,Strand's gear box,Шкатулка Странда с шестернями,Strandning tishli qutichasi
+obj.safe,Wall safe,Стенной сейф,Devor seyfi
+obj.panel,Panel 7,Щит 7,7-panel
+obj.radio,Valve radio,Ламповый радиоприёмник,Lampali radiopriyomnik
+obj.projector,Lumen projector,Проектор «Люмен»,«Lumen» proyektori
+obj.poster,Tabula Resonantiarum — Strand's table of resonances,Tabula Resonantiarum — таблица резонансов Странда,Tabula Resonantiarum — Strandning rezonanslar jadvali
+obj.chalkboard,Strand's chalkboard,Доска Странда,Strandning dokasi
+obj.bench,Laboratory bench,Лабораторный стол,Laboratoriya stoli
+obj.vials,"Three samples, labelled only by density (ρ)","Три образца, подписаны только плотностью (ρ)",Uchta namuna — faqat zichligi (ρ) yozilgan
+obj.bookshelf,Bookcase — a nine-volume encyclopedia,Книжный шкаф — энциклопедия в девяти томах,Kitob javoni — toʻqqiz jildli ensiklopediya
+obj.mirror_a,Mirror stand,Зеркальная стойка,Koʻzgu tirgagi
+obj.mirror_b,Mirror stand — the bracket is empty,Зеркальная стойка — держатель пуст,Koʻzgu tirgagi — ushlagich boʻsh
+obj.lock,The door's eye — a light lock,Глаз двери — световой замок,Eshik koʻzi — yorugʻlik qulfi
+obj.window,Barred window. The valley sleeps under the moon.,Окно с решёткой. Долина спит под луной.,Panjarali deraza. Vodiy oy ostida uxlayapti.
+obj.coat,"A coat, still on its hook","Пальто, всё ещё на вешалке",Ilgichda hamon osilgan palto
+obj.drawing,"A child's drawing: the Institute, the sun, a woman in a white coat","Детский рисунок: институт, солнце, женщина в белом халате","Bolalar rasmi: institut, quyosh, oq xalatli ayol"
+obj.darkroom,Leyla's darkroom,Тёмная комната Лейлы,Leylaning qorongʻi xonasi
+obj.evidence,Leyla's evidence wall,Стена улик Лейлы,Leylaning dalillar devori
+obj.shadow,Shadow sculpture — a brass ring and a rod,Теневая скульптура — латунное кольцо и стержень,Soya haykalchasi — jez halqa va sterjen
+obj.emblem,"The Institute's mark, with a socket at its heart",Знак института с гнездом в центре,Markazida uyasi bor institut belgisi
+obj.cabinet,A small locked cabinet,Маленький запертый шкафчик,Kichik qulflangan javoncha
+obj.filing,"Filing cabinet — staff records, mostly empty","Картотека — личные дела, почти пустая","Kartoteka — xodimlar hujjatlari, deyarli boʻsh"
+obj.radiator,A cold cast-iron radiator,Холодная чугунная батарея,Sovuq choʻyan batareya
+msg.nothing,Nothing happens.,Ничего не происходит.,Hech narsa boʻlmadi.
+msg.door_sealed,Sealed. The magnetic lock hums; its lamp glows red.,"Заперто. Магнитный замок гудит, его лампа горит красным.","Yopiq. Magnit qulf gʻuvillaydi, chirogʻi qizil yonmoqda."
+msg.drawer_locked,Locked. Four brass wheels hold it shut.,Заперто. Его держат четыре латунных колеса.,Qulflangan. Uni toʻrtta jez gʻildirak ushlab turibdi.
+msg.drawer_opened,Click — the drawer slides open.,Щелчок — ящик выдвигается.,Chiq — tortma ochildi.
+msg.box_opened,The gears align and the lid springs open.,"Шестерни совпали, и крышка откидывается.",Tishli gʻildiraklar mos keldi va qopqoq ochilib ketdi.
+msg.combine_failed,These don't fit together.,Это не подходит друг к другу.,Bular bir-biriga mos kelmaydi.
+msg.lamp_ready,The UV lamp flickers to life.,УФ-лампа оживает.,UB chiroq yonib ketdi.
+msg.uv_page,Hidden ink blooms on the blank page!,На пустой странице проступают невидимые чернила!,Boʻsh sahifada yashirin siyoh paydo boʻldi!
+msg.uv_desk,A glowing mark appears on the side of the desk.,На боковине стола проступает светящийся знак.,Stolning yon tomonida yorugʻ belgi paydo boʻldi.
+msg.safe_denied,Wrong code. The safe buzzes.,Неверный код. Сейф гудит.,Kod notoʻgʻri. Seyf gʻuvillaydi.
+msg.safe_opened,The bolts slide back. The safe is open.,Засовы отходят. Сейф открыт.,Zulfinlar surildi. Seyf ochildi.
+msg.keyhole,"The rosette sinks in; a panel slides away, revealing a keyhole.","Розетка утапливается, панель сдвигается — под ней замочная скважина.","Gul naqsh ichkariga botdi, panel surilib, kalit teshigi koʻrindi."
+msg.compartment,A hidden compartment slides out of the desk.,Из стола выдвигается тайник.,Stoldan yashirin boʻlma chiqib keldi.
+msg.main_no_handle,The main breaker has no handle.,У главного рубильника нет рукояти.,Asosiy uzgichning dastasi yoʻq.
+msg.handle_installed,The handle clicks into place.,Рукоять встаёт на место.,Dasta joyiga oʻrnashdi.
+msg.breaker_tripped,Sparks! The VENT line tripped the breaker.,Искры! Линия вентиляции выбила рубильник.,Uchqunlar! Shamollatish liniyasi uzgichni urib tushirdi.
+msg.power_restored,Power restored.,Питание восстановлено.,Elektr tiklandi.
+msg.switches_locked,The circuit is locked in place.,Цепь зафиксирована.,Zanjir mahkamlangan.
+msg.main_locked,The main lever is locked in place.,Главный рычаг зафиксирован.,Asosiy richag mahkamlangan.
+msg.radio_dead,The radio is silent.,Радио молчит.,Radio jim.
+msg.radio_no_power,No power reaches the radio.,Радио обесточено.,Radioga tok kelmayapti.
+msg.radio_needs_valve,The hatch reveals an empty valve socket.,Под крышкой — пустое гнездо для лампы.,Qopqoq ostida lampa uchun boʻsh uya bor.
+msg.valve_installed,The valve warms up with an orange glow.,Лампа разогревается оранжевым светом.,Lampa toʻq sariq rangda qizib ketdi.
+msg.radio_signal,A signal cuts through the static…,Сквозь помехи пробивается сигнал…,Shovqin orasidan signal eshitildi…
+msg.shelf_opened,Something clicks behind the books… the bookcase swings open!,За книгами что-то щёлкает… шкаф отъезжает в сторону!,Kitoblar ortida nimadir chiqilladi… javon ochilib ketdi!
+msg.red_glow,A faint red glow seeps around the bookcase.,Вокруг книжного шкафа сочится слабый красный свет.,Kitob javoni atrofidan xira qizil nur sizib chiqyapti.
+msg.cabinet_opened,The shadow forms the mark — the cabinet clicks open.,Тень складывается в знак — шкафчик открывается.,Soya belgini hosil qildi — javoncha ochildi.
+msg.emblem_recorded,The crystal flares. It has remembered the mark.,Кристалл вспыхивает. Он запомнил знак.,Billur chaqnadi. U belgini eslab qoldi.
+msg.lens_in_socket,The lens fits the socket perfectly.,Линза идеально встаёт в гнездо.,Linza uyaga aynan mos tushdi.
+msg.lens_in_projector,The crystal lens slides into the projector.,Кристаллическая линза встаёт в проектор.,Billur linza proyektorga joylashdi.
+msg.projector_no_power,The projector is dead. It needs power.,Проектор мёртв. Нужно питание.,Proyektor ishlamayapti. Unga tok kerak.
+msg.projector_no_lens,The lens socket is empty.,Гнездо для линзы пусто.,Linza uyasi boʻsh.
+msg.projector_scatter,The light scatters — the rings are out of tune.,Свет рассеивается — кольца не настроены.,Yorugʻlik tarqalib ketdi — halqalar sozlanmagan.
+msg.beam_on,A clean Lumen beam pours from the lens.,Из линзы льётся чистый луч Люмена.,Linzadan musaffo Lumen nuri oqib chiqdi.
+msg.rings_locked,The rings won't move while the beam is on.,"Кольца не двигаются, пока горит луч.",Nur yonib turganda halqalar qimirlamaydi.
+msg.mirror_back,The beam strikes the brass back of the mirror.,Луч бьёт в латунную тыльную сторону зеркала.,Nur koʻzguning jez orqa tomoniga urildi.
+msg.lock_waits,The beam reaches the door's eye… but it waits for a sign.,Луч касается глаза двери… но он ждёт знака.,Nur eshik koʻziga yetdi… lekin u belgi kutyapti.
+msg.door_unlocked,The door's eye blazes. The magnetic lock lets go.,Глаз двери вспыхивает. Магнитный замок отпускает.,Eshik koʻzi chaqnadi. Magnit qulf boʻshadi.
+msg.mirror_mounted,The mirror clicks onto the stand.,Зеркало защёлкивается на стойке.,Koʻzgu tirgakka mahkamlandi.
+msg.lens_removed,You take the crystal lens back.,Вы забираете линзу обратно.,Billur linzani qaytarib olasiz.
+msg.book_pulled,"Volume %s tilts out, then springs back.",Том %s наклоняется и возвращается на место.,%s-jild egilib chiqdi va joyiga qaytdi.
+msg.needs_uv,Something here might show under the right light.,Здесь что-то может проявиться при нужном свете.,Bu yerda toʻgʻri yorugʻlikda nimadir koʻrinishi mumkin.
+cap.maglock,[Magnetic lock clicks shut],[Щелчок магнитного замка],[Magnit qulf chiqillab yopildi]
+cap.beacon,[Radio beacon: •• — •••••• — •••],[Радиомаяк: •• — •••••• — •••],[Radiomayoq: •• — •••••• — •••]
+cap.static,[Radio static],[Радиопомехи],[Radio shovqini]
+cap.hum,[The projector hums],[Проектор гудит],[Proyektor gʻuvillaydi]
+cap.sparks,[Sparks crackle],[Треск искр],[Uchqunlar chirsillaydi]
+cap.door,[The heavy door creaks open],[Тяжёлая дверь со скрипом открывается],[Ogʻir eshik gʻiyqillab ochildi]
+hint.notebook.1,Someone left a notebook behind.,Кто-то оставил блокнот.,Kimdir daftar qoldirib ketgan.
+hint.notebook.2,Look at the desk under the window.,Посмотрите на стол под окном.,Deraza ostidagi stolga qarang.
+hint.notebook.3,"Tap the desk, then take Leyla's notebook.",Нажмите на стол и возьмите блокнот Лейлы.,Stolga bosing va Leylaning daftarini oling.
+hint.drawer.1,Leyla wrote about a moment she must never forget.,"Лейла писала о мгновении, которое нельзя забыть.",Leyla hech qachon unutmasligi kerak boʻlgan lahza haqida yozgan.
+hint.drawer.2,The clock on her desk stopped at that very moment.,Часы на её столе остановились именно в это мгновение.,Uning stolidagi soat aynan oʻsha lahzada toʻxtagan.
+hint.drawer.3,Set the drawer wheels to 0-3-1-7.,Установите колёса ящика на 0-3-1-7.,Tortma gʻildiraklarini 0-3-1-7 ga qoʻying.
+hint.take_lamp.1,The drawer is open.,Ящик открыт.,Tortma ochiq.
+hint.take_lamp.2,Something is lying inside the drawer.,В ящике что-то лежит.,Tortma ichida nimadir yotibdi.
+hint.take_lamp.3,Tap the lamp inside the drawer to take it.,"Нажмите на лампу в ящике, чтобы взять её.",Olish uchun tortmadagi chiroqqa bosing.
+hint.gearbox.1,Strand's box: each knob drags a neighbour along.,Шкатулка Странда: каждая ручка тянет за собой соседа.,Strandning qutichasi: har bir murvat qoʻshnisini ham aylantiradi.
+hint.gearbox.2,Bring every gear's pointer to the mark at the back. Count how far each one is.,"Наведите стрелки всех шестерней на метку сзади. Посчитайте, сколько шагов до неё.",Har bir gʻildirak koʻrsatkichini orqadagi belgiga keltiring. Har biri necha qadam uzoqligini sanang.
+hint.gearbox.3,"Press the left knob 2 times, the middle knob 1 time, the right knob 3 times.","Нажмите левую ручку 2 раза, среднюю — 1 раз, правую — 3 раза.","Chap murvatni 2 marta, oʻrtadagini 1 marta, oʻngdagini 3 marta bosing."
+hint.take_cell.1,The gear box is open.,Шкатулка открыта.,Quticha ochiq.
+hint.take_cell.2,Leyla kept something for her lamp inside it.,Лейла хранила в ней кое-что для лампы.,Leyla uning ichida chirogʻi uchun nimanidir saqlagan.
+hint.take_cell.3,Tap the battery cell inside the box.,Нажмите на батарею в шкатулке.,Quticha ichidagi batareyaga bosing.
+hint.lamp.1,The lamp is dead.,Лампа не работает.,Chiroq ishlamayapti.
+hint.lamp.2,Its battery bay fits something you carry.,К её отсеку подойдёт кое-что из ваших вещей.,Uning batareya joyiga yoningizdagi bir narsa mos keladi.
+hint.lamp.3,"Select the UV lamp, press Combine, then tap the battery cell.","Выберите УФ-лампу, нажмите «Объединить», затем батарею.","UB chiroqni tanlang, «Birlashtirish»ni bosing, soʻng batareyani tanlang."
+hint.cipher.1,One page of the notebook looks empty.,Одна страница блокнота кажется пустой.,Daftarning bir sahifasi boʻsh koʻrinadi.
+hint.cipher.2,Some inks only show under ultraviolet light.,Некоторые чернила видны только в ультрафиолете.,Ayrim siyohlar faqat ultrabinafsha nurda koʻrinadi.
+hint.cipher.3,Open the notebook at the blank page and press the UV button.,Откройте блокнот на пустой странице и нажмите кнопку УФ.,Daftarni boʻsh sahifada oching va UB tugmasini bosing.
+hint.safe.1,The symbols on the page stand for numbers.,Символы на странице означают числа.,Sahifadagi belgilar sonlarni bildiradi.
+hint.safe.2,The poster on the wall counts dots beside each symbol.,Плакат на стене показывает число точек рядом с каждым символом.,Devordagi plakat har bir belgi yonida nuqtalar sonini koʻrsatadi.
+hint.safe.3,"Enter 7-2-9-4 on the safe keypad, then press the enter key (bottom right).",Введите на сейфе 7-2-9-4 и нажмите клавишу ввода (внизу справа).,Seyf tugmalarida 7-2-9-4 ni tering va kiritish tugmasini bosing (pastki oʻngda).
+hint.take_safe.1,The safe is open.,Сейф открыт.,Seyf ochiq.
+hint.take_safe.2,Everything inside will be useful.,"Всё, что внутри, пригодится.",Ichidagi hamma narsa asqotadi.
+hint.take_safe.3,"Take the key, the lens, the letter and the valve from the safe.","Возьмите из сейфа ключ, линзу, письмо и лампу.","Seyfdan kalit, linza, maktub va radiolampani oling."
+hint.compartment.1,“Where only my lamp can show the way.”,"«Туда, куда дорогу укажет только моя лампа».",«Faqat chirogʻim yoʻl koʻrsata oladigan joyga».
+hint.compartment.2,Shine the UV lamp along Leyla's desk.,Посветите УФ-лампой вдоль стола Лейлы.,Leylaning stoli boʻylab UB chiroq bilan yoriting.
+hint.compartment.3,"Shine UV on the right side of the desk, then press the carved rosette.",Посветите УФ на правую боковину стола и нажмите на резную розетку.,Stolning oʻng yon tomonini UB bilan yoriting va oʻyma gul naqshni bosing.
+hint.key.1,A keyhole has appeared.,Появилась замочная скважина.,Kalit teshigi paydo boʻldi.
+hint.key.2,The safe held a small brass key.,В сейфе был маленький латунный ключ.,Seyfda kichkina jez kalit bor edi.
+hint.key.3,Select the brass key and tap the keyhole in the desk.,Выберите латунный ключ и нажмите на скважину в столе.,Jez kalitni tanlang va stoldagi kalit teshigiga bosing.
+hint.take_handle.1,The hidden compartment is open.,Тайник открыт.,Yashirin boʻlma ochiq.
+hint.take_handle.2,Leyla hid something important inside.,Лейла спрятала там нечто важное.,Leyla uning ichiga muhim narsa yashirgan.
+hint.take_handle.3,Take the breaker handle (and the photograph) from the compartment.,Возьмите из тайника рукоять рубильника (и фотографию).,Boʻlmadan uzgich dastasini (va suratni) oling.
+hint.handle.1,The main breaker can't be moved.,Главный рубильник не двигается.,Asosiy uzgich qimirlamaydi.
+hint.handle.2,Its handle is missing — you have it.,У него нет рукояти — она у вас.,Uning dastasi yoʻq — u sizda.
+hint.handle.3,Select the breaker handle and tap the main lever on Panel 7.,Выберите рукоять и нажмите на главный рычаг щита 7.,Uzgich dastasini tanlang va 7-paneldagi asosiy richagga bosing.
+hint.circuits.1,Leyla listed which lines must be live.,"Лейла записала, какие линии должны быть под током.",Leyla qaysi liniyalar tok ostida boʻlishi kerakligini yozib qoldirgan.
+hint.circuits.2,"LOCK, LIGHT and ARRAY on; VENT off. Follow the copper traces from each switch to the lamps.","ЗАМОК, СВЕТ и РЕШЁТКА — вкл., ВЕНТИЛЯЦИЯ — выкл. Проследите медные дорожки от переключателей к лампам.","QULF, YORUGʻLIK va PANJARA yoqilgan, SHAMOLLATISH oʻchiq. Har bir ulagichdan lampalargacha mis yoʻlakchalarni kuzating."
+hint.circuits.3,"Raise switches I, II and III only, then raise the main lever.","Поднимите только переключатели I, II и III, затем главный рычаг.","Faqat I, II va III ulagichlarni koʻtaring, soʻng asosiy richagni koʻtaring."
+hint.valve.1,The radio is silent.,Радио молчит.,Radio jim.
+hint.valve.2,Open its hatch: a valve is missing.,Откройте крышку: не хватает лампы.,Qopqogʻini oching: lampa yetishmayapti.
+hint.valve.3,Select the radio valve from the safe and tap the radio.,Выберите радиолампу из сейфа и нажмите на радио.,Seyfdan olingan radiolampani tanlang va radioga bosing.
+hint.tune.1,Strand left his beacon's band on his board.,Странд оставил на доске волну своего маяка.,Strand mayogʻining toʻlqinini dokasida qoldirgan.
+hint.tune.2,The chalkboard says λ = 41 m. The radio dial is marked in metres too.,На доске написано λ = 41 м. Шкала радио тоже размечена в метрах.,Dokada λ = 41 m deb yozilgan. Radio shkalasi ham metrlarda belgilangan.
+hint.tune.3,Turn the dial until the needle sits on the 41 m band.,"Крутите ручку, пока стрелка не встанет на отметку 41 м.",Koʻrsatkich 41 m belgisiga kelguncha murvatni buring.
+hint.books.1,The beacon repeats three numbers.,Маяк повторяет три числа.,Mayoq uchta sonni takrorlaydi.
+hint.books.2,"Count its pulses: 2, 6, 3. Leyla's encyclopedia “remembers them”.","Посчитайте импульсы: 2, 6, 3. Энциклопедия Лейлы «их помнит».","Impulslarni sanang: 2, 6, 3. Leylaning ensiklopediyasi «ularni eslaydi»."
+hint.books.3,"Pull volumes II, VI, then III.","Потяните тома II, VI, затем III.","II, VI, soʻng III jildlarni torting."
+hint.shadow.1,The wall shows the Institute's mark.,На стене — знак института.,Devorda institut belgisi bor.
+hint.shadow.2,Make the sculpture's shadow draw it: a full ring and a straight line.,"Сделайте так, чтобы тень скульптуры нарисовала его: полное кольцо и прямую линию.",Haykalcha soyasi uni chizsin: toʻliq halqa va toʻgʻri chiziq.
+hint.shadow.3,"Turn the ring until it faces the lamp, and the rod until it stands upright.","Поворачивайте кольцо, пока оно не встанет к лампе, а стержень — пока не станет вертикальным.","Halqani chiroqqa yuzlanguncha, sterjenni esa tik turguncha buring."
+hint.take_mirror.1,The cabinet is open.,Шкафчик открыт.,Javoncha ochiq.
+hint.take_mirror.2,Strand's mirror is inside.,Внутри — зеркало Странда.,Ichida Strandning koʻzgusi bor.
+hint.take_mirror.3,Tap the round mirror to take it.,"Нажмите на круглое зеркало, чтобы взять его.",Olish uchun dumaloq koʻzguga bosing.
+hint.record.1,“The crystal remembers what falls on it.”,"«Кристалл помнит то, что на него падает».",«Billur ustiga tushgan narsani eslab qoladi».
+hint.record.2,The mark's socket fits the crystal lens.,Гнездо в центре знака подходит для кристаллической линзы.,Belgi markazidagi uyaga billur linza mos keladi.
+hint.record.3,Place the crystal lens in the socket while the shadow forms the mark.,"Вставьте линзу в гнездо, пока тень образует знак.",Soya belgini hosil qilib turganda billur linzani uyaga qoʻying.
+hint.retrieve_lens.1,The crystal has remembered the mark.,Кристалл запомнил знак.,Billur belgini eslab qoldi.
+hint.retrieve_lens.2,Now it must travel with the light.,Теперь он должен отправиться вместе со светом.,Endi u yorugʻlik bilan birga yoʻlga chiqishi kerak.
+hint.retrieve_lens.3,Tap the socket to take the lens back.,"Нажмите на гнездо, чтобы забрать линзу.",Linzani qaytarib olish uchun uyaga bosing.
+hint.lens.1,The projector's socket is empty.,Гнездо проектора пусто.,Proyektor uyasi boʻsh.
+hint.lens.2,The crystal lens fits it.,Туда подходит кристаллическая линза.,Unga billur linza mos keladi.
+hint.lens.3,Select the crystal lens and tap the projector.,Выберите линзу и нажмите на проектор.,Billur linzani tanlang va proyektorga bosing.
+hint.projector.1,Strand's letter tells how to tune it.,"Письмо Странда говорит, как его настроить.",Strandning maktubi uni qanday sozlashni aytadi.
+hint.projector.2,“The heaviest first.” Compare the samples' density (ρ).,«Начиная с самого тяжёлого». Сравните плотность (ρ) образцов.,«Eng ogʻiridan boshlab». Namunalarning zichligini (ρ) solishtiring.
+hint.projector.3,"Set the rings to crimson, cobalt, green — then pull the lever.","Установите кольца: малиновый, кобальтовый, зелёный — и потяните рычаг.","Halqalarni toʻq qizil, kobalt, yashilga qoʻying — soʻng richagni torting."
+hint.mount_mirror.1,One mirror stand is empty.,Одна зеркальная стойка пуста.,Bitta koʻzgu tirgagi boʻsh.
+hint.mount_mirror.2,You carry Strand's round mirror.,У вас есть круглое зеркало Странда.,Sizda Strandning dumaloq koʻzgusi bor.
+hint.mount_mirror.3,Select the round mirror and tap the empty stand near the door.,Выберите зеркало и нажмите на пустую стойку у двери.,Dumaloq koʻzguni tanlang va eshik yonidagi boʻsh tirgakka bosing.
+hint.mirrors.1,The door has a glass eye made for light.,У двери есть стеклянный глаз — для света.,Eshikning yorugʻlik uchun shisha koʻzi bor.
+hint.mirrors.2,Turn the mirrors to guide the beam around the room.,"Поворачивайте зеркала, чтобы провести луч по комнате.",Nurni xona boʻylab yoʻnaltirish uchun koʻzgularni buring.
+hint.mirrors.3,First stand: send the beam toward the window wall. Second stand: send it into the door's eye.,Первая стойка: направьте луч к стене с окном. Вторая — в глаз двери.,Birinchi tirgak: nurni deraza devoriga yoʻnaltiring. Ikkinchisi: eshik koʻziga.
+hint.finale.1,The way is open.,Путь открыт.,Yoʻl ochiq.
+hint.finale.2,Leyla's light is fading.,Свет Лейлы угасает.,Leylaning nuri soʻnmoqda.
+hint.finale.3,Make your choice.,Сделайте выбор.,Tanlov qiling.

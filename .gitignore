@@ -24,3 +24,6 @@ export_presets.cfg.bak
 .DS_Store
 Thumbs.db
 __pycache__/
+
+# Godot generated translations (rebuilt on import)
+*.translation
