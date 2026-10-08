@@ -1,0 +1,26 @@
+# Godot
+.godot/
+*.import.tmp
+export_presets.cfg.bak
+/android/build/
+/build/
+*.apk
+*.aab
+*.ipa
+
+# Blender
+*.blend1
+*.blend2
+
+# Signing material — never commit
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+.env
+.env.*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+__pycache__/
