@@ -152,7 +152,18 @@ func _spawn(id: String, model: String, pos: Vector3, yaw: float, hotspot: String
 	models[id] = n
 	_roots[n] = id
 	n.set_meta("hotspot", hotspot)
+	_tune_shadows(n)
 	return n
+
+
+## Small props don't cast shadows (barely visible, costly on phones: every caster is redrawn per shadow pass).
+func _tune_shadows(n: Node3D) -> void:
+	for mi in ModelUtil.find_meshes(n):
+		if mi.mesh == null:
+			continue
+		var sz := mi.mesh.get_aabb().size
+		if maxf(sz.x, maxf(sz.y, sz.z)) < 0.3:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _build_models() -> void:
@@ -274,7 +285,7 @@ func _build_lights() -> void:
 	moon.shadow_enabled = true
 	moon.shadow_blur = 1.5
 	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	moon.directional_shadow_max_distance = 12.0
+	moon.directional_shadow_max_distance = 8.0
 	add_child(moon)
 	moon.look_at_from_position(Vector3(1.5, 4.5, -5.5), Vector3(0.3, 0.0, 0.6), Vector3.UP)
 	lights["moon"] = moon
@@ -338,8 +349,8 @@ func _build_lights() -> void:
 	var fill := OmniLight3D.new()
 	fill.light_color = Color("ffe2c2")
 	fill.light_energy = 0.0
-	fill.omni_range = 1.6
-	fill.omni_attenuation = 1.6
+	fill.omni_range = 2.4
+	fill.omni_attenuation = 1.3
 	fill.shadow_enabled = false
 	add_child(fill)
 	lights["focus_fill"] = fill
@@ -928,7 +939,9 @@ func _process(delta: float) -> void:
 func _on_view_changed(id: String) -> void:
 	hud.call("set_view", id, cam.is_root(), HOTSPOT_CAPTION.get(id, ""))
 	var fill: OmniLight3D = lights["focus_fill"]
-	create_tween().tween_property(fill, "light_energy", 0.0 if cam.is_root() else 0.9, 0.6)
+	var bright_views := ["bookshelf", "books", "projector", "chalkboard", "coat", "filing", "mirror_a", "mirror_b", "lock"]
+	var e := 0.0 if cam.is_root() else (1.5 if id in bright_views else 1.0)
+	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor"]
 	if id == "darkroom" and not _darkroom_seen:
 		_darkroom_seen = true
@@ -1109,7 +1122,7 @@ func _update_lighting(animated: bool) -> void:
 	var dur := 2.4 if animated else 0.0
 	var targets := {
 		"pendant_0": 2.2 if on else 0.0, "pendant_1": 1.7 if on else 0.0,
-		"desk_lamp": 1.3 if on else 1.0, "safelight": 1.4 if on else 0.0,
+		"desk_lamp": 1.3 if on else 1.0, "safelight": 0.7 if on else 0.0,
 		"shadow_lamp": 3.2 if on else 0.0,
 	}
 	for k: String in targets:

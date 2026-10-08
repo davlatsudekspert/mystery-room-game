@@ -25,8 +25,8 @@ func _ready() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CLEAR_COLOR
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("8b8478")
-	env.ambient_light_energy = 0.6
+	env.ambient_light_color = Color("b3aa9b")
+	env.ambient_light_energy = 1.1
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var we := WorldEnvironment.new()
 	we.environment = env
@@ -35,15 +35,20 @@ func _ready() -> void:
 	_cam.fov = 30.0
 	_vp.add_child(_cam)
 	var key := DirectionalLight3D.new()
-	key.light_energy = 1.6
+	key.light_energy = 2.4
 	key.light_color = Color("ffe4c4")
 	_vp.add_child(key)
 	key.look_at_from_position(Vector3(1, 1.4, 1.2), Vector3.ZERO, Vector3.UP)
 	var rim := DirectionalLight3D.new()
-	rim.light_energy = 0.8
+	rim.light_energy = 1.4
 	rim.light_color = Color("a9c7ff")
 	_vp.add_child(rim)
 	rim.look_at_from_position(Vector3(-1.2, 0.6, -1.0), Vector3.ZERO, Vector3.UP)
+	var fill := DirectionalLight3D.new()
+	fill.light_energy = 0.9
+	fill.light_color = Color("ffffff")
+	_vp.add_child(fill)
+	fill.look_at_from_position(Vector3(0, 0.2, 2.0), Vector3.ZERO, Vector3.UP)
 	_pivot = Node3D.new()
 	_vp.add_child(_pivot)
 
