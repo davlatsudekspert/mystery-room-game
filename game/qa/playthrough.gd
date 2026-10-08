@@ -104,14 +104,27 @@ func step(label: String, cond: Callable) -> void:
 	report.append(("✓ " if ok else "✗ ") + label)
 
 
+## Tap a 3D part; succeed only if `cond` becomes true. Otherwise apply `fallback` (logic call).
+func act(model: String, part: String, cond: Callable, fallback: Callable, label: String = "", offset: Vector3 = Vector3.ZERO) -> void:
+	if not cond.call():
+		await tap_part(model, part, offset)
+		await _settle(0.25)
+	if cond.call():
+		taps_ok += 1
+	else:
+		fallback.call()
+		taps_fallback += 1
+		report.append("  fallback: %s %s" % [label if label != "" else part, model])
+
+
 func run() -> void:
 	var s := logic.state
+	var L := logic
 	await shot("lab_dark_start")
 	# --- notebook + drawer (P1)
 	await view("desk")
 	await shot("desk_view")
-	if not await tap_part("notebook", ""):
-		logic.take("notebook"); taps_fallback += 1
+	await act("notebook", "", func() -> bool: return L.has_item("notebook"), func() -> void: L.take("notebook"), "notebook")
 	await view("drawer")
 	await shot("drawer_closeup_locked")
 	var code := Lab7Logic.DRAWER_CODE
@@ -119,54 +132,51 @@ func run() -> void:
 		var guard := 0
 		while int(s["drawer"][i]) != code[i] and guard < 12:
 			guard += 1
-			if not await tap_part("desk", "IA_drawer_wheel_%d" % i, Vector3(0, 0.01, 0)):
-				logic.step_drawer_wheel(i, 1); taps_fallback += 1
+			var before := int(s["drawer"][i])
+			await act("desk", "IA_drawer_wheel_%d" % i, func() -> bool: return int(s["drawer"][i]) != before,
+				func() -> void: L.step_drawer_wheel(i, 1), "wheel %d" % i, Vector3(0, 0.012, 0))
 	await _settle(0.8)
 	await shot("drawer_open_0317")
-	if logic.can_take("drawer_lamp"):
-		if not await tap_part("desk", "IA_drawer_top"):
-			logic.take("drawer_lamp"); taps_fallback += 1
-	step("P1 drawer 0317 → UV lamp", func() -> bool: return s["drawer_open"] and logic.has_item("uv_lamp_empty"))
+	await act("desk", "Item_drawer_lamp", func() -> bool: return L.has_item("uv_lamp_empty"), func() -> void: L.take("drawer_lamp"), "lamp in drawer")
+	step("P1 drawer 0317 → UV lamp", func() -> bool: return s["drawer_open"] and L.has_item("uv_lamp_empty"))
 	# --- gear box (P2)
 	cam().go("lab")
 	await _settle(0.8)
-	await view("bookshelf")
-	await shot("bookshelf_view")
 	await view("gearbox")
 	await shot("gearbox_closeup")
 	var presses := Lab7Solver.gear_solution(s["gears"])
 	for i in 3:
 		for _k in presses[i]:
-			if not await tap_part("gear_box", "IA_knob_%d" % i):
-				logic.press_gear(i); taps_fallback += 1
+			var g0 := str(s["gears"])
+			await act("gear_box", "IA_knob_%d" % i, func() -> bool: return str(s["gears"]) != g0 or s["box_open"],
+				func() -> void: L.press_gear(i), "knob %d" % i)
 	await _settle(1.0)
 	await shot("gearbox_open")
-	if logic.can_take("box_cell"):
-		logic.take("box_cell"); taps_fallback += 1
-	step("P2 gear box → battery", func() -> bool: return s["box_open"] and logic.has_item("battery_cell"))
-	# --- combine (P3) through the HUD path
-	logic.select_item("uv_lamp_empty")
-	logic.combine("uv_lamp_empty", "battery_cell")
-	step("P3 combine → UV lamp", func() -> bool: return logic.has_item("uv_lamp"))
-	# --- UV: notebook page, desk mark (P4/P5)
-	logic.select_item("uv_lamp")
+	await act("gear_box", "Item_box_cell", func() -> bool: return L.has_item("battery_cell"), func() -> void: L.take("box_cell"), "cell")
+	step("P2 gear box → battery", func() -> bool: return s["box_open"] and L.has_item("battery_cell"))
+	# --- combine (P3) through the HUD
+	L.select_item("uv_lamp_empty")
+	L.combine("uv_lamp_empty", "battery_cell")
+	step("P3 combine → UV lamp", func() -> bool: return L.has_item("uv_lamp"))
+	# --- UV: desk mark (dwell) + notebook page (HUD button)
+	L.select_item("uv_lamp")
 	await view("desk")
 	await view("desk_side")
 	room.set("_uv_aim", cam().unproject_position(Vector3(0.262, 0.52, -2.05)))
-	await _settle(1.2)
+	await _settle(1.4)
 	await shot("uv_desk_mark")
-	if not s["uv_desk"]:
-		logic.uv_reveal("desk_mark"); taps_fallback += 1
-	logic.uv_reveal("notebook_page")
+	if s["uv_desk"]:
+		taps_ok += 1
+	else:
+		L.uv_reveal("desk_mark"); taps_fallback += 1; report.append("  fallback: uv desk dwell")
 	var hud: Node = room.get("hud")
-	hud.call("show_document", "notebook")
-	await _settle(0.2)
-	hud.set("_overlay", hud.get("_overlay"))
-	# open page 5 with UV revealed
+	hud.call("_show_notebook", 4)
+	await _settle(0.3)
+	L.uv_reveal("notebook_page")
 	hud.call("_show_notebook", 4)
 	await shot("notebook_uv_page")
 	hud.call("_close_overlay")
-	logic.select_item("")
+	L.select_item("")
 	step("UV reveals (page + desk)", func() -> bool: return s["uv_page"] and s["uv_desk"])
 	# --- poster + safe (P4)
 	cam().go("lab")
@@ -174,43 +184,38 @@ func run() -> void:
 	await view("poster")
 	await shot("poster_resonances")
 	await view("safe")
+	await shot("safe_keypad")
 	for c in "7294":
-		if not await tap_part("wall_safe", "IA_key_" + c):
-			logic.safe_press(c); taps_fallback += 1
-	if not await tap_part("wall_safe", "IA_key_enter"):
-		logic.safe_press("E"); taps_fallback += 1
+		var n0 := str(s["safe_input"]).length()
+		await act("wall_safe", "IA_key_" + c, func() -> bool: return str(s["safe_input"]).length() > n0, func() -> void: L.safe_press(c), "key " + c)
+	await act("wall_safe", "IA_key_enter", func() -> bool: return s["safe_open"], func() -> void: L.safe_press("E"), "enter")
 	await _settle(1.4)
 	await shot("safe_open")
 	for spot in ["safe_key", "safe_lens", "safe_letter", "safe_valve"]:
-		if logic.can_take(spot):
-			logic.take(spot); taps_fallback += 1
-	step("P4 safe 7294 → key, lens, letter, valve", func() -> bool: return s["safe_open"] and logic.has_item("crystal_lens"))
+		var item: String = Lab7Logic.SPOTS[spot]["item"]
+		await act("wall_safe", "Item_" + spot, func() -> bool: return L.has_item(item), func() -> void: L.take(spot), spot)
+	step("P4 safe 7294 → key, lens, letter, valve", func() -> bool: return s["safe_open"] and L.has_item("crystal_lens"))
 	# --- compartment (P5)
 	await view("desk")
 	await view("desk_side")
-	if not await tap_part("desk", "IA_rosette"):
-		logic.press_rosette(); taps_fallback += 1
-	logic.select_item("brass_key")
-	if not await tap_part("desk", "IA_keyhole"):
-		logic.use_item_on("brass_key", "desk_keyhole"); taps_fallback += 1
+	await act("desk", "IA_rosette", func() -> bool: return s["rosette"], func() -> void: L.press_rosette(), "rosette")
+	await _settle(0.6)
+	L.select_item("brass_key")
+	await act("desk", "IA_keyhole", func() -> bool: return s["compartment_open"], func() -> void: L.use_item_on("brass_key", "desk_keyhole"), "keyhole")
 	await _settle(0.8)
 	await shot("desk_compartment_open")
-	for spot in ["compartment_handle", "compartment_photo"]:
-		if logic.can_take(spot):
-			logic.take(spot); taps_fallback += 1
-	step("P5 compartment → breaker handle", func() -> bool: return logic.has_item("breaker_handle"))
+	await act("desk", "Item_compartment_handle", func() -> bool: return L.has_item("breaker_handle"), func() -> void: L.take("compartment_handle"), "handle")
+	await act("desk", "Item_compartment_photo", func() -> bool: return L.has_item("leyla_photo"), func() -> void: L.take("compartment_photo"), "photo")
+	step("P5 compartment → breaker handle", func() -> bool: return L.has_item("breaker_handle"))
 	# --- Panel 7 (P6)
 	cam().go("lab")
 	await _settle(0.8)
 	await view("panel")
-	logic.select_item("breaker_handle")
-	if not await tap_part("panel7", "IA_main_lever"):
-		logic.use_item_on("breaker_handle", "panel_main"); taps_fallback += 1
+	L.select_item("breaker_handle")
+	await act("panel7", "IA_main_lever", func() -> bool: return s["handle_installed"], func() -> void: L.use_item_on("breaker_handle", "panel_main"), "install handle")
 	for i in [0, 1, 2]:
-		if not await tap_part("panel7", "IA_switch_%d" % i):
-			logic.toggle_switch(i); taps_fallback += 1
-	if not await tap_part("panel7", "IA_main_lever"):
-		logic.toggle_main(); taps_fallback += 1
+		await act("panel7", "IA_switch_%d" % i, func() -> bool: return int(s["switches"][i]) == 1, func() -> void: L.toggle_switch(i), "switch %d" % i)
+	await act("panel7", "IA_main_lever", func() -> bool: return s["power_on"], func() -> void: L.toggle_main(), "main lever")
 	await _settle(2.6)
 	await shot("panel_power_restored")
 	step("P6 circuits → power", func() -> bool: return s["power_on"])
@@ -221,23 +226,27 @@ func run() -> void:
 	# --- radio (P7/P8)
 	await view("chalkboard")
 	await shot("chalkboard")
-	await view("bench")
 	await view("radio")
-	logic.select_item("radio_valve")
-	if not await tap_part("radio", ""):
-		logic.use_item_on("radio_valve", "radio"); taps_fallback += 1
-	logic.set_dial(Lab7Logic.RADIO_TARGET)
+	L.select_item("radio_valve")
+	await act("radio", "", func() -> bool: return s["valve_installed"], func() -> void: L.use_item_on("radio_valve", "radio"), "valve")
+	var g := 0
+	while not s["signal_heard"] and g < 30:
+		g += 1
+		var d0 := int(s["dial"])
+		await act("radio", "IA_tuning_knob", func() -> bool: return int(s["dial"]) != d0, func() -> void: L.step_dial(-2), "tuning knob",
+			Vector3(-0.012, 0, 0))
 	await _settle(1.5)
 	await shot("radio_tuned_41m")
 	step("P7/P8 radio valve + 41 m", func() -> bool: return s["signal_heard"])
 	# --- books (P9)
 	cam().go("lab")
 	await _settle(0.8)
-	await view("bookshelf")
 	await view("books")
+	await shot("encyclopedia")
 	for n in Lab7Logic.BEACON_PULSES:
-		if not await tap_part("bookshelf", "IA_book_%d" % n):
-			logic.pull_book(n); taps_fallback += 1
+		var b0 := str(s["books"])
+		await act("bookshelf", "IA_book_%d" % n, func() -> bool: return str(s["books"]) != b0 or s["shelf_open"], func() -> void: L.pull_book(n), "book %d" % n)
+		await _settle(0.6)
 	await _settle(2.6)
 	cam().go("lab")
 	await _settle(1.0)
@@ -246,61 +255,77 @@ func run() -> void:
 	step("P9 books II-VI-III → darkroom", func() -> bool: return s["shelf_open"])
 	# --- darkroom shadow + recording (P10)
 	cam().go("darkroom")
-	await _settle(1.0)
+	await _settle(1.2)
 	await shot("darkroom")
 	await view("shadow")
 	await shot("shadow_misaligned")
-	logic.select_item("crystal_lens")
-	logic.use_item_on("crystal_lens", "emblem_socket")
+	L.select_item("crystal_lens")
+	L.use_item_on("crystal_lens", "emblem_socket")
 	var guard := 0
-	while not logic.shadow_aligned() and guard < 12:
+	while not L.shadow_aligned() and guard < 14:
 		guard += 1
-		var p := 0 if int(s["shadow"][0]) % 3 != 0 else 1
-		if not await tap_part("shadow_lock", "IA_ring_knob" if p == 0 else "IA_rod_knob"):
-			logic.turn_sculpture(p); taps_fallback += 1
+		var p := 0 if int(s["shadow"][0]) != 0 else 1
+		var sh0 := str(s["shadow"])
+		await act("shadow_lock", "IA_ring_knob" if p == 0 else "IA_rod_knob", func() -> bool: return str(s["shadow"]) != sh0,
+			func() -> void: L.turn_sculpture(p), "sculpture %d" % p)
 	await _settle(1.2)
 	await shot("shadow_emblem_recorded")
-	if logic.can_take("cabinet_mirror"):
-		logic.take("cabinet_mirror"); taps_fallback += 1
-	logic.remove_lens()
-	step("P10 shadow lock + emblem recorded + mirror", func() -> bool: return s["emblem_recorded"] and logic.has_item("mirror_item"))
+	await view("cabinet")
+	await act("shadow_lock", "Item_cabinet_mirror", func() -> bool: return L.has_item("mirror_item"), func() -> void: L.take("cabinet_mirror"), "mirror")
+	L.remove_lens()
+	step("P10 shadow lock + emblem recorded + mirror", func() -> bool: return s["emblem_recorded"] and L.has_item("mirror_item"))
 	# --- projector (P11)
 	cam().go("lab")
 	await _settle(1.0)
 	await view("vials")
 	await shot("vials_densities")
 	await view("projector")
-	logic.select_item("crystal_lens")
-	if not await tap_part("lumen_projector", "IA_lens_socket"):
-		logic.use_item_on("crystal_lens", "projector"); taps_fallback += 1
+	L.select_item("crystal_lens")
+	await act("lumen_projector", "IA_lens_socket", func() -> bool: return s["lens_at"] == "projector", func() -> void: L.use_item_on("crystal_lens", "projector"), "lens socket")
 	for i in 3:
-		var g := 0
-		while int(s["rings"][i]) != Lab7Logic.RING_TARGET[i] and g < 8:
-			g += 1
-			if not await tap_part("lumen_projector", "IA_ring_%d" % i):
-				logic.turn_ring(i); taps_fallback += 1
-	if not await tap_part("lumen_projector", "IA_projector_lever"):
-		logic.pull_projector_lever(); taps_fallback += 1
+		var gg := 0
+		while int(s["rings"][i]) != Lab7Logic.RING_TARGET[i] and gg < 8:
+			gg += 1
+			var r0 := int(s["rings"][i])
+			await act("lumen_projector", "IA_ring_%d" % i, func() -> bool: return int(s["rings"][i]) != r0, func() -> void: L.turn_ring(i), "ring %d" % i)
+	await shot("projector_tuned")
+	await act("lumen_projector", "IA_projector_lever", func() -> bool: return s["beam_on"], func() -> void: L.pull_projector_lever(), "lever")
 	await _settle(1.0)
 	await shot("projector_beam_on")
 	step("P11 projector tuned → beam", func() -> bool: return s["beam_on"])
 	# --- mirrors (P12)
-	logic.select_item("mirror_item")
-	logic.use_item_on("mirror_item", "mirror_stand_b")
-	while int(s["mirrors"][0]) != 5:
-		logic.rotate_mirror(0, 1)
+	await view("mirror_b")
+	L.select_item("mirror_item")
+	await act("mirror_stand_b", "IA_mirror_mount", func() -> bool: return s["mirror_b_mounted"], func() -> void: L.use_item_on("mirror_item", "mirror_stand_b"), "mount mirror")
+	await view("mirror_a")
+	var m := 0
+	while int(s["mirrors"][0]) != 5 and m < 10:
+		m += 1
+		var a0 := int(s["mirrors"][0])
+		await act("mirror_stand", "IA_mirror_mount", func() -> bool: return int(s["mirrors"][0]) != a0, func() -> void: L.rotate_mirror(0, 1), "mirror A")
 	cam().go("lab")
 	await _settle(1.0)
 	await shot("beam_first_mirror")
-	while int(s["mirrors"][1]) != 1 and not s["door_open"]:
-		logic.rotate_mirror(1, 1)
+	await view("mirror_b")
+	m = 0
+	while int(s["mirrors"][1]) != 1 and not s["door_open"] and m < 10:
+		m += 1
+		var b1 := int(s["mirrors"][1])
+		await act("mirror_stand_b", "IA_mirror_mount", func() -> bool: return int(s["mirrors"][1]) != b1 or s["door_open"], func() -> void: L.rotate_mirror(1, 1), "mirror B")
 	await _settle(2.5)
 	await shot("finale_echo_1979")
-	await _settle(6.0)
-	await shot("door_open")
+	await _settle(4.0)
+	await shot("finale_door")
+	# wait for the choice overlay, then choose
+	var w := 0
+	while w < 60 and hud.get("_overlay") == null:
+		w += 1
+		await _settle(0.25)
+	await shot("finale_choice")
 	step("P12 mirrors → light lock → door", func() -> bool: return s["door_open"])
-	logic.choose_ending("leave_lens")
-	await _settle(2.0)
+	hud.call("_close_overlay")
+	L.choose_ending("leave_lens")
+	await _settle(2.5)
 	await shot("chapter_complete")
 	step("Finale choice → chapter complete", func() -> bool: return s["complete"])
 	_finish()

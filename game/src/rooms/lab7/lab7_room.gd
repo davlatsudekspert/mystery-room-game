@@ -96,6 +96,8 @@ func _ready() -> void:
 	_build_models()
 	_build_lights()
 	_build_views()
+	_hinge_bookcase()
+	_place_lights_from_models()
 	visuals = Lab7Visuals.new(self)
 	add_child(visuals)
 	_build_input()
@@ -301,6 +303,8 @@ func _build_lights() -> void:
 		p.omni_attenuation = 1.2
 		p.position = [Vector3(-0.6, 2.45, -0.6), Vector3(1.2, 2.45, 0.8)][i]
 		p.shadow_enabled = i == 0
+		p.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
+		p.distance_fade_enabled = false
 		add_child(p)
 		lights["pendant_%d" % i] = p
 
@@ -354,6 +358,60 @@ func _build_lights() -> void:
 	probe.update_mode = ReflectionProbe.UPDATE_ONCE
 	probe.interior = true
 	add_child(probe)
+
+
+## Lamps sit exactly at the empties authored in Blender, so shadows/glows line up with the models.
+func _place_lights_from_models() -> void:
+	var sl := ModelUtil.find(models.get("shadow_lock"), "light_origin")
+	var lamp: SpotLight3D = lights["shadow_lamp"]
+	if sl:
+		lamp.spot_angle = 14.0
+		lamp.look_at_from_position(sl.global_position, Vector3(-4.0, 1.5, -1.585), Vector3.UP)
+	var so := ModelUtil.find(models.get("shadow_lock"), "safelight_origin")
+	if so:
+		(lights["safelight"] as Light3D).global_position = so.global_position
+	var dl := ModelUtil.find(models.get("desk_lamp"), "light_origin")
+	if dl:
+		(lights["desk_lamp"] as Light3D).global_position = dl.global_position + Vector3(0, -0.04, 0)
+	# per-card photographs on the evidence wall and the drying line
+	for k in 8:
+		var card := ModelUtil.find(models.get("evidence_board"), "photo_%d" % k) as MeshInstance3D
+		if card:
+			card.material_override = _photo_mat(k)
+	for k in 4:
+		var pr := ModelUtil.find(models.get("darkroom_props"), "print_%d" % k) as MeshInstance3D
+		if pr:
+			pr.material_override = _photo_mat((k + 4) % 8)
+
+
+func _photo_mat(k: int) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load("res://assets/textures/decals/photo_%d.jpg" % k)
+	m.roughness = 0.55
+	return m
+
+
+## The bookcase swings INTO the lab about its front-north edge, keeping the darkroom clear.
+func _hinge_bookcase() -> void:
+	var shelf: Node3D = models.get("bookshelf")
+	if shelf == null:
+		return
+	var pivot := Node3D.new()
+	pivot.name = "BookcasePivot"
+	add_child(pivot)
+	pivot.global_position = Vector3(-2.74, 0.0, -1.15)
+	shelf.reparent(pivot, true)
+	models["bookshelf_pivot"] = pivot
+
+
+## Only draw the darkroom while it can be seen (perf on phones; no occlusion culling needed).
+func _update_room_visibility() -> void:
+	var dark_visible: bool = logic.state["shelf_open"] or cam.current() in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor"]
+	for id in ["shadow_lock", "darkroom_props", "evidence_board"]:
+		var n: Node3D = models.get(id)
+		if n:
+			n.visible = dark_visible
+	(lights["safelight"] as Light3D).visible = dark_visible or (logic.state["power_on"])
 
 
 func _build_views() -> void:
@@ -876,6 +934,7 @@ func _on_view_changed(id: String) -> void:
 		_darkroom_seen = true
 		get_tree().create_timer(1.0).timeout.connect(func() -> void: hud.call("caption", tr("doc.darkroom_note"), 7.0))
 	(lights["shadow_lamp"] as SpotLight3D).visible = in_dark
+	_update_room_visibility()
 	(lights["moon"] as DirectionalLight3D).shadow_enabled = not in_dark
 	_uv_aim = get_viewport().get_visible_rect().size * 0.5
 
@@ -884,6 +943,7 @@ func _on_events(ev: Array[String]) -> void:
 	for e in ev:
 		_feedback(e)
 	visuals.apply_state(true)
+	_update_room_visibility()
 
 
 func _feedback(e: String) -> void:

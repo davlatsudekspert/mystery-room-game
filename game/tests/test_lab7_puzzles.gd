@@ -171,15 +171,17 @@ func test_books_use_last_three_pulls() -> void:
 	has(l.pull_book(3), "shelf_opened")
 
 
-func test_shadow_symmetric_alignment_and_recording() -> void:
+func test_shadow_alignment_and_recording() -> void:
 	l.state["shelf_open"] = true
 	l.state["power_on"] = true
 	l.state["lens_at"] = "inventory"
 	l.inventory.append("crystal_lens")
-	# ring 2 -> 3 (180°, symmetric) ; rod 2 -> 3
-	has(l.turn_sculpture(0), "shadow:3:2")
-	var ev := l.turn_sculpture(1)
-	has(ev, "cabinet_opened", "180° is as valid as 0°")
+	l.state["shadow"] = [3, 3]
+	var ev := l.turn_sculpture(0)
+	lacks(ev, "cabinet_opened", "90° edge-on ring draws no emblem")
+	l.state["shadow"] = [5, 0]
+	ev = l.turn_sculpture(0) # ring 5 -> 0 (wraps: 6 x 30° = half turn, ring is symmetric)
+	has(ev, "cabinet_opened", "ring facing lamp + rod upright")
 	lacks(ev, "emblem_recorded", "no lens in socket yet")
 	ev = l.use_item_on("crystal_lens", "emblem_socket")
 	has(ev, "emblem_recorded", "inserting while aligned records")

@@ -94,7 +94,7 @@ static func step(l: Lab7Logic, choice: String) -> void:
 			return
 		var guard := 0
 		while not l.shadow_aligned() and guard < 40:
-			l.turn_sculpture(0 if int(s["shadow"][0]) % 3 != 0 else 1)
+			l.turn_sculpture(0 if int(s["shadow"][0]) != 0 else 1)
 			guard += 1
 		return
 	if l.can_take("cabinet_mirror"):

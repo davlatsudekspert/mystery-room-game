@@ -366,9 +366,11 @@ func pull_book(n: int) -> Array[String]:
 
 
 # ================================================================== P10 shadow lock + Light Memory
+## Ring faces the lamp and the rod stands upright. 6 steps of 30° span 180°, and both parts are
+## symmetric under a half turn, so step 0 is the only aligned position for each.
 func shadow_aligned() -> bool:
 	var s: Array = state["shadow"]
-	return int(s[0]) % 3 == 0 and int(s[1]) % 3 == 0
+	return int(s[0]) == 0 and int(s[1]) == 0
 
 
 func turn_sculpture(part: int) -> Array[String]:

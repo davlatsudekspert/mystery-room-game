@@ -15,7 +15,7 @@ const SWITCH_OFF_DEG := 0.0
 const SWITCH_ON_DEG := -70.0
 const LEVER_OFF_DEG := 0.0
 const LEVER_ON_DEG := -80.0
-const SHELF_OPEN_DEG := -85.0
+const SHELF_OPEN_DEG := 85.0
 const CABINET_OPEN_DEG := -100.0
 const DOOR_OPEN_DEG := -95.0
 const RING_SIGN := 1.0
@@ -140,9 +140,12 @@ func _spawn_container_items() -> void:
 	_spawn_item("compartment_handle", "breaker_handle", part("desk", "IA_compartment"), Vector3(-0.08, 0.03, 0.0), 90.0)
 	_spawn_item("compartment_photo", "letter", part("desk", "IA_compartment"), Vector3(-0.2, 0.025, 0.0), 0.0, 0.8)
 	var sl := model("shadow_lock")
+	var spot := part("shadow_lock", "cabinet_item_spot")
 	var cab := part("shadow_lock", "IA_cabinet_door")
-	if sl and cab:
-		_spawn_item("cabinet_mirror", "mirror_item", sl, cab.position + Vector3(0.12, 0.0, -0.08), 0.0)
+	if sl and spot:
+		_spawn_item("cabinet_mirror", "mirror_item", spot, Vector3.ZERO, 0.0)
+	elif sl and cab:
+		_spawn_item("cabinet_mirror", "mirror_item", sl, cab.position + Vector3(0.178, 0.0, -0.101), 0.0)
 
 
 func _build_safe_display() -> void:
@@ -210,8 +213,8 @@ func apply_state(animated: bool) -> void:
 		valve.visible = s["valve_installed"]
 	_rot(part("radio", "IA_radio_hatch"), Vector3.RIGHT, -70.0 if radio_hatch_open else 0.0, animated, 0.4)
 	_update_radio(animated)
-	# P9 bookcase door
-	_rot(model("bookshelf"), Vector3.UP, SHELF_OPEN_DEG if s["shelf_open"] else 0.0, animated, 2.2, false, true)
+	# P9 bookcase door (pivot node at its front-north edge, swings into the lab)
+	_rot(model("bookshelf_pivot"), Vector3.UP, SHELF_OPEN_DEG if s["shelf_open"] else 0.0, animated, 2.2, false, true)
 	# P10 shadow sculpture, cabinet, socket
 	_rot(part("shadow_lock", "sculpture_ring"), Vector3.UP, (int(s["shadow"][0]) - 2) * 30.0, animated, 0.35)
 	_rot(part("shadow_lock", "sculpture_rod"), Vector3.BACK, (int(s["shadow"][1]) - 2) * 30.0, animated, 0.35)
@@ -314,6 +317,9 @@ func set_power_emissives(on: bool) -> void:
 	var dial := part("radio", "radio_dial") as MeshInstance3D
 	if dial:
 		ModelUtil.set_emission(dial, on)
+	var spot_bulb := part("shadow_lock", "spot_bulb") as MeshInstance3D
+	if spot_bulb:
+		ModelUtil.set_emission(spot_bulb, on, Color("fff1d6"), 4.0)
 	var red_bulb := part("room_lab7", "darkroom_bulb") as MeshInstance3D
 	if red_bulb:
 		ModelUtil.set_emission(red_bulb, on, Color("ff2a1a"), 3.0)
