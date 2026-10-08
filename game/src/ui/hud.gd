@@ -273,7 +273,12 @@ func caption(text: String, seconds: float = 3.5) -> void:
 
 func set_view(id: String, is_root: bool, caption_key: String) -> void:
 	_back_btn.visible = not is_root or id == "darkroom"
-	_top_caption.text = tr(caption_key) if caption_key != "" else ""
+	set_caption(caption_key)
+
+
+func set_caption(caption_key: String) -> void:
+	# the key itself: the label auto-translates, so a language switch in the pause menu updates it too
+	_top_caption.text = caption_key
 
 
 func set_busy(b: bool) -> void:
@@ -828,17 +833,18 @@ func show_chapter_complete() -> void:
 		lines.append(tr("epi.shards"))
 	lines.append(tr("epi.postmark"))
 	for line in lines:
-		var l := UITheme.label(line, 28)
+		var l := UITheme.label(line, 26)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(l)
 	var stats := HBoxContainer.new()
 	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override("separation", 48)
+	stats.add_theme_constant_override("separation", 36)
 	var mins := int(GameState.play_time) / 60
 	var secs := int(GameState.play_time) % 60
 	for pair in [["ui.time", "%d:%02d" % [mins, secs]], ["ui.puzzles", "%d / %d" % [logic.solved_count(), Lab7Logic.PUZZLE_IDS.size()]],
 			["ui.hints_used", str(GameState.hints_used)], ["ui.shards", "%d / 5" % (s["shards"] as Array).size()]]:
 		var col := VBoxContainer.new()
+		col.custom_minimum_size = Vector2(230, 0) # labels wrap; without a width they collapse to one letter per line
 		var a := UITheme.label(pair[0], 22, UITheme.MUTED)
 		a.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var b := UITheme.label(pair[1], 34, UITheme.BRASS_HI)

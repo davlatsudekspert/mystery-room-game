@@ -38,6 +38,7 @@ std("M_Decal_RadioDial", {"roughness": 0.2, "emission_enabled": "false", "emissi
     "emission_energy_multiplier": 0.6, "emission_operator": 1, "emission_texture": 'ExtResource("1")'}, D + "radio_dial.jpg")
 std("M_Decal_Chalkboard", {"roughness": 0.92}, D + "chalkboard.jpg")
 std("M_Decal_Poster", {"roughness": 0.85}, D + "poster_resonance.jpg")
+std("M_Decal_Photo_Leyla", {"roughness": 0.3, "metallic_specular": 0.6}, D + "photo_3.jpg")  # glossy 1970s print
 for c in ("Crimson", "Cobalt", "Green"):
     std(f"M_Decal_VialLabel_{c}", {"roughness": 0.85}, D + f"vial_label_{c.lower()}.png")
 std("M_Decal_Photos", {"roughness": 0.6}, D + "photo_0.jpg")
@@ -58,8 +59,15 @@ std("M_Book_Gold", {"albedo_color": hexc("E3C27A"), "metallic": 1.0, "roughness"
 FAB = "res://assets/textures/fabric/"
 std("M_Grille_Fabric", {"albedo_color": hexc("B8A27A"), "roughness": 0.95, "uv1_scale": "Vector3(6, 6, 6)"},
     FAB + "albedo.jpg")
-std("M_Cork", {"albedo_color": hexc("9C7650"), "roughness": 0.95})
+# M_Cork is textured (procedural cork in tools/textures/fetch_textures.py)
 std("M_String_Red", {"albedo_color": hexc("A0201C"), "roughness": 0.8})
 std("M_Felt", {"albedo_color": hexc("3A3A3A"), "roughness": 1.0})
 std("M_Echo_Fallback", {"albedo_color": hexc("CFF6FF", 0.3), "transparency": 1, "shading_mode": 0})
+# props agent: shadow lock emblem, poster frame, banker's lamp, chalk, darkroom bottles
+std("M_Decal_Emblem", {"transparency": 2, "alpha_scissor_threshold": 0.4, "roughness": 0.95}, D + "wall_emblem.png")
+std("M_Lacquer_Black", {"albedo_color": hexc("141211"), "roughness": 0.32, "metallic_specular": 0.55})
+std("M_Glass_Green", {"albedo_color": hexc("16472A"), "roughness": 0.07, "metallic_specular": 0.75, "rim_enabled": "true",
+    "rim": 0.25, "rim_tint": 0.6})
+std("M_Chalk", {"albedo_color": hexc("ECE6D6"), "roughness": 1.0})
+std("M_Glass_Amber", {"albedo_color": hexc("5A2A0C", 0.82), "transparency": 1, "roughness": 0.08, "metallic_specular": 0.7})
 print("extra materials written to", OUT)

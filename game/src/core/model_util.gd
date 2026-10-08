@@ -4,6 +4,7 @@ extends RefCounted
 ## and builds tap colliders: a box per interactive part (IA_*) and trimesh blockers for big static meshes.
 
 const MAT_DIR := "res://assets/materials/%s.tres"
+const LARGE_PART_M := 0.15
 static var _mat_cache: Dictionary = {}
 
 
@@ -58,8 +59,9 @@ static func find_meshes(root: Node) -> Array[MeshInstance3D]:
 	return out
 
 
-## mode "parts": boxes for IA_* meshes, convex-ish boxes for other meshes (tap blockers).
-## mode "static": trimesh for every mesh (room shell).
+## Small interactive parts (IA_*) get a snug box (a generous, stable tap target). Everything else gets
+## an exact trimesh so furniture never swallows taps meant for objects sitting on or inside it.
+## mode "static": the same, used for the room shell.
 static func build_colliders(root: Node3D, mode: String) -> void:
 	for mi: MeshInstance3D in find_meshes(root):
 		if mi.mesh == null:
@@ -69,17 +71,20 @@ static func build_colliders(root: Node3D, mode: String) -> void:
 		body.collision_layer = 1
 		body.collision_mask = 0
 		var shape := CollisionShape3D.new()
-		if mode == "static" and not mi.name.begins_with("IA_"):
-			shape.shape = mi.mesh.create_trimesh_shape()
-		else:
+		var is_ia := mi.name.begins_with("IA_")
+		# Large interactive parts (drawers, doors, panels) get an exact trimesh too, so their bounding box
+		# never covers the small controls mounted on them (drawer digits, knobs, keyholes).
+		if is_ia and mi.mesh.get_aabb().get_longest_axis_size() <= LARGE_PART_M:
 			var aabb := mi.mesh.get_aabb()
 			var box := BoxShape3D.new()
-			box.size = (aabb.size + Vector3.ONE * 0.01).max(Vector3.ONE * 0.012)
+			box.size = (aabb.size + Vector3.ONE * 0.004).max(Vector3.ONE * 0.012)
 			shape.shape = box
 			shape.position = aabb.get_center()
+		else:
+			shape.shape = mi.mesh.create_trimesh_shape()
 		body.add_child(shape)
 		mi.add_child(body)
-		body.set_meta("part", str(mi.name) if mi.name.begins_with("IA_") else "")
+		body.set_meta("part", str(mi.name) if is_ia else "")
 
 
 ## Find a node by exact name anywhere below root (GLB hierarchies can nest).

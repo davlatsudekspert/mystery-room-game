@@ -80,7 +80,7 @@ H = {
 "tune": [
     ("Strand left his beacon's band on his board.", "Странд оставил на доске волну своего маяка.", "Strand mayogʻining toʻlqinini dokasida qoldirgan."),
     ("The chalkboard says λ = 41 m. The radio dial is marked in metres too.", "На доске написано λ = 41 м. Шкала радио тоже размечена в метрах.", "Dokada λ = 41 m deb yozilgan. Radio shkalasi ham metrlarda belgilangan."),
-    ("Turn the dial until the needle sits on the 41 m band.", "Крутите ручку, пока стрелка не встанет на отметку 41 м.", "Koʻrsatkich 41 m belgisiga kelguncha murvatni buring."),
+    ("Drag the knob (or tap its left side) until the needle sits on 41 m.", "Крутите ручку пальцем (или нажимайте её левую сторону), пока стрелка не встанет на 41 м.", "Murvatni barmoq bilan buring (yoki chap tomoniga bosing), koʻrsatkich 41 m ga kelsin."),
 ],
 "books": [
     ("The beacon repeats three numbers.", "Маяк повторяет три числа.", "Mayoq uchta sonni takrorlaydi."),
@@ -124,7 +124,7 @@ H = {
 ],
 "mirrors": [
     ("The door has a glass eye made for light.", "У двери есть стеклянный глаз — для света.", "Eshikning yorugʻlik uchun shisha koʻzi bor."),
-    ("Turn the mirrors to guide the beam around the room.", "Поворачивайте зеркала, чтобы провести луч по комнате.", "Nurni xona boʻylab yoʻnaltirish uchun koʻzgularni buring."),
+    ("Each tap turns a mirror one notch (45°). Guide the beam around the room.", "Каждое нажатие поворачивает зеркало на одно деление (45°). Проведите луч по комнате.", "Har bosish koʻzguni bir pogʻona (45°) buradi. Nurni xona boʻylab yoʻnaltiring."),
     ("First stand: send the beam toward the window wall. Second stand: send it into the door's eye.", "Первая стойка: направьте луч к стене с окном. Вторая — в глаз двери.", "Birinchi tirgak: nurni deraza devoriga yoʻnaltiring. Ikkinchisi: eshik koʻziga."),
 ],
 "finale": [

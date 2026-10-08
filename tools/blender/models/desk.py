@@ -6,7 +6,7 @@ East side = model +X (Godot +X): carved rosette, secret panel, keyhole, hidden c
 Interactive parts (separate objects, origin at the pivot):
   IA_drawer_top        centre drawer; origin at its front-bottom-centre (drawer-front face, bottom
                        edge); slides out along -Y Blender / +Z Godot.
-  IA_drawer_wheel_0..3 4 brass digit wheels (left -> right), CHILDREN of IA_drawer_top. Axle = local X,
+  IA_drawer_digit_0..3 4 brass digit wheels (left -> right), CHILDREN of IA_drawer_top. Axle = local X,
                        origin at the axle centre. Digit 0 faces the viewer at rest; rotation.x = +k*36deg
                        (Godot and Blender alike) shows digit k.
   IA_rosette           carved rosette on the east side, upper rear; origin at the centre of its base
@@ -293,7 +293,7 @@ def centre_drawer():
     wheels = []
     y_axle = DFY - 0.0035 - 0.009 + WHEEL_R          # wheel front 9 mm proud of the plate
     for k in range(4):
-        w = A.combo_wheel(f"IA_drawer_wheel_{k}", WHEEL_R, WHEEL_W, chamfer=0.0016, segments=30)
+        w = A.combo_wheel(f"IA_drawer_digit_{k}", WHEEL_R, WHEEL_W, chamfer=0.0016, segments=30)
         w.location = ((k - 1.5) * WHEEL_PITCH, y_axle, WHEEL_Z)
         w["digit_step_deg"] = 36.0
         w["rotation_axis"] = "local X; rotation = +digit*36deg shows that digit"

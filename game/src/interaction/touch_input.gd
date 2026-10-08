@@ -5,7 +5,7 @@ extends Node
 
 signal tapped(pos: Vector2)
 signal dragged(relative: Vector2, pos: Vector2)
-signal drag_started(pos: Vector2)
+signal drag_started(pos: Vector2) # where the finger first touched, not where the drag threshold was crossed
 signal drag_ended(pos: Vector2)
 signal pinched(factor: float)
 signal two_finger_tap
@@ -63,7 +63,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif not _multi:
 			if not _dragging and float(tch["moved"]) >= TAP_MAX_MOVE * scale:
 				_dragging = true
-				drag_started.emit(d.position)
+				drag_started.emit(tch["start"])
 			if _dragging:
 				dragged.emit(d.relative, d.position)
 		get_viewport().set_input_as_handled()

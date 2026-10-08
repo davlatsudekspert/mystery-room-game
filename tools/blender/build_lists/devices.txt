@@ -10,3 +10,4 @@ breaker_handle.py
 letter.py
 radio_valve.py
 mirror_item.py
+photo_print.py

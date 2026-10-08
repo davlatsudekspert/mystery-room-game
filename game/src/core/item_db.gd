@@ -12,7 +12,7 @@ const ITEMS := {
 	"strand_letter": {"model": "letter", "doc": "letter"},
 	"radio_valve": {"model": "radio_valve"},
 	"breaker_handle": {"model": "breaker_handle"},
-	"leyla_photo": {"model": "letter", "doc": "photo"},
+	"leyla_photo": {"model": "photo_print", "doc": "photo"},
 	"mirror_item": {"model": "mirror_item"},
 }
 

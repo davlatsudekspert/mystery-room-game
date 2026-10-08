@@ -65,8 +65,16 @@ const HOTSPOT_CAPTION := {
 	"safe": "obj.safe", "panel": "obj.panel", "coat": "obj.coat", "mirror_a": "obj.mirror_a",
 	"mirror_b": "obj.mirror_b", "lock": "obj.lock", "evidence": "obj.evidence", "shadow": "obj.shadow",
 	"window": "obj.window", "vials": "obj.vials", "drawer": "obj.drawer", "books": "obj.bookshelf",
-	"emblem": "obj.emblem", "cabinet": "obj.cabinet", "darkroom": "obj.darkroom", "desk_side": "obj.desk",
+	"emblem": "obj.emblem", "cabinet": "obj.cabinet", "darkroom": "obj.darkroom", "sculpture": "obj.shadow",
+	"projector_rings": "obj.projector", "desk_side": "obj.desk",
 	"radiator": "obj.radiator", "drawing": "obj.drawing",
+}
+
+const BOOKCASE_HINGE := Vector3(-2.74, 0.0, -1.15)
+const SHARD_SPOTS := {
+	"under_desk": Vector3(-0.85, 0.011, -2.25), "bookshelf_top": Vector3(-2.85, 2.16, -0.3),
+	"radiator": Vector3(1.78, 0.05, -2.33), "coat_pocket": Vector3(2.37, 1.07, -1.98),
+	"darkroom": Vector3(-4.55, 0.011, 0.15),
 }
 
 var logic: Lab7Logic
@@ -85,6 +93,9 @@ var _uv_target := ""
 var _ending := false
 var capture_mode := false # set by QA capture script: no intro, no input
 var _darkroom_seen := false
+var _shard_nodes: Dictionary = {} # shard id -> Node3D
+var _knob_drag := false # a drag that started on the radio tuning knob turns it
+var _knob_acc := 0.0
 
 
 func _ready() -> void:
@@ -104,6 +115,7 @@ func _ready() -> void:
 	_build_hud()
 	GameState.events.connect(_on_events)
 	visuals.apply_state(false)
+	_update_shards()
 	_update_lighting(false)
 	cam.go("lab", true)
 	AudioManager.music("music_lab", 4.0)
@@ -234,11 +246,7 @@ func _build_uv_ink() -> void:
 
 
 func _build_shards() -> void:
-	var spots := {
-		"under_desk": Vector3(-0.85, 0.011, -2.25), "bookshelf_top": Vector3(-2.85, 2.16, -0.3),
-		"radiator": Vector3(1.78, 0.05, -2.33), "coat_pocket": Vector3(2.37, 1.07, -1.98),
-		"darkroom": Vector3(-4.55, 0.011, 0.15),
-	}
+	var spots := SHARD_SPOTS
 	for id: String in spots:
 		var shard := ModelUtil.spawn("lumen_shard", self, Transform3D(Basis(Vector3.UP, randf() * TAU), spots[id]), "none")
 		var node: Node3D = shard
@@ -261,6 +269,7 @@ func _build_shards() -> void:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		node.name = "Shard_" + id
 		node.set_meta("shard", id)
+		_shard_nodes[id] = node
 		_add_tap_area(node, Vector3(0.12, 0.12, 0.12), "", "Shard_" + id, false)
 
 
@@ -410,14 +419,30 @@ func _hinge_bookcase() -> void:
 	var pivot := Node3D.new()
 	pivot.name = "BookcasePivot"
 	add_child(pivot)
-	pivot.global_position = Vector3(-2.74, 0.0, -1.15)
+	pivot.global_position = BOOKCASE_HINGE
 	shelf.reparent(pivot, true)
 	models["bookshelf_pivot"] = pivot
+	# the Lumen shard lying on top of the bookcase rides along when it swings open
+	var shard: Node3D = _shard_nodes.get("bookshelf_top")
+	if shard:
+		shard.reparent(pivot, true)
+	_frame_open_bookcase()
+
+
+## Once the bookcase stands open, the views that looked at it frame the hidden doorway from a spot
+## outside the swing arc (the "books" close-up sits inside it), and the shelf-top view follows the shelf.
+func _frame_open_bookcase() -> void:
+	if not logic.state["shelf_open"]:
+		return
+	cam.add_view("bookshelf", Vector3(-1.2, 1.45, 0.15), Vector3(-3.3, 1.2, -0.7), 60.0)
+	cam.add_view("books", Vector3(-1.2, 1.45, 0.15), Vector3(-3.3, 1.2, -0.7), 60.0)
+	var top := BOOKCASE_HINGE + Basis(Vector3.UP, deg_to_rad(Lab7Visuals.SHELF_OPEN_DEG)) * (SHARD_SPOTS["bookshelf_top"] - BOOKCASE_HINGE)
+	cam.add_view("bookshelf_top", top + Vector3(0.45, 0.4, 0.55), top, 48.0)
 
 
 ## Only draw the darkroom while it can be seen (perf on phones; no occlusion culling needed).
 func _update_room_visibility() -> void:
-	var dark_visible: bool = logic.state["shelf_open"] or cam.current() in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor"]
+	var dark_visible: bool = logic.state["shelf_open"] or cam.current() in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor", "sculpture"]
 	for id in ["shadow_lock", "darkroom_props", "evidence_board"]:
 		var n: Node3D = models.get(id)
 		if n:
@@ -447,6 +472,7 @@ func _build_views() -> void:
 	V.call("bookshelf_top", Vector3(-2.15, 2.5, -0.55), Vector3(-2.9, 2.12, -0.5), 48.0)
 	V.call("chalkboard", Vector3(-1.15, 1.55, 1.05), Vector3(-3.0, 1.5, 1.05), 50.0)
 	V.call("projector", Vector3(-1.45, 1.45, 1.05), Vector3(-2.2, 1.12, 1.6), 46.0)
+	V.call("projector_rings", Vector3(-2.22, 1.27, 1.2), Vector3(-2.22, 1.14, 1.6), 30.0)
 	V.call("bench", Vector3(-0.3, 1.65, 1.15), Vector3(-0.3, 1.0, 2.25), 56.0)
 	V.call("vials", Vector3(-0.9, 1.18, 1.62), Vector3(-0.9, 1.0, 2.12), 32.0)
 	V.call("radio", Vector3(0.55, 1.22, 1.62), Vector3(0.55, 1.05, 2.22), 36.0)
@@ -461,6 +487,7 @@ func _build_views() -> void:
 	V.call("radiator", Vector3(1.5, 0.95, -1.65), Vector3(1.6, 0.35, -2.45), 50.0)
 	V.call("evidence", Vector3(-3.45, 1.5, -0.6), Vector3(-4.8, 1.5, -0.6), 56.0)
 	V.call("shadow", Vector3(-3.45, 1.6, 0.32), Vector3(-4.0, 1.38, -1.45), 56.0)
+	V.call("sculpture", Vector3(-3.58, 1.3, -0.25), Vector3(-4.0, 1.08, -0.6), 40.0)
 	V.call("emblem", Vector3(-4.0, 1.5, -0.98), Vector3(-4.0, 1.5, -1.6), 50.0)
 	V.call("cabinet", Vector3(-3.95, 0.95, -0.95), Vector3(-4.0, 0.55, -1.58), 46.0)
 	V.call("darkroom_floor", Vector3(-3.9, 0.9, -0.3), Vector3(-4.5, 0.0, 0.2), 55.0)
@@ -473,6 +500,8 @@ func _build_input() -> void:
 	add_child(touch)
 	touch.tapped.connect(_on_tap)
 	touch.dragged.connect(_on_drag)
+	touch.drag_started.connect(_on_drag_started)
+	touch.drag_ended.connect(func(_p: Vector2) -> void: _knob_drag = false)
 	touch.pinched.connect(func(f: float) -> void: cam.zoom(f))
 	touch.two_finger_tap.connect(go_back)
 
@@ -494,7 +523,28 @@ func go_back() -> void:
 		logic.select_item("")
 
 
+const KNOB_PX_PER_STEP := 9.0 # drag distance per dial unit (≈ 1 cm on a phone)
+
+
+func _on_drag_started(pos: Vector2) -> void:
+	_knob_drag = false
+	_knob_acc = 0.0
+	if cam.transitioning or cam.current() not in ["radio", "radio_hatch"]:
+		return
+	var hit := _raycast(pos)
+	if not hit.is_empty() and _resolve(hit)["part"] == "IA_tuning_knob":
+		_knob_drag = true
+
+
 func _on_drag(rel: Vector2, pos: Vector2) -> void:
+	if _knob_drag:
+		# right / up turns clockwise (higher frequency), like a real tuning knob
+		_knob_acc += (rel.x - rel.y) / (KNOB_PX_PER_STEP * maxf(1.0, DisplayServer.screen_get_scale()))
+		var steps := int(_knob_acc)
+		if steps != 0:
+			_knob_acc -= steps
+			logic.step_dial(steps)
+		return
 	if logic.selected == "uv_lamp" and not cam.is_root():
 		_uv_aim = pos
 		return
@@ -525,16 +575,18 @@ func _raycast(screen: Vector2) -> Dictionary:
 	var first_d := from.distance_to(hits[0]["position"])
 	var best: Dictionary = hits[0]
 	var best_vol := INF
+	var best_d := INF
 	for h in hits:
 		var d := from.distance_to(h["position"])
 		if d - first_d > 0.18:
 			break
 		var col: Node = h["collider"]
-		var part := str(col.get_meta("part", ""))
-		if part == "":
+		if str(col.get_meta("part", "")) == "":
 			continue
 		var vol := _collider_volume(col)
-		if vol < best_vol:
+		if best_d == INF or (d - best_d < 0.03 and vol < best_vol):
+			if best_d == INF:
+				best_d = d
 			best_vol = vol
 			best = h
 	return best
@@ -609,7 +661,8 @@ func _in_reach(hotspot: String) -> bool:
 		return true
 	var deeper := {
 		"desk": ["drawer", "clock", "desk_side", "under_desk"], "bookshelf": ["books", "bookshelf_top"],
-		"bench": ["vials", "radio", "radio_hatch"], "door": ["lock"], "shadow": ["emblem", "cabinet"],
+		"bench": ["vials", "radio", "radio_hatch"], "door": ["lock"], "shadow": ["emblem", "cabinet", "sculpture"],
+		"projector": ["projector_rings"],
 		"radio": ["radio_hatch"],
 	}
 	return (deeper.get(v, []) as Array).has(cur)
@@ -690,7 +743,7 @@ func _interact(hs: String, part: String, r: Dictionary) -> void:
 func _interact_desk(part: String, r: Dictionary) -> void:
 	var s := logic.state
 	var cur := cam.current()
-	if part.begins_with("IA_drawer_wheel_"):
+	if part.begins_with("IA_drawer_digit_"):
 		if cur != "drawer":
 			cam.go("drawer")
 			return
@@ -836,12 +889,15 @@ func _interact_panel(part: String) -> void:
 
 
 func _interact_projector(part: String) -> void:
-	if cam.current() != "projector":
+	if cam.current() not in ["projector", "projector_rings"]:
 		cam.go("projector")
 		return
 	var s := logic.state
 	if part.begins_with("IA_ring_"):
-		logic.turn_ring(int(part.substr(8)))
+		if cam.current() != "projector_rings":
+			cam.go("projector_rings")
+		else:
+			logic.turn_ring(int(part.substr(8)))
 	elif part == "IA_projector_lever":
 		logic.pull_projector_lever()
 	elif part in ["IA_lens_socket", "lens_installed"] and s["lens_at"] == "projector":
@@ -856,24 +912,22 @@ func _interact_mirror(hs: String, part: String, r: Dictionary) -> void:
 	if which == 1 and not logic.state["mirror_b_mounted"]:
 		hud.call("message", tr("obj.mirror_b"))
 		return
-	var mount := ModelUtil.find(models.get("mirror_stand" if which == 0 else "mirror_stand_b"), "IA_mirror_mount")
-	var right := true
-	if mount != null:
-		right = cam.unproject_position(r["pos"]).x >= cam.unproject_position(mount.global_position).x
-	logic.rotate_mirror(which, 1 if right else -1)
+	# One tap = one 45° click, always the same way: predictable on a phone (a left/right-half rule
+	# flips as the mirror itself turns).
+	logic.rotate_mirror(which, 1)
 
 
 func _interact_shadow(part: String) -> void:
 	var s := logic.state
 	var cur := cam.current()
 	if part == "IA_ring_knob" or part == "sculpture_ring":
-		if cur != "shadow":
-			cam.go("shadow")
+		if cur != "sculpture":
+			cam.go("sculpture")
 		else:
 			logic.turn_sculpture(0)
 	elif part == "IA_rod_knob" or part == "sculpture_rod":
-		if cur != "shadow":
-			cam.go("shadow")
+		if cur != "sculpture":
+			cam.go("sculpture")
 		else:
 			logic.turn_sculpture(1)
 	elif part in ["IA_emblem_socket", "socket_lens"]:
@@ -942,13 +996,25 @@ func _process(delta: float) -> void:
 
 
 # ====================================================================== events → feedback
+func _view_caption(id: String) -> String:
+	## Captions that describe a state ("bracket is empty", "sealed", "locked") follow the state.
+	var s := logic.state
+	if id == "mirror_b" and s["mirror_b_mounted"]:
+		return "obj.mirror_a"
+	if id == "door" and s["door_open"]:
+		return "obj.door_open"
+	if id == "cabinet" and s["cabinet_open"]:
+		return "obj.cabinet_open"
+	return HOTSPOT_CAPTION.get(id, "")
+
+
 func _on_view_changed(id: String) -> void:
-	hud.call("set_view", id, cam.is_root(), HOTSPOT_CAPTION.get(id, ""))
+	hud.call("set_view", id, cam.is_root(), _view_caption(id))
 	var fill: OmniLight3D = lights["focus_fill"]
 	var bright_views := ["bookshelf", "books", "projector", "chalkboard", "coat", "filing", "mirror_a", "mirror_b", "lock"]
 	var e := 0.0 if cam.is_root() else (1.5 if id in bright_views else 1.0)
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
-	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor"]
+	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor", "sculpture"]
 	if id == "darkroom" and not _darkroom_seen:
 		_darkroom_seen = true
 		get_tree().create_timer(1.0).timeout.connect(func() -> void: hud.call("caption", tr("doc.darkroom_note"), 7.0))
@@ -963,6 +1029,21 @@ func _on_events(ev: Array[String]) -> void:
 		_feedback(e)
 	visuals.apply_state(true)
 	_update_room_visibility()
+	_update_shards()
+	hud.call("set_caption", _view_caption(cam.current()))
+
+
+## Collected shards leave the room (also after loading a save); their tap areas go with them.
+func _update_shards() -> void:
+	var got: Array = logic.state["shards"]
+	for id: String in _shard_nodes:
+		var n: Node3D = _shard_nodes[id]
+		var keep := not got.has(id)
+		if n.visible != keep:
+			n.visible = keep
+			n.process_mode = Node.PROCESS_MODE_INHERIT if keep else Node.PROCESS_MODE_DISABLED
+			for body in n.find_children("*", "StaticBody3D", true, false):
+				(body as StaticBody3D).collision_layer = 1 if keep else 0
 
 
 func _feedback(e: String) -> void:
@@ -1053,6 +1134,11 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("rosette_press", -2.0, 0.85)
 			visuals.tilt_book(int(arg))
 		"shelf_opened":
+			_frame_open_bookcase()
+			if cam.current() == "books":
+				cam.back() # to the re-framed "bookshelf" view, clear of the swinging case
+			elif cam.current() == "bookshelf":
+				cam.refresh()
 			AudioManager.sfx("secret_panel", 2.0, 0.6)
 			AudioManager.sfx("door_open", -6.0, 1.3)
 			hud.call("message", tr("msg.shelf_opened"))
@@ -1193,6 +1279,7 @@ func _play_ending() -> void:
 	warm.tween_property(lights["desk_lamp"], "light_energy", 2.6, 1.2)
 	var echo: Node3D = models.get("echo_leyla")
 	hud.call("caption", tr("outro.echo"))
+	visuals.flashback_1979(true)
 	if echo:
 		echo.visible = true
 		visuals.fade_echo(echo, 0.0, 1.0, 1.2)
@@ -1209,6 +1296,7 @@ func _play_ending() -> void:
 	cool.tween_property(env, "ambient_light_color", Color("2f3a38"), 1.6)
 	cool.tween_property(env, "ambient_light_energy", 0.55, 1.6)
 	cool.tween_property(lights["desk_lamp"], "light_energy", 1.3, 1.6)
+	visuals.flashback_1979(false)
 	await get_tree().create_timer(1.6).timeout
 	cam.go("door")
 	await get_tree().create_timer(0.7).timeout

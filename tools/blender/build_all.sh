@@ -12,4 +12,5 @@ for list in tools/blender/build_lists/*.txt; do
     fi
   done < "$list"
 done
+python3 tools/blender/check_glb_names.py || fail=1
 exit $fail

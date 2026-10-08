@@ -6,6 +6,10 @@ var out_dir := "/tmp"
 
 
 func _ready() -> void:
+	_run.call_deferred() # the root is still busy adding children during _ready
+
+
+func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
@@ -13,7 +17,14 @@ func _ready() -> void:
 	for lang in ["en", "ru", "uz"]:
 		TranslationServer.set_locale(lang)
 		Settings.values["text_scale"] = 1.0
-		# --- main menu, settings, chapters
+		# --- first-launch language picker, main menu, settings, chapters
+		if lang == "en": # the picker shows all three languages at once
+			var picker: Control = (load("res://src/ui/language_select.tscn") as PackedScene).instantiate()
+			get_tree().root.add_child(picker)
+			await _settle(1.0)
+			await _shot("language_select")
+			picker.queue_free()
+			await _settle(0.2)
 		var menu: Control = (load("res://src/ui/main_menu.tscn") as PackedScene).instantiate()
 		get_tree().root.add_child(menu)
 		await _settle(1.5)
@@ -52,6 +63,14 @@ func _ready() -> void:
 		hud.call("show_document", "letter")
 		await _settle(0.5)
 		await _shot("%s_letter" % lang)
+		hud.call("_close_overlay")
+		hud.call("show_choice")
+		await _settle(0.8)
+		await _shot("%s_choice" % lang)
+		hud.call("_close_overlay")
+		hud.call("show_chapter_complete")
+		await _settle(1.2)
+		await _shot("%s_chapter_complete" % lang)
 		hud.call("_close_overlay")
 		Settings.values["text_scale"] = 1.3
 		hud.call("show_hint")

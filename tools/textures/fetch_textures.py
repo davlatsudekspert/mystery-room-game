@@ -129,6 +129,9 @@ TEXTURED = [
     dict(folder="chalkboard", material="M_Chalkboard",
          source=("procedural", "chalkboard", None), tile_m=1.0, size=1024,
          albedo=None, rough=None, metal=0.0),
+    dict(folder="cork", material="M_Cork",
+         source=("procedural", "cork", None), tile_m=0.5, size=1024,
+         albedo=None, rough=None, metal=0.0),
     dict(folder="bakelite", material="M_Bakelite",
          source=("ambientcg", "Plastic012B", "1K"), tile_m=0.5, size=1024, normal_strength=0.5,
          albedo=dict(target="#23170F", contrast=1.0, sat=1.0,
@@ -417,7 +420,32 @@ def procedural_chalkboard(size: int) -> dict[str, np.ndarray]:
                 normal=normal, ao=ao, metal=np.zeros((size, size), np.float32))
 
 
-PROCEDURAL = {"chalkboard": procedural_chalkboard}
+def procedural_cork(size: int) -> dict[str, np.ndarray]:
+    """Pressed cork board: warm granules, dark pits, light flecks, old pin holes (tileable, 0.5 m per repeat)."""
+    gran = tile_noise(size, 0.006, 41)                           # ~3 mm granules
+    fine = tile_noise(size, 0.0022, 42)                          # fine grain inside the granules
+    tone = fbm(size, 0.12, 43, octaves=3)                        # board-scale tone drift
+    pits = smoothstep(0.80, 0.97, 1.0 - tile_noise(size, 0.003, 44))
+    flecks = smoothstep(0.84, 0.98, tile_noise(size, 0.0045, 45))
+    holes = smoothstep(0.975, 1.0, tile_noise(size, 0.0011, 46))  # old pin holes
+    base = s2l(hex_rgb("#9C7650"))
+    dark = s2l(hex_rgb("#4E3320"))
+    light = s2l(hex_rgb("#C7A27A"))
+    shade = 0.72 + 0.45 * gran + 0.18 * (fine - 0.5) + 0.16 * (tone - 0.5)
+    lin = base[None, None, :] * shade[..., None]
+    lin = lin * (1 - 0.75 * pits[..., None]) + dark * 0.75 * pits[..., None]
+    lin = lin * (1 - 0.55 * flecks[..., None]) + light * 0.55 * flecks[..., None]
+    lin = lin * (1 - 0.8 * holes[..., None]) + dark * 0.4 * holes[..., None]
+    albedo = l2s(lin)
+    height = 0.55 * gran + 0.25 * fine - 0.6 * pits - 0.8 * holes
+    rough = np.clip(0.9 + 0.06 * (fine - 0.5) + 0.05 * pits, 0.8, 1.0)
+    ao = np.clip(1.0 - 0.35 * pits - 0.5 * holes, 0, 1)
+    return dict(albedo=albedo.astype(np.float32), rough=rough.astype(np.float32),
+                normal=normal_from_height(height, strength=2.2), ao=ao.astype(np.float32),
+                metal=np.zeros((size, size), np.float32))
+
+
+PROCEDURAL = {"chalkboard": procedural_chalkboard, "cork": procedural_cork}
 
 
 # ---------------------------------------------------------------------------

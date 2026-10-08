@@ -143,6 +143,7 @@ doc.photo,"Lab 7, spring 1977.\nFor Mira — so she remembers my face.","Лаб.
 doc.darkroom_note,Only light and shadow may draw the Institute's mark.\nThe crystal remembers what falls on it.,"Знак института могут нарисовать только свет и тень.\nКристалл помнит то, что на него падает.",Institut belgisini faqat yorugʻlik va soya chiza oladi.\nBillur ustiga tushgan narsani eslab qoladi.
 doc.evidence,"Forty-one photographs. Forty-one names.\nA clipping, 1979: “Institute closed after ventilation accident.”\nA clipping, 1998: “Former researcher seen at the sealed Institute.”","Сорок одна фотография. Сорок одно имя.\nВырезка, 1979: «Институт закрыт после аварии вентиляции».\nВырезка, 1998: «Бывшую сотрудницу видели у закрытого института».","Qirq bitta surat. Qirq bitta ism.\nGazeta qirqimi, 1979: «Shamollatish avariyasidan soʻng institut yopildi».\nGazeta qirqimi, 1998: «Sobiq xodima yopiq institut yonida koʻrilgan»."
 obj.door,Laboratory door — sealed by a magnetic lock,Дверь лаборатории — заперта магнитным замком,Laboratoriya eshigi — magnit qulf bilan yopilgan
+obj.door_open,Laboratory door — open,Дверь лаборатории — открыта,Laboratoriya eshigi — ochiq
 obj.desk,Leyla's desk,Стол Лейлы,Leylaning stoli
 obj.drawer,Drawer lock — four brass wheels,Замок ящика — четыре латунных колеса,Tortma qulfi — toʻrtta jez gʻildirak
 obj.clock,"A flip clock, stopped",Перекидные часы — остановились,Varaqli soat — toʻxtab qolgan
@@ -167,6 +168,7 @@ obj.evidence,Leyla's evidence wall,Стена улик Лейлы,Leylaning dali
 obj.shadow,Shadow sculpture — a brass ring and a rod,Теневая скульптура — латунное кольцо и стержень,Soya haykalchasi — jez halqa va sterjen
 obj.emblem,"The Institute's mark, with a socket at its heart",Знак института с гнездом в центре,Markazida uyasi bor institut belgisi
 obj.cabinet,A small locked cabinet,Маленький запертый шкафчик,Kichik qulflangan javoncha
+obj.cabinet_open,"A small cabinet, now unlocked",Маленький шкафчик — теперь открыт,Kichik javoncha — endi ochiq
 obj.filing,"Filing cabinet — staff records, mostly empty","Картотека — личные дела, почти пустая","Kartoteka — xodimlar hujjatlari, deyarli boʻsh"
 obj.radiator,A cold cast-iron radiator,Холодная чугунная батарея,Sovuq choʻyan batareya
 msg.nothing,Nothing happens.,Ничего не происходит.,Hech narsa boʻlmadi.
@@ -264,7 +266,7 @@ hint.valve.2,Open its hatch: a valve is missing.,Откройте крышку: 
 hint.valve.3,Select the radio valve from the safe and tap the radio.,Выберите радиолампу из сейфа и нажмите на радио.,Seyfdan olingan radiolampani tanlang va radioga bosing.
 hint.tune.1,Strand left his beacon's band on his board.,Странд оставил на доске волну своего маяка.,Strand mayogʻining toʻlqinini dokasida qoldirgan.
 hint.tune.2,The chalkboard says λ = 41 m. The radio dial is marked in metres too.,На доске написано λ = 41 м. Шкала радио тоже размечена в метрах.,Dokada λ = 41 m deb yozilgan. Radio shkalasi ham metrlarda belgilangan.
-hint.tune.3,Turn the dial until the needle sits on the 41 m band.,"Крутите ручку, пока стрелка не встанет на отметку 41 м.",Koʻrsatkich 41 m belgisiga kelguncha murvatni buring.
+hint.tune.3,Drag the knob (or tap its left side) until the needle sits on 41 m.,"Крутите ручку пальцем (или нажимайте её левую сторону), пока стрелка не встанет на 41 м.","Murvatni barmoq bilan buring (yoki chap tomoniga bosing), koʻrsatkich 41 m ga kelsin."
 hint.books.1,The beacon repeats three numbers.,Маяк повторяет три числа.,Mayoq uchta sonni takrorlaydi.
 hint.books.2,"Count its pulses: 2, 6, 3. Leyla's encyclopedia “remembers them”.","Посчитайте импульсы: 2, 6, 3. Энциклопедия Лейлы «их помнит».","Impulslarni sanang: 2, 6, 3. Leylaning ensiklopediyasi «ularni eslaydi»."
 hint.books.3,"Pull volumes II, VI, then III.","Потяните тома II, VI, затем III.","II, VI, soʻng III jildlarni torting."
@@ -290,7 +292,7 @@ hint.mount_mirror.1,One mirror stand is empty.,Одна зеркальная с�
 hint.mount_mirror.2,You carry Strand's round mirror.,У вас есть круглое зеркало Странда.,Sizda Strandning dumaloq koʻzgusi bor.
 hint.mount_mirror.3,Select the round mirror and tap the empty stand near the door.,Выберите зеркало и нажмите на пустую стойку у двери.,Dumaloq koʻzguni tanlang va eshik yonidagi boʻsh tirgakka bosing.
 hint.mirrors.1,The door has a glass eye made for light.,У двери есть стеклянный глаз — для света.,Eshikning yorugʻlik uchun shisha koʻzi bor.
-hint.mirrors.2,Turn the mirrors to guide the beam around the room.,"Поворачивайте зеркала, чтобы провести луч по комнате.",Nurni xona boʻylab yoʻnaltirish uchun koʻzgularni buring.
+hint.mirrors.2,Each tap turns a mirror one notch (45°). Guide the beam around the room.,Каждое нажатие поворачивает зеркало на одно деление (45°). Проведите луч по комнате.,Har bosish koʻzguni bir pogʻona (45°) buradi. Nurni xona boʻylab yoʻnaltiring.
 hint.mirrors.3,First stand: send the beam toward the window wall. Second stand: send it into the door's eye.,Первая стойка: направьте луч к стене с окном. Вторая — в глаз двери.,Birinchi tirgak: nurni deraza devoriga yoʻnaltiring. Ikkinchisi: eshik koʻziga.
 hint.finale.1,The way is open.,Путь открыт.,Yoʻl ochiq.
 hint.finale.2,Leyla's light is fading.,Свет Лейлы угасает.,Leylaning nuri soʻnmoqda.

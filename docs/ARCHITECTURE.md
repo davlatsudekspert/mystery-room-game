@@ -22,7 +22,7 @@ mystery-room-game/
 │   ├── fonts/                # font fetch + coverage checks
 │   ├── ui/                   # SVG sources for logo/icons -> PNG via Inkscape
 │   ├── run_tests.sh          # headless automated tests
-│   └── capture.sh            # Xvfb runtime screenshots for visual QA
+│   └── blender/check_glb_names.py  # rejects node names Godot treats as import hints
 └── game/                     # Godot project root
     ├── project.godot
     ├── assets/{models,textures,materials,fonts,audio,ui}
@@ -111,18 +111,20 @@ UI (Control scenes)   3D Room scene (Node3D)
 - There are no ads, subscriptions or energy systems.
 
 ## Testing
-- `tools/run_tests.sh` runs `godot --headless --path game --script res://tests/run_all.gd`, a custom zero-dependency runner. It exits non-zero on failure.
-- Test suites:
-  - logic: each puzzle, wrong inputs, full solution path
-  - no-softlock fuzz
-  - inventory consistency
-  - save/load round-trip and corruption handling
-  - localization: every key in all 3 languages, no missing placeholders, glyph coverage of fonts
-  - hints coverage
-  - settings persistence
-  - premium entitlement logic
-  - scene smoke: instantiate every scene, simulate taps
-- `tools/capture.sh` runs the real renderer under Xvfb (Vulkan lavapipe), scripts a camera tour, and saves PNG screenshots and frame-time stats to `qa/screenshots/`.
+- `tools/run_tests.sh` first checks the GLB node names (`tools/blender/check_glb_names.py`), then runs `res://tests/run_all.tscn` headless. It is a scene, so the autoloads exist. The runner is a custom zero-dependency runner and exits non-zero on failure.
+- Test suites (`game/tests/`):
+  - `test_lab7_puzzles`: each puzzle, wrong inputs, full solution path
+  - `test_no_softlock`: 300-seed random-play fuzz, then the scripted solver must still finish
+  - `test_save_load`: save/load round-trip through JSON, corrupted data falls back to defaults, saves are language-independent
+  - `test_localization`: every key in all 3 languages, placeholders, glyph coverage of the fonts
+  - `test_hints`: hint goals advance monotonically to "done" along the solution, and every goal has 3 translated levels
+  - `test_settings_premium`: settings persistence, atomic saves with backup, save/continue cycle, premium rules, hint escalation
+  - `test_layout`: button and message text fits at text scale 1.3 in EN/RU/UZ
+- `game/qa/` holds the runtime QA scenes. They run the real renderer under Xvfb (Vulkan lavapipe).
+  - `room_preview.tscn` renders review shots to `docs/previews/`.
+  - `playthrough.tscn` plays Chapter 1 by tapping the real 3D parts. It writes screenshots, draw-call and memory stats, and a report. A step that needs a logic fallback counts as a failure. `--from=pN` / `--to=pN` limit the run, and the solver plays the earlier puzzles.
+  - `ui_screens.tscn` renders the menus and overlays in EN/RU/UZ.
+  - `check_scripts.tscn` load-checks every script.
 
 ## Performance budgets (mid-range Android, e.g. Adreno 610 / Mali-G57)
 | Budget | Limit |

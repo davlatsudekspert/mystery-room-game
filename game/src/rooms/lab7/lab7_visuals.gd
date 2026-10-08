@@ -7,6 +7,9 @@ extends Node
 const WHEEL_STEP_DEG := 36.0
 const WHEEL_AXIS := Vector3.RIGHT
 const WHEEL_SIGN := 1.0
+## The player reads the lock from the seated eye line (~30° above the axle), like a desk lock with an
+## angled window, so each digit sits that far "up" the wheel; otherwise the next digit shows instead.
+const WHEEL_VIEW_TILT_DEG := 30.0
 const DRAWER_TRAVEL := 0.26
 const GEAR_SIGN := -1.0
 const LID_OPEN_DEG := -105.0
@@ -145,7 +148,7 @@ func _spawn_container_items() -> void:
 	_spawn_item("safe_letter", "letter", safe, Vector3(0.1, -0.11, -0.14), -15.0)
 	_spawn_item("safe_valve", "radio_valve", safe, Vector3(0.0, 0.08, -0.15), 0.0)
 	_spawn_item("compartment_handle", "breaker_handle", part("desk", "IA_compartment"), Vector3(-0.08, 0.03, 0.0), 90.0)
-	_spawn_item("compartment_photo", "letter", part("desk", "IA_compartment"), Vector3(-0.2, 0.025, 0.0), 0.0, 0.8)
+	_spawn_item("compartment_photo", "photo_print", part("desk", "IA_compartment"), Vector3(-0.2, 0.022, 0.0), 90.0)
 	var sl := model("shadow_lock")
 	var spot := part("shadow_lock", "cabinet_item_spot")
 	var cab := part("shadow_lock", "IA_cabinet_door")
@@ -179,7 +182,7 @@ func apply_state(animated: bool) -> void:
 	var s := logic.state
 	# P1 drawer
 	for i in 4:
-		_rot(part("desk", "IA_drawer_wheel_%d" % i), WHEEL_AXIS, WHEEL_SIGN * int(s["drawer"][i]) * WHEEL_STEP_DEG, animated, 0.12)
+		_rot(part("desk", "IA_drawer_digit_%d" % i), WHEEL_AXIS, WHEEL_SIGN * (int(s["drawer"][i]) * WHEEL_STEP_DEG - WHEEL_VIEW_TILT_DEG), animated, 0.12)
 	_slide(part("desk", "IA_drawer_top"), Vector3(0, 0, DRAWER_TRAVEL if s["drawer_open"] else 0.0), animated)
 	# P2 gear box
 	for i in 3:
@@ -532,6 +535,16 @@ func _update_beam() -> void:
 		_beam_root.add_child(d)
 		d.global_position = Vector3(2.948, y, 0.12)
 		d.global_rotation = Vector3(0, 0, deg_to_rad(90))
+
+
+## Finale flashback: "for a moment the laboratory is 1979 again" — Leyla's desk is closed up as she
+## left it (the echo sits where the open drawer would be). `false` restores the present.
+func flashback_1979(on: bool) -> void:
+	if on:
+		_slide(part("desk", "IA_drawer_top"), Vector3.ZERO, true)
+		_slide(part("desk", "IA_compartment"), Vector3.ZERO, true)
+	else:
+		apply_state(true)
 
 
 func open_door(animated: bool = true) -> void:

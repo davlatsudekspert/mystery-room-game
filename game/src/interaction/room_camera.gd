@@ -56,6 +56,14 @@ func go(id: String, instant: bool = false) -> void:
 	view_changed.emit(id)
 
 
+## Re-apply the current view after its definition changed (add_view on the same id).
+func refresh() -> void:
+	var id := current()
+	if id == "":
+		return
+	_move_to(_view_transform(id), float(views[id]["fov"]) if not views[id]["root"] else zoom_fov, false)
+
+
 func back() -> bool:
 	if stack.size() <= 1 or transitioning:
 		return false

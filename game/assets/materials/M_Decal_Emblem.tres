@@ -4,7 +4,7 @@
 
 [resource]
 resource_name = "M_Decal_Emblem"
+albedo_texture = ExtResource("1")
 transparency = 2
 alpha_scissor_threshold = 0.4
-albedo_texture = ExtResource("1")
 roughness = 0.95

@@ -80,7 +80,7 @@ Most materials are PBR built from **CC0 scanned textures** (ambientCG, Poly Have
   - room shell ≤ 10k
   - whole scene ≤ 150k
 - Textures are 1K, with 2K only for the floor and walls. Use ETC2/ASTC compression (Godot VRAM compressed).
-- Interactive parts are separate objects, named `IA_<id>` (for example `IA_drawer_wheel_0`), so Godot can attach behaviour to them.
+- Interactive parts are separate objects, named `IA_<id>` (for example `IA_drawer_digit_0`), so Godot can attach behaviour to them.
 - Pivots sit where things rotate: hinges, wheel axles, lever bases.
 
 ## UI style

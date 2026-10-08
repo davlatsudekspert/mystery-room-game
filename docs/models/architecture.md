@@ -226,7 +226,7 @@ With the documented hinge at (−3.1, 0, −1.15), a pure −85° yaw sweeps the
 | Part | Pivot (model-local) | Motion |
 |---|---|---|
 | `IA_drawer_top` | (0, 0.628, 0.353): the bottom-centre of the drawer front | slide along **+Z** |
-| `IA_drawer_wheel_0..3` | children of the drawer. Axles at x −0.033 / −0.011 / +0.011 / +0.033, y 0.678, z 0.3395 | local **+X**: **+k × 36°** shows digit k. Digit 0 faces the viewer at rest |
+| `IA_drawer_digit_0..3` | children of the drawer. Axles at x −0.033 / −0.011 / +0.011 / +0.033, y 0.678, z 0.3395 | local **+X**: **+k × 36°** shows digit k. Digit 0 faces the viewer at rest |
 | `IA_rosette` | (0.725, 0.7025, −0.1425) | press: translate −X by 6 mm |
 | `IA_compartment` | (0.735, 0.555, −0.1425) | slide along **+X** |
 | `IA_secret_panel` | child of the compartment, (0.7383, 0.596, −0.1425) | slide along **−Y** by 0.06 |

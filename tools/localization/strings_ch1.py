@@ -44,6 +44,7 @@ S = [
 
 # ---------------------------------------------------------------- objects (focus captions)
 ("obj.door", "Laboratory door — sealed by a magnetic lock", "Дверь лаборатории — заперта магнитным замком", "Laboratoriya eshigi — magnit qulf bilan yopilgan"),
+("obj.door_open", "Laboratory door — open", "Дверь лаборатории — открыта", "Laboratoriya eshigi — ochiq"),
 ("obj.desk", "Leyla's desk", "Стол Лейлы", "Leylaning stoli"),
 ("obj.drawer", "Drawer lock — four brass wheels", "Замок ящика — четыре латунных колеса", "Tortma qulfi — toʻrtta jez gʻildirak"),
 ("obj.clock", "A flip clock, stopped", "Перекидные часы — остановились", "Varaqli soat — toʻxtab qolgan"),
@@ -68,6 +69,7 @@ S = [
 ("obj.shadow", "Shadow sculpture — a brass ring and a rod", "Теневая скульптура — латунное кольцо и стержень", "Soya haykalchasi — jez halqa va sterjen"),
 ("obj.emblem", "The Institute's mark, with a socket at its heart", "Знак института с гнездом в центре", "Markazida uyasi bor institut belgisi"),
 ("obj.cabinet", "A small locked cabinet", "Маленький запертый шкафчик", "Kichik qulflangan javoncha"),
+("obj.cabinet_open", "A small cabinet, now unlocked", "Маленький шкафчик — теперь открыт", "Kichik javoncha — endi ochiq"),
 ("obj.filing", "Filing cabinet — staff records, mostly empty", "Картотека — личные дела, почти пустая", "Kartoteka — xodimlar hujjatlari, deyarli boʻsh"),
 ("obj.radiator", "A cold cast-iron radiator", "Холодная чугунная батарея", "Sovuq choʻyan batareya"),
 
