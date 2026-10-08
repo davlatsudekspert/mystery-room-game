@@ -24,16 +24,26 @@ What Strand hid: at full resonance the Array does not just replay light. It **ke
 ### Tone
 Quiet, curious, melancholic, never gory. Wonder first, dread second. The story is told through objects, handwriting, light and sound — minimal text, no dialogue trees.
 
-### Chapter structure (5 chapters planned)
-| # | Chapter | Location | Story beat | Status |
+### Chapter structure (data-driven; more chapters can be appended in `game/src/core/chapters.gd`)
+| # | Chapter | Location | Story beat | Access |
 |---|---|---|---|---|
-| 1 | **Laboratory 7** | Leyla's lab | You are locked in; you learn about the Night of Silence, restore power, and the Array briefly wakes — a light-echo of Leyla appears at her desk and fades | **Free — in development** |
-| 2 | The Archive | Records hall | Sealed files: staff list of 41 people; Strand's illness; the official cover-up | Planned (premium) |
-| 3 | The Observatory | Roof dome | Crystal growth chamber; why 03:17 (alignment of the Array with the dome) | Planned (premium) |
-| 4 | The Array Hall | Basement | The great crystal; the 41 silhouettes inside the light | Planned (premium) |
-| 5 | The Silence | Array core | Choice-free finale: release the stored light. The staff's echoes leave the crystal; the windows of the Institute glow one last time | Planned (premium) |
+| 1 | **The Locked Laboratory** | Laboratory 7 + Leyla's hidden darkroom | You are locked in Lab 7. You learn about the Night of Silence, restore power, follow Strand's beacon to Leyla's darkroom, and wake the Array for a moment. A light-echo of Leyla appears, and **looks at you** | **Free** |
+| 2 | The Missing Scientist | Records archive + Leyla's apartment wing | Where did Leyla go after 1979? Her letters stop in 1998. The parcel you received was postmarked **14 November 1979** | Premium (planned) |
+| 3 | The Underground Facility | Transformer halls, crystal-growth vaults | The Array's true scale. The 41 staff silhouettes in the light. Strand's illness | Premium (planned) |
+| 4 | The Experiment | The Array Hall | Re-run the Night of Silence in reverse. The ending depends on choices from Chapters 1–3 (lens, shards, who you trusted) | Premium (planned) |
 
-### Chapter 1 — "Laboratory 7" (detailed)
+### Fair twists (foreshadowed)
+1. **The parcel** that brought you here carries a 1979 postmark. It appears on the intro card and is mentioned in the Chapter 1 epilogue. Leyla could not have sent it in the present day. Someone, or something, inside the light did.
+2. **The echo is not a recording.** Recorded light cannot react. Leyla's echo turns toward the player, which proves the Array keeps people, not just images. This is foreshadowed by notebook p.1: "It is not replaying the light. It is keeping it."
+3. **Strand was not a villain.** His letters show he tried to save his dying colleagues, and himself. This is revealed gradually across the chapters.
+
+### Player choices that carry forward
+| Choice | Recorded as | Consequences |
+|---|---|---|
+| Ch1 finale: **take** the crystal lens / **leave** it in the projector | `choices.ch1_lens` | Chapter 2 opening differs: the lens can sense echoes, or Leyla's echo guides you once |
+| Ch1 optional: all **5 Lumen shards** found | `choices.ch1_shards = 5` | Secret epilogue line; contributes to the "true ending" in Chapter 4 |
+
+### Chapter 1 — "The Locked Laboratory" (detailed)
 **Opening (≤ 20 seconds, skippable):** black screen, sound of rain and a heavy key. Text card: *"Meridian Institute. Sealed since 14 November 1979."* The door of Lab 7 swings open; you step in; the door slams; a maglock clicks; a red lamp glows. Only the moon and a flickering desk lamp light the room.
 
 **Environmental storytelling in the room**
@@ -52,10 +62,19 @@ Quiet, curious, melancholic, never gory. Wonder first, dread second. The story i
 5. *(blank — UV ink)* "The safe answers in Strand's symbols:" + four symbols.
 6. "I took the handle of the main breaker and hid it where only my lamp can show the way."
 7. "If someone reads this: the Array must wake once more to open the door. Tune it exactly as Strand wrote — or it will keep you too."
+8. "Strand's beacon still calls on his old band, three numbers over and over. My encyclopedia remembers them."
+9. *(darkroom note)* "The Institute's mark — only light and shadow may draw it."
 
 **Strand's letter (found in the safe):** "Leyla — the light opens any door when the three rings sing with the three samples, the heaviest first. Do not be afraid of it. — E.S."
 
-**Ending of Chapter 1:** the projector fires through the crystal lens; the maglock releases; the door swings open. For three seconds a translucent figure of light sits at the desk, writing — Leyla, 1979 — then looks up toward the player and dissolves. Text card: *"The Array is listening again."* → Chapter complete.
+**Mid-chapter reveal:** Strand's beacon still broadcasts on the 41 m band. Its pulses open Leyla's hidden darkroom behind the bookcase. Inside are her evidence wall (photos of the 41 staff, newspaper clippings about the "ventilation accident") and the shadow lock that protects Strand's mirror.
+
+**Ending of Chapter 1:**
+1. The tuned Lumen beam, guided by the two mirrors, strikes the door's photocell. The maglock releases and the door swings open.
+2. For three seconds a translucent figure of light sits at the desk, writing. It is Leyla, 1979. Then she **turns to look at the player**.
+3. Choice: *Take the crystal lens* / *Leave it for her*.
+4. Text card: *"The Array is listening again."*
+5. Chapter complete. The epilogue line varies with the choice and with the shards found.
 
 ### Ending of the full game (for future chapters)
 Strand, dying, tried to "save" his colleagues by recording them into the great crystal on the Night of Silence. Leyla spent her life hiding the Array's parts so nobody would wake it carelessly — and looking for a way to undo it. The Visitor completes her work: the Array is tuned *in reverse*, the 41 echoes leave the crystal as light, and the Institute is no longer forgotten.
