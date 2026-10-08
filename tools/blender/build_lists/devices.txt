@@ -1,0 +1,12 @@
+# Hero devices + inventory items (lib_devices.py). QA-only: models/items_lineup.py (not built here).
+lumen_projector.py
+radio.py
+notebook.py
+uv_lamp.py
+battery_cell.py
+brass_key.py
+crystal_lens.py
+breaker_handle.py
+letter.py
+radio_valve.py
+mirror_item.py

@@ -12,7 +12,7 @@ const LAYOUT := {
 	"desk": [Vector3(-0.5, 0, -2.1), 0.0, "desk", "parts"],
 	"chair": [Vector3(-0.35, 0, -1.3), 168.0, "", "parts"],
 	"flip_clock": [Vector3(-1.0, 0.78, -2.25), 8.0, "clock", "parts"],
-	"notebook": [Vector3(-0.28, 0.78, -1.98), -12.0, "notebook", "parts"],
+	"notebook": [Vector3(-0.28, 0.7934, -1.98), -12.0, "notebook", "parts"],
 	"desk_lamp": [Vector3(-1.18, 0.78, -2.32), 25.0, "desk", "parts"],
 	"filing_cabinet": [Vector3(-2.6, 0, -2.2), 0.0, "filing", "parts"],
 	"bookshelf": [Vector3(-3.1, 0, -1.15), 90.0, "bookshelf", "parts"],
@@ -450,6 +450,7 @@ func _build_views() -> void:
 	V.call("bench", Vector3(-0.3, 1.65, 1.15), Vector3(-0.3, 1.0, 2.25), 56.0)
 	V.call("vials", Vector3(-0.9, 1.18, 1.62), Vector3(-0.9, 1.0, 2.12), 32.0)
 	V.call("radio", Vector3(0.55, 1.22, 1.62), Vector3(0.55, 1.05, 2.22), 36.0)
+	V.call("radio_hatch", Vector3(0.55, 1.54, 1.92), Vector3(0.54, 1.12, 2.23), 38.0)
 	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
 	V.call("safe", Vector3(2.2, 1.32, 1.72), Vector3(2.2, 1.25, 2.5), 40.0)
 	V.call("panel", Vector3(2.12, 1.5, -1.3), Vector3(3.0, 1.45, -1.3), 50.0)
@@ -608,7 +609,8 @@ func _in_reach(hotspot: String) -> bool:
 		return true
 	var deeper := {
 		"desk": ["drawer", "clock", "desk_side", "under_desk"], "bookshelf": ["books", "bookshelf_top"],
-		"bench": ["vials", "radio"], "door": ["lock"], "shadow": ["emblem", "cabinet"],
+		"bench": ["vials", "radio", "radio_hatch"], "door": ["lock"], "shadow": ["emblem", "cabinet"],
+		"radio": ["radio_hatch"],
 	}
 	return (deeper.get(v, []) as Array).has(cur)
 
@@ -775,7 +777,7 @@ func _interact_bench(part: String) -> void:
 
 
 func _interact_radio(part: String, r: Dictionary) -> void:
-	if cam.current() != "radio":
+	if cam.current() not in ["radio", "radio_hatch"]:
 		cam.go("radio")
 		return
 	var s := logic.state
@@ -789,7 +791,11 @@ func _interact_radio(part: String, r: Dictionary) -> void:
 		logic.step_dial(2 if right else -2)
 		return
 	if part == "IA_radio_hatch" or part == "IA_valve_socket":
-		visuals.radio_hatch_open = not visuals.radio_hatch_open
+		if cam.current() != "radio_hatch":
+			visuals.radio_hatch_open = true
+			cam.go("radio_hatch")
+		else:
+			visuals.radio_hatch_open = not visuals.radio_hatch_open
 		visuals.apply_state(true)
 		if not s["valve_installed"]:
 			hud.call("message", tr("msg.radio_needs_valve"))

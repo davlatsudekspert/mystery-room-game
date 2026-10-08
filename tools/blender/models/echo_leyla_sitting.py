@@ -266,7 +266,9 @@ def build_head(no_decimate=False):
     E.sculpt(head, E.face_kernels(P))
     if no_decimate:
         return head, Mh
-    E.decimate(head, HEAD_TRIS, vgroup_weights=E.face_detail_weight(P), vg_factor=HEAD_VG)
+    # plain quadric collapse: the vgroup-weighted variant starves the cranium in Blender 5.2 and collapses
+    # the skull and bun into a cone (see echo_strand_standing.py); curvature keeps the face features
+    E.decimate(head, HEAD_TRIS)
     E.clean_mesh(head)
     head.data.transform(Mh)
     mrlib.set_origin(head, PIVOT)

@@ -475,6 +475,7 @@ func show_inspect(id: String) -> void:
 	var model := ModelUtil.spawn(ItemDB.model_path(id), pivot, Transform3D.IDENTITY, "none")
 	var radius := 0.1
 	if model:
+		model.rotation.x = deg_to_rad(ItemDB.view_tilt(id))
 		var aabb := ItemIcons._aabb(model)
 		model.position = -aabb.get_center()
 		radius = maxf(0.02, aabb.size.length() * 0.5)

@@ -131,7 +131,14 @@ func _spawn_item(spot: String, item_model: String, parent: Node3D, offset: Vecto
 
 func _spawn_container_items() -> void:
 	_spawn_item("drawer_lamp", "uv_lamp", part("desk", "IA_drawer_top"), Vector3(0.05, 0.035, -0.18), 80.0)
-	_spawn_item("box_cell", "battery_cell", part("gear_box", "IA_box_lid").get_parent() if part("gear_box", "IA_box_lid") else model("gear_box"), Vector3(0, 0.05, 0), 90.0)
+	var anchor := part("gear_box", "battery_anchor")
+	if anchor:
+		_spawn_item("box_cell", "battery_cell", anchor, Vector3.ZERO, 0.0)
+	else:
+		_spawn_item("box_cell", "battery_cell", model("gear_box"), Vector3(0, 0.05, 0), 0.0)
+		var cell: Node3D = _items.get("box_cell")
+		if cell:
+			cell.basis = Basis(Vector3.BACK, -PI / 2)
 	var safe := model("wall_safe")
 	_spawn_item("safe_key", "brass_key", safe, Vector3(-0.12, -0.1, -0.12), 30.0)
 	_spawn_item("safe_lens", "crystal_lens", safe, Vector3(0.0, -0.08, -0.16), 0.0)
@@ -211,6 +218,10 @@ func apply_state(animated: bool) -> void:
 	var valve := part("radio", "valve_installed")
 	if valve:
 		valve.visible = s["valve_installed"]
+	var heater := part("radio", "valve_heater") as MeshInstance3D
+	if heater:
+		ModelUtil.set_emission(heater, s["valve_installed"] and s["power_on"], Color("ff8a2a"), 2.5)
+	_rot(part("radio", "IA_tuning_knob"), Vector3.BACK, -9.0 * (int(s["dial"]) - Lab7Logic.RADIO_START), animated, 0.15)
 	_rot(part("radio", "IA_radio_hatch"), Vector3.RIGHT, -70.0 if radio_hatch_open else 0.0, animated, 0.4)
 	_update_radio(animated)
 	# P9 bookcase door (pivot node at its front-north edge, swings into the lab)

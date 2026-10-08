@@ -75,6 +75,8 @@ func _pump() -> void:
 		_pump()
 		return # model not built yet: the slot shows the item's name instead
 	if n != null:
+		_pivot.rotation = Vector3.ZERO
+		n.rotation.x = deg_to_rad(ItemDB.view_tilt(id))
 		var aabb := _aabb(n)
 		var radius := maxf(0.01, aabb.size.length() * 0.5)
 		n.position = -aabb.get_center()

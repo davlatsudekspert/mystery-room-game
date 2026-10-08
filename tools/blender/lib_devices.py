@@ -401,12 +401,25 @@ def centre_of_mass(objs) -> Vector:
 
 
 def recentre(objs, com=None) -> Vector:
-    """Translate the root objects of an item so its centre of mass lands on the world origin."""
+    """Move a whole item so its centre of mass sits on the world origin. Root meshes get the shift baked
+    into their data (their nodes end at identity, so node origin = scene origin = centre of mass);
+    children keep their own pivots (shifted with the item)."""
     com = com if com is not None else centre_of_mass(objs)
-    for o in objs:
-        if o.parent is None:
-            o.location = o.location - com
     M.refresh()
+    shift = Matrix.Translation(-com)
+    order, todo = [], [o for o in bpy.context.scene.objects if o.parent is None]
+    while todo:
+        o = todo.pop(0)
+        order.append(o)
+        todo += list(o.children)
+    target = {o: shift @ o.matrix_world for o in order}
+    for o in order:
+        if o.parent is None and o.type == "MESH":
+            o.data.transform(target[o])
+            o.matrix_world = Matrix.Identity(4)
+        else:
+            o.matrix_world = target[o]
+        M.refresh()
     return com
 
 

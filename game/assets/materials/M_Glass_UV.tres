@@ -1,0 +1,15 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "M_Glass_UV"
+transparency = 1
+albedo_color = Color(0.1725, 0.0902, 0.2824, 0.82)
+metallic = 0
+metallic_specular = 0.7
+roughness = 0.06
+emission_enabled = false
+emission = Color(0.4824, 0.302, 1, 1)
+emission_energy_multiplier = 1.5
+rim_enabled = true
+rim = 0.25
+rim_tint = 0.6

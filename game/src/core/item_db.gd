@@ -41,5 +41,10 @@ static func document(id: String) -> String:
 	return ITEMS.get(id, {}).get("doc", "")
 
 
+## Extra rotation (degrees about X) so flat items face the camera in icons / inspect view.
+static func view_tilt(id: String) -> float:
+	return 70.0 if id in ["notebook", "strand_letter", "leyla_photo", "brass_key"] else 0.0
+
+
 static func is_tool(id: String) -> bool:
 	return ITEMS.get(id, {}).has("tool")

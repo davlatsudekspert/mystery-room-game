@@ -328,8 +328,10 @@ def build_cable():
     g0 = Vector((0, Y_HR + 0.010, ZB - 0.052)) + Vector((0, 0.45, -1)).normalized() * 0.021
     ox, oy = OUTLET
     path = [tuple(g0), (0.0, 0.268, 1.02), (0.022, 0.305, 0.80), (0.058, 0.362, 0.42), (0.098, 0.432, 0.07),
-            (0.122, 0.505, 0.0045), (ox, oy - 0.03, 0.006), (ox, oy, 0.016)]
+            (0.124, 0.505, 0.0068), (ox, oy - 0.032, 0.0075), (ox, oy, 0.016)]
     cable = L.tube("cable", path, 0.0042, mat="M_Fabric", bevel_res=1, res_u=2)
+    for v in cable.data.vertices:           # Bezier overshoot: flatten the contact patch on the floor
+        v.co.z = max(v.co.z, 0.0002)
     outlet = L.lathe2("outlet", [(0.032, 0.0), (0.032, 0.002), (0.028, 0.005), (0.012, 0.006), (0.0105, 0.018),
                                  (0.0, 0.019)], segments=12, mat="M_Brass_Aged", cap_bottom=False)
     outlet.location = (ox, oy, 0.0)

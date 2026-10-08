@@ -8,8 +8,9 @@ Output: game/assets/models/echo_strand_standing.glb
              his head; positive yaw turns him to his left (Godot -X side of the model).
 Facing: the board is in front of him = Blender +Y = Godot -Z. The chalk tip touches a board plane
 0.52 m in front of the origin at height 1.60 m (model local (0.13, 0.52, 1.60) Blender = Godot (0.13, 1.60, -0.52)).
-To stand him at the Lab 7 chalkboard (west wall, board face x = -2.975): place the GLB at Godot
-(-2.975 + 0.52, 0, 1.05 - 0.13) = (-2.455, 0, 0.92), rotation_degrees.y = +90.
+To stand him at the Lab 7 chalkboard (slate face at Godot x = -2.978, slate z 0.25..1.85): place the GLB at
+Godot (-2.458, 0, 0.95), rotation_degrees.y = +90 -> the chalk touches the slate at (-2.978, 1.60, 0.82) and his
+left side stays clear of the lumen projector at (-2.3, 0, 1.6).
 Material: one slot, M_Echo (replaced in Godot by the additive light-echo shader). Closed 2-manifold meshes.
 
 Run: blender -b --factory-startup -P tools/blender/models/echo_strand_standing.py [-- --no-render] [-- --dev <dir>]
@@ -204,27 +205,29 @@ def build_body():
 
 
 # ------------------------------------------------------------------ head
-P_HEAD = E.MALE
+P_HEAD = dict(E.MALE, nose=1.1, brow=2.0)
 
 
 def hair_disp(co, nrm):
     """Receding grey fringe (horseshoe round the back of the head) + short trimmed beard and moustache."""
     s = P_HEAD["scale"]
     x, y, z = co[:, 0], co[:, 1], co[:, 2]
+    ax = np.abs(x)
     deg = np.degrees(np.abs(np.arctan2(x, y + 0.01)))
     lower = np.interp(deg, [0, 70, 85, 100, 140, 180], [0.3, 0.3, 0.004, -0.02, -0.06, -0.072]) * s
     upper = np.interp(deg, [0, 70, 85, 110, 150, 180], [-0.3, -0.3, 0.05, 0.072, 0.086, 0.09]) * s
-    m = E.smoothstep(lower - 0.002, lower + 0.007, z) * (1.0 - E.smoothstep(upper - 0.012, upper + 0.004, z))
-    thick = np.interp(deg, [80, 120, 180], [0.0045, 0.0062, 0.007])
-    # beard: chin + jaw below the mouth, joined to the fringe by short sideburns
-    front = E.smoothstep(-0.02 * s, 0.03 * s, y)
-    below_mouth = E.smoothstep(-0.074 * s, -0.086 * s, z)
-    jaw = E.smoothstep(0.03 * s, -0.012 * s, z) * E.smoothstep(0.055 * s, 0.07 * s, np.abs(x)) * E.smoothstep(-0.02 * s, 0.0, y)
-    beard = np.clip(front * below_mouth + jaw * E.smoothstep(-0.11 * s, -0.02 * s, z) * 0.8, 0, 1)
-    beard *= E.smoothstep(-0.125 * s, -0.112 * s, z) * 0 + 1.0
-    mous = (E.smoothstep(-0.066 * s, -0.062 * s, z) * (1 - E.smoothstep(-0.056 * s, -0.052 * s, z))
-            * E.smoothstep(0.07 * s, 0.082 * s, y) * (1 - E.smoothstep(0.024 * s, 0.032 * s, np.abs(x))))
-    d = thick * m + 0.0065 * beard + 0.004 * mous
+    m = E.smoothstep(lower - 0.002, lower + 0.008, z) * (1.0 - E.smoothstep(upper - 0.014, upper + 0.004, z))
+    fringe = np.interp(deg, [80, 120, 180], [0.006, 0.0085, 0.0095]) * m
+    # short full beard: chin below the lower lip + jaw sides up to the sideburns, feathered edges
+    chin = E.smoothstep(-0.03 * s, 0.035 * s, y) * E.smoothstep(-0.07 * s, -0.084 * s, z)
+    sides = (E.smoothstep(0.042 * s, 0.062 * s, ax) * E.smoothstep(0.012 * s, -0.03 * s, z)
+             * E.smoothstep(-0.028 * s, 0.0, y))
+    beard = np.clip(chin + 0.75 * sides, 0, 1) * E.smoothstep(-0.16 * s, -0.12 * s, z)
+    beard_d = (0.0055 + 0.0035 * E.smoothstep(-0.09 * s, -0.11 * s, z)) * beard
+    # moustache over the upper lip, out to the mouth corners
+    mous = (E.smoothstep(-0.07 * s, -0.064 * s, z) * (1 - E.smoothstep(-0.056 * s, -0.051 * s, z))
+            * E.smoothstep(0.066 * s, 0.08 * s, y) * (1 - E.smoothstep(0.026 * s, 0.036 * s, ax)))
+    d = np.maximum(fringe, beard_d) + 0.0045 * mous
     return nrm * d[:, None]
 
 
@@ -247,8 +250,6 @@ def build_head(no_decimate=False):
     nt = atlas_local + Vector((0, 0.014, 0.03))
     parts.append(E.loft("h_neck", [nb, nm, nt], [(0.058, 0.06), (0.054, 0.056), (0.054, 0.054)],
                         side=(1, 0, 0), seg=24, sub=3, cap0=0.3, cap1=0.6))
-    # older face: heavier brow ridge, softer cheeks with nasolabial mass, slightly larger nose and ears
-    parts.append(E.ellipsoid("h_brow", (0, 0.082 * Pp["scale"], 0.024 * Pp["scale"]), (0.05, 0.014, 0.01), seg=16, rings=8))
     head = E.union_remesh(parts, "head_tmp", 0.0016)
     E.taubin(head, 4)
     E.fill_concave(head, 10)
@@ -269,7 +270,9 @@ def build_head(no_decimate=False):
     E.sculpt(head, kern)
     if no_decimate:
         return head, Mh
-    E.decimate(head, HEAD_TRIS, vgroup_weights=E.face_detail_weight(Pp), vg_factor=0.002)
+    # plain quadric collapse: the weighted variant (lib_echo vgroup protection) starves the cranium at this ratio
+    # and collapses it into a cone; curvature alone keeps the face features
+    E.decimate(head, HEAD_TRIS)
     E.clean_mesh(head)
     head.data.transform(Mh)
     mrlib.set_origin(head, PIVOT)

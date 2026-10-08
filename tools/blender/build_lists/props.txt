@@ -1,5 +1,11 @@
-# props built by the props agent (one script per line)
+# props built by the props agent (one script per line; build_all.sh runs each with -- --no-render)
 bookshelf.py
 lab_bench.py
 echo_leyla_sitting.py
 shadow_lock.py
+chalkboard.py
+poster_frame.py
+desk_lamp.py
+evidence_board.py
+darkroom_props.py
+echo_strand_standing.py
