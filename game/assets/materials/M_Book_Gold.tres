@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Book_Gold"
+albedo_color = Color(0.8902, 0.7608, 0.4784, 1.0)
+metallic = 1.0
+roughness = 0.3

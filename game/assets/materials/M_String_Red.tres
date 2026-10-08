@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_String_Red"
+albedo_color = Color(0.6275, 0.1255, 0.1098, 1.0)
+roughness = 0.8

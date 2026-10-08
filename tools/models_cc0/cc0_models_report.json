@@ -1,0 +1,1066 @@
+{
+ "assets": {
+  "vintage_microscope": {
+   "src_tris": 20631,
+   "kept_tris": 20631,
+   "tris": 5998,
+   "decimated_objects": [
+    "vintage_microscope_mirror_arm",
+    "vintage_microscope_condenser",
+    "vintage_microscope_rack_mount_support",
+    "vintage_microscope_base",
+    "vintage_microscope_mirror_base",
+    "vintage_microscope_eye_piece",
+    "vintage_microscope_adjustment",
+    "vintage_microscope_revolver"
+   ],
+   "glass_materials_alpha": [
+    "vintage_microscope_glass"
+   ],
+   "orm_occlusion_added": [
+    "vintage_microscope",
+    "vintage_microscope_glass"
+   ],
+   "objects": {
+    "vintage_microscope_mirror_arm": 165,
+    "vintage_microscope_condenser": 301,
+    "vintage_microscope_rack_mount_support": 1925,
+    "vintage_microscope_base": 326,
+    "vintage_microscope_mirror_base": 186,
+    "vintage_microscope_eye_piece": 899,
+    "vintage_microscope_adjustment": 991,
+    "vintage_microscope_revolver": 1205
+   },
+   "materials": [
+    "vintage_microscope",
+    "vintage_microscope_glass"
+   ],
+   "images": [
+    [
+     "vintage_microscope_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_microscope_metal-vintage_microscope_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_microscope_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.106,
+    0.4,
+    0.182
+   ],
+   "bbox_min_gltf": [
+    -0.055,
+    0.0,
+    -0.084
+   ],
+   "bbox_max_gltf": [
+    0.052,
+    0.4,
+    0.098
+   ],
+   "name": "Vintage Microscope",
+   "authors": [
+    "Luis José Fernández Rodríguez"
+   ],
+   "source_url": "https://polyhaven.com/a/vintage_microscope",
+   "license": "CC0",
+   "download_bytes": 2312802,
+   "glb_bytes": 1911608,
+   "used_for": "Lab bench dressing (brass microscope)",
+   "placement": "Lab bench top, free span between vial rack and radio, ~(-0.35, 0.92, 2.30); lab_bench.glb lists a microscope, so this can replace it",
+   "source_polycount_api": 20631
+  },
+  "vintage_spacecraft_instrument": {
+   "src_tris": 13279,
+   "kept_tris": 13279,
+   "tris": 6000,
+   "decimated_objects": [
+    "vintage_spacecraft_instrument"
+   ],
+   "glass_materials_alpha": [
+    "vintage_spacecraft_instrument_glass"
+   ],
+   "orm_occlusion_added": [
+    "vintage_spacecraft_instrument",
+    "vintage_spacecraft_instrument_glass"
+   ],
+   "objects": {
+    "vintage_spacecraft_instrument": 6000
+   },
+   "materials": [
+    "vintage_spacecraft_instrument",
+    "vintage_spacecraft_instrument_glass"
+   ],
+   "images": [
+    [
+     "vintage_spacecraft_instrument_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_spacecraft_instrument_metal-vintage_spacecraft_instrument_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_spacecraft_instrument_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.41,
+    0.27,
+    0.204
+   ],
+   "bbox_min_gltf": [
+    -0.205,
+    0.0,
+    -0.085
+   ],
+   "bbox_max_gltf": [
+    0.206,
+    0.27,
+    0.119
+   ],
+   "name": "Vintage Spacecraft Instrument",
+   "authors": [
+    "Michał Wiśniewski"
+   ],
+   "source_url": "https://polyhaven.com/a/vintage_spacecraft_instrument",
+   "license": "CC0",
+   "download_bytes": 3665564,
+   "glb_bytes": 2717632,
+   "used_for": "Storage-shelf dressing (Soviet-era enamel navigation instrument)",
+   "placement": "Worn metal rack shelf or filing-cabinet top; keep it away from the radio so it is not read as a puzzle device",
+   "source_polycount_api": 13279
+  },
+  "retro_multimeter": {
+   "src_tris": 8948,
+   "kept_tris": 8948,
+   "tris": 3997,
+   "decimated_objects": [
+    "retro_multimeter_LOD0",
+    "retro_multimeter_handle_LOD0",
+    "retro_multimeter_dial_LOD0",
+    "retro_multimeter_cables_LOD0"
+   ],
+   "glass_materials_alpha": [
+    "retro_multimeter_glass"
+   ],
+   "orm_occlusion_added": [
+    "retro_multimeter",
+    "retro_multimeter_glass"
+   ],
+   "objects": {
+    "retro_multimeter_LOD0": 396,
+    "retro_multimeter_buttons_LOD0": 90,
+    "retro_multimeter_handle_LOD0": 203,
+    "retro_multimeter_dial_LOD0": 299,
+    "retro_multimeter_knob_LOD0": 80,
+    "retro_multimeter_cables_LOD0": 2921,
+    "retro_multimeter_needle_LOD0": 8
+   },
+   "materials": [
+    "retro_multimeter",
+    "retro_multimeter_glass"
+   ],
+   "images": [
+    [
+     "retro_multimeter_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "retro_multimeter_metal-retro_multimeter_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "retro_multimeter_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.216,
+    0.279,
+    0.203
+   ],
+   "bbox_min_gltf": [
+    -0.135,
+    0.0,
+    -0.031
+   ],
+   "bbox_max_gltf": [
+    0.08,
+    0.279,
+    0.172
+   ],
+   "name": "Retro Multimeter",
+   "authors": [
+    "elli moeller"
+   ],
+   "source_url": "https://polyhaven.com/a/retro_multimeter",
+   "license": "CC0",
+   "download_bytes": 1393330,
+   "glb_bytes": 1276580,
+   "used_for": "Panel-7 corner dressing (analogue multimeter)",
+   "placement": "Floor/crate under Panel 7, ~(2.70, 0, -1.30), leads toward the panel; or a metal-rack shelf",
+   "source_polycount_api": 13356
+  },
+  "book_encyclopedia_set_01": {
+   "src_tris": 67282,
+   "kept_tris": 67282,
+   "tris": 5979,
+   "decimated_objects": [
+    "book_encyclopedia_set_01_book01",
+    "book_encyclopedia_set_01_book02",
+    "book_encyclopedia_set_01_book03",
+    "book_encyclopedia_set_01_book04",
+    "book_encyclopedia_set_01_book05",
+    "book_encyclopedia_set_01_book06",
+    "book_encyclopedia_set_01_book07",
+    "book_encyclopedia_set_01_book08",
+    "book_encyclopedia_set_01_book09",
+    "book_encyclopedia_set_01_book10",
+    "book_encyclopedia_set_01_book11",
+    "book_encyclopedia_set_01_book12",
+    "book_encyclopedia_set_01_book13",
+    "book_encyclopedia_set_01_book14",
+    "book_encyclopedia_set_01_book15",
+    "book_encyclopedia_set_01_book16",
+    "book_encyclopedia_set_01_book17",
+    "book_encyclopedia_set_01_book18",
+    "book_encyclopedia_set_01_book19",
+    "book_encyclopedia_set_01_book20"
+   ],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [
+    "book_encyclopedia_set_01_cover"
+   ],
+   "objects": {
+    "book_encyclopedia_set_01_book01": 301,
+    "book_encyclopedia_set_01_book02": 299,
+    "book_encyclopedia_set_01_book03": 299,
+    "book_encyclopedia_set_01_book04": 299,
+    "book_encyclopedia_set_01_book05": 299,
+    "book_encyclopedia_set_01_book06": 299,
+    "book_encyclopedia_set_01_book07": 299,
+    "book_encyclopedia_set_01_book08": 299,
+    "book_encyclopedia_set_01_book09": 299,
+    "book_encyclopedia_set_01_book10": 299,
+    "book_encyclopedia_set_01_book11": 297,
+    "book_encyclopedia_set_01_book12": 298,
+    "book_encyclopedia_set_01_book13": 299,
+    "book_encyclopedia_set_01_book14": 299,
+    "book_encyclopedia_set_01_book15": 299,
+    "book_encyclopedia_set_01_book16": 299,
+    "book_encyclopedia_set_01_book17": 299,
+    "book_encyclopedia_set_01_book18": 299,
+    "book_encyclopedia_set_01_book19": 299,
+    "book_encyclopedia_set_01_book20": 299
+   },
+   "materials": [
+    "book_encyclopedia_set_01_cover",
+    "book_encyclopedia_set_01_paper"
+   ],
+   "images": [
+    [
+     "book_encyclopedia_set_01_cover_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "book_encyclopedia_set_01_cover_metallic-book_encyclopedia_set_01_cover_roughness",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "book_encyclopedia_set_01_cover_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "book_encyclopedia_set_01_paper_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "book_encyclopedia_set_01_paper_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "book_encyclopedia_set_01_paper_roughness",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.551,
+    0.237,
+    0.163
+   ],
+   "bbox_min_gltf": [
+    -0.019,
+    0.0,
+    -0.062
+   ],
+   "bbox_max_gltf": [
+    0.532,
+    0.237,
+    0.101
+   ],
+   "name": "Book Encyclopedia Set 01",
+   "authors": [
+    "John Malcolm"
+   ],
+   "source_url": "https://polyhaven.com/a/book_encyclopedia_set_01",
+   "license": "CC0",
+   "download_bytes": 3261046,
+   "glb_bytes": 1015432,
+   "used_for": "Shelf dressing (leather-bound book set)",
+   "placement": "Metal-rack shelf or filing-cabinet top; NOT the bookshelf door (puzzle encyclopedia IA_book_1..9 lives there)",
+   "source_polycount_api": 67306
+  },
+  "magnifying_glass_01": {
+   "src_tris": 7240,
+   "kept_tris": 7240,
+   "tris": 2500,
+   "decimated_objects": [
+    "magnifying_glass_01"
+   ],
+   "glass_materials_alpha": [
+    "magnifying_glass_01_lense"
+   ],
+   "orm_occlusion_added": [
+    "magnifying_glass_01_lense"
+   ],
+   "objects": {
+    "magnifying_glass_01": 2500
+   },
+   "materials": [
+    "magnifying_glass_01",
+    "magnifying_glass_01_lense"
+   ],
+   "images": [
+    [
+     "magnifying_glass_01_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "magnifying_glass_01_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "magnifying_glass_01_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "magnifying_glass_01_rough.png",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.132,
+    0.027,
+    0.272
+   ],
+   "bbox_min_gltf": [
+    -0.066,
+    -0.0,
+    -0.272
+   ],
+   "bbox_max_gltf": [
+    0.066,
+    0.027,
+    -0.0
+   ],
+   "name": "Magnifying Glass 01",
+   "authors": [
+    "Nazar Borodavka"
+   ],
+   "source_url": "https://polyhaven.com/a/magnifying_glass_01",
+   "license": "CC0",
+   "download_bytes": 466908,
+   "glb_bytes": 357420,
+   "used_for": "Desk dressing (magnifying glass)",
+   "placement": "Desk top east of the notebook, ~(0.00, 0.78, -1.95)",
+   "source_polycount_api": 7240
+  },
+  "round_spectacles": {
+   "src_tris": 11810,
+   "kept_tris": 11810,
+   "tris": 2500,
+   "decimated_objects": [
+    "round_spectacles"
+   ],
+   "glass_materials_alpha": [
+    "round_spectacles_glass"
+   ],
+   "orm_occlusion_added": [
+    "round_spectacles",
+    "round_spectacles_glass"
+   ],
+   "objects": {
+    "round_spectacles": 2500
+   },
+   "materials": [
+    "round_spectacles",
+    "round_spectacles_glass"
+   ],
+   "images": [
+    [
+     "round_spectacles_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "round_spectacles_metal-round_spectacles_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "round_spectacles_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.158,
+    0.046,
+    0.149
+   ],
+   "bbox_min_gltf": [
+    -0.079,
+    0.0,
+    -0.148
+   ],
+   "bbox_max_gltf": [
+    0.079,
+    0.046,
+    0.001
+   ],
+   "name": "Round Spectacles",
+   "authors": [
+    "Sean Buckley"
+   ],
+   "source_url": "https://polyhaven.com/a/round_spectacles",
+   "license": "CC0",
+   "download_bytes": 2069915,
+   "glb_bytes": 1812416,
+   "used_for": "Desk dressing (reading glasses)",
+   "placement": "Desk top beside the notebook, ~(-0.05, 0.78, -2.10)",
+   "source_polycount_api": 11810
+  },
+  "seadogs_compass": {
+   "src_tris": 11645,
+   "kept_tris": 11645,
+   "tris": 4997,
+   "decimated_objects": [
+    "seadogs_compass",
+    "seadogs_compass_lid",
+    "seadogs_compass_needle"
+   ],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [
+    "seadogs_compass"
+   ],
+   "objects": {
+    "seadogs_compass": 2973,
+    "seadogs_compass_lid": 1747,
+    "seadogs_compass_needle": 277
+   },
+   "materials": [
+    "seadogs_compass"
+   ],
+   "images": [
+    [
+     "seadogs_compass_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "seadogs_compass_metal-seadogs_compass_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "seadogs_compass_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.081,
+    0.087,
+    0.15
+   ],
+   "bbox_min_gltf": [
+    -0.038,
+    0.0,
+    -0.087
+   ],
+   "bbox_max_gltf": [
+    0.044,
+    0.087,
+    0.063
+   ],
+   "name": "Seadogs Compass",
+   "authors": [
+    "Benny Weimer"
+   ],
+   "source_url": "https://polyhaven.com/a/seadogs_compass",
+   "license": "CC0",
+   "download_bytes": 2695701,
+   "glb_bytes": 2521904,
+   "used_for": "Desk/shelf dressing (brass compass)",
+   "placement": "Bookshelf (not the shelf-3 clear spot) or the window sill",
+   "source_polycount_api": 11645
+  },
+  "tea_set_01": {
+   "src_tris": 40296,
+   "kept_tris": 19180,
+   "tris": 3998,
+   "decimated_objects": [
+    "tea_set_01_cup_small_01",
+    "tea_set_01_teapot_01",
+    "tea_set_01_saucer_circular_04",
+    "tea_set_01_teapot_01_lid"
+   ],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [
+    "tea_set_01"
+   ],
+   "objects": {
+    "tea_set_01_cup_small_01": 866,
+    "tea_set_01_teapot_01": 1758,
+    "tea_set_01_saucer_circular_04": 600,
+    "tea_set_01_teapot_01_lid": 774
+   },
+   "materials": [
+    "tea_set_01"
+   ],
+   "images": [
+    [
+     "tea_set_01_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "tea_set_01_metal-tea_set_01_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "tea_set_01_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.387,
+    0.165,
+    0.268
+   ],
+   "bbox_min_gltf": [
+    -0.193,
+    0.0,
+    -0.129
+   ],
+   "bbox_max_gltf": [
+    0.194,
+    0.165,
+    0.139
+   ],
+   "name": "Tea Set 01",
+   "authors": [
+    "James Ray Cock",
+    "Jurita Burger",
+    "Rico Cilliers"
+   ],
+   "source_url": "https://polyhaven.com/a/tea_set_01",
+   "license": "CC0",
+   "download_bytes": 2282591,
+   "glb_bytes": 1440720,
+   "used_for": "Desk dressing (porcelain teapot, cup and saucer)",
+   "placement": "Desk east end, ~(0.10, 0.78, -2.25): the 'cup of tea dried to a ring'; teapot is its own node",
+   "source_polycount_api": 40296
+  },
+  "vintage_electric_kettle": {
+   "src_tris": 14838,
+   "kept_tris": 14838,
+   "tris": 3999,
+   "decimated_objects": [
+    "vintage_electric_kettle"
+   ],
+   "glass_materials_alpha": [
+    "vintage_electric_kettle_glass"
+   ],
+   "orm_occlusion_added": [
+    "vintage_electric_kettle",
+    "vintage_electric_kettle_glass"
+   ],
+   "objects": {
+    "vintage_electric_kettle": 3999
+   },
+   "materials": [
+    "vintage_electric_kettle",
+    "vintage_electric_kettle_glass"
+   ],
+   "images": [
+    [
+     "vintage_electric_kettle_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_electric_kettle_metal-vintage_electric_kettle_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_electric_kettle_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.321,
+    0.305,
+    0.248
+   ],
+   "bbox_min_gltf": [
+    -0.165,
+    0.0,
+    -0.124
+   ],
+   "bbox_max_gltf": [
+    0.156,
+    0.305,
+    0.124
+   ],
+   "name": "Vintage Electric Kettle",
+   "authors": [
+    "SV Garip"
+   ],
+   "source_url": "https://polyhaven.com/a/vintage_electric_kettle",
+   "license": "CC0",
+   "download_bytes": 2387109,
+   "glb_bytes": 2131488,
+   "used_for": "Window-sill dressing (old electric kettle)",
+   "placement": "Stone window sill (north wall, x 0.95-2.05, y ~1.45) or beside the radiator",
+   "source_polycount_api": 14838
+  },
+  "vintage_wooden_drawer_01": {
+   "src_tris": 5184,
+   "kept_tris": 5184,
+   "tris": 5184,
+   "decimated_objects": [],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [
+    "vintage_wooden_drawer_01"
+   ],
+   "objects": {
+    "vintage_wooden_drawer_01_body": 2064,
+    "vintage_wooden_drawer_01_drawer02": 520,
+    "vintage_wooden_drawer_01_drawer03": 520,
+    "vintage_wooden_drawer_01_drawer05": 520,
+    "vintage_wooden_drawer_01_drawer04": 520,
+    "vintage_wooden_drawer_01_drawer01": 520,
+    "vintage_wooden_drawer_01_drawer06": 520
+   },
+   "materials": [
+    "vintage_wooden_drawer_01"
+   ],
+   "images": [
+    [
+     "vintage_wooden_drawer_01_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_wooden_drawer_01_metal-vintage_wooden_drawer_01_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "vintage_wooden_drawer_01_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.858,
+    0.545,
+    0.457
+   ],
+   "bbox_min_gltf": [
+    -0.429,
+    0.0,
+    -0.22
+   ],
+   "bbox_max_gltf": [
+    0.429,
+    0.545,
+    0.237
+   ],
+   "name": "Vintage Wooden Drawer 01",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_url": "https://polyhaven.com/a/vintage_wooden_drawer_01",
+   "license": "CC0",
+   "download_bytes": 759801,
+   "glb_bytes": 755124,
+   "used_for": "Floor/wall dressing (card-index drawer chest)",
+   "placement": "North wall between filing cabinet and desk, ~(-1.85, 0, -2.27), facing +Z",
+   "source_polycount_api": 5184
+  },
+  "metal_stool_02": {
+   "src_tris": 6532,
+   "kept_tris": 6532,
+   "tris": 6532,
+   "decimated_objects": [],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [
+    "metal_stool_02"
+   ],
+   "objects": {
+    "metal_stool_02": 6532
+   },
+   "materials": [
+    "metal_stool_02"
+   ],
+   "images": [
+    [
+     "metal_stool_02_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "metal_stool_02_metal-metal_stool_02_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "metal_stool_02_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.448,
+    0.458,
+    0.473
+   ],
+   "bbox_min_gltf": [
+    -0.224,
+    0.0,
+    -0.235
+   ],
+   "bbox_max_gltf": [
+    0.224,
+    0.458,
+    0.238
+   ],
+   "name": "Metal Stool 02",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_url": "https://polyhaven.com/a/metal_stool_02",
+   "license": "CC0",
+   "download_bytes": 2540986,
+   "glb_bytes": 2540728,
+   "used_for": "Lab bench seating (metal lab stool)",
+   "placement": "In front of the lab bench, ~(0.15, 0, 1.60); seat 0.46 m, stays under the Lumen beam (y 1.15)",
+   "source_polycount_api": 6532
+  },
+  "worn_metal_rack": {
+   "src_tris": 6372,
+   "kept_tris": 6372,
+   "tris": 6372,
+   "decimated_objects": [],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [
+    "worn_metal_rack"
+   ],
+   "objects": {
+    "worn_metal_rack": 6372
+   },
+   "materials": [
+    "worn_metal_rack"
+   ],
+   "images": [
+    [
+     "worn_metal_rack_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "worn_metal_rack_metal-worn_metal_rack_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "worn_metal_rack_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.915,
+    1.9,
+    0.6
+   ],
+   "bbox_min_gltf": [
+    -0.46,
+    0.0,
+    -0.3
+   ],
+   "bbox_max_gltf": [
+    0.455,
+    1.9,
+    0.3
+   ],
+   "name": "Worn Metal Rack",
+   "authors": [
+    "Luca B"
+   ],
+   "source_url": "https://polyhaven.com/a/worn_metal_rack",
+   "license": "CC0",
+   "download_bytes": 2009106,
+   "glb_bytes": 2008628,
+   "used_for": "Storage corner (metal shelving)",
+   "placement": "East wall south of the door, centre ~(2.70, 0, 1.95), facing -X; check clearance to the wall safe and mirror A",
+   "source_polycount_api": 6372
+  },
+  "old_gas_mask": {
+   "src_tris": 18900,
+   "kept_tris": 18900,
+   "tris": 3999,
+   "decimated_objects": [
+    "old_gas_mask"
+   ],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [
+    "old_gas_mask"
+   ],
+   "objects": {
+    "old_gas_mask": 3999
+   },
+   "materials": [
+    "old_gas_mask"
+   ],
+   "images": [
+    [
+     "old_gas_mask_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "old_gas_mask_metal-old_gas_mask_rough",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "old_gas_mask_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.212,
+    1.126,
+    0.309
+   ],
+   "bbox_min_gltf": [
+    -0.106,
+    -1.126,
+    -0.122
+   ],
+   "bbox_max_gltf": [
+    0.106,
+    0.0,
+    0.187
+   ],
+   "name": "Old Gas Mask",
+   "authors": [
+    "Michał Wiśniewski"
+   ],
+   "source_url": "https://polyhaven.com/a/old_gas_mask",
+   "license": "CC0",
+   "download_bytes": 2262447,
+   "glb_bytes": 1893252,
+   "used_for": "Story dressing (gas mask, 'ventilation accident')",
+   "placement": "Free hook on the coat rack (2.6, 0, -2.15); origin = hook point (top), hose hangs 1.13 m",
+   "source_polycount_api": 18900
+  },
+  "marble_bust_01": {
+   "src_tris": 17456,
+   "kept_tris": 17456,
+   "tris": 4000,
+   "decimated_objects": [
+    "marble_bust_01"
+   ],
+   "glass_materials_alpha": [],
+   "orm_occlusion_added": [],
+   "objects": {
+    "marble_bust_01": 4000
+   },
+   "materials": [
+    "marble_bust_01"
+   ],
+   "images": [
+    [
+     "marble_bust_01_arm",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "marble_bust_01_diff",
+     [
+      1024,
+      1024
+     ]
+    ],
+    [
+     "marble_bust_01_nor_gl",
+     [
+      1024,
+      1024
+     ]
+    ]
+   ],
+   "dims_m": [
+    0.272,
+    0.515,
+    0.3
+   ],
+   "bbox_min_gltf": [
+    -0.123,
+    0.0,
+    -0.145
+   ],
+   "bbox_max_gltf": [
+    0.149,
+    0.515,
+    0.155
+   ],
+   "name": "Marble Bust 01",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_url": "https://polyhaven.com/a/marble_bust_01",
+   "license": "CC0",
+   "download_bytes": 898283,
+   "glb_bytes": 586732,
+   "used_for": "Study dressing (marble bust)",
+   "placement": "Top of the filing cabinet (-2.6, top, -2.2)",
+   "source_polycount_api": 17456
+  }
+ },
+ "generated": "2026-10-08"
+}

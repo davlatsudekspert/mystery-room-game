@@ -536,7 +536,47 @@ def wall_emblem() -> None:
     ink_rough(im, 0.3, 130).save(os.path.join(OUT, "wall_emblem.png"))
 
 
+def staff_photos(count: int = 8) -> None:
+    """Sepia studio-portrait silhouettes for Leyla's evidence wall (stylized, no real people)."""
+    for k in range(count):
+        r = np.random.default_rng(200 + k)
+        w, h = 256, 320
+        yy, xx = np.mgrid[0:h, 0:w]
+        bg = 120 + 60 * np.exp(-(((xx - w / 2) / 110) ** 2 + ((yy - h * 0.45) / 140) ** 2))
+        img = Image.fromarray(np.clip(np.stack([bg * 1.0, bg * 0.86, bg * 0.66], -1), 0, 255).astype(np.uint8)).convert("RGBA")
+        d = ImageDraw.Draw(img)
+        tone = (int(r.integers(40, 70)), int(r.integers(30, 50)), int(r.integers(20, 35)), 255)
+        cx = w / 2 + r.integers(-10, 10)
+        d.ellipse([cx - 95, 215, cx + 95, 380], fill=tone)  # shoulders
+        d.rectangle([cx - 22, 170, cx + 22, 230], fill=tone)  # neck
+        hw, hh = r.integers(46, 56), r.integers(60, 70)
+        d.ellipse([cx - hw, 150 - hh, cx + hw, 150 + hh], fill=(tone[0] + 60, tone[1] + 48, tone[2] + 34, 255))
+        hair = (tone[0] - 15, tone[1] - 12, tone[2] - 8, 255)
+        style = k % 4
+        if style == 0:
+            d.ellipse([cx - hw - 4, 150 - hh - 8, cx + hw + 4, 150 - hh / 3], fill=hair)
+        elif style == 1:
+            d.ellipse([cx - hw - 6, 150 - hh - 10, cx + hw + 6, 160], fill=hair)
+            d.ellipse([cx - hw + 8, 150 - hh / 2, cx + hw - 8, 150 + hh], fill=(tone[0] + 60, tone[1] + 48, tone[2] + 34, 255))
+        elif style == 2:
+            d.ellipse([cx - 30, 150 - hh - 40, cx + 30, 150 - hh + 10], fill=hair)
+            d.ellipse([cx - hw - 2, 150 - hh - 6, cx + hw + 2, 150 - hh / 2], fill=hair)
+        if k % 3 == 1:  # glasses
+            d.ellipse([cx - 34, 140, cx - 8, 160], outline=(30, 24, 18, 255), width=3)
+            d.ellipse([cx + 8, 140, cx + 34, 160], outline=(30, 24, 18, 255), width=3)
+        img = img.filter(ImageFilter.GaussianBlur(1.6))
+        a = np.asarray(img).astype(np.float32)
+        a[..., :3] += r.normal(0, 9, (h, w, 1))
+        vign = 1 - 0.5 * np.clip(np.sqrt(((xx - w / 2) / (w / 2)) ** 2 + ((yy - h / 2) / (h / 2)) ** 2) - 0.6, 0, 1)
+        a[..., :3] *= vign[..., None]
+        out = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGB")
+        framed = Image.new("RGB", (w + 24, h + 24), (232, 224, 204))
+        framed.paste(out, (12, 12))
+        framed.save(os.path.join(OUT, f"photo_{k}.jpg"), quality=88)
+
+
 if __name__ == "__main__":
+    staff_photos()
     radio_dial()
     wall_emblem()
     make_glyph_icons()

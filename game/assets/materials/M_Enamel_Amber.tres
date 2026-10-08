@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Enamel_Amber"
+albedo_color = Color(0.7882, 0.5412, 0.1176, 1.0)
+roughness = 0.28
+metallic_specular = 0.6

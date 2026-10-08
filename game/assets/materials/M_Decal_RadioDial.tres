@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/decals/radio_dial.jpg" id="1"]
+
+[resource]
+resource_name = "M_Decal_RadioDial"
+albedo_texture = ExtResource("1")
+roughness = 0.2
+emission_enabled = false
+emission = Color(1.0000, 0.7608, 0.4784, 1.0)
+emission_energy_multiplier = 0.6
+emission_operator = 1
+emission_texture = ExtResource("1")
