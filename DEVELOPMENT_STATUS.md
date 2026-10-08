@@ -40,7 +40,7 @@ Budget: ≤ 150 draw calls (OK). Primitives are about 20% over the 150k target. 
 ## CI status (GitHub Actions, free quota, manual triggers)
 - After the billing block was lifted, the first runs at 18:40 and 18:46 UTC still got no runner. From 19:24 UTC jobs run normally.
 - ✅ `tests.yml` run 37831728496: 41 tests, 2494 checks, 0 failures (about 25 s).
-- ✅ `android.yml` debug run 37831976693: tests plus a signed debug APK. The artifact is 98 MB zipped and is kept for 7 days. The debug key is generated per run, so uninstall the previous build before installing a newer one.
+- ✅ `android.yml` debug runs 37831976693 and 37832359209 (latest, commit 2a23bad): tests plus a signed debug APK. The latest artifact is 101 MB zipped and is kept for 7 days. The debug key is generated per run, so uninstall the previous build before installing a newer one.
 - ⏳ `android.yml` release (AAB + Play internal testing) waits for the upload keystore secrets.
 - ⏳ `ios.yml` waits for the App Store Connect app record. It runs on macOS, where 1 minute counts as 10 against the free quota.
 
