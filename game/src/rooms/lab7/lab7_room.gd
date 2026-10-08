@@ -1,0 +1,1060 @@
+extends Node3D
+## Chapter 1 scene: assembles Laboratory 7 + the darkroom from models, owns lights/camera/input,
+## routes taps to Lab7Logic and lets Lab7Visuals render the resulting state.
+
+const BEAM_Y := 1.15
+const UV_REVEAL_TIME := 0.35
+
+## model -> [position, yaw degrees (front +Z = 0), hotspot id, collider mode]
+const LAYOUT := {
+	"room_lab7": [Vector3.ZERO, 0.0, "", "static"],
+	"door_lab7": [Vector3(3.0, 0, 0.9), -90.0, "door", "parts"],
+	"desk": [Vector3(-0.5, 0, -2.1), 0.0, "desk", "parts"],
+	"chair": [Vector3(-0.35, 0, -1.3), 168.0, "", "parts"],
+	"flip_clock": [Vector3(-1.0, 0.78, -2.25), 8.0, "clock", "parts"],
+	"notebook": [Vector3(-0.28, 0.78, -1.98), -12.0, "notebook", "parts"],
+	"desk_lamp": [Vector3(-1.18, 0.78, -2.32), 25.0, "desk", "parts"],
+	"filing_cabinet": [Vector3(-2.6, 0, -2.2), 0.0, "filing", "parts"],
+	"bookshelf": [Vector3(-3.1, 0, -1.15), 90.0, "bookshelf", "parts"],
+	"gear_box": [Vector3(-2.88, 1.205, -0.6), 90.0, "gearbox", "parts"],
+	"chalkboard": [Vector3(-3.0, 1.0, 1.05), 90.0, "chalkboard", "parts"],
+	"lumen_projector": [Vector3(-2.3, 0, 1.6), 90.0, "projector", "parts"],
+	"lab_bench": [Vector3(-0.3, 0, 2.15), 180.0, "bench", "parts"],
+	"radio": [Vector3(0.55, 0.92, 2.2), 180.0, "radio", "parts"],
+	"poster_frame": [Vector3(-0.3, 1.9, 2.5), 180.0, "poster", "parts"],
+	"wall_safe": [Vector3(2.2, 1.25, 2.5), 180.0, "safe", "parts"],
+	"panel7": [Vector3(3.0, 1.45, -1.3), -90.0, "panel", "parts"],
+	"coat_rack": [Vector3(2.6, 0, -2.15), -30.0, "coat", "parts"],
+	"pendant_lamp": [Vector3(-0.6, 3.4, -0.6), 0.0, "", "none"],
+	"mirror_stand": [Vector3(1.6, 0, 1.6), 0.0, "mirror_a", "parts"],
+	"light_sensor": [Vector3(3.0, 1.15, 0.12), -90.0, "lock", "parts"],
+	"evidence_board": [Vector3(-4.8, 1.5, -0.6), 90.0, "evidence", "parts"],
+	"shadow_lock": [Vector3.ZERO, 0.0, "shadow", "parts"],
+	"darkroom_props": [Vector3.ZERO, 0.0, "", "parts"],
+}
+
+## Extra instances of a model: id -> [model, position, yaw, hotspot]
+const EXTRA := {
+	"pendant_lamp_2": ["pendant_lamp", Vector3(1.2, 3.4, 0.8), 0.0, ""],
+	"mirror_stand_b": ["mirror_stand", Vector3(1.6, 0, 0.12), 0.0, "mirror_b"],
+	"cc_microscope": ["cc0/vintage_microscope/vintage_microscope", Vector3(-0.35, 0.92, 2.32), 200.0, "bench"],
+	"cc_tea": ["cc0/tea_set_01/tea_set_01", Vector3(0.05, 0.78, -2.22), -20.0, "desk"],
+	"cc_spectacles": ["cc0/round_spectacles/round_spectacles", Vector3(-0.62, 0.78, -1.92), 35.0, "desk"],
+	"cc_magnifier": ["cc0/magnifying_glass_01/magnifying_glass_01", Vector3(-0.78, 0.78, -2.0), -60.0, "desk"],
+	"cc_bust": ["cc0/marble_bust_01/marble_bust_01", Vector3(-2.6, 1.32, -2.25), 15.0, "filing"],
+	"cc_multimeter": ["cc0/retro_multimeter/retro_multimeter", Vector3(2.55, 0, -0.85), -100.0, ""],
+	"cc_kettle": ["cc0/vintage_electric_kettle/vintage_electric_kettle", Vector3(1.05, 1.47, -2.45), 30.0, "window"],
+	"cc_compass": ["cc0/seadogs_compass/seadogs_compass", Vector3(1.85, 1.47, -2.42), -40.0, "window"],
+	"cc_stool": ["cc0/metal_stool_02/metal_stool_02", Vector3(0.25, 0, 1.45), 20.0, ""],
+	"cc_gasmask": ["cc0/old_gas_mask/old_gas_mask", Vector3(2.45, 1.7, -2.3), 0.0, "coat"],
+	"cc_drawer": ["cc0/vintage_wooden_drawer_01/vintage_wooden_drawer_01", Vector3(-1.85, 0, -2.25), 0.0, ""],
+	"cc_instrument": ["cc0/vintage_spacecraft_instrument/vintage_spacecraft_instrument", Vector3(-1.85, 0.545, -2.25), 10.0, ""],
+}
+
+## Hotspot -> camera view id (tapping the hotspot from elsewhere moves the camera here)
+const HOTSPOT_VIEW := {
+	"door": "door", "desk": "desk", "clock": "clock", "notebook": "desk", "filing": "filing",
+	"bookshelf": "bookshelf", "gearbox": "gearbox", "chalkboard": "chalkboard", "projector": "projector",
+	"bench": "bench", "radio": "radio", "poster": "poster", "safe": "safe", "panel": "panel", "coat": "coat",
+	"mirror_a": "mirror_a", "mirror_b": "mirror_b", "lock": "lock", "evidence": "evidence",
+	"shadow": "shadow", "window": "window", "vials": "vials",
+}
+const HOTSPOT_CAPTION := {
+	"door": "obj.door", "desk": "obj.desk", "clock": "obj.clock", "filing": "obj.filing",
+	"bookshelf": "obj.bookshelf", "gearbox": "obj.gearbox", "chalkboard": "obj.chalkboard",
+	"projector": "obj.projector", "bench": "obj.bench", "radio": "obj.radio", "poster": "obj.poster",
+	"safe": "obj.safe", "panel": "obj.panel", "coat": "obj.coat", "mirror_a": "obj.mirror_a",
+	"mirror_b": "obj.mirror_b", "lock": "obj.lock", "evidence": "obj.evidence", "shadow": "obj.shadow",
+	"window": "obj.window", "vials": "obj.vials", "drawer": "obj.drawer", "books": "obj.bookshelf",
+	"emblem": "obj.emblem", "cabinet": "obj.cabinet", "darkroom": "obj.darkroom", "desk_side": "obj.desk",
+	"radiator": "obj.radiator", "drawing": "obj.drawing",
+}
+
+var logic: Lab7Logic
+var models: Dictionary = {} # id -> Node3D
+var _roots: Dictionary = {} # Node3D -> id
+var cam: RoomCamera
+var touch: TouchInput
+var hud: Node
+var visuals: Lab7Visuals
+var lights: Dictionary = {}
+var env: Environment
+var uv_light: SpotLight3D
+var _uv_aim := Vector2.ZERO
+var _uv_dwell := 0.0
+var _uv_target := ""
+var _ending := false
+var capture_mode := false # set by QA capture script: no intro, no input
+
+
+func _ready() -> void:
+	if GameState.logic == null or not GameState.logic is Lab7Logic:
+		GameState.start_new("ch1")
+	logic = GameState.logic
+	GameState.in_game = true
+	_build_environment()
+	_build_models()
+	_build_lights()
+	_build_views()
+	visuals = Lab7Visuals.new(self)
+	add_child(visuals)
+	_build_input()
+	_build_hud()
+	GameState.events.connect(_on_events)
+	visuals.apply_state(false)
+	_update_lighting(false)
+	cam.go("lab", true)
+	AudioManager.music("music_lab", 4.0)
+	AudioManager.ambience("amb_lab_dark", true, -2.0)
+	if logic.state["power_on"]:
+		AudioManager.ambience("amb_power_hum", true, -8.0)
+	if not capture_mode and logic.state["taken"].is_empty() and logic.inventory.is_empty():
+		hud.call("play_intro")
+
+
+func _exit_tree() -> void:
+	GameState.in_game = false
+	RenderingServer.global_shader_parameter_set("uv_light_on", 0.0)
+
+
+# ====================================================================== construction
+func _build_environment() -> void:
+	var we := WorldEnvironment.new()
+	env = Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color("0b0d10")
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color("26383a")
+	env.ambient_light_energy = 0.5
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.0
+	env.glow_enabled = true
+	env.glow_intensity = 0.6
+	env.glow_bloom = 0.05
+	env.glow_hdr_threshold = 1.1
+	env.fog_enabled = true
+	env.fog_light_color = Color("1b2a2b")
+	env.fog_density = 0.012
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 0.92
+	we.environment = env
+	add_child(we)
+
+
+func _spawn(id: String, model: String, pos: Vector3, yaw: float, hotspot: String, mode: String) -> Node3D:
+	var n := ModelUtil.spawn(model, self, Transform3D(Basis(Vector3.UP, deg_to_rad(yaw)), pos), mode)
+	if n == null:
+		return null
+	n.name = id
+	models[id] = n
+	_roots[n] = id
+	n.set_meta("hotspot", hotspot)
+	return n
+
+
+func _build_models() -> void:
+	for id: String in LAYOUT:
+		var e: Array = LAYOUT[id]
+		_spawn(id, id, e[0], e[1], e[2], e[3])
+	for id: String in EXTRA:
+		var e: Array = EXTRA[id]
+		_spawn(id, e[0], e[1], e[2], e[3], "parts" if e[3] != "" else "none")
+	# echo figure (finale only)
+	var echo := _spawn("echo_leyla", "echo_leyla_sitting", Vector3(-0.38, 0, -1.55), 0.0, "", "none")
+	if echo:
+		var mat := ShaderMaterial.new()
+		mat.shader = load("res://src/fx/echo.gdshader")
+		for mi in ModelUtil.find_meshes(echo):
+			mi.material_override = mat
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		echo.visible = false
+	_build_backdrop()
+	_build_uv_ink()
+	_build_shards()
+	var dust := DustMotes.create(Vector3(2.8, 1.5, 2.3), 140)
+	dust.position = Vector3(0, 1.6, 0)
+	add_child(dust)
+
+
+func _build_backdrop() -> void:
+	# Moonlit valley seen through the window (unshaded so it reads as the bright outside).
+	var q := MeshInstance3D.new()
+	var qm := QuadMesh.new()
+	qm.size = Vector2(4.0, 3.0)
+	q.mesh = qm
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_texture = load("res://assets/textures/decals/window_night.jpg")
+	m.albedo_color = Color(0.85, 0.9, 1.0)
+	q.material_override = m
+	q.position = Vector3(1.5, 2.2, -4.2)
+	q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(q)
+
+
+func _uv_quad(id: String, tex: String, size: Vector2, pos: Vector3, normal_yaw: float, use_tex: bool = true) -> MeshInstance3D:
+	var q := MeshInstance3D.new()
+	var qm := QuadMesh.new()
+	qm.size = size
+	q.mesh = qm
+	var m := ShaderMaterial.new()
+	m.shader = load("res://src/fx/uv_ink.gdshader")
+	if tex != "":
+		m.set_shader_parameter("ink", load(tex))
+	m.set_shader_parameter("use_texture", use_tex)
+	q.material_override = m
+	q.position = pos
+	q.rotation.y = deg_to_rad(normal_yaw)
+	q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	q.name = "UV_" + id
+	add_child(q)
+	return q
+
+
+func _build_uv_ink() -> void:
+	# Leyla's fluorescent circle + arrow on the desk's east side, around the rosette.
+	var mark := _uv_quad("desk_mark", "res://assets/textures/decals/uv_desk_mark.png", Vector2(0.34, 0.34),
+		Vector3(0.262, 0.52, -2.05), 90.0)
+	mark.set_meta("uv_target", "desk_mark")
+	_add_tap_area(mark, Vector3(0.05, 0.34, 0.34), "desk_side", "UV_desk_mark")
+
+
+func _build_shards() -> void:
+	var spots := {
+		"under_desk": Vector3(-0.85, 0.02, -2.25), "bookshelf_top": Vector3(-2.85, 2.13, -0.3),
+		"radiator": Vector3(1.85, 0.08, -2.38), "coat_pocket": Vector3(2.52, 1.12, -2.02),
+		"darkroom": Vector3(-4.55, 0.02, 0.15),
+	}
+	for id: String in spots:
+		var shard := ModelUtil.spawn("lumen_shard", self, Transform3D(Basis(Vector3.UP, randf() * TAU), spots[id]), "none")
+		var node: Node3D = shard
+		if node == null:
+			var mi := MeshInstance3D.new()
+			var pm := PrismMesh.new()
+			pm.size = Vector3(0.03, 0.06, 0.03)
+			mi.mesh = pm
+			add_child(mi)
+			mi.position = spots[id]
+			node = mi
+		var m := ShaderMaterial.new()
+		m.shader = load("res://src/fx/uv_ink.gdshader")
+		m.set_shader_parameter("use_texture", false)
+		m.set_shader_parameter("ink_color", Color(0.75, 0.95, 1.0))
+		m.set_shader_parameter("strength", 2.4)
+		m.set_shader_parameter("cone_cos", 0.96)
+		for mi in ModelUtil.find_meshes(node):
+			mi.material_override = m
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		node.name = "Shard_" + id
+		node.set_meta("shard", id)
+		_add_tap_area(node, Vector3(0.12, 0.12, 0.12), "", "Shard_" + id, false)
+
+
+func _add_tap_area(parent: Node3D, size: Vector3, hotspot: String, part: String, local: bool = true) -> void:
+	var body := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	cs.shape = box
+	body.add_child(cs)
+	body.set_meta("part", part)
+	body.set_meta("hotspot", hotspot)
+	parent.add_child(body)
+	if not local:
+		body.position = Vector3.ZERO
+
+
+func _build_lights() -> void:
+	var moon := DirectionalLight3D.new()
+	moon.light_color = Color("7fa7d9")
+	moon.light_energy = 0.8
+	moon.shadow_enabled = true
+	moon.shadow_blur = 1.5
+	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	moon.directional_shadow_max_distance = 12.0
+	add_child(moon)
+	moon.look_at_from_position(Vector3(1.5, 4.5, -5.5), Vector3(0.3, 0.0, 0.6), Vector3.UP)
+	lights["moon"] = moon
+
+	var desk_lamp := OmniLight3D.new()
+	desk_lamp.light_color = Color("ffb46b")
+	desk_lamp.light_energy = 1.1
+	desk_lamp.omni_range = 2.6
+	desk_lamp.position = Vector3(-1.05, 1.18, -2.15)
+	add_child(desk_lamp)
+	lights["desk_lamp"] = desk_lamp
+
+	var maglock := OmniLight3D.new()
+	maglock.light_color = Color("ff3b2f")
+	maglock.light_energy = 0.9
+	maglock.omni_range = 1.8
+	maglock.position = Vector3(2.85, 2.35, 0.9)
+	add_child(maglock)
+	lights["maglock"] = maglock
+
+	for i in 2:
+		var p := OmniLight3D.new()
+		p.light_color = Color("ffc58a")
+		p.light_energy = 0.0
+		p.omni_range = 6.5
+		p.omni_attenuation = 1.2
+		p.position = [Vector3(-0.6, 2.45, -0.6), Vector3(1.2, 2.45, 0.8)][i]
+		p.shadow_enabled = i == 0
+		add_child(p)
+		lights["pendant_%d" % i] = p
+
+	var red := OmniLight3D.new() # darkroom safelight, leaks around the bookcase once ARRAY is live
+	red.light_color = Color("ff2a1a")
+	red.light_energy = 0.0
+	red.omni_range = 3.2
+	red.position = Vector3(-3.6, 2.3, -0.6)
+	add_child(red)
+	lights["safelight"] = red
+
+	var shadow_lamp := SpotLight3D.new()
+	shadow_lamp.light_color = Color("fff1d6")
+	shadow_lamp.light_energy = 0.0
+	shadow_lamp.spot_range = 3.0
+	shadow_lamp.spot_angle = 22.0
+	shadow_lamp.shadow_enabled = true
+	shadow_lamp.shadow_blur = 0.4
+	add_child(shadow_lamp)
+	shadow_lamp.look_at_from_position(Vector3(-4.0, 1.25, 0.12), Vector3(-4.0, 1.5, -1.6), Vector3.UP)
+	lights["shadow_lamp"] = shadow_lamp
+
+	var lumen := OmniLight3D.new()
+	lumen.light_color = Color("cff6ff")
+	lumen.light_energy = 0.0
+	lumen.omni_range = 2.0
+	lumen.position = Vector3(-1.95, BEAM_Y, 1.6)
+	add_child(lumen)
+	lights["lumen"] = lumen
+
+	uv_light = SpotLight3D.new()
+	uv_light.light_color = Color("7b4dff")
+	uv_light.light_energy = 3.0
+	uv_light.spot_range = 3.5
+	uv_light.spot_angle = 11.0
+	uv_light.visible = false
+	add_child(uv_light)
+
+	var probe := ReflectionProbe.new()
+	probe.size = Vector3(6, 3.4, 5)
+	probe.position = Vector3(0, 1.7, 0)
+	probe.update_mode = ReflectionProbe.UPDATE_ONCE
+	probe.interior = true
+	add_child(probe)
+
+
+func _build_views() -> void:
+	cam = RoomCamera.new()
+	cam.near = 0.03
+	cam.far = 30.0
+	add_child(cam)
+	var V := cam.add_view
+	V.call("lab", Vector3(0.2, 1.55, 0.25), Vector3(0.0, 1.4, -2.5), 62.0, true)
+	V.call("darkroom", Vector3(-3.3, 1.5, -0.55), Vector3(-4.8, 1.35, -0.75), 62.0, true)
+	V.call("door", Vector3(1.55, 1.5, 0.75), Vector3(3.0, 1.25, 0.75), 56.0)
+	V.call("lock", Vector3(2.35, 1.2, 0.12), Vector3(3.0, 1.15, 0.12), 34.0)
+	V.call("desk", Vector3(-0.5, 1.48, -1.2), Vector3(-0.5, 0.8, -2.15), 52.0)
+	V.call("drawer", Vector3(-0.5, 0.86, -1.32), Vector3(-0.5, 0.66, -1.76), 34.0)
+	V.call("clock", Vector3(-0.98, 1.0, -1.8), Vector3(-1.0, 0.84, -2.25), 30.0)
+	V.call("desk_side", Vector3(0.95, 0.78, -1.85), Vector3(0.25, 0.55, -2.08), 42.0)
+	V.call("under_desk", Vector3(-0.5, 0.45, -1.15), Vector3(-0.7, 0.05, -2.1), 55.0)
+	V.call("filing", Vector3(-1.9, 1.55, -1.25), Vector3(-2.6, 1.0, -2.2), 50.0)
+	V.call("bookshelf", Vector3(-1.35, 1.35, -0.6), Vector3(-2.74, 1.15, -0.6), 56.0)
+	V.call("books", Vector3(-2.0, 1.0, -0.6), Vector3(-2.74, 0.9, -0.6), 44.0)
+	V.call("gearbox", Vector3(-2.3, 1.55, -0.6), Vector3(-2.82, 1.25, -0.6), 34.0)
+	V.call("bookshelf_top", Vector3(-2.15, 2.5, -0.55), Vector3(-2.9, 2.12, -0.5), 48.0)
+	V.call("chalkboard", Vector3(-1.15, 1.55, 1.05), Vector3(-3.0, 1.5, 1.05), 50.0)
+	V.call("projector", Vector3(-1.45, 1.45, 1.05), Vector3(-2.2, 1.12, 1.6), 46.0)
+	V.call("bench", Vector3(-0.3, 1.65, 1.15), Vector3(-0.3, 1.0, 2.25), 56.0)
+	V.call("vials", Vector3(-0.9, 1.18, 1.62), Vector3(-0.9, 1.0, 2.12), 32.0)
+	V.call("radio", Vector3(0.55, 1.22, 1.62), Vector3(0.55, 1.05, 2.22), 36.0)
+	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
+	V.call("safe", Vector3(2.2, 1.32, 1.72), Vector3(2.2, 1.25, 2.5), 40.0)
+	V.call("panel", Vector3(2.12, 1.5, -1.3), Vector3(3.0, 1.45, -1.3), 50.0)
+	V.call("coat", Vector3(1.9, 1.55, -1.45), Vector3(2.6, 1.3, -2.15), 50.0)
+	V.call("mirror_a", Vector3(0.95, 1.5, 1.05), Vector3(1.6, 1.15, 1.6), 46.0)
+	V.call("mirror_b", Vector3(0.85, 1.45, 0.4), Vector3(1.6, 1.15, 0.12), 46.0)
+	V.call("window", Vector3(1.5, 1.85, -1.55), Vector3(1.5, 2.0, -2.7), 56.0)
+	V.call("radiator", Vector3(1.5, 0.95, -1.65), Vector3(1.6, 0.35, -2.45), 50.0)
+	V.call("evidence", Vector3(-3.45, 1.5, -0.6), Vector3(-4.8, 1.5, -0.6), 56.0)
+	V.call("shadow", Vector3(-3.45, 1.6, 0.32), Vector3(-4.0, 1.38, -1.45), 56.0)
+	V.call("emblem", Vector3(-4.0, 1.5, -0.98), Vector3(-4.0, 1.5, -1.6), 50.0)
+	V.call("cabinet", Vector3(-3.95, 0.95, -0.95), Vector3(-4.0, 0.55, -1.58), 46.0)
+	V.call("darkroom_floor", Vector3(-3.9, 0.9, -0.3), Vector3(-4.5, 0.0, 0.2), 55.0)
+	V.call("echo", Vector3(0.35, 1.45, -0.55), Vector3(-0.45, 1.0, -1.85), 50.0)
+	cam.view_changed.connect(_on_view_changed)
+
+
+func _build_input() -> void:
+	touch = TouchInput.new()
+	add_child(touch)
+	touch.tapped.connect(_on_tap)
+	touch.dragged.connect(_on_drag)
+	touch.pinched.connect(func(f: float) -> void: cam.zoom(f))
+	touch.two_finger_tap.connect(go_back)
+
+
+func _build_hud() -> void:
+	hud = (load("res://src/ui/hud.gd") as GDScript).new()
+	add_child(hud)
+	hud.call("bind", self)
+
+
+# ====================================================================== input
+func go_back() -> void:
+	if _ending:
+		return
+	if cam.current() == "darkroom":
+		cam.go("lab")
+		return
+	if not cam.back() and cam.current() == "lab" and logic.selected != "":
+		logic.select_item("")
+
+
+func _on_drag(rel: Vector2, pos: Vector2) -> void:
+	if logic.selected == "uv_lamp" and not cam.is_root():
+		_uv_aim = pos
+		return
+	cam.free_look(rel)
+	if logic.selected == "uv_lamp":
+		_uv_aim = get_viewport().get_visible_rect().size * 0.5
+
+
+func _raycast(screen: Vector2) -> Dictionary:
+	var from := cam.project_ray_origin(screen)
+	var dir := cam.project_ray_normal(screen)
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 20.0)
+	q.collide_with_areas = false
+	return get_world_3d().direct_space_state.intersect_ray(q)
+
+
+func _resolve(hit: Dictionary) -> Dictionary:
+	## -> {"hotspot", "part", "model", "pos"}
+	var out := {"hotspot": "", "part": "", "model": "", "pos": hit.get("position", Vector3.ZERO)}
+	var col: Node = hit.get("collider")
+	if col == null:
+		return out
+	out["part"] = str(col.get_meta("part", ""))
+	if col.has_meta("hotspot"):
+		out["hotspot"] = str(col.get_meta("hotspot"))
+	var n := col
+	while n != null and n != self:
+		if _roots.has(n):
+			out["model"] = _roots[n]
+			if out["hotspot"] == "":
+				out["hotspot"] = str(n.get_meta("hotspot", ""))
+			break
+		n = n.get_parent()
+	return out
+
+
+func _on_tap(screen: Vector2) -> void:
+	if cam.transitioning or _ending:
+		return
+	if logic.selected == "uv_lamp":
+		_uv_aim = screen
+	var hit := _raycast(screen)
+	if hit.is_empty():
+		return
+	var r := _resolve(hit)
+	var part: String = r["part"]
+	var hs: String = r["hotspot"]
+	if part.begins_with("Shard_"):
+		_tap_shard(part.substr(6))
+		return
+	if hs == "":
+		return
+	# Using a selected item takes priority (except tools that are "worn", like the UV lamp).
+	if logic.selected != "" and logic.selected != "uv_lamp":
+		var target := _use_target(hs, part)
+		if target != "" and _in_reach(hs):
+			var ev := logic.use_item_on(logic.selected, target)
+			if ev.has("nothing_happens"):
+				hud.call("message", tr("msg.nothing"))
+				AudioManager.ui("ui_error")
+			else:
+				logic.select_item("")
+			return
+	if not _in_reach(hs):
+		_focus(hs)
+		return
+	_interact(hs, part, r)
+
+
+func _in_reach(hotspot: String) -> bool:
+	## A hotspot is directly operable from its own view or any deeper view of the same object.
+	var v: String = HOTSPOT_VIEW.get(hotspot, "")
+	var cur := cam.current()
+	if v == "" or cur == v:
+		return true
+	var deeper := {
+		"desk": ["drawer", "clock", "desk_side", "under_desk"], "bookshelf": ["books", "gearbox", "bookshelf_top"],
+		"bench": ["vials", "radio"], "door": ["lock"], "shadow": ["emblem", "cabinet"],
+	}
+	return (deeper.get(v, []) as Array).has(cur)
+
+
+func _focus(hotspot: String) -> void:
+	var v: String = HOTSPOT_VIEW.get(hotspot, "")
+	if v != "":
+		cam.go(v)
+		AudioManager.ui("ui_tap")
+
+
+func _use_target(hs: String, part: String) -> String:
+	match hs:
+		"desk":
+			if part in ["IA_keyhole", "IA_secret_panel", "IA_compartment", "IA_rosette"] or cam.current() == "desk_side":
+				return "desk_keyhole"
+		"panel":
+			return "panel_main"
+		"radio":
+			return "radio"
+		"projector":
+			return "projector"
+		"shadow":
+			return "emblem_socket"
+		"mirror_b":
+			return "mirror_stand_b"
+	return "_"
+
+
+# ====================================================================== interactions
+func _interact(hs: String, part: String, r: Dictionary) -> void:
+	var s := logic.state
+	match hs:
+		"door":
+			if cam.current() == "lab":
+				_focus("door")
+			elif not s["door_open"]:
+				hud.call("message", tr("msg.door_sealed"))
+				AudioManager.sfx("drawer_locked", -6.0, 0.7)
+		"lock":
+			if cam.current() != "lock":
+				cam.go("lock")
+		"notebook":
+			if logic.can_take("notebook"):
+				logic.take("notebook")
+		"clock":
+			cam.go("clock")
+		"desk":
+			_interact_desk(part, r)
+		"bookshelf", "gearbox":
+			_interact_bookshelf(part, r)
+		"chalkboard", "poster", "filing", "window", "coat", "evidence":
+			if cam.current() != HOTSPOT_VIEW.get(hs, ""):
+				_focus(hs)
+			elif hs == "evidence":
+				hud.call("show_document", "evidence")
+		"bench":
+			_interact_bench(part)
+		"radio":
+			_interact_radio(part, r)
+		"safe":
+			_interact_safe(part)
+		"panel":
+			_interact_panel(part)
+		"projector":
+			_interact_projector(part)
+		"mirror_a", "mirror_b":
+			_interact_mirror(hs, part, r)
+		"shadow":
+			_interact_shadow(part)
+		_:
+			pass
+
+
+func _interact_desk(part: String, r: Dictionary) -> void:
+	var s := logic.state
+	var cur := cam.current()
+	if part.begins_with("IA_drawer_wheel_"):
+		if cur != "drawer":
+			cam.go("drawer")
+			return
+		var i := int(part.substr(16))
+		var wheel := ModelUtil.find(models.get("desk"), part)
+		var up := true
+		if wheel != null:
+			up = (r["pos"] as Vector3).y >= wheel.global_position.y
+		logic.step_drawer_wheel(i, 1 if up else -1)
+		return
+	if part == "IA_drawer_top" or part.begins_with("Item_drawer"):
+		if cur != "drawer":
+			cam.go("drawer")
+		elif s["drawer_open"] and logic.can_take("drawer_lamp"):
+			logic.take("drawer_lamp")
+		elif not s["drawer_open"]:
+			hud.call("message", tr("msg.drawer_locked"))
+			AudioManager.sfx("drawer_locked")
+		return
+	if part in ["IA_rosette", "IA_secret_panel", "IA_keyhole", "IA_compartment", "UV_desk_mark"] or part.begins_with("Item_comp"):
+		if cur != "desk_side":
+			cam.go("desk_side")
+			return
+		if part == "IA_rosette":
+			logic.press_rosette()
+		elif s["compartment_open"]:
+			for spot in ["compartment_handle", "compartment_photo"]:
+				if logic.can_take(spot):
+					logic.take(spot)
+					return
+		elif s["rosette"]:
+			hud.call("message", tr("hint.key.1"))
+		return
+	if cur == "lab":
+		cam.go("desk")
+	elif cur == "desk":
+		# tapped the desk body: the east side or the drawer area by hit position
+		var p: Vector3 = r["pos"]
+		if p.x > 0.15:
+			cam.go("desk_side")
+		elif p.y < 0.4:
+			cam.go("under_desk")
+		elif p.y < 0.76 and absf(p.x + 0.5) < 0.35:
+			cam.go("drawer")
+
+
+func _interact_bookshelf(part: String, _r: Dictionary) -> void:
+	var s := logic.state
+	var cur := cam.current()
+	if part.begins_with("IA_book_"):
+		if cur != "books":
+			cam.go("books")
+			return
+		var n := int(part.substr(8))
+		logic.pull_book(n)
+		return
+	if part.begins_with("IA_knob_") or part.begins_with("IA_gear_") or part == "IA_box_lid" or part.begins_with("Item_box"):
+		if cur != "gearbox":
+			cam.go("gearbox")
+			return
+		if s["box_open"]:
+			if logic.can_take("box_cell"):
+				logic.take("box_cell")
+			return
+		var i := int(part.substr(part.length() - 1))
+		logic.press_gear(i)
+		return
+	if s["shelf_open"] and cur in ["lab", "bookshelf"]:
+		cam.go("darkroom")
+		return
+	if cur == "lab":
+		cam.go("bookshelf")
+	elif cur == "bookshelf":
+		cam.go("books")
+
+
+func _interact_bench(part: String) -> void:
+	if part.begins_with("IA_vial_") or part.begins_with("vial"):
+		cam.go("vials")
+	elif cam.current() == "lab":
+		cam.go("bench")
+
+
+func _interact_radio(part: String, r: Dictionary) -> void:
+	if cam.current() != "radio":
+		cam.go("radio")
+		return
+	var s := logic.state
+	if part == "IA_tuning_knob":
+		if logic.radio_status() == "dead":
+			hud.call("message", tr("msg.radio_no_power") if not s["power_on"] else tr("msg.radio_needs_valve"))
+		var knob := ModelUtil.find(models.get("radio"), part)
+		var right := true
+		if knob != null:
+			right = cam.unproject_position(r["pos"]).x >= cam.unproject_position(knob.global_position).x
+		logic.step_dial(2 if right else -2)
+		return
+	if part == "IA_radio_hatch" or part == "IA_valve_socket":
+		visuals.radio_hatch_open = not visuals.radio_hatch_open
+		visuals.apply_state(true)
+		if not s["valve_installed"]:
+			hud.call("message", tr("msg.radio_needs_valve"))
+		return
+	if logic.radio_status() == "dead":
+		hud.call("message", tr("msg.radio_dead"))
+
+
+func _interact_safe(part: String) -> void:
+	if cam.current() != "safe":
+		cam.go("safe")
+		return
+	var s := logic.state
+	if s["safe_open"]:
+		for spot in ["safe_key", "safe_lens", "safe_letter", "safe_valve"]:
+			if part == "Item_" + spot and logic.can_take(spot):
+				logic.take(spot)
+				return
+		for spot in ["safe_key", "safe_lens", "safe_letter", "safe_valve"]:
+			if logic.can_take(spot):
+				logic.take(spot)
+				return
+		return
+	if part.begins_with("IA_key_"):
+		var k := part.substr(7)
+		var map := {"clear": "C", "enter": "E"}
+		logic.safe_press(map.get(k, k))
+
+
+func _interact_panel(part: String) -> void:
+	if cam.current() != "panel":
+		cam.go("panel")
+		return
+	if part.begins_with("IA_switch_"):
+		logic.toggle_switch(int(part.substr(10)))
+	elif part == "IA_main_lever" or part == "main_handle":
+		logic.toggle_main()
+
+
+func _interact_projector(part: String) -> void:
+	if cam.current() != "projector":
+		cam.go("projector")
+		return
+	var s := logic.state
+	if part.begins_with("IA_ring_"):
+		logic.turn_ring(int(part.substr(8)))
+	elif part == "IA_projector_lever":
+		logic.pull_projector_lever()
+	elif part in ["IA_lens_socket", "lens_installed"] and s["lens_at"] == "projector":
+		logic.remove_lens()
+
+
+func _interact_mirror(hs: String, part: String, r: Dictionary) -> void:
+	if cam.current() != hs:
+		cam.go(hs)
+		return
+	var which := 0 if hs == "mirror_a" else 1
+	if which == 1 and not logic.state["mirror_b_mounted"]:
+		hud.call("message", tr("obj.mirror_b"))
+		return
+	var mount := ModelUtil.find(models.get("mirror_stand" if which == 0 else "mirror_stand_b"), "IA_mirror_mount")
+	var right := true
+	if mount != null:
+		right = cam.unproject_position(r["pos"]).x >= cam.unproject_position(mount.global_position).x
+	logic.rotate_mirror(which, 1 if right else -1)
+
+
+func _interact_shadow(part: String) -> void:
+	var s := logic.state
+	var cur := cam.current()
+	if part == "IA_ring_knob" or part == "sculpture_ring":
+		if cur != "shadow":
+			cam.go("shadow")
+		else:
+			logic.turn_sculpture(0)
+	elif part == "IA_rod_knob" or part == "sculpture_rod":
+		if cur != "shadow":
+			cam.go("shadow")
+		else:
+			logic.turn_sculpture(1)
+	elif part in ["IA_emblem_socket", "socket_lens"]:
+		if cur != "emblem" and cur != "shadow":
+			cam.go("emblem")
+		elif s["lens_at"] == "socket":
+			logic.remove_lens()
+		else:
+			hud.call("message", tr("obj.emblem"))
+	elif part == "IA_cabinet_door" or part.begins_with("Item_cabinet"):
+		if cur != "cabinet":
+			cam.go("cabinet")
+		elif s["cabinet_open"] and logic.can_take("cabinet_mirror"):
+			logic.take("cabinet_mirror")
+		elif not s["cabinet_open"]:
+			hud.call("message", tr("obj.cabinet"))
+	elif cur == "darkroom":
+		cam.go("shadow")
+
+
+func _tap_shard(id: String) -> void:
+	if logic.selected != "uv_lamp":
+		return
+	var ev := logic.collect_shard(id)
+	if ev.has("nothing_happens"):
+		return
+
+
+# ====================================================================== per-frame: UV torch
+func _process(delta: float) -> void:
+	var uv_on := logic.selected == "uv_lamp" and not _ending
+	uv_light.visible = uv_on
+	RenderingServer.global_shader_parameter_set("uv_light_on", 1.0 if uv_on else 0.0)
+	if not uv_on:
+		_uv_dwell = 0.0
+		return
+	var vp := get_viewport().get_visible_rect().size
+	if _uv_aim == Vector2.ZERO:
+		_uv_aim = vp * 0.5
+	var origin := cam.global_position + cam.global_basis * Vector3(0.08, -0.06, 0.0)
+	var dir := cam.project_ray_normal(_uv_aim)
+	uv_light.global_position = origin
+	uv_light.look_at(origin + dir, Vector3.UP if absf(dir.y) < 0.98 else Vector3.FORWARD)
+	RenderingServer.global_shader_parameter_set("uv_light_pos", origin)
+	RenderingServer.global_shader_parameter_set("uv_light_dir", dir)
+	# dwell on a UV target to reveal it
+	var hit := _raycast(_uv_aim)
+	var target := ""
+	if not hit.is_empty():
+		var col: Node = hit["collider"]
+		var p: Node = col.get_parent() if col else null
+		if p != null and p.has_meta("uv_target"):
+			target = str(p.get_meta("uv_target"))
+		elif str(col.get_meta("part", "")) == "IA_rosette" or cam.current() == "desk_side":
+			target = "desk_mark"
+	if target != "" and target == _uv_target:
+		_uv_dwell += delta
+		if _uv_dwell >= UV_REVEAL_TIME:
+			logic.uv_reveal(target)
+			_uv_dwell = -999.0
+	else:
+		_uv_target = target
+		_uv_dwell = 0.0
+
+
+# ====================================================================== events → feedback
+func _on_view_changed(id: String) -> void:
+	hud.call("set_view", id, cam.is_root(), HOTSPOT_CAPTION.get(id, ""))
+	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor"]
+	(lights["shadow_lamp"] as SpotLight3D).visible = in_dark
+	(lights["moon"] as DirectionalLight3D).shadow_enabled = not in_dark
+	_uv_aim = get_viewport().get_visible_rect().size * 0.5
+
+
+func _on_events(ev: Array[String]) -> void:
+	for e in ev:
+		_feedback(e)
+	visuals.apply_state(true)
+
+
+func _feedback(e: String) -> void:
+	var name := e.get_slice(":", 0)
+	var arg := e.get_slice(":", 1) if e.contains(":") else ""
+	match name:
+		"item_added":
+			AudioManager.sfx("item_pickup")
+			AudioManager.haptic(15)
+			hud.call("message", tr("ui.item_added") % tr(ItemDB.name_key(arg)))
+		"drawer_wheel":
+			AudioManager.sfx("wheel_tick", -3.0, randf_range(0.95, 1.05))
+		"drawer_opened":
+			AudioManager.sfx("drawer_open")
+			hud.call("message", tr("msg.drawer_opened"))
+		"gears":
+			AudioManager.sfx("gear_turn", -2.0, randf_range(0.95, 1.05))
+		"box_opened":
+			AudioManager.sfx("box_open")
+			hud.call("message", tr("msg.box_opened"))
+		"combined":
+			AudioManager.sfx("item_combine")
+			if arg == "uv_lamp":
+				hud.call("message", tr("msg.lamp_ready"))
+		"combine_failed":
+			AudioManager.ui("ui_error")
+			hud.call("message", tr("msg.combine_failed"))
+		"uv_revealed":
+			AudioManager.sfx("reveal")
+			hud.call("message", tr("msg.uv_page") if arg == "notebook_page" else tr("msg.uv_desk"))
+		"safe_key":
+			AudioManager.sfx("keypad_press", -2.0, randf_range(0.97, 1.03))
+		"safe_cleared":
+			AudioManager.sfx("keypad_press", -4.0, 0.8)
+		"safe_denied":
+			AudioManager.sfx("safe_denied")
+			hud.call("message", tr("msg.safe_denied"))
+			AudioManager.haptic(60)
+		"safe_opened":
+			AudioManager.sfx("safe_open")
+			hud.call("message", tr("msg.safe_opened"))
+		"keyhole_revealed":
+			AudioManager.sfx("secret_panel")
+			hud.call("message", tr("msg.keyhole"))
+		"rosette_click":
+			AudioManager.sfx("rosette_press", -4.0)
+		"compartment_opened":
+			AudioManager.sfx("key_turn")
+			hud.call("message", tr("msg.compartment"))
+		"handle_installed":
+			AudioManager.sfx("lens_insert", 0.0, 0.7)
+			hud.call("message", tr("msg.handle_installed"))
+		"switch":
+			AudioManager.sfx("switch_toggle")
+		"main_no_handle":
+			hud.call("message", tr("msg.main_no_handle"))
+			AudioManager.ui("ui_error")
+		"main_on", "main_off":
+			AudioManager.sfx("breaker_on", -4.0 if name == "main_on" else -8.0, 1.0 if name == "main_on" else 0.8)
+		"breaker_tripped":
+			AudioManager.sfx("breaker_trip")
+			AudioManager.haptic(120)
+			hud.call("message", tr("msg.breaker_tripped"))
+			hud.call("caption", tr("cap.sparks"))
+			SceneManager.flash(Color(1.0, 0.85, 0.6, 0.35), 0.03, 0.4)
+		"power_restored":
+			AudioManager.sfx("power_on")
+			hud.call("message", tr("msg.power_restored"))
+			_update_lighting(true)
+			AudioManager.ambience("amb_power_hum", true, -8.0, 4.0)
+		"switches_locked":
+			hud.call("message", tr("msg.switches_locked"))
+		"main_locked":
+			hud.call("message", tr("msg.main_locked"))
+		"valve_installed":
+			AudioManager.sfx("lens_insert")
+			hud.call("message", tr("msg.valve_installed"))
+		"dial":
+			visuals.radio_tick()
+		"radio_signal":
+			hud.call("message", tr("msg.radio_signal"))
+			hud.call("caption", tr("cap.beacon"))
+		"book_pulled":
+			AudioManager.sfx("rosette_press", -2.0, 0.85)
+			visuals.tilt_book(int(arg))
+		"shelf_opened":
+			AudioManager.sfx("secret_panel", 2.0, 0.6)
+			AudioManager.sfx("door_open", -6.0, 1.3)
+			hud.call("message", tr("msg.shelf_opened"))
+			AudioManager.haptic(80)
+		"shadow":
+			AudioManager.sfx("ring_turn", -2.0, 0.8)
+		"cabinet_opened":
+			AudioManager.sfx("box_open", 0.0, 0.8)
+			hud.call("message", tr("msg.cabinet_opened"))
+		"lens_in_socket":
+			AudioManager.sfx("lens_insert")
+			hud.call("message", tr("msg.lens_in_socket"))
+		"emblem_recorded":
+			AudioManager.sfx("reveal", 2.0, 0.7)
+			AudioManager.sfx("projector_fire", -10.0, 1.4)
+			hud.call("message", tr("msg.emblem_recorded"))
+			SceneManager.flash(Color(0.8, 0.96, 1.0, 0.45), 0.05, 0.9)
+		"lens_in_projector":
+			AudioManager.sfx("lens_insert")
+			hud.call("message", tr("msg.lens_in_projector"))
+		"lens_removed":
+			AudioManager.sfx("lens_insert", -2.0, 1.2)
+			hud.call("message", tr("msg.lens_removed"))
+		"ring":
+			AudioManager.sfx("ring_turn")
+		"rings_locked":
+			hud.call("message", tr("msg.rings_locked"))
+		"projector_no_power":
+			hud.call("message", tr("msg.projector_no_power"))
+			AudioManager.sfx("switch_toggle", -6.0, 0.7)
+		"projector_no_lens":
+			hud.call("message", tr("msg.projector_no_lens"))
+			AudioManager.sfx("switch_toggle", -6.0, 0.7)
+		"projector_scatter":
+			AudioManager.sfx("projector_charge", -4.0)
+			AudioManager.sfx("projector_fail", -2.0)
+			hud.call("message", tr("msg.projector_scatter"))
+			visuals.scatter_flash()
+		"beam_on":
+			AudioManager.sfx("projector_charge")
+			AudioManager.sfx("projector_fire", -3.0)
+			hud.call("message", tr("msg.beam_on"))
+			hud.call("caption", tr("cap.hum"))
+		"beam_path":
+			if arg == "mirror_back":
+				hud.call("message", tr("msg.mirror_back"))
+		"lock_waits_for_sign":
+			hud.call("message", tr("msg.lock_waits"))
+		"mirror":
+			AudioManager.sfx("ring_turn", -3.0, 0.7)
+		"mirror_mounted":
+			AudioManager.sfx("lens_insert", 0.0, 0.8)
+			hud.call("message", tr("msg.mirror_mounted"))
+		"door_unlocked":
+			_play_ending()
+		"shard_collected":
+			AudioManager.sfx("reveal", 0.0, 1.3)
+			hud.call("message", tr("ui.shard_found") % (logic.state["shards"] as Array).size())
+		"all_shards":
+			GameState.unlock_achievement("light_remembers")
+		"solved":
+			AudioManager.sfx("puzzle_solved", -5.0)
+		"chapter_complete":
+			hud.call("show_chapter_complete")
+		"selected":
+			if arg == "uv_lamp":
+				AudioManager.sfx("uv_on", -4.0)
+				hud.call("message", tr("ui.uv_drag"))
+
+
+func _update_lighting(animated: bool) -> void:
+	var on: bool = logic.state["power_on"]
+	var dur := 2.4 if animated else 0.0
+	var targets := {
+		"pendant_0": 2.2 if on else 0.0, "pendant_1": 1.7 if on else 0.0,
+		"desk_lamp": 1.3 if on else 1.0, "safelight": 1.4 if on else 0.0,
+		"shadow_lamp": 3.2 if on else 0.0,
+	}
+	for k: String in targets:
+		var l: Light3D = lights[k]
+		if animated and k.begins_with("pendant"):
+			var tw := create_tween()
+			# relay-style flicker-in
+			tw.tween_property(l, "light_energy", targets[k] * 0.6, 0.08)
+			tw.tween_property(l, "light_energy", 0.0, 0.1)
+			tw.tween_property(l, "light_energy", targets[k] * 0.8, 0.12)
+			tw.tween_interval(0.15 + 0.3 * int(k.ends_with("1")))
+			tw.tween_property(l, "light_energy", targets[k], dur * 0.5)
+		elif animated:
+			create_tween().tween_property(l, "light_energy", targets[k], dur)
+		else:
+			l.light_energy = targets[k]
+	var amb := Color("2f3a38") if on else Color("26383a")
+	if animated:
+		create_tween().tween_property(env, "ambient_light_energy", 0.55 if on else 0.5, dur)
+	else:
+		env.ambient_light_energy = 0.55 if on else 0.5
+	env.ambient_light_color = amb
+	visuals.set_power_emissives(on)
+
+
+# ====================================================================== finale
+func _play_ending() -> void:
+	_ending = true
+	logic.select_item("")
+	hud.call("set_busy", true)
+	AudioManager.sfx("projector_fire", 0.0, 0.9)
+	await get_tree().create_timer(0.6).timeout
+	SceneManager.flash(Color(0.85, 0.97, 1.0, 0.85), 0.15, 1.6)
+	AudioManager.sfx("maglock_release")
+	hud.call("message", tr("msg.door_unlocked"))
+	visuals.apply_state(true)
+	# 1979 flashback: warm room, Leyla's echo at the desk turns to look at you.
+	cam.go("echo")
+	var warm := create_tween().set_parallel(true)
+	warm.tween_property(env, "ambient_light_color", Color("6a5034"), 1.2)
+	warm.tween_property(env, "ambient_light_energy", 1.1, 1.2)
+	warm.tween_property(lights["desk_lamp"], "light_energy", 2.6, 1.2)
+	var echo: Node3D = models.get("echo_leyla")
+	hud.call("caption", tr("outro.echo"))
+	if echo:
+		echo.visible = true
+		visuals.fade_echo(echo, 0.0, 1.0, 1.2)
+		await get_tree().create_timer(1.8).timeout
+		var head := ModelUtil.find(echo, "echo_head")
+		if head:
+			var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			tw.tween_property(head, "rotation:y", deg_to_rad(-55.0), 1.4)
+		await get_tree().create_timer(2.4).timeout
+		visuals.fade_echo(echo, 1.0, 0.0, 1.6)
+	else:
+		await get_tree().create_timer(3.0).timeout
+	var cool := create_tween().set_parallel(true)
+	cool.tween_property(env, "ambient_light_color", Color("2f3a38"), 1.6)
+	cool.tween_property(env, "ambient_light_energy", 0.55, 1.6)
+	cool.tween_property(lights["desk_lamp"], "light_energy", 1.3, 1.6)
+	await get_tree().create_timer(1.6).timeout
+	cam.go("door")
+	await get_tree().create_timer(0.7).timeout
+	visuals.open_door()
+	AudioManager.sfx("door_open")
+	hud.call("caption", tr("cap.door"))
+	await get_tree().create_timer(2.4).timeout
+	hud.call("set_busy", false)
+	hud.call("show_choice")

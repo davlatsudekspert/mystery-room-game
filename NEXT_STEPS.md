@@ -1,5 +1,7 @@
 # Next Steps
 
-1. Phase 1: create the Godot project (`game/`), autoloads, Lab 7 pure logic, and the headless test runner with full-solution and no-softlock tests.
-2. Phase 2: Blender procedural modelling scripts, CC0 textures (ambientCG / Poly Haven), OFL fonts with Cyrillic and Uzbek coverage, and synthesized audio.
-3. Phase 3: assemble the interactive Lab 7 scene and verify it with runtime screenshots.
+1. Finish the Blender models: room shell with secret darkroom, door, safe, Panel 7, projector, radio, mirrors, items, chalkboard, poster, darkroom props. Then replace each greybox placeholder.
+2. Finish the HUD: inventory icons, inspect view, notebook/documents with the UV page, hints, pause, choice, chapter-complete screen. Create `lab7.tscn`.
+3. Run an automated runtime playthrough in the real 3D scene (scripted taps), with screenshots of each puzzle.
+4. Lighting polish and the 1979 echo finale. Main menu, language picker, settings.
+5. Android debug APK (local), then GitHub Actions workflows (manual trigger only; private-repo minutes need the owner's consent).
