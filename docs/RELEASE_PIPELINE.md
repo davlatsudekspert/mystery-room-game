@@ -22,14 +22,21 @@ All workflows are **manual** (`workflow_dispatch`). Actions minutes in a private
 ## What the owner must provide (GitHub → Settings → Secrets and variables → Actions)
 
 ### Google Play
-| Secret | How to get it |
+The upload key was created on 2026-10-08 and handed to the owner.
+- Format: PKCS12, RSA 4096, alias `mysteryroom-upload`, valid until 2054.
+- Certificate SHA-256: `E5:D8:42:A6:B8:0E:D2:50:FD:DD:EE:CA:92:64:ED:D7:A6:8B:E1:59:70:A3:AD:8C:06:A7:EC:9C:E8:37:D1:3E`
+- It belongs to MYSTERY ROOM only and is never committed. The owner keeps the backup.
+- If it is ever lost, Play App Signing lets the owner request an upload-key reset in Play Console.
+
+| Secret | Value |
 |---|---|
-| `ANDROID_KEYSTORE_BASE64` | Create an **upload key** once: `keytool -genkeypair -v -keystore upload.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000`. Then `base64 -w0 upload.jks`. Keep `upload.jks` in a safe place; it must never be committed |
-| `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | Chosen when creating the key |
-| `PLAY_SERVICE_ACCOUNT_JSON` | Play Console → Setup → API access. Create a service account with the "Release manager" role for this app only, and download its JSON key |
+| `ANDROID_KEYSTORE_BASE64` | Base64 of `mystery-room-upload.keystore` (given to the owner) |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password (given to the owner). A PKCS12 key uses the same password |
+| `ANDROID_KEY_ALIAS` | `mysteryroom-upload` |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Optional, only for automatic uploads: Play Console → Setup → API access. Create a service account with the "Release manager" role for this app only, and download its JSON key |
 
 Prerequisites:
-1. A Google Play developer account. Google charges a **one-time $25 registration fee**, which requires the owner's decision.
+1. A Google Play developer account (the owner has one).
 2. The app is created in the Play Console with the package name above.
 3. Play App Signing is enabled.
 4. The first AAB is uploaded manually once. After that, the API can upload.

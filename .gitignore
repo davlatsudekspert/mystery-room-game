@@ -3,6 +3,8 @@
 *.import.tmp
 export_presets.cfg.bak
 /android/build/
+# Godot Android build template (installed by CI / locally with --install-android-build-template)
+game/android/
 /build/
 *.apk
 *.aab

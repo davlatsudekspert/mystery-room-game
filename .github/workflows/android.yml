@@ -1,8 +1,12 @@
 # MYSTERY ROOM — Android build (debug APK / release AAB) and optional Google Play internal-testing upload.
 # Manual trigger only: private-repo Actions minutes are metered, so runs happen only when the owner starts them.
 # Required secrets for release/upload (never commit keys):
-#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
-#   PLAY_SERVICE_ACCOUNT_JSON (only for upload)
+#   ANDROID_KEYSTORE_BASE64   base64 of the MYSTERY ROOM upload keystore (PKCS12)
+#   ANDROID_KEYSTORE_PASSWORD keystore password (PKCS12: the key uses the same password)
+#   ANDROID_KEY_ALIAS         mysteryroom-upload
+#   PLAY_SERVICE_ACCOUNT_JSON only for the optional Play upload. The very first AAB of a new app must be
+#                             uploaded by hand in Play Console; API uploads work after that.
+# versionCode = the workflow run number, so every build Play receives is higher than the last.
 name: Android build
 
 on:
@@ -78,6 +82,16 @@ jobs:
           EOT
           if [ -n "$KS_B64" ]; then echo "$KS_B64" | base64 -d > ~/release.keystore; fi
 
+      - name: Version code from the run number
+        run: sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" game/export_presets.cfg
+
+      - name: Android SDK 36 (Play requires target API 36 since 2026-08-31)
+        if: inputs.build_type == 'release'
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-36" "build-tools;36.1.0" > /dev/null
+
       - name: Export debug APK
         if: inputs.build_type == 'debug'
         run: |
@@ -98,6 +112,9 @@ jobs:
           godot --headless --install-android-build-template || true
           godot --headless --export-release "Android AAB" ../build/android/mystery-room-release.aab
           ls -la ../build/android
+          # the bundle must carry the upload key's signature
+          jarsigner -verify ../build/android/mystery-room-release.aab | tail -1
+          keytool -printcert -jarfile ../build/android/mystery-room-release.aab | grep -E "Owner|SHA256:"
 
       - uses: actions/upload-artifact@v4
         with:
