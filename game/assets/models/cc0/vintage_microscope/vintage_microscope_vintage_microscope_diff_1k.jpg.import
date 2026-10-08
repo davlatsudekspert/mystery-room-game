@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dygncw18p6pup"
-path="res://.godot/imported/vintage_microscope_vintage_microscope_diff_1k.jpg-aa0c3b3fffde5c5d9194d66a4b80efdf.ctex"
+path.s3tc="res://.godot/imported/vintage_microscope_vintage_microscope_diff_1k.jpg-aa0c3b3fffde5c5d9194d66a4b80efdf.s3tc.ctex"
+path.etc2="res://.godot/imported/vintage_microscope_vintage_microscope_diff_1k.jpg-aa0c3b3fffde5c5d9194d66a4b80efdf.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "03a0e7b4e84bba6fe8dc1bcdf867c880"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/cc0/vintage_microscope/vintage_microscope_vintage_microscope_diff_1k.jpg"
-dest_files=["res://.godot/imported/vintage_microscope_vintage_microscope_diff_1k.jpg-aa0c3b3fffde5c5d9194d66a4b80efdf.ctex"]
+dest_files=["res://.godot/imported/vintage_microscope_vintage_microscope_diff_1k.jpg-aa0c3b3fffde5c5d9194d66a4b80efdf.s3tc.ctex", "res://.godot/imported/vintage_microscope_vintage_microscope_diff_1k.jpg-aa0c3b3fffde5c5d9194d66a4b80efdf.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=1024
+detect_3d/compress_to=0

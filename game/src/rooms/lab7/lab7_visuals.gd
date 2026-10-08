@@ -6,7 +6,7 @@ extends Node
 
 const WHEEL_STEP_DEG := 36.0
 const WHEEL_AXIS := Vector3.RIGHT
-const WHEEL_SIGN := -1.0
+const WHEEL_SIGN := 1.0
 const DRAWER_TRAVEL := 0.26
 const GEAR_SIGN := -1.0
 const LID_OPEN_DEG := -105.0
@@ -15,11 +15,11 @@ const SWITCH_OFF_DEG := -35.0
 const SWITCH_ON_DEG := 35.0
 const LEVER_OFF_DEG := -40.0
 const LEVER_ON_DEG := 40.0
-const SHELF_OPEN_DEG := 85.0
+const SHELF_OPEN_DEG := -85.0
 const CABINET_OPEN_DEG := -100.0
 const DOOR_OPEN_DEG := 95.0
 const RING_SIGN := 1.0
-const BOOK_TILT_DEG := -16.0
+const BOOK_TILT_DEG := 16.0
 
 var room: Node3D
 var logic: Lab7Logic
@@ -71,10 +71,7 @@ func _record(n: Node) -> void:
 
 func _attach_bookshelf_children() -> void:
 	# The gear box rides on the swinging bookcase.
-	var shelf := model("bookshelf")
-	var box := model("gear_box")
-	if shelf and box:
-		box.reparent(shelf, true)
+	pass
 
 
 func _spawn_item(spot: String, item_model: String, parent: Node3D, offset: Vector3, yaw: float = 0.0, scale: float = 1.0) -> void:
@@ -155,8 +152,8 @@ func apply_state(animated: bool) -> void:
 		_safe_label.text = "OPEN" if s["safe_open"] else (" ".join(inp.split("")) + " _".repeat(4 - inp.length())).strip_edges()
 	# P5 desk compartment
 	_slide(part("desk", "IA_rosette"), Vector3(-0.006 if s["rosette"] else 0.0, 0, 0), animated)
-	_slide(part("desk", "IA_secret_panel"), Vector3(0, -0.065 if s["rosette"] else 0.0, 0), animated)
-	_slide(part("desk", "IA_compartment"), Vector3(0.22 if s["compartment_open"] else 0.0, 0, 0), animated)
+	_slide(part("desk", "IA_secret_panel"), Vector3(0, -0.06 if s["rosette"] else 0.0, 0), animated)
+	_slide(part("desk", "IA_compartment"), Vector3(0.20 if s["compartment_open"] else 0.0, 0, 0), animated)
 	# items in containers
 	for spot: String in _items:
 		(_items[spot] as Node3D).visible = not s["taken"].get(spot, false)
@@ -406,7 +403,7 @@ func tilt_book(n: int) -> void:
 	if not rest.has(b):
 		rest[b] = b.transform
 	var base: Transform3D = rest[b]
-	var out := Transform3D(base.basis * Basis(Vector3.BACK, deg_to_rad(BOOK_TILT_DEG)), base.origin)
+	var out := Transform3D(base.basis * Basis(Vector3.RIGHT, deg_to_rad(BOOK_TILT_DEG)), base.origin)
 	var tw := room.create_tween()
 	tw.tween_property(b, "transform", out, 0.18)
 	tw.tween_interval(0.25)

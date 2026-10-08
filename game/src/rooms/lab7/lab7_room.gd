@@ -16,7 +16,7 @@ const LAYOUT := {
 	"desk_lamp": [Vector3(-1.18, 0.78, -2.32), 25.0, "desk", "parts"],
 	"filing_cabinet": [Vector3(-2.6, 0, -2.2), 0.0, "filing", "parts"],
 	"bookshelf": [Vector3(-3.1, 0, -1.15), 90.0, "bookshelf", "parts"],
-	"gear_box": [Vector3(-2.88, 1.205, -0.6), 90.0, "gearbox", "parts"],
+	"gear_box": [Vector3(-1.85, 0.545, -2.18), 0.0, "gearbox", "parts"],
 	"chalkboard": [Vector3(-3.0, 1.0, 1.05), 90.0, "chalkboard", "parts"],
 	"lumen_projector": [Vector3(-2.3, 0, 1.6), 90.0, "projector", "parts"],
 	"lab_bench": [Vector3(-0.3, 0, 2.15), 180.0, "bench", "parts"],
@@ -48,7 +48,6 @@ const EXTRA := {
 	"cc_stool": ["cc0/metal_stool_02/metal_stool_02", Vector3(0.25, 0, 1.45), 20.0, ""],
 	"cc_gasmask": ["cc0/old_gas_mask/old_gas_mask", Vector3(2.45, 1.7, -2.3), 0.0, "coat"],
 	"cc_drawer": ["cc0/vintage_wooden_drawer_01/vintage_wooden_drawer_01", Vector3(-1.85, 0, -2.25), 0.0, ""],
-	"cc_instrument": ["cc0/vintage_spacecraft_instrument/vintage_spacecraft_instrument", Vector3(-1.85, 0.545, -2.25), 10.0, ""],
 }
 
 ## Hotspot -> camera view id (tapping the hotspot from elsewhere moves the camera here)
@@ -331,6 +330,15 @@ func _build_lights() -> void:
 	add_child(lumen)
 	lights["lumen"] = lumen
 
+	var fill := OmniLight3D.new()
+	fill.light_color = Color("ffe2c2")
+	fill.light_energy = 0.0
+	fill.omni_range = 1.6
+	fill.omni_attenuation = 1.6
+	fill.shadow_enabled = false
+	add_child(fill)
+	lights["focus_fill"] = fill
+
 	uv_light = SpotLight3D.new()
 	uv_light.light_color = Color("7b4dff")
 	uv_light.light_energy = 3.0
@@ -358,14 +366,14 @@ func _build_views() -> void:
 	V.call("door", Vector3(1.55, 1.5, 0.75), Vector3(3.0, 1.25, 0.75), 56.0)
 	V.call("lock", Vector3(2.35, 1.2, 0.12), Vector3(3.0, 1.15, 0.12), 34.0)
 	V.call("desk", Vector3(-0.5, 1.48, -1.2), Vector3(-0.5, 0.8, -2.15), 52.0)
-	V.call("drawer", Vector3(-0.5, 0.86, -1.32), Vector3(-0.5, 0.66, -1.76), 34.0)
+	V.call("drawer", Vector3(-0.5, 1.08, -1.12), Vector3(-0.5, 0.62, -1.78), 36.0)
 	V.call("clock", Vector3(-0.98, 1.0, -1.8), Vector3(-1.0, 0.84, -2.25), 30.0)
 	V.call("desk_side", Vector3(0.95, 0.78, -1.85), Vector3(0.25, 0.55, -2.08), 42.0)
 	V.call("under_desk", Vector3(-0.5, 0.45, -1.15), Vector3(-0.7, 0.05, -2.1), 55.0)
 	V.call("filing", Vector3(-1.9, 1.55, -1.25), Vector3(-2.6, 1.0, -2.2), 50.0)
 	V.call("bookshelf", Vector3(-1.35, 1.35, -0.6), Vector3(-2.74, 1.15, -0.6), 56.0)
 	V.call("books", Vector3(-2.0, 1.0, -0.6), Vector3(-2.74, 0.9, -0.6), 44.0)
-	V.call("gearbox", Vector3(-2.3, 1.55, -0.6), Vector3(-2.82, 1.25, -0.6), 34.0)
+	V.call("gearbox", Vector3(-1.85, 1.02, -1.72), Vector3(-1.85, 0.6, -2.18), 38.0)
 	V.call("bookshelf_top", Vector3(-2.15, 2.5, -0.55), Vector3(-2.9, 2.12, -0.5), 48.0)
 	V.call("chalkboard", Vector3(-1.15, 1.55, 1.05), Vector3(-3.0, 1.5, 1.05), 50.0)
 	V.call("projector", Vector3(-1.45, 1.45, 1.05), Vector3(-2.2, 1.12, 1.6), 46.0)
@@ -492,7 +500,7 @@ func _in_reach(hotspot: String) -> bool:
 	if v == "" or cur == v:
 		return true
 	var deeper := {
-		"desk": ["drawer", "clock", "desk_side", "under_desk"], "bookshelf": ["books", "gearbox", "bookshelf_top"],
+		"desk": ["drawer", "clock", "desk_side", "under_desk"], "bookshelf": ["books", "bookshelf_top"],
 		"bench": ["vials", "radio"], "door": ["lock"], "shadow": ["emblem", "cabinet"],
 	}
 	return (deeper.get(v, []) as Array).has(cur)
@@ -543,8 +551,10 @@ func _interact(hs: String, part: String, r: Dictionary) -> void:
 			cam.go("clock")
 		"desk":
 			_interact_desk(part, r)
-		"bookshelf", "gearbox":
+		"bookshelf":
 			_interact_bookshelf(part, r)
+		"gearbox":
+			_interact_gearbox(part)
 		"chalkboard", "poster", "filing", "window", "coat", "evidence":
 			if cam.current() != HOTSPOT_VIEW.get(hs, ""):
 				_focus(hs)
@@ -628,17 +638,6 @@ func _interact_bookshelf(part: String, _r: Dictionary) -> void:
 		var n := int(part.substr(8))
 		logic.pull_book(n)
 		return
-	if part.begins_with("IA_knob_") or part.begins_with("IA_gear_") or part == "IA_box_lid" or part.begins_with("Item_box"):
-		if cur != "gearbox":
-			cam.go("gearbox")
-			return
-		if s["box_open"]:
-			if logic.can_take("box_cell"):
-				logic.take("box_cell")
-			return
-		var i := int(part.substr(part.length() - 1))
-		logic.press_gear(i)
-		return
 	if s["shelf_open"] and cur in ["lab", "bookshelf"]:
 		cam.go("darkroom")
 		return
@@ -646,6 +645,19 @@ func _interact_bookshelf(part: String, _r: Dictionary) -> void:
 		cam.go("bookshelf")
 	elif cur == "bookshelf":
 		cam.go("books")
+
+
+func _interact_gearbox(part: String) -> void:
+	var s := logic.state
+	if cam.current() != "gearbox":
+		cam.go("gearbox")
+		return
+	if s["box_open"]:
+		if logic.can_take("box_cell"):
+			logic.take("box_cell")
+		return
+	if part.begins_with("IA_knob_") or part.begins_with("IA_gear_"):
+		logic.press_gear(int(part.substr(part.length() - 1)))
 
 
 func _interact_bench(part: String) -> void:
@@ -779,6 +791,8 @@ func _tap_shard(id: String) -> void:
 
 # ====================================================================== per-frame: UV torch
 func _process(delta: float) -> void:
+	var fill: OmniLight3D = lights["focus_fill"]
+	fill.global_position = cam.global_position + cam.global_basis * Vector3(0.12, 0.18, 0.05)
 	var uv_on := logic.selected == "uv_lamp" and not _ending
 	uv_light.visible = uv_on
 	RenderingServer.global_shader_parameter_set("uv_light_on", 1.0 if uv_on else 0.0)
@@ -817,6 +831,8 @@ func _process(delta: float) -> void:
 # ====================================================================== events → feedback
 func _on_view_changed(id: String) -> void:
 	hud.call("set_view", id, cam.is_root(), HOTSPOT_CAPTION.get(id, ""))
+	var fill: OmniLight3D = lights["focus_fill"]
+	create_tween().tween_property(fill, "light_energy", 0.0 if cam.is_root() else 0.9, 0.6)
 	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor"]
 	(lights["shadow_lamp"] as SpotLight3D).visible = in_dark
 	(lights["moon"] as DirectionalLight3D).shadow_enabled = not in_dark

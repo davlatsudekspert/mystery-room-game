@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d2obkcxtxltjr"
-path="res://.godot/imported/magnifying_glass_01_magnifying_glass_01_arm_1k.jpg-de66d2dc791372ebd11a4cffbd5d0751.ctex"
+path.s3tc="res://.godot/imported/magnifying_glass_01_magnifying_glass_01_arm_1k.jpg-de66d2dc791372ebd11a4cffbd5d0751.s3tc.ctex"
+path.etc2="res://.godot/imported/magnifying_glass_01_magnifying_glass_01_arm_1k.jpg-de66d2dc791372ebd11a4cffbd5d0751.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "921e496932791848efb33acfe738a238"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/cc0/magnifying_glass_01/magnifying_glass_01_magnifying_glass_01_arm_1k.jpg"
-dest_files=["res://.godot/imported/magnifying_glass_01_magnifying_glass_01_arm_1k.jpg-de66d2dc791372ebd11a4cffbd5d0751.ctex"]
+dest_files=["res://.godot/imported/magnifying_glass_01_magnifying_glass_01_arm_1k.jpg-de66d2dc791372ebd11a4cffbd5d0751.s3tc.ctex", "res://.godot/imported/magnifying_glass_01_magnifying_glass_01_arm_1k.jpg-de66d2dc791372ebd11a4cffbd5d0751.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=512
+detect_3d/compress_to=0

@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hapa0khq1q6e"
-path="res://.godot/imported/worn_metal_rack_worn_metal_rack_arm_1k.jpg-16617235f7644137667cb85cc6df46d5.ctex"
+path.s3tc="res://.godot/imported/worn_metal_rack_worn_metal_rack_arm_1k.jpg-16617235f7644137667cb85cc6df46d5.s3tc.ctex"
+path.etc2="res://.godot/imported/worn_metal_rack_worn_metal_rack_arm_1k.jpg-16617235f7644137667cb85cc6df46d5.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "720a7074248972552ffe288106532566"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/cc0/worn_metal_rack/worn_metal_rack_worn_metal_rack_arm_1k.jpg"
-dest_files=["res://.godot/imported/worn_metal_rack_worn_metal_rack_arm_1k.jpg-16617235f7644137667cb85cc6df46d5.ctex"]
+dest_files=["res://.godot/imported/worn_metal_rack_worn_metal_rack_arm_1k.jpg-16617235f7644137667cb85cc6df46d5.s3tc.ctex", "res://.godot/imported/worn_metal_rack_worn_metal_rack_arm_1k.jpg-16617235f7644137667cb85cc6df46d5.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=1024
+detect_3d/compress_to=0

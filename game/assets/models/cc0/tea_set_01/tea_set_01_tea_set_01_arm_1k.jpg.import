@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbkvqpw7dlo10"
-path="res://.godot/imported/tea_set_01_tea_set_01_arm_1k.jpg-c9c1df350e44189bad919f3dc287b127.ctex"
+path.s3tc="res://.godot/imported/tea_set_01_tea_set_01_arm_1k.jpg-c9c1df350e44189bad919f3dc287b127.s3tc.ctex"
+path.etc2="res://.godot/imported/tea_set_01_tea_set_01_arm_1k.jpg-c9c1df350e44189bad919f3dc287b127.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "4bb61bf5c168f666fc3280073d6306bf"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/cc0/tea_set_01/tea_set_01_tea_set_01_arm_1k.jpg"
-dest_files=["res://.godot/imported/tea_set_01_tea_set_01_arm_1k.jpg-c9c1df350e44189bad919f3dc287b127.ctex"]
+dest_files=["res://.godot/imported/tea_set_01_tea_set_01_arm_1k.jpg-c9c1df350e44189bad919f3dc287b127.s3tc.ctex", "res://.godot/imported/tea_set_01_tea_set_01_arm_1k.jpg-c9c1df350e44189bad919f3dc287b127.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=512
+detect_3d/compress_to=0

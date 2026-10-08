@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0ht7svdkqy2i"
-path="res://.godot/imported/round_spectacles_round_spectacles_arm_1k.jpg-fc131ed85c2301433815ababdb3bef32.ctex"
+path.s3tc="res://.godot/imported/round_spectacles_round_spectacles_arm_1k.jpg-fc131ed85c2301433815ababdb3bef32.s3tc.ctex"
+path.etc2="res://.godot/imported/round_spectacles_round_spectacles_arm_1k.jpg-fc131ed85c2301433815ababdb3bef32.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "3f01368d9839851d5163b1e6f0b9ab43"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/cc0/round_spectacles/round_spectacles_round_spectacles_arm_1k.jpg"
-dest_files=["res://.godot/imported/round_spectacles_round_spectacles_arm_1k.jpg-fc131ed85c2301433815ababdb3bef32.ctex"]
+dest_files=["res://.godot/imported/round_spectacles_round_spectacles_arm_1k.jpg-fc131ed85c2301433815ababdb3bef32.s3tc.ctex", "res://.godot/imported/round_spectacles_round_spectacles_arm_1k.jpg-fc131ed85c2301433815ababdb3bef32.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=512
+detect_3d/compress_to=0

@@ -65,6 +65,10 @@ func _pump() -> void:
 	for c in _pivot.get_children():
 		c.queue_free()
 	var n := ModelUtil.spawn(ItemDB.model_path(id), _pivot, Transform3D.IDENTITY, "none")
+	if n == null:
+		_busy = false
+		_pump()
+		return # model not built yet: the slot shows the item's name instead
 	if n != null:
 		var aabb := _aabb(n)
 		var radius := maxf(0.01, aabb.size.length() * 0.5)

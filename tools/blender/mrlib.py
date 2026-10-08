@@ -629,6 +629,9 @@ def export_glb(name: str, subdir: str = "") -> str:
         export_cameras=False,
         export_lights=False,
         export_extras=True,
+        # Godot swaps every M_* slot for res://assets/materials/<name>.tres, so embedding the
+        # QA-preview images would only duplicate the texture library inside each GLB.
+        export_image_format="NONE",
     )
     print(f"[mrlib] exported {path} ({tri_count()} tris)")
     return path

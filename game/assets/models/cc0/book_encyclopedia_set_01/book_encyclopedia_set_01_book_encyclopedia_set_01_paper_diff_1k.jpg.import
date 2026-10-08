@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dphwflsylk8w3"
-path="res://.godot/imported/book_encyclopedia_set_01_book_encyclopedia_set_01_paper_diff_1k.jpg-c0ebfbf205c17c8b60ab1a1cd5ed7057.ctex"
+path.s3tc="res://.godot/imported/book_encyclopedia_set_01_book_encyclopedia_set_01_paper_diff_1k.jpg-c0ebfbf205c17c8b60ab1a1cd5ed7057.s3tc.ctex"
+path.etc2="res://.godot/imported/book_encyclopedia_set_01_book_encyclopedia_set_01_paper_diff_1k.jpg-c0ebfbf205c17c8b60ab1a1cd5ed7057.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "13f2da2de8138158c2f47a19ec9354ca"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/cc0/book_encyclopedia_set_01/book_encyclopedia_set_01_book_encyclopedia_set_01_paper_diff_1k.jpg"
-dest_files=["res://.godot/imported/book_encyclopedia_set_01_book_encyclopedia_set_01_paper_diff_1k.jpg-c0ebfbf205c17c8b60ab1a1cd5ed7057.ctex"]
+dest_files=["res://.godot/imported/book_encyclopedia_set_01_book_encyclopedia_set_01_paper_diff_1k.jpg-c0ebfbf205c17c8b60ab1a1cd5ed7057.s3tc.ctex", "res://.godot/imported/book_encyclopedia_set_01_book_encyclopedia_set_01_paper_diff_1k.jpg-c0ebfbf205c17c8b60ab1a1cd5ed7057.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,5 +41,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
-detect_3d/compress_to=1
+process/size_limit=1024
+detect_3d/compress_to=0
