@@ -1,0 +1,4 @@
+# Python packages for tools/audio/synth_all.py (also needs ffmpeg with libvorbis and SoX on PATH)
+numpy>=1.26
+scipy>=1.11
+Pillow>=10.0

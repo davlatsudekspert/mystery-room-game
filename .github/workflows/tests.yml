@@ -1,0 +1,16 @@
+# Headless logic/localization/save tests (Linux, ~3 min). Manual trigger to respect the private-repo minute quota.
+name: Tests
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          curl -sSL -o /tmp/g.zip "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip"
+          unzip -q /tmp/g.zip -d /tmp/godot && sudo ln -sf /tmp/godot/Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+      - name: Run tests
+        run: tools/run_tests.sh
