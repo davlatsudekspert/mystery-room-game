@@ -3,6 +3,7 @@ extends Control
 
 var _menu: VBoxContainer
 var _panel_host: CenterContainer
+var _dim: ColorRect # darkens the menu behind an open panel
 
 
 func _ready() -> void:
@@ -48,6 +49,12 @@ func _ready() -> void:
 	_menu = VBoxContainer.new()
 	_menu.add_theme_constant_override("separation", 14)
 	left.add_child(_menu)
+	_dim = ColorRect.new()
+	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dim.color = Color(0, 0, 0, 0.62)
+	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dim.visible = false
+	add_child(_dim)
 	_panel_host = CenterContainer.new()
 	_panel_host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_panel_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -106,19 +113,24 @@ func _clear_panel() -> void:
 	for c in _panel_host.get_children():
 		c.queue_free()
 	_panel_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dim.visible = false
+
+
+func _open_panel() -> void:
+	_clear_panel()
+	_panel_host.mouse_filter = Control.MOUSE_FILTER_STOP
+	_dim.visible = true
 
 
 func _show_settings() -> void:
-	_clear_panel()
-	_panel_host.mouse_filter = Control.MOUSE_FILTER_STOP
+	_open_panel()
 	var sp := SettingsPanel.new()
 	_panel_host.add_child(sp)
 	sp.closed.connect(_clear_panel)
 
 
 func _show_chapters() -> void:
-	_clear_panel()
-	_panel_host.mouse_filter = Control.MOUSE_FILTER_STOP
+	_open_panel()
 	var p := PanelContainer.new()
 	p.custom_minimum_size = Vector2(1200, 0)
 	_panel_host.add_child(p)
@@ -162,8 +174,7 @@ func _show_chapters() -> void:
 
 
 func _confirm(key: String, yes: Callable) -> void:
-	_clear_panel()
-	_panel_host.mouse_filter = Control.MOUSE_FILTER_STOP
+	_open_panel()
 	var p := PanelContainer.new()
 	p.custom_minimum_size = Vector2(900, 0)
 	_panel_host.add_child(p)

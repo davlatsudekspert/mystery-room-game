@@ -71,7 +71,9 @@ jobs:
           sed -i '' "s/^application\/version=.*/application\/version=\"${{ github.run_number }}\"/" export_presets.cfg
           "$GODOT" --headless --import || true
           mkdir -p ../build/ios
-          "$GODOT" --headless --export-release "iOS" ../build/ios/MysteryRoom.xcodeproj
+          # the .ipa path names the project (build/ios/MysteryRoom.xcodeproj); with export_project_only
+          # Godot writes the Xcode project only (verified on Linux: scheme "MysteryRoom", team + bundle id set)
+          "$GODOT" --headless --export-release "iOS" ../build/ios/MysteryRoom.ipa
           ls -la ../build/ios
 
       - name: Archive (automatic cloud signing)
@@ -80,11 +82,17 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
+          set -o pipefail
           xcodebuild -project build/ios/MysteryRoom.xcodeproj -scheme MysteryRoom -configuration Release \
             -destination 'generic/platform=iOS' -archivePath build/ios/MysteryRoom.xcarchive archive \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" | tail -40
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CODE_SIGN_IDENTITY="Apple Development" 2>&1 | tail -60
+          # Godot's Release config asks for "Apple Distribution" with Automatic style, which Xcode rejects as
+          # "conflicting provisioning settings"; the archive is development-signed and -exportArchive below
+          # re-signs it with the cloud-managed distribution certificate.
+          test -d build/ios/MysteryRoom.xcarchive
 
       - name: Export IPA (and upload to TestFlight)
         env:
@@ -105,9 +113,10 @@ jobs:
             <key>uploadSymbols</key><true/>
           </dict></plist>
           EOT
+          set -o pipefail
           xcodebuild -exportArchive -archivePath build/ios/MysteryRoom.xcarchive -exportPath build/ios/export \
             -exportOptionsPlist build/ios/ExportOptions.plist -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tail -40
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" 2>&1 | tail -60
           ls -la build/ios/export || true
 
       - uses: actions/upload-artifact@v4

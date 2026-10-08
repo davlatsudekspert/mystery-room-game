@@ -1,6 +1,6 @@
 extends Node
 ## QA: renders the menus and in-game overlays in EN, RU and UZ to check layout/fonts on a real frame.
-## Run: xvfb-run godot --path game res://qa/ui_screens.tscn -- --out=<dir>
+## Run: xvfb-run godot --path game res://qa/ui_screens.tscn -- --out=<dir> [--langs=en,ru] [--menus-only]
 
 var out_dir := "/tmp"
 
@@ -10,11 +10,17 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	var langs: PackedStringArray = ["en", "ru", "uz"]
+	var menus_only := false
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
+		elif a.begins_with("--langs="):
+			langs = a.substr(8).split(",", false)
+		elif a == "--menus-only":
+			menus_only = true
 	SaveSystem.save_path = "user://qa_ui_save.json"
-	for lang in ["en", "ru", "uz"]:
+	for lang in langs:
 		TranslationServer.set_locale(lang)
 		Settings.values["text_scale"] = 1.0
 		# --- first-launch language picker, main menu, settings, chapters
@@ -37,6 +43,8 @@ func _run() -> void:
 		await _shot("%s_chapters" % lang)
 		menu.queue_free()
 		await _settle(0.3)
+		if menus_only:
+			continue
 		# --- in-game overlays
 		GameState.start_new("ch1")
 		var l := GameState.logic as Lab7Logic

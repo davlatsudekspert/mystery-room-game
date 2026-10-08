@@ -72,7 +72,7 @@ const HOTSPOT_CAPTION := {
 
 const BOOKCASE_HINGE := Vector3(-2.74, 0.0, -1.15)
 const SHARD_SPOTS := {
-	"under_desk": Vector3(-0.85, 0.011, -2.25), "bookshelf_top": Vector3(-2.85, 2.16, -0.3),
+	"under_desk": Vector3(-0.7, 0.011, -2.22), "bookshelf_top": Vector3(-2.85, 2.16, -0.3),
 	"radiator": Vector3(1.78, 0.05, -2.33), "coat_pocket": Vector3(2.37, 1.07, -1.98),
 	"darkroom": Vector3(-4.55, 0.011, 0.15),
 }
@@ -464,7 +464,7 @@ func _build_views() -> void:
 	V.call("drawer", Vector3(-0.5, 1.08, -1.12), Vector3(-0.5, 0.62, -1.78), 36.0)
 	V.call("clock", Vector3(-0.98, 1.0, -1.8), Vector3(-1.0, 0.84, -2.25), 30.0)
 	V.call("desk_side", Vector3(0.95, 0.78, -1.85), Vector3(0.25, 0.55, -2.08), 42.0)
-	V.call("under_desk", Vector3(-0.5, 0.45, -1.15), Vector3(-0.7, 0.05, -2.1), 55.0)
+	V.call("under_desk", Vector3(-0.74, 0.5, -1.15), Vector3(-0.7, 0.02, -2.2), 55.0) # beside the chair, not under it
 	V.call("filing", Vector3(-1.9, 1.55, -1.25), Vector3(-2.6, 1.0, -2.2), 50.0)
 	V.call("bookshelf", Vector3(-1.35, 1.35, -0.6), Vector3(-2.74, 1.15, -0.6), 56.0)
 	V.call("books", Vector3(-2.0, 1.0, -0.6), Vector3(-2.74, 0.9, -0.6), 44.0)
@@ -480,7 +480,7 @@ func _build_views() -> void:
 	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
 	V.call("safe", Vector3(2.2, 1.32, 1.72), Vector3(2.2, 1.25, 2.5), 40.0)
 	V.call("panel", Vector3(2.12, 1.5, -1.3), Vector3(3.0, 1.45, -1.3), 50.0)
-	V.call("coat", Vector3(1.9, 1.55, -1.45), Vector3(2.6, 1.3, -2.15), 50.0)
+	V.call("coat", Vector3(1.7, 1.35, -2.05), Vector3(2.37, 1.07, -1.98), 46.0) # north of Panel 7's open door
 	V.call("mirror_a", Vector3(0.95, 1.5, 1.05), Vector3(1.6, 1.15, 1.6), 46.0)
 	V.call("mirror_b", Vector3(0.85, 1.45, 0.4), Vector3(1.6, 1.15, 0.12), 46.0)
 	V.call("window", Vector3(1.5, 1.85, -1.55), Vector3(1.5, 2.0, -2.7), 56.0)
@@ -1005,6 +1005,8 @@ func _view_caption(id: String) -> String:
 		return "obj.door_open"
 	if id == "cabinet" and s["cabinet_open"]:
 		return "obj.cabinet_open"
+	if id in ["bookshelf", "books"] and s["shelf_open"]:
+		return "obj.bookshelf_open"
 	return HOTSPOT_CAPTION.get(id, "")
 
 
@@ -1205,8 +1207,7 @@ func _feedback(e: String) -> void:
 			hud.call("show_chapter_complete")
 		"selected":
 			if arg == "uv_lamp":
-				AudioManager.sfx("uv_on", -4.0)
-				hud.call("message", tr("ui.uv_drag"))
+				AudioManager.sfx("uv_on", -4.0) # the HUD prompt already says "drag to shine"
 
 
 func _update_lighting(animated: bool) -> void:

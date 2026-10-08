@@ -5,7 +5,7 @@
 - Never reuse NFCSTORE ids, keys or workflows.
 
 ## Current state
-- GitHub Actions is paused until the account's billing is restored. The workflows below are ready and will be used then.
+- GitHub Actions: on 2026-10-08 the owner reported that the billing block is lifted. The manual runs at 18:40 and 18:46 UTC still ended after about 3 s, with no runner assigned and no logs. That is the billing-lock signature, so check **Settings → Billing and licensing** before the next run.
 - Codemagic was evaluated and **cancelled** by the owner. Its config was removed; it can be recovered from commit `c7ffd7e`.
 - Meanwhile, Android debug APKs are built and verified locally in the dev container.
 
@@ -17,7 +17,7 @@ All workflows are **manual** (`workflow_dispatch`). Actions minutes in a private
 | `tests.yml` | ubuntu | Headless test suite (`tools/run_tests.sh`) |
 | `android.yml` (debug) | ubuntu | Tests, then a debug APK signed with a throw-away debug key, uploaded as an artifact |
 | `android.yml` (release) | ubuntu | Tests, then a Gradle **AAB** signed with the upload key from secrets. Optionally uploaded to **Google Play → Internal testing** as a draft |
-| `ios.yml` | macOS 15 | Godot iOS export. With signing secrets: a signed IPA, optionally uploaded to **TestFlight**. Without them: the unsigned Xcode project as an artifact |
+| `ios.yml` | macOS 15 | Godot iOS export, Xcode archive with cloud signing, then an IPA, optionally uploaded to **TestFlight**. It stops at the first step if the secrets are missing |
 
 ## What the owner must provide (GitHub → Settings → Secrets and variables → Actions)
 
@@ -46,9 +46,11 @@ One-time setup in App Store Connect:
 2. Create the app record (Apps → "+").
 
 The workflow then:
-1. exports the Godot Xcode project;
-2. archives it with `-allowProvisioningUpdates` and the API key, so Xcode manages certificates and profiles;
-3. uploads the build to TestFlight (`destination=upload`).
+1. exports the Godot Xcode project. This step is verified on Linux: scheme `MysteryRoom`, bundle id and team set, automatic signing, iOS 15.
+2. archives it with `-allowProvisioningUpdates` and the API key, so Xcode manages certificates and profiles.
+   - The archive is development-signed (`CODE_SIGN_IDENTITY="Apple Development"`).
+   - Godot's Release config asks for "Apple Distribution" with automatic signing, which Xcode rejects as conflicting.
+3. re-signs the archive in `-exportArchive` with the cloud-managed distribution certificate and uploads it to TestFlight (`destination=upload`).
 
 ## Status (verified in the dev container)
 - ✅ Debug APK builds locally:
@@ -56,5 +58,8 @@ The workflow then:
   - arm64-v8a
   - **123 MB** after the mobile texture policy (`tools/build/texture_imports.py`)
 - ⏳ Release AAB via Gradle: configured, not yet run, because it needs the Gradle download and the owner's upload key.
-- ❌ iOS: cannot be built or verified here (no macOS/Xcode). The workflow is prepared but **has not been run**.
+- 🔶 iOS:
+  - The Xcode project export is verified on Linux.
+  - The owner added `IOS_TEAM_ID` and the `ASC_*` secrets on 2026-10-08.
+  - Archive, signing and upload need macOS, so they are unverified. The workflow **has not run yet**: it needs the App Store Connect app record and working Actions runners.
 - ❌ No physical-device testing yet. FPS, load time and memory on real phones are **not measured**. Container figures come from a software renderer.

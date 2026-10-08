@@ -157,6 +157,7 @@ obj.chalkboard,Strand's chalkboard,Доска Странда,Strandning dokasi
 obj.bench,Laboratory bench,Лабораторный стол,Laboratoriya stoli
 obj.vials,"Three samples, labelled only by density (ρ)","Три образца, подписаны только плотностью (ρ)",Uchta namuna — faqat zichligi (ρ) yozilgan
 obj.bookshelf,Bookcase — a nine-volume encyclopedia,Книжный шкаф — энциклопедия в девяти томах,Kitob javoni — toʻqqiz jildli ensiklopediya
+obj.bookshelf_open,Behind the bookcase: Leyla's darkroom,За книжным шкафом — тёмная комната Лейлы,Kitob javoni ortida — Leylaning qorongʻi xonasi
 obj.mirror_a,Mirror stand,Зеркальная стойка,Koʻzgu tirgagi
 obj.mirror_b,Mirror stand — the bracket is empty,Зеркальная стойка — держатель пуст,Koʻzgu tirgagi — ushlagich boʻsh
 obj.lock,The door's eye — a light lock,Глаз двери — световой замок,Eshik koʻzi — yorugʻlik qulfi

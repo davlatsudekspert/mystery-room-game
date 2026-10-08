@@ -17,12 +17,18 @@ func _ready() -> void:
 	c.add_child(v)
 	var t := UITheme.title("MYSTERY ROOM", 80)
 	t.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	t.autowrap_mode = TextServer.AUTOWRAP_OFF
 	v.add_child(t)
-	# The prompt is shown in all three languages so everyone can read it.
-	var prompt := UITheme.label("Choose your language · Выберите язык · Tilni tanlang", 28, UITheme.MUTED)
-	prompt.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(prompt)
+	# The prompt is shown in all three languages (one per line, same EN → RU → UZ order) so everyone can read it.
+	for line in ["Choose your language", "Выберите язык", "Tilni tanlang"]:
+		var prompt := UITheme.label(line, 28, UITheme.MUTED)
+		prompt.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		prompt.autowrap_mode = TextServer.AUTOWRAP_OFF
+		v.add_child(prompt)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(0, 12)
+	v.add_child(gap)
 	var detected := Loc.detect_device_language()
 	for code in Loc.SUPPORTED:
 		var b := UITheme.button(Loc.NATIVE_NAMES[code], 520)
