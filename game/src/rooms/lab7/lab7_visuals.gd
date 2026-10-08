@@ -47,6 +47,39 @@ func _ready() -> void:
 	_beam_root = Node3D.new()
 	_beam_root.name = "Beam"
 	room.add_child(_beam_root)
+	_build_red_leak()
+
+
+var _leak: Array[MeshInstance3D] = []
+
+
+## Thin red light seams around the closed bookcase: the darkroom safelight leaking through the gaps.
+func _build_red_leak() -> void:
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.albedo_color = Color(1.0, 0.16, 0.08, 0.85)
+	m.no_depth_test = false
+	for e: Array in [[Vector3(-2.995, 1.075, -1.155), Vector2(0.012, 2.15)], [Vector3(-2.995, 1.075, -0.045), Vector2(0.012, 2.15)],
+			[Vector3(-2.995, 2.152, -0.6), Vector2(1.1, 0.012)]]:
+		var q := MeshInstance3D.new()
+		var qm := QuadMesh.new()
+		qm.size = e[1]
+		q.mesh = qm
+		q.material_override = m
+		q.rotation.y = deg_to_rad(90)
+		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		room.add_child(q)
+		q.position = e[0]
+		q.visible = false
+		_leak.append(q)
+
+
+func _update_red_leak() -> void:
+	var on: bool = logic.state["power_on"] and not logic.state["shelf_open"]
+	for q in _leak:
+		q.visible = on
 
 
 func part(model: String, name: String) -> Node3D:
@@ -198,6 +231,7 @@ func apply_state(animated: bool) -> void:
 	if mb:
 		mb.visible = s["mirror_b_mounted"]
 	_update_beam()
+	_update_red_leak()
 	# door + maglock
 	var mag := part("door_lab7", "maglock_lamp") as MeshInstance3D
 	if mag:

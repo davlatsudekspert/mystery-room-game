@@ -433,11 +433,48 @@ func _on_drag(rel: Vector2, pos: Vector2) -> void:
 
 
 func _raycast(screen: Vector2) -> Dictionary:
+	## Collects every hit along the tap ray and prefers the smallest interactive part (IA_*, items,
+	## shards) within a short depth window behind the first surface, so small controls (dial wheels,
+	## knobs, keys) win over the coarse boxes of the furniture they sit on.
 	var from := cam.project_ray_origin(screen)
 	var dir := cam.project_ray_normal(screen)
-	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 20.0)
-	q.collide_with_areas = false
-	return get_world_3d().direct_space_state.intersect_ray(q)
+	var space := get_world_3d().direct_space_state
+	var exclude: Array[RID] = []
+	var hits: Array[Dictionary] = []
+	for i in 8:
+		var q := PhysicsRayQueryParameters3D.create(from, from + dir * 20.0)
+		q.exclude = exclude
+		var h := space.intersect_ray(q)
+		if h.is_empty():
+			break
+		hits.append(h)
+		exclude.append(h["rid"])
+	if hits.is_empty():
+		return {}
+	var first_d := from.distance_to(hits[0]["position"])
+	var best: Dictionary = hits[0]
+	var best_vol := INF
+	for h in hits:
+		var d := from.distance_to(h["position"])
+		if d - first_d > 0.18:
+			break
+		var col: Node = h["collider"]
+		var part := str(col.get_meta("part", ""))
+		if part == "":
+			continue
+		var vol := _collider_volume(col)
+		if vol < best_vol:
+			best_vol = vol
+			best = h
+	return best
+
+
+func _collider_volume(col: Node) -> float:
+	for c in col.get_children():
+		if c is CollisionShape3D and (c as CollisionShape3D).shape is BoxShape3D:
+			var sz := ((c as CollisionShape3D).shape as BoxShape3D).size
+			return sz.x * sz.y * sz.z
+	return 1.0
 
 
 func _resolve(hit: Dictionary) -> Dictionary:
@@ -913,6 +950,9 @@ func _feedback(e: String) -> void:
 			hud.call("message", tr("msg.power_restored"))
 			_update_lighting(true)
 			AudioManager.ambience("amb_power_hum", true, -8.0, 4.0)
+			get_tree().create_timer(4.0).timeout.connect(func() -> void:
+				if not logic.state["shelf_open"]:
+					hud.call("caption", tr("msg.red_glow"), 4.5))
 		"switches_locked":
 			hud.call("message", tr("msg.switches_locked"))
 		"main_locked":
@@ -925,6 +965,7 @@ func _feedback(e: String) -> void:
 		"radio_signal":
 			hud.call("message", tr("msg.radio_signal"))
 			hud.call("caption", tr("cap.beacon"))
+			_array_answers()
 		"book_pulled":
 			AudioManager.sfx("rosette_press", -2.0, 0.85)
 			visuals.tilt_book(int(arg))
@@ -1028,6 +1069,26 @@ func _update_lighting(animated: bool) -> void:
 		env.ambient_light_energy = 0.55 if on else 0.5
 	env.ambient_light_color = amb
 	visuals.set_power_emissives(on)
+
+
+## When Strand's beacon is found, the Array "answers": every lamp in the lab stutters for a moment.
+func _array_answers() -> void:
+	for k in ["pendant_0", "pendant_1", "desk_lamp"]:
+		var l: Light3D = lights[k]
+		var base := l.light_energy
+		var tw := create_tween()
+		for i in 4:
+			tw.tween_property(l, "light_energy", base * 0.15, 0.06)
+			tw.tween_property(l, "light_energy", base * 1.25, 0.05)
+		tw.tween_property(l, "light_energy", base, 0.3)
+	AudioManager.sfx("projector_charge", -14.0, 0.6)
+
+
+func play_opening_camera() -> void:
+	## Called by the HUD intro: start facing the slammed door, then turn toward the moonlit desk.
+	cam.go("door", true)
+	await get_tree().create_timer(1.6).timeout
+	cam.go("lab")
 
 
 # ====================================================================== finale

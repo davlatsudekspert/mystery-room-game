@@ -32,8 +32,8 @@ S = [
 ("ui.no", "No", "Нет", "Yoʻq"),
 ("ui.confirm", "Confirm", "Подтвердить", "Tasdiqlash"),
 ("ui.cancel", "Cancel", "Отмена", "Bekor qilish"),
-("ui.on", "On", "Вкл.", "Yoqilgan"),
-("ui.off", "Off", "Выкл.", "Oʻchirilgan"),
+("ui.on", "On", "Вкл.", "Yoniq"),
+("ui.off", "Off", "Выкл.", "Oʻchiq"),
 ("ui.tap_to_continue", "Tap to continue", "Нажмите, чтобы продолжить", "Davom etish uchun bosing"),
 ("ui.skip", "Skip", "Пропустить", "Oʻtkazib yuborish"),
 ("ui.new_game_confirm", "Start a new game? Your current progress will be lost.", "Начать новую игру? Текущий прогресс будет потерян.", "Yangi oʻyin boshlansinmi? Joriy natijalar oʻchib ketadi."),
@@ -67,7 +67,7 @@ S = [
 
 # ---------------------------------------------------------------- in-game HUD
 ("ui.hint", "Hint", "Подсказка", "Maslahat"),
-("ui.hint_more", "Stronger hint", "Подсказка яснее", "Aniqroq maslahat"),
+("ui.hint_more", "Stronger hint", "Яснее", "Aniqroq"),
 ("ui.hint_level", "Hint %d of 3", "Подсказка %d из 3", "Maslahat: %d / 3"),
 ("ui.inspect", "Inspect", "Осмотреть", "Koʻrib chiqish"),
 ("ui.combine", "Combine", "Объединить", "Birlashtirish"),

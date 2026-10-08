@@ -764,6 +764,7 @@ func play_intro() -> void:
 		var tw2 := create_tween()
 		tw2.tween_property(lbl, "modulate:a", 0.0, 0.6)
 		await tw2.finished
+	room.call("play_opening_camera")
 	AudioManager.sfx("door_slam")
 	AudioManager.sfx("maglock_release", -4.0, 0.8)
 	AudioManager.haptic(120)

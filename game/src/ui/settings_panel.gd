@@ -54,7 +54,7 @@ func _ready() -> void:
 	var bottom := HBoxContainer.new()
 	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
 	bottom.add_theme_constant_override("separation", 16)
-	var restore := UITheme.button("ui.restore", 300)
+	var restore := UITheme.button("ui.restore", 460)
 	restore.pressed.connect(func() -> void:
 		Premium.restore_purchases()
 		SceneManager.toast(tr("ui.restored")))
@@ -97,7 +97,7 @@ func _toggle(key: String, setting: String) -> Control:
 	var l := UITheme.label(key, 26)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(l)
-	var b := UITheme.button("", 200)
+	var b := UITheme.button("", 220)
 	b.toggle_mode = true
 	b.button_pressed = bool(Settings.get_value(setting))
 	b.text = "ui.on" if b.button_pressed else "ui.off"

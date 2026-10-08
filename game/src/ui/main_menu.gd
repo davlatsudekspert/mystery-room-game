@@ -140,7 +140,7 @@ func _show_chapters() -> void:
 		var can := Premium.can_play(ch["id"])
 		if can:
 			state_key = "ui.completed" if GameState.is_chapter_completed(ch["id"]) else ("ui.free" if Chapters.is_free(ch["id"]) else "ui.play")
-		var b := UITheme.button(state_key if not can else "ui.play", 240)
+		var b := UITheme.button(state_key if not can else "ui.play", 280)
 		b.disabled = not can
 		if can:
 			var id: String = ch["id"]
