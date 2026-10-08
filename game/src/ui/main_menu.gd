@@ -97,6 +97,14 @@ func _add(key: String, cb: Callable) -> void:
 	_menu.add_child(b)
 
 
+## Android back / Escape: closes an open panel, otherwise asks before quitting.
+func handle_back() -> void:
+	if _dim.visible:
+		_clear_panel()
+	else:
+		_confirm("ui.quit_confirm", func() -> void: get_tree().quit())
+
+
 func _new_game() -> void:
 	SaveSystem.delete_game()
 	if GameState.start_new("ch1"):

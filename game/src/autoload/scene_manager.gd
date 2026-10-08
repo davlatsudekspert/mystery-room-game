@@ -34,6 +34,27 @@ func _ready() -> void:
 	_layer.add_child(_toast)
 
 
+## Android back button/gesture (with application/config/quit_on_go_back off) and Escape on desktop go to
+## the current scene's handle_back(); a scene without one ignores it, so "back" never quits by accident.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_dispatch_back()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_ESCAPE:
+		_dispatch_back()
+		get_viewport().set_input_as_handled()
+
+
+func _dispatch_back() -> void:
+	if _busy:
+		return
+	var scene := get_tree().current_scene
+	if scene != null and scene.has_method("handle_back"):
+		scene.call("handle_back")
+
+
 func goto(path: String, fade_time: float = 0.45) -> void:
 	if _busy:
 		return

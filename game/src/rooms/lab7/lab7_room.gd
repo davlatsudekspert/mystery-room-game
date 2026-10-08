@@ -113,6 +113,7 @@ func _ready() -> void:
 	add_child(visuals)
 	_build_input()
 	_build_hud()
+	add_child(PerfGuard.new())
 	GameState.events.connect(_on_events)
 	visuals.apply_state(false)
 	_update_shards()
@@ -513,6 +514,19 @@ func _build_hud() -> void:
 
 
 # ====================================================================== input
+## Android back / Escape: overlay → selected item → camera step back → pause menu at the room view.
+func handle_back() -> void:
+	if hud.call("handle_back") or _ending:
+		return
+	if logic.selected != "":
+		logic.select_item("")
+		return
+	if cam.is_root() and cam.current() == "lab":
+		hud.call("show_pause")
+		return
+	go_back()
+
+
 func go_back() -> void:
 	if _ending:
 		return

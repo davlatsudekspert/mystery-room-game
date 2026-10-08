@@ -11,6 +11,8 @@ config/features=PackedStringArray("4.7", "Mobile")
 boot_splash/bg_color=Color(0.054902, 0.0588235, 0.0705882, 1)
 boot_splash/show_image=false
 config/icon="res://assets/ui/icon.png"
+config/quit_on_go_back=false
+run/max_fps=60
 
 [autoload]
 
@@ -55,6 +57,7 @@ lights_and_shadows/directional_shadow/size=2048
 lights_and_shadows/positional_shadow/atlas_size=2048
 environment/defaults/default_clear_color=Color(0.054902, 0.0588235, 0.0705882, 1)
 mesh_lod/lod_change/threshold_pixels=2.0
+rendering_device/fallback_to_opengl3=true
 
 [shader_globals]
 

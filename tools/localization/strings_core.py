@@ -23,6 +23,7 @@ S = [
 ("ui.settings", "Settings", "Настройки", "Sozlamalar"),
 ("ui.credits", "Credits", "Авторы", "Mualliflar"),
 ("ui.quit", "Quit", "Выход", "Chiqish"),
+("ui.quit_confirm", "Quit the game? Your progress is saved.", "Выйти из игры? Прогресс сохранён.", "Oʻyindan chiqasizmi? Natijalar saqlangan."),
 ("ui.back", "Back", "Назад", "Orqaga"),
 ("ui.close", "Close", "Закрыть", "Yopish"),
 ("ui.resume", "Resume", "Продолжить", "Davom etish"),

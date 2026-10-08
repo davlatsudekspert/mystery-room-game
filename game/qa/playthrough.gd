@@ -234,6 +234,18 @@ func run() -> void:
 	var L := logic
 	var hud: Node = room.get("hud")
 	await shot("lab_dark_start")
+	# Android back button (room.handle_back is what SceneManager calls): pause at the room view and resume,
+	# then step out of a close-up instead of quitting the game
+	room.call("handle_back")
+	await _settle(0.3)
+	var pause_opened: bool = hud.get("_overlay") != null
+	room.call("handle_back")
+	await _settle(0.3)
+	var pause_closed: bool = hud.get("_overlay") == null
+	await view("desk")
+	room.call("handle_back")
+	await _settle(0.9)
+	step("Back button: pause → resume, close-up → room", func() -> bool: return pause_opened and pause_closed and cam().current() == "lab")
 	# --- notebook + drawer (P1)
 	if _from <= 1 and 1 <= _to:
 		await view("desk")

@@ -337,6 +337,16 @@ func _open_overlay(dim: float = 0.72) -> Control:
 	return o
 
 
+## Back button: closes the open overlay (pause, inspect, notebook, hint...). The finale choice and the
+## chapter-complete screen need an explicit answer, and cinematics/intro swallow it. -> true if consumed.
+func handle_back() -> bool:
+	if _overlay != null:
+		if not bool(_overlay.get_meta("locked", false)):
+			_close_overlay()
+		return true
+	return _busy
+
+
 func _close_overlay() -> void:
 	if _overlay != null:
 		_overlay.queue_free()
@@ -800,6 +810,7 @@ func _wait_tap_or(o: Control, seconds: float) -> void:
 # ====================================================================== finale
 func show_choice() -> void:
 	var o := _open_overlay(0.45)
+	o.set_meta("locked", true)
 	var v := _center_panel(o, Vector2(1000, 0))
 	var t := UITheme.label("ui.choice_prompt", 32)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -820,6 +831,7 @@ func show_chapter_complete() -> void:
 	set_busy(true)
 	AudioManager.music("stinger_chapter_complete", 1.0)
 	var o := _open_overlay(0.0)
+	o.set_meta("locked", true)
 	var tw := create_tween()
 	tw.tween_property(o, "color:a", 0.9, 1.4)
 	var v := _center_panel(o, Vector2(1200, 0))
