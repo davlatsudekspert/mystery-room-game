@@ -82,23 +82,16 @@ for i, (x, ln, rz) in enumerate(((-0.52, 0.082, 0.05), (-0.47, 0.046, -0.25), (0
     c = M.cylinder(f"chalk{i}", CH_R, ln, loc=(x, (TY0 + TY1) / 2 + 0.004 * i, TZ + CH_R), rot=(0, math.pi / 2, rz), verts=10,
                    mat="M_Chalk", bevel=0.0012, segments=1)
     items.append(c)
-for i in range(7):
+for i in range(5):
     items.append(M.sphere(f"crumb{i}", rnd.uniform(0.0015, 0.003), loc=(rnd.uniform(-0.6, 0.3), rnd.uniform(TY1 + 0.012, TY0 - 0.01),
                                                                      TZ + 0.001), segments=6, rings=3, mat="M_Chalk",
                           scale=(1.0, 0.8, 0.5)))
-# dust smudges on the tray (flat irregular patches)
-for i, (cx, w) in enumerate(((-0.35, 0.34), (0.32, 0.22))):
-    n = 9
-    pts = []
-    for k in range(n):
-        a = 2 * math.pi * k / n
-        pts.append((cx + math.cos(a) * w / 2 * rnd.uniform(0.75, 1.0), (TY0 + TY1) / 2 + math.sin(a) * 0.026 * rnd.uniform(0.7, 1.0),
-                    TZ + 0.0004))
-    d = P.mesh_obj(f"dust{i}", pts, [list(range(n))], ["M_Chalk"])
-    P.fix_normals(d)
-    if d.data.polygons[0].normal.z < 0:
-        d.data.flip_normals()
-    items.append(d)
+# chalk dust: a fine scatter of flat flecks along the tray (no opaque patches)
+for i in range(16):
+    x = rnd.uniform(-0.62, 0.42)
+    items.append(M.box(f"fleck{i}", (rnd.uniform(0.002, 0.006), rnd.uniform(0.002, 0.005), 0.0006),
+                       loc=(x, rnd.uniform(TY1 + 0.012, TY0 - 0.008), TZ + 0.0003), rot=(0, 0, rnd.uniform(0, 3.1)), mat="M_Chalk",
+                       bevel=0.0, segments=1))
 # felt eraser: walnut back block + grey felt pad, lying felt-down, chalk-dusted
 ER = Vector((0.36, (TY0 + TY1) / 2 - 0.002, TZ))
 er = [M.box("eraser_block", (0.12, 0.048, 0.022), loc=ER + Vector((0, 0, 0.006 + 0.011)), mat="M_Wood_Panel", bevel=0.004, segments=2),

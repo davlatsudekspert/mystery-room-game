@@ -17,7 +17,7 @@ const LEVER_OFF_DEG := 0.0
 const LEVER_ON_DEG := -80.0
 const SHELF_OPEN_DEG := -85.0
 const CABINET_OPEN_DEG := -100.0
-const DOOR_OPEN_DEG := 95.0
+const DOOR_OPEN_DEG := -95.0
 const RING_SIGN := 1.0
 const BOOK_TILT_DEG := 16.0
 
@@ -314,6 +314,9 @@ func set_power_emissives(on: bool) -> void:
 	var dial := part("radio", "radio_dial") as MeshInstance3D
 	if dial:
 		ModelUtil.set_emission(dial, on)
+	var red_bulb := part("room_lab7", "darkroom_bulb") as MeshInstance3D
+	if red_bulb:
+		ModelUtil.set_emission(red_bulb, on, Color("ff2a1a"), 3.0)
 
 
 # ====================================================================== radio

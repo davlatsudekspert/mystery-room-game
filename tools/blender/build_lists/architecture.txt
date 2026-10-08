@@ -1,3 +1,7 @@
 desk.py
 pendant_lamp.py
 room_lab7.py
+door_lab7.py
+chair.py
+filing_cabinet.py
+coat_rack.py

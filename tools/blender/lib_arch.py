@@ -277,7 +277,7 @@ def tube(name: str, path, radius: float, sides: int = 10, fillet: float = 0.0, f
     if caps and not closed:
         bm.faces.new(list(reversed(rings[0])))
         bm.faces.new(rings[-1])
-    return obj_from_bm(name, bm, mat, col)
+    return hint(obj_from_bm(name, bm, mat, col))
 
 
 def loft(name: str, rings, mat: str = "M_Fabric", cap_start: bool = True, cap_end: bool = True,
@@ -425,7 +425,7 @@ def screw(name: str, r: float, loc, normal=(0, -1, 0), mat: str = "M_Brass_Aged"
     q = z.rotation_difference(Vector(normal).normalized())
     o.data.transform(q.to_matrix().to_4x4())
     o.location = loc
-    return o
+    return hint(o)
 
 
 def bevel_box(name, size, loc=(0, 0, 0), mat="M_Wood_Walnut", bevel=0.004, segments=2, rot=(0, 0, 0), col=None):
@@ -792,3 +792,48 @@ def grain_uv(obj: bpy.types.Object, slots=WOOD_SLOTS, ratio: float = 1.15, force
                 uvl.data[li].uv = (v, -u)
             count += 1
     return count
+
+
+# ---------------------------------------------------------------- per-part smoothing
+SMOOTH_HINT = "mr_smooth"
+
+
+def hint(obj: bpy.types.Object, angle: float = 60.0) -> bpy.types.Object:
+    """Tag a part so presmooth() smooths it with `angle` (round parts: tubes, lathes, cylinders
+    with 8-12 sides need ~60 deg, otherwise mrlib's 35 deg default leaves them faceted)."""
+    obj[SMOOTH_HINT] = angle
+    return obj
+
+
+def lathe_s(*a, **k):
+    return hint(M.lathe(*a, **k))
+
+
+def cyl_s(*a, **k):
+    return hint(M.cylinder(*a, **k))
+
+
+def torus_s(*a, **k):
+    return hint(M.torus(*a, **k))
+
+
+def sphere_s(*a, **k):
+    return hint(M.sphere(*a, **k), 80.0)
+
+
+def presmooth(objs, default: float = 35.0) -> None:
+    """Smooth each part with its hinted angle BEFORE joining (mrlib.join keeps the flags);
+    then finish with finalize_uv() instead of mrlib.finalize() so the flags survive."""
+    for o in objs:
+        if o is not None and o.type == "MESH":
+            M.apply_modifiers(o)
+            M.smooth(o, o.get(SMOOTH_HINT, default))
+
+
+def finalize_uv(objs=None, uv_scale: float = 1.0) -> None:
+    """mrlib.finalize() without the global re-smoothing (use after presmooth())."""
+    for obj in (objs or list(bpy.context.scene.objects)):
+        if obj.type != "MESH":
+            continue
+        M.apply_modifiers(obj)
+        M.box_uv(obj, uv_scale)

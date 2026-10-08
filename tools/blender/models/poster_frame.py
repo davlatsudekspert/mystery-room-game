@@ -1,4 +1,4 @@
-"""poster_frame.glb — Strand's "Tabula Resonantiarum" poster behind glass in a thin black frame.
+"""poster_frame.glb — Strand's "Tabula Resonantiarum" poster behind glass in a thin black frame (M_Lacquer_Black).
 
 Model space (Blender, Z up): back plane at Y = 0, front toward -Y (Godot +Z).
 Origin = back plane, centre of the frame. Paper 0.50 x 0.7070 m (aspect 1024 : 1448), frame 0.544 x 0.751.
@@ -23,6 +23,7 @@ NAME = "poster_frame"
 ARGS = M.main_guard()
 M.reset_scene()
 P.init_materials()
+M.material("M_Lacquer_Black", color="141211", rough=0.32)
 
 PW = 0.50
 PH = PW * 1448.0 / 1024.0      # 0.7070
@@ -31,7 +32,7 @@ FW = 0.022                     # frame moulding width
 # black lacquered frame: rounded outer edge, flat face, small inner bevel stepping down to the glass
 prof = [(0.0, 0.0), (0.0, 0.0175), (0.0012, 0.0212), (0.0042, 0.0236), (0.0085, 0.024), (0.0155, 0.024), (0.0185, 0.0222),
         (0.0205, 0.0185), (FW, 0.0165), (FW, 0.0)]
-frame = P.frame_sweep("poster_frame_body", PW + 2 * FW, PH + 2 * FW, prof, mat="M_Bakelite")
+frame = P.frame_sweep("poster_frame_body", PW + 2 * FW, PH + 2 * FW, prof, mat="M_Lacquer_Black")
 back = M.box("backboard", (PW + 0.02, 0.004, PH + 0.02), loc=(0, -0.002, 0), mat="M_Wood_Panel", bevel=0.0008, segments=1)
 # turn buttons that hold the backboard (seen only from the side) + hanging wire hooks hidden behind
 clips = []

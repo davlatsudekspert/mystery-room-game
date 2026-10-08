@@ -25,7 +25,7 @@ NAME = "desk_lamp"
 ARGS = M.main_guard()
 M.reset_scene()
 P.init_materials()
-M.material("M_Glass_Green", color="1F5C35", rough=0.08, metal=0.0)
+M.material("M_Glass_Green", color="16472A", rough=0.07, metal=0.0)
 
 # ---------------------------------------------------------------- stepped cast-brass base
 base = P.rrect_loft("lamp_base", [

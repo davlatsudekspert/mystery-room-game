@@ -70,9 +70,10 @@ func _ready() -> void:
 	]
 	var suffix := "_powered" if powered else "_dark"
 	for s: Array in shots:
-		var ceiling := find_child("TempCeiling", true, false) as Node3D
-		if ceiling:
-			ceiling.visible = not s[4]
+		for cname in ["TempCeiling", "room_ceiling", "room_woodwork", "pendant_lamp", "pendant_lamp_2"]:
+			var ceiling := find_child(cname, true, false) as Node3D
+			if ceiling:
+				ceiling.visible = not s[4] or cname == "room_woodwork" and false
 		cam.fov = s[3]
 		cam.look_at_from_position(s[1], s[2], Vector3.UP)
 		for i in 12:

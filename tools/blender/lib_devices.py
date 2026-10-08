@@ -42,6 +42,7 @@ TAU = 2.0 * math.pi
 # name: (hex, roughness, metallic, emission hex or None, alpha)
 DEV_MATERIALS = {
     "M_Glass_UV": ("2C1748", 0.06, 0.0, None, 0.8),     # Wood's glass (UV filter), dark violet
+    "M_String_Red": ("A0201C", 0.8, 0.0, None, 1.0),    # exists in game/assets/materials (ribbon, string)
 }
 
 
@@ -255,71 +256,75 @@ def crystal_lens(name, centre=(0, 0, 0), segments=32, ticks=24, low=False):
     return obj
 
 
-def valve(name, loc=(0, 0, 0), quality="item"):
-    """1950s octal power valve ("coke-bottle" ST envelope): bakelite base with 8 pins and a keyed spigot,
-    glass envelope with real wall thickness (outer + inner surface), silver getter flash in the dome,
-    mica spacers, grey anode with wings, support rods and the pinched glass stem. 115 mm tall above
-    z = 0 (the underside of the base, which seats on the socket); pins reach 11.5 mm below; 38 mm across.
-    quality: "item" (inventory close-ups), "mid" (installed in the radio: single-surface glass, no pins),
-    "far" (static valves seen through the hatch)."""
+VALVE_H = 0.0612        # glass height of the noval valve (z = 0 at the glass bottom / socket seat)
+VALVE_R = 0.0108
+
+
+def valve(name, loc=(0, 0, 0), quality="item", heater=None):
+    """1950s miniature noval (B9A, EL84-style) valve: glass envelope with real wall thickness (outer +
+    inner surface) and pinched exhaust tip, silver getter flash in the dome, nine pins with the keying
+    gap, two grey anode plates with side wings, top and bottom micas, support rods and a cathode sleeve.
+    21.6 mm across, 61 mm of glass above z = 0 (the glass bottom, which seats on the socket); the pins
+    reach 7.3 mm below. quality: "item" (inspect close-ups), "mid" (installed in the radio: single-surface
+    glass, no pins), "far" (static valves seen through the hatch).
+    heater: optional object name -> the cathode becomes a separate child mesh with M_Copper (the game
+    lights it with ModelUtil.set_emission for the "warm orange glow")."""
     lx, ly, lz = loc
     item = quality == "item"
-    segments = {"item": 20, "mid": 14, "far": 10}[quality]
+    segments = {"item": 20, "mid": 16, "far": 10}[quality]
     seg2 = max(8, segments // 2)
     parts = []
-    base = [(0.0, 0.0), (0.0146, 0.0), (0.0160, 0.0016), (0.0163, 0.0185), (0.0155, 0.0215), (0.0128, 0.0225)]
-    if not item:
-        base = [(0.0155, 0.0), (0.0163, 0.0020), (0.0163, 0.0185), (0.0150, 0.0222)]
-    parts.append(L.lathe2(name + "_base", base, segments=segments, mat="M_Bakelite", cap_top=False,
-                          cap_bottom=False))
     if item:
-        for k in range(8):
-            a = TAU * k / 8 + TAU / 16
-            pin = L.lathe2(name + "_pin", [(0.0, -0.0095), (0.0009, -0.0092), (0.0012, -0.0085), (0.0012, 0.0)],
-                           segments=6, mat="M_Chrome", cap_top=False)
-            pin.location = (0.0087 * math.cos(a), 0.0087 * math.sin(a), 0.0)
+        for k in range(9):              # 9 pins on a 11.9 mm circle; position 9 is the keying gap
+            a = TAU * k / 10 + TAU / 20
+            pin = L.lathe2(name + "_pin", [(0.0005, 0.0006), (0.0005, -0.0066), (0.0003, -0.0072),
+                                           (0.0, -0.0073)], segments=4, mat="M_Chrome", cap_bottom=False)
+            pin.location = (0.00595 * math.cos(a), 0.00595 * math.sin(a), 0.0)
             parts.append(pin)
-        parts.append(L.lathe2(name + "_spigot", [(0.0, -0.0115), (0.0036, -0.011), (0.0042, -0.0102),
-                                                 (0.0042, 0.0)], segments=10, mat="M_Bakelite", cap_top=False))
-        parts.append(M.box(name + "_key", (0.0016, 0.0016, 0.010), loc=(0.0043, 0.0, -0.0055), mat="M_Bakelite",
-                           bevel=0.0))
-        outer = [(0.0128, 0.0215), (0.0136, 0.0255), (0.0150, 0.036), (0.0180, 0.050), (0.0189, 0.061),
-                 (0.0178, 0.073), (0.0153, 0.083), (0.0150, 0.097), (0.0132, 0.1045), (0.0085, 0.1095),
-                 (0.0030, 0.1115), (0.0019, 0.1140), (0.0, 0.1148)]
-        inner = [(0.0, 0.1100), (0.0072, 0.1082), (0.0122, 0.1034), (0.0141, 0.097), (0.0144, 0.083),
-                 (0.0169, 0.073), (0.0180, 0.061), (0.0171, 0.050), (0.0141, 0.036), (0.0127, 0.0255),
-                 (0.0119, 0.0215)]
-        prof = outer + inner          # glass with thickness: outer surface up, inner surface back down
+        outer = [(0.0, 0.0), (0.0094, 0.0), (0.0106, 0.0011), (0.0108, 0.0030), (0.0108, 0.0480), (0.0101, 0.0524),
+                 (0.0083, 0.0553), (0.0048, 0.0574), (0.0019, 0.0580), (0.0015, 0.0604), (0.0, 0.0612)]
+        inner = [(0.0, 0.0569), (0.0042, 0.0564), (0.0074, 0.0545), (0.0093, 0.0516), (0.0099, 0.0478),
+                 (0.0099, 0.0050), (0.0088, 0.0038), (0.0, 0.0036)]
+        prof = outer + inner            # glass with thickness: outer surface up, inner surface back down
     else:
-        prof = [(0.0130, 0.0215), (0.0150, 0.036), (0.0183, 0.051), (0.0187, 0.064), (0.0156, 0.082),
-                (0.0150, 0.097), (0.0108, 0.1075), (0.0026, 0.1125), (0.0, 0.1145)]
+        prof = [(0.0, 0.0), (0.0100, 0.0), (0.0108, 0.0025), (0.0108, 0.0480), (0.0098, 0.0528),
+                (0.0062, 0.0566), (0.0018, 0.0580), (0.0013, 0.0604), (0.0, 0.0612)]
     parts.append(L.lathe2(name + "_glass", prof, segments=segments, mat="M_Glass", cap_bottom=False,
                           cap_top=False))
-    getter = [(0.0140, 0.095), (0.0134, 0.1015), (0.0112, 0.1055), (0.0068, 0.1080), (0.0, 0.1092)]
-    if not item:
-        getter = [(0.0140, 0.096), (0.0110, 0.1050), (0.0, 0.1092)]
+    getter = [(0.0099, 0.0465), (0.0095, 0.0505), (0.0079, 0.0538), (0.0046, 0.0559), (0.0, 0.0565)]
+    if quality == "far":
+        getter = [(0.0099, 0.047), (0.0072, 0.0545), (0.0, 0.0563)]
     parts.append(L.lathe2(name + "_getter", getter, segments=segments, mat="M_Chrome", cap_bottom=False))
-    if quality != "far":
-        parts.append(L.lathe2(name + "_stem", [(0.0110, 0.0225), (0.0080, 0.027), (0.0040, 0.033), (0.0, 0.034)],
-                              segments=seg2, mat="M_Glass", cap_bottom=False))
-    for zm in ((0.040, 0.079) if item else (0.079,)):
-        parts.append(L.lathe2(name + "_mica", [(0.0, zm), (0.0130, zm), (0.0130, zm + 0.0008), (0.0, zm + 0.0008)],
+    for zm in ((0.0100, 0.0405) if quality != "far" else (0.0405,)):
+        parts.append(L.lathe2(name + "_mica", [(0.0, zm), (0.0094, zm), (0.0094, zm + 0.0007), (0.0, zm + 0.0007)],
                               segments=seg2, mat="M_Glass_Frosted"))
-    parts.append(M.box(name + "_anode", (0.016, 0.0075, 0.037), loc=(0.0, 0.0, 0.0602), mat="M_Steel_Dark",
-                       bevel=0.0008 if item else 0.0, segments=1))
+    for sy in (-1, 1):                  # two anode plates (open sides show the cathode)
+        parts.append(M.box(name + "_plate", (0.0118, 0.0007, 0.027), loc=(0.0, sy * 0.0024, 0.0252),
+                           mat="M_Steel_Dark", bevel=0.0))
     if quality != "far":
         for sx in (-1, 1):
-            parts.append(M.box(name + "_wing", (0.004, 0.0009, 0.033), loc=(sx * 0.0098, 0.0, 0.0602),
+            parts.append(M.box(name + "_wing", (0.0030, 0.0006, 0.025), loc=(sx * 0.0072, 0.0, 0.0252),
                                mat="M_Steel_Dark", bevel=0.0))
+        parts.append(M.box(name + "_shield", (0.0062, 0.0062, 0.0035), loc=(0.0, 0.0, 0.0438), mat="M_Steel_Dark",
+                           bevel=0.0))
     if item:
         for (sx, sy) in ((-1, -1), (-1, 1), (1, -1), (1, 1)):
-            rod = L.lathe2(name + "_rod", [(0.00045, 0.030), (0.00045, 0.086)], segments=4, mat="M_Chrome",
+            rod = L.lathe2(name + "_rod", [(0.0003, 0.0036), (0.0003, 0.0425)], segments=4, mat="M_Chrome",
                            cap_bottom=False, cap_top=False)
-            rod.location = (sx * 0.0118, sy * 0.0028, 0.0)
+            rod.location = (sx * 0.0074, sy * 0.0015, 0.0)
             parts.append(rod)
+    cath = L.lathe2(name + "_cathode", [(0.0, 0.0090), (0.0013, 0.0092), (0.0013, 0.0410), (0.0, 0.0412)],
+                    segments=6, mat="M_Copper")
+    if heater is None:
+        parts.append(cath)
     obj = M.join(parts, name)
     obj.data.transform(Matrix.Translation((lx, ly, lz)))
     M.set_origin(obj, (lx, ly, lz))
+    if heater is not None:
+        cath.name = heater
+        cath.data.name = heater
+        cath.location = (lx, ly, lz)
+        M.set_parent(cath, obj)
     return obj
 
 
@@ -330,8 +335,9 @@ def resmooth(obj, angle_deg=12.0) -> None:
 
 # ---------------------------------------------------------------- items: centre of mass
 def centre_of_mass(objs) -> Vector:
-    """Uniform-density centroid of the (closed-ish) meshes via signed tetrahedra; falls back to the
-    bounding-box centre if the volume is degenerate (open sheets such as paper)."""
+    """Uniform-density centroid via signed tetrahedra, integrating only the watertight islands of each
+    mesh (open shells such as printed labels, paper or decals carry no volume). Falls back to the
+    bounding-box centre when nothing closed is found."""
     M.refresh()
     vol = 0.0
     acc = Vector((0, 0, 0))
@@ -340,22 +346,54 @@ def centre_of_mass(objs) -> Vector:
     for o in objs:
         if o.type != "MESH":
             continue
-        me = o.data
-        mw = o.matrix_world
-        me.calc_loop_triangles()
-        co = [mw @ v.co for v in me.vertices]
-        for v in co:
-            lo = Vector(map(min, lo, v))
-            hi = Vector(map(max, hi, v))
-        for t in me.loop_triangles:
-            a, b, c = (co[i] for i in t.vertices)
-            v6 = a.dot(b.cross(c))
-            vol += v6
-            acc += v6 * (a + b + c) / 4.0
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        bm.transform(o.matrix_world)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-7)
+        for v in bm.verts:
+            lo = Vector(map(min, lo, v.co))
+            hi = Vector(map(max, hi, v.co))
+        seen = set()
+        for f0 in bm.faces:
+            if f0.index in seen:
+                continue
+            island, stack = [], [f0]
+            seen.add(f0.index)
+            while stack:
+                f = stack.pop()
+                island.append(f)
+                for e in f.edges:
+                    for g in e.link_faces:
+                        if g.index not in seen:
+                            seen.add(g.index)
+                            stack.append(g)
+            edges = {e for f in island for e in f.edges}
+            closed = all(len(e.link_faces) == 2 for e in edges)
+            ilo = Vector((1e9, 1e9, 1e9))
+            ihi = Vector((-1e9, -1e9, -1e9))
+            for f in island:
+                for v in f.verts:
+                    ilo = Vector(map(min, ilo, v.co))
+                    ihi = Vector(map(max, ihi, v.co))
+            ref = (ilo + ihi) / 2
+            ivol = 0.0
+            iacc = Vector((0, 0, 0))
+            for f in island:
+                vs = [v.co - ref for v in f.verts]
+                for i in range(1, len(vs) - 1):
+                    a, b, c = vs[0], vs[i], vs[i + 1]
+                    v6 = a.dot(b.cross(c))
+                    ivol += v6
+                    iacc += v6 * ((a + b + c) / 4.0 + ref)
+            box = (ihi - ilo)
+            if not closed and abs(ivol / 6.0) < 0.2 * box.x * box.y * box.z:
+                continue          # open sheet (print, paper, decal): no volume
+            vol += ivol
+            acc += iacc
+        bm.free()
     if abs(vol) < 1e-12:
         return (lo + hi) / 2
     com = acc / vol
-    # sanity: keep inside the bounding box
     for i in range(3):
         if not (lo[i] - 1e-6 <= com[i] <= hi[i] + 1e-6):
             return (lo + hi) / 2
@@ -445,3 +483,80 @@ def want_render() -> bool:
 
 def export(name) -> str:
     return L.export_lean(name)
+
+
+# ---------------------------------------------------------------- text on curved surfaces
+def wrap_to_cylinder(obj, radius, axis_point=(0, 0, 0)) -> None:
+    """Bend a flat object lying in a plane y = const (facing -Y, built with front_rot) onto a vertical
+    cylinder of `radius` around the Z axis through `axis_point`: x becomes arc length (angle x / r measured
+    from -Y), the depth offset (y - plane) is kept radially. Bakes the object transform."""
+    M.apply_transform(obj)
+    ax, ay, _ = axis_point
+    ys = [v.co.y for v in obj.data.vertices]
+    y0 = max(ys)                       # the face that touches the surface
+    for v in obj.data.vertices:
+        a = (v.co.x - ax) / radius
+        r = radius + (y0 - v.co.y)
+        v.co.x = ax + r * math.sin(a)
+        v.co.y = ay - r * math.cos(a)
+    obj.data.update()
+
+
+def text_on_circle(name, body, size, radius, centre=(0.0, 0.0), start_deg=90.0, step_deg=None, font=FONT_COND_B,
+                   mat="M_Bakelite", res=1, clockwise=True):
+    """Letters set around a circle in the XY plane (like the engraving on a camera-lens ring), letter
+    bottoms toward the centre, centred on `start_deg`, reading clockwise. Returns one joined object
+    (faces +Z, lying at z = 0); use lib_mech.to_front() to put it on a -Y facing surface."""
+    step = step_deg if step_deg is not None else math.degrees(size * 0.62 / radius)
+    n = len(body)
+    total = step * (n - 1)
+    parts = []
+    for i, ch in enumerate(body):
+        if ch == " ":
+            continue
+        a = math.radians(start_deg + (total / 2 - i * step) * (1 if clockwise else -1))
+        t = L.text_flat(f"{name}_{i}", ch, size, font=font, res=res, mat=mat)
+        t.data.transform(Matrix.Translation((0.0, -size * 0.05, 0.0)))     # centre the cap height
+        t.data.transform(Matrix.Rotation(a - math.pi / 2, 4, "Z"))
+        t.data.transform(Matrix.Translation((centre[0] + radius * math.cos(a), centre[1] + radius * math.sin(a), 0)))
+        parts.append(t)
+    return M.join(parts, name)
+
+
+# ---------------------------------------------------------------- inventory-item pipeline
+def item_main(name, build_fn, shots=(), post=None, lineup_rot=(0, 0, 0)):
+    """Standard item build: reset, build, finalize (box UVs + smoothing), optional post-callback (decal UVs,
+    resmoothing), move the centre of mass to the origin, export game/assets/models/<name>.glb, QA renders.
+    shots: [(suffix, cam_loc, target, lens)] relative to the centred item (floor added under the item)."""
+    M.reset_scene()
+    ensure_materials()
+    build_fn()
+    M.finalize()
+    if post:
+        post()
+    roots = [o for o in bpy.context.scene.objects if o.parent is None]
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    com = recentre(roots, centre_of_mass(meshes))
+    print(f"[devices] {name}: centre of mass moved to origin (was {tuple(round(c, 4) for c in com)})")
+    export(name)
+    describe(name)
+    if want_render() and shots:
+        qa_tweak()
+        lo, _ = bounds()
+        for (suffix, cam, target, lens) in shots:
+            shot(f"item_{name}{suffix}", cam, target, lens=lens, floor_z=lo.z - 0.0005, samples=28, res=(800, 600))
+
+
+def decimate(obj, ratio=0.5) -> None:
+    """Collapse-decimate a dense flat mesh (handwriting text) to `ratio` of its faces."""
+    mod = obj.modifiers.new("dec", "DECIMATE")
+    mod.decimate_type = "COLLAPSE"
+    mod.ratio = ratio
+    M.apply_modifiers(obj)
+
+
+def hand(name, body, size, ratio=0.5, **kw):
+    """Handwriting (Caveat) text geometry, decimated to keep the item budgets."""
+    obj = text(name, body, size, font=FONT_HAND, res=1, **kw)
+    decimate(obj, ratio)
+    return obj

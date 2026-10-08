@@ -140,6 +140,7 @@ def leaf():
         parts.append(keyhole(f"keyhole{side}", HANDLE_X, KEY_Z, yk, out))
         for z in (0.94, 1.15):
             parts.append(A.screw(f"lp_screw{side}", 0.0032, (HANDLE_X, yk, z), (0, out, 0), BR, 25 + 40 * side, segs=6))
+    A.presmooth(parts)
     o = M.join(parts, "IA_door_leaf")
     M.set_origin(o, (PIN[0], PIN[1], 0.0))
     return o
@@ -149,7 +150,7 @@ def handle():
     parts = []
     for side, (yb, out) in enumerate(((LY0 - 0.003, -1), (LY1 + 0.003, 1))):
         # rose + boss
-        rose = M.lathe(f"h_rose{side}", [(0.0, 0.0), (0.021, 0.0), (0.021, 0.003), (0.016, 0.008), (0.012, 0.010),
+        rose = A.lathe_s(f"h_rose{side}", [(0.0, 0.0), (0.021, 0.0), (0.021, 0.003), (0.016, 0.008), (0.012, 0.010),
                                          (0.011, 0.024), (0.0125, 0.027), (0.0, 0.028)], segments=12, mat=BR)
         q = Vector((0, 0, 1)).rotation_difference(Vector((0, out, 0)))
         rose.data.transform(q.to_matrix().to_4x4())
@@ -164,7 +165,8 @@ def handle():
         rad = A.resample_radii(ctrl, [0.0085, 0.0075, 0.0068, 0.0082, 0.0088], 3)
         parts.append(A.tube(f"h_lever{side}", pts, 0.008, sides=8, radii=rad, mat=BR))
         tip = Vector(ctrl[-1])
-        parts.append(M.sphere(f"h_tip{side}", 0.0088, loc=tuple(tip), segments=8, rings=5, mat=BR))
+        parts.append(A.sphere_s(f"h_tip{side}", 0.0088, loc=tuple(tip), segments=8, rings=5, mat=BR))
+    A.presmooth(parts)
     o = M.join(parts, "IA_door_handle")
     M.set_origin(o, (HANDLE_X, LYM, HANDLE_Z))
     return o
@@ -196,7 +198,7 @@ def frame():
                          up=(0, 0, 1), mat=WAL))
     # hinge knuckles (corridor side, on the pin axis)
     for z in (0.28, 1.10, 1.92):
-        k = M.lathe("knuckle", [(0.0, -0.062), (0.004, -0.061), (0.0078, -0.055), (0.0078, 0.055), (0.004, 0.061),
+        k = A.lathe_s("knuckle", [(0.0, -0.062), (0.004, -0.061), (0.0078, -0.055), (0.0078, 0.055), (0.004, 0.061),
                                 (0.0, 0.064)], segments=10, mat=BR)
         k.location = (PIN[0], PIN[1], z)
         parts.append(k)
@@ -210,7 +212,7 @@ def frame():
     parts.append(box("mag_label", (-0.27, -0.0765, LAMP[2] - 0.016), (-0.06, -0.075, LAMP[2] + 0.016), "M_Enamel_Cream", 0.001))
     parts.append(A.text_lowpoly("mag_text", "MAGNETIC LOCK", 0.016, depth=0.0, resolution=1, loc=(-0.165, -0.0768, LAMP[2] - 0.001),
                              rot=(math.pi / 2, 0, 0), mat="M_Bakelite", font_path=A.font_path()))
-    bez = M.lathe("mag_bezel", [(0.0145, 0.0), (0.022, 0.0), (0.023, 0.003), (0.020, 0.007), (0.0155, 0.0075),
+    bez = A.lathe_s("mag_bezel", [(0.0145, 0.0), (0.022, 0.0), (0.023, 0.003), (0.020, 0.007), (0.0155, 0.0075),
                                 (0.0145, 0.005)], segments=14, mat="M_Chrome")
     bez.data.transform(Matrix.Rotation(math.pi / 2, 4, "X"))
     bez.location = (LAMP[0], LAMP[1], LAMP[2])
@@ -219,12 +221,13 @@ def frame():
     cab = [(mx0 - 0.004, -0.036, LAMP[2]), (mx0 - 0.045, -0.036, LAMP[2]), (mx0 - 0.06, -0.03, LAMP[2] + 0.07),
            (mx0 - 0.06, -0.03, top + 0.40), (mx0 - 0.06, 0.004, top + 0.40)]
     parts.append(A.tube("mag_cable", cab, 0.0065, sides=8, fillet=0.016, mat="M_Steel_Dark"))
-    parts.append(M.cylinder("mag_gland", 0.011, 0.016, loc=(mx0 - 0.004, -0.036, LAMP[2]), rot=(0, math.pi / 2, 0), verts=10,
+    parts.append(A.cyl_s("mag_gland", 0.011, 0.016, loc=(mx0 - 0.004, -0.036, LAMP[2]), rot=(0, math.pi / 2, 0), verts=10,
                             mat=BR, bevel=0.0012, segments=1))
-    parts.append(M.cylinder("mag_wallrose", 0.02, 0.008, loc=(mx0 - 0.06, -0.004, top + 0.40), rot=(math.pi / 2, 0, 0), verts=12,
+    parts.append(A.cyl_s("mag_wallrose", 0.02, 0.008, loc=(mx0 - 0.06, -0.004, top + 0.40), rot=(math.pi / 2, 0, 0), verts=12,
                             mat="M_Steel_Dark", bevel=0.002, segments=1))
+    A.presmooth(parts)
     o = M.join(parts, "door_frame")
-    lamp = M.lathe("maglock_lamp", [(0.0, 0.0), (0.0145, 0.0), (0.0145, 0.004), (0.0125, 0.0095), (0.0085, 0.0128),
+    lamp = A.lathe_s("maglock_lamp", [(0.0, 0.0), (0.0145, 0.0), (0.0145, 0.004), (0.0125, 0.0095), (0.0085, 0.0128),
                                     (0.0, 0.014)], segments=18, mat="M_Emissive_Red")
     lamp.data.transform(Matrix.Rotation(math.pi / 2, 4, "X"))
     lamp.location = LAMP
@@ -239,7 +242,8 @@ def build():
     hd = handle()
     M.refresh()
     M.set_parent(hd, lf)
-    M.finalize()
+    A.presmooth([lamp])
+    A.finalize_uv()
     # vertical grain on stiles / muntin / jambs / casing legs, and on the whole lower panels
     def panels(c, n):
         if abs(c.x) > MUNTIN / 2 + 0.003 and abs(c.x) < LX1 - STILE - 0.003 and BOT_Z1 + 0.003 < c.z < LOCK_Z0 - 0.003 \

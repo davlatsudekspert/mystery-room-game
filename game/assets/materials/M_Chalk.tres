@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Chalk"
+albedo_color = Color(0.9255, 0.9020, 0.8392, 1)
+roughness = 1.0

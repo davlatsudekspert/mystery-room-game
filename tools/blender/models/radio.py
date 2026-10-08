@@ -42,9 +42,9 @@ EYE_Z, KNOB_Z = 0.127, 0.070
 HATCH = (-0.100, 0.100, -0.024, 0.0905)     # x0, x1, y0, y1 of the top opening
 HINGE = (0.0, 0.0905, H)
 SPLASH_Y = 0.255              # lab-bench splashback face, radio-local (radio at bench-local y = +0.05)
-CHASSIS_Z = 0.140
-SOCKET = (0.020, 0.034)
-SOCK_TOP = CHASSIS_Z + 0.0075
+CHASSIS_Z = 0.195
+SOCKET = (0.012, 0.058)
+SOCK_TOP = CHASSIS_Z + 0.003 + 0.0055
 
 
 def build_cabinet():
@@ -149,19 +149,17 @@ def build_body():
     plate = M.box("chassis", (0.248, 0.143, 0.003), loc=(0.0, 0.0265, CHASSIS_Z + 0.0015), mat="M_Steel_Painted",
                   bevel=0.0)
     parts.append(plate)
-    for (vx, vy, s) in ((-0.056, 0.010, 1.0), (-0.056, 0.058, 0.82)):
-        sk = D.revolve("vsock", [(0.0, 0.0), (0.0175 * s, 0.0), (0.0175 * s, 0.006), (0.0, 0.006)],
+    for (vx, vy) in ((-0.050, 0.060), (-0.050, 0.014)):
+        sk = D.revolve("vsock", [(0.0, 0.0), (0.0125, 0.0), (0.0125, 0.0055), (0.0, 0.0055)],
                        direction=(0, 0, 1), loc=(vx, vy, CHASSIS_Z + 0.003), segments=12, mat="M_Bakelite")
-        v = D.valve("static_valve", (0, 0, 0), quality="far")
-        v.data.transform(Matrix.Diagonal((s, s, s, 1.0)))
-        v.location = (vx, vy, CHASSIS_Z + 0.009)
+        v = D.valve("static_valve", (vx, vy, SOCK_TOP), quality="far")
         parts += [sk, v]
-    can = L.lathe2("xcan", [(0.0, 0.0), (0.020, 0.0), (0.020, 0.052), (0.0185, 0.0555), (0.0, 0.056)],
+    can = L.lathe2("xcan", [(0.0, 0.0), (0.017, 0.0), (0.017, 0.046), (0.0155, 0.0495), (0.0, 0.050)],
                    segments=14, mat="M_Chrome", cap_bottom=False)
-    can.location = (0.080, 0.060, CHASSIS_Z + 0.003)
-    cap2 = L.lathe2("ecap", [(0.0, 0.0), (0.011, 0.0), (0.011, 0.034), (0.0095, 0.036), (0.0, 0.0365)],
+    can.location = (0.070, 0.050, CHASSIS_Z + 0.003)
+    cap2 = L.lathe2("ecap", [(0.0, 0.0), (0.010, 0.0), (0.010, 0.032), (0.0085, 0.034), (0.0, 0.0345)],
                     segments=10, mat="M_Copper", cap_bottom=False)
-    cap2.location = (0.082, 0.004, CHASSIS_Z + 0.003)
+    cap2.location = (0.070, 0.002, CHASSIS_Z + 0.003)
     parts += [can, cap2]
     # ---- back board with vent slots, mains cord through a grommet
     board = M.box("backboard", (0.356, 0.004, 0.211), loc=(0.0, YB - 0.004, 0.13), mat="M_Wood_Panel", bevel=0.001,
@@ -285,19 +283,19 @@ def build_hatch():
 def build_socket():
     sx, sy = SOCKET
     z = CHASSIS_Z + 0.003
-    body = D.revolve("osock", [(0.0, 0.0), (0.0185, 0.0), (0.0185, 0.0035), (0.0170, 0.0045), (0.0, 0.0045)],
+    body = D.revolve("osock", [(0.0, 0.0), (0.0128, 0.0), (0.0128, 0.0045), (0.0118, 0.0055), (0.0, 0.0055)],
                      direction=(0, 0, 1), loc=(sx, sy, z), segments=16, mat="M_Bakelite")
-    saddle = L.curve_solid("saddle", [L.rounded_rect(0.056, 0.024, 0.008, 2), L.circle(0.0186, 12)], 0.0012,
+    saddle = L.curve_solid("saddle", [L.rounded_rect(0.046, 0.019, 0.0075, 2), L.circle(0.0129, 12)], 0.0012,
                            bevel=0.0003, mat="M_Brass_Aged")
     saddle.location = (sx, sy, z)
     parts = [body, saddle]
-    for dx in (-0.0235, 0.0235):
-        parts.append(L.rivet("srivet", 0.0022, (sx + dx, sy, z + 0.0012), normal=(0, 0, 1), segs=6))
-    for k in range(8):               # pin holes + keyway
-        a = math.tau * k / 8 + math.tau / 16
-        parts.append(L.flat_shape("hole", [L.circle(0.0016, 6, cx=0.0087 * math.cos(a), cy=0.0087 * math.sin(a))],
+    for dx in (-0.0185, 0.0185):
+        parts.append(L.rivet("srivet", 0.0020, (sx + dx, sy, z + 0.0012), normal=(0, 0, 1), segs=6))
+    for k in range(9):               # B9A: nine pin holes, gap at the tenth position
+        a = math.tau * k / 10 + math.tau / 20
+        parts.append(L.flat_shape("hole", [L.circle(0.0011, 5, cx=0.00595 * math.cos(a), cy=0.00595 * math.sin(a))],
                                   mat="M_Steel_Dark", loc=(sx, sy, SOCK_TOP + 0.00005)))
-    parts.append(L.flat_shape("keyhole", [L.circle(0.0046, 10)], mat="M_Steel_Dark", loc=(sx, sy, SOCK_TOP + 0.00005)))
+    parts.append(L.flat_shape("keyhole", [L.circle(0.0021, 8)], mat="M_Steel_Dark", loc=(sx, sy, SOCK_TOP + 0.00005)))
     obj = M.join(parts, "IA_valve_socket")
     M.set_origin(obj, (sx, sy, SOCK_TOP))
     return obj
@@ -312,7 +310,7 @@ def build():
     build_eye()
     build_hatch()
     build_socket()
-    D.valve("valve_installed", (SOCKET[0], SOCKET[1], SOCK_TOP), quality="mid")
+    D.valve("valve_installed", (SOCKET[0], SOCKET[1], SOCK_TOP), quality="mid", heater="valve_heater")
 
 
 def decal_uvs():
@@ -331,10 +329,12 @@ def main():
         # hatch open, valve hidden (the puzzle state), seen from above-back
         hatch = M.bpy.data.objects["IA_radio_hatch"]
         hatch.rotation_euler = (math.radians(-70.0), 0.0, 0.0)
-        M.bpy.data.objects["valve_installed"].hide_render = True
-        D.shot("radio_3", (0.10, -0.30, 0.62), (0.010, 0.030, 0.17), lens=40)
+        for n in ("valve_installed", "valve_heater"):        # Godot hides the child with its parent
+            M.bpy.data.objects[n].hide_render = True
+        D.shot("radio_3", (0.10, -0.30, 0.62), (0.010, 0.040, 0.22), lens=40)
         # tuned to the 41 m band with the valve installed
-        M.bpy.data.objects["valve_installed"].hide_render = False
+        for n in ("valve_installed", "valve_heater"):
+            M.bpy.data.objects[n].hide_render = False
         needle = M.bpy.data.objects["dial_needle"]
         needle.location.x += (0.06 + 0.88 * 36 / 100.0 - NEEDLE_U) * DIAL_W
         D.shot("radio_4", (0.26, -0.42, 0.62), (0.0, 0.0, 0.17), lens=42)

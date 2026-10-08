@@ -230,6 +230,7 @@ def build_house():
     qp = L.curve_solid("quadrant", [quad], 0.0025, bevel=0.0006, mat="M_Brass_Aged")
     # drawn x -> world -Y (front), drawn y -> world +Z, extrusion -> world +X
     qp.data.transform(Matrix(((0, 0, 1, 0), (-1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 0, 1))))
+    qp.data.flip_normals()        # that axis map is a reflection (det -1): restore outward normals
     qp.location = (LEVER_P[0] - 0.0035, LEVER_P[1], ZB)
     parts.append(qp)
     for ang, mat in ((math.radians(115.0), "M_Enamel_Cream"), (math.radians(80.0), "M_Enamel_Green")):

@@ -225,7 +225,7 @@ def ceiling_parts():
         r = ROSE_R
         prof = [(0.0, -0.016), (0.072, -0.016), (0.078, -0.022), (0.086, -0.030), (0.096, -0.027),
                 (0.106, -0.031), (0.118, -0.025), (0.130, -0.013), (r, -0.004), (r, 0.0)]
-        o = M.lathe(f"rose_{i}", prof, segments=32, mat="M_Ceiling")
+        o = A.lathe_s(f"rose_{i}", prof, segments=32, mat="M_Ceiling")
         petals = 8
         for v in o.data.vertices:
             rr = math.hypot(v.co.x, v.co.y)
@@ -299,7 +299,7 @@ def window():
     add("brass", box("esp_plate", (hx - 0.013, sy0 - 0.004, 1.86), (hx + 0.013, sy0, 2.00), B, 0.0015))
     lever = M.box("esp_lever", (0.012, 0.014, 0.10), loc=(hx, sy0 - 0.012, 1.93 - 0.035), rot=(0, 0, 0), mat=B,
                   bevel=0.003, segments=1)
-    add("brass", lever, M.cylinder("esp_boss", 0.009, 0.014, loc=(hx, sy0 - 0.009, 1.93), rot=(math.pi / 2, 0, 0),
+    add("brass", lever, A.cyl_s("esp_boss", 0.009, 0.014, loc=(hx, sy0 - 0.009, 1.93), rot=(math.pi / 2, 0, 0),
                                    verts=10, mat=B, bevel=0.0015, segments=1))
     for side, x in enumerate((1.24, 1.76)):
         add("brass", box(f"stay{side}", (x - 0.11, sy0 - 0.010, SILL_TOP + fw + 0.01), (x + 0.11, sy0 - 0.004, SILL_TOP + fw + 0.022),
@@ -309,7 +309,7 @@ def window():
     by = Y1 + T - 0.016
     for k in range(4):
         x = WIN_X0 + 0.22 * (k + 1)
-        add("iron", M.cylinder(f"bar{k}", 0.012, WIN_Z1 - WIN_Z0 + 0.12, loc=(x, by, (WIN_Z0 + WIN_Z1) / 2),
+        add("iron", A.cyl_s(f"bar{k}", 0.012, WIN_Z1 - WIN_Z0 + 0.12, loc=(x, by, (WIN_Z0 + WIN_Z1) / 2),
                                verts=10, mat=I, bevel=0.0))
     for z in (1.82, 2.50):
         add("iron", box(f"bar_tie_{z}", (WIN_X0 - 0.04, by - 0.006, z - 0.02), (WIN_X1 + 0.04, by + 0.006, z + 0.02), I, 0.002))
@@ -324,15 +324,15 @@ def radiator():
     prof = [(0.0, 0.11), (0.019, 0.116), (0.026, 0.138), (0.019, 0.178), (0.022, 0.21), (0.022, 0.69),
             (0.019, 0.722), (0.026, 0.762), (0.019, 0.784), (0.0, 0.79)]
     for i in range(n):
-        o = M.lathe(f"rad_sec{i}", prof, segments=8, mat=P)
+        o = A.lathe_s(f"rad_sec{i}", prof, segments=8, mat=P)
         o.data.transform(Matrix.Diagonal((1.0, 2.9, 1.0, 1.0)))
         o.location = (x0 + i * pitch, RAD_Y, 0)
         add("iron", o)
     for z in (0.138, 0.762):
-        add("iron", M.cylinder(f"rad_hub{z}", 0.017, pitch * (n - 1), loc=(RAD_X, RAD_Y, z), rot=(0, math.pi / 2, 0),
+        add("iron", A.cyl_s(f"rad_hub{z}", 0.017, pitch * (n - 1), loc=(RAD_X, RAD_Y, z), rot=(0, math.pi / 2, 0),
                                verts=8, mat=P, bevel=0.0))
     for x in (x0, x0 + pitch * (n - 1)):
-        add("iron", M.lathe("rad_foot", [(0.0, 0.0), (0.024, 0.0), (0.026, 0.008), (0.017, 0.03), (0.016, 0.115), (0.0, 0.12)],
+        add("iron", A.lathe_s("rad_foot", [(0.0, 0.0), (0.024, 0.0), (0.026, 0.008), (0.017, 0.03), (0.016, 0.115), (0.0, 0.12)],
                             loc=(x, RAD_Y, 0), segments=8, mat=P))
     # copper flow with an angle valve (left) and return with a lockshield (right)
     Cu, B = "M_Copper", "M_Brass_Aged"
@@ -341,23 +341,23 @@ def radiator():
                          0.0095, sides=8, fillet=0.03, mat=Cu))
     add("copper", A.tube("rad_return", [(xr, RAD_Y + 0.03, -0.01), (xr, RAD_Y + 0.03, 0.138), (xr - 0.075, RAD_Y + 0.03, 0.138)],
                          0.0095, sides=8, fillet=0.03, mat=Cu))
-    add("brass", M.lathe("valve_body", [(0.0, 0.10), (0.017, 0.10), (0.018, 0.115), (0.018, 0.16), (0.012, 0.168),
+    add("brass", A.lathe_s("valve_body", [(0.0, 0.10), (0.017, 0.10), (0.018, 0.115), (0.018, 0.16), (0.012, 0.168),
                                         (0.006, 0.20), (0.0, 0.205)], loc=(xl, RAD_Y + 0.03, 0), segments=10, mat=B))
-    add("brass", M.lathe("valve_wheel", [(0.0, 0.198), (0.028, 0.198), (0.030, 0.204), (0.030, 0.212), (0.024, 0.218),
+    add("brass", A.lathe_s("valve_wheel", [(0.0, 0.198), (0.028, 0.198), (0.030, 0.204), (0.030, 0.212), (0.024, 0.218),
                                          (0.0, 0.22)], loc=(xl, RAD_Y + 0.03, 0), segments=12, mat="M_Bakelite"))
-    add("brass", M.lathe("lockshield", [(0.0, 0.11), (0.016, 0.11), (0.017, 0.16), (0.010, 0.175), (0.0, 0.178)],
+    add("brass", A.lathe_s("lockshield", [(0.0, 0.11), (0.016, 0.11), (0.017, 0.16), (0.010, 0.175), (0.0, 0.178)],
                          loc=(xr, RAD_Y + 0.03, 0), segments=10, mat=B))
-    add("brass", M.cylinder("bleed", 0.006, 0.024, loc=(xr - 0.04, RAD_Y + 0.0, 0.762), rot=(0, math.pi / 2, 0),
+    add("brass", A.cyl_s("bleed", 0.006, 0.024, loc=(xr - 0.04, RAD_Y + 0.0, 0.762), rot=(0, math.pi / 2, 0),
                             verts=8, mat=B, bevel=0.001, segments=1))
     for x in (xl, xr):    # floor escutcheons
-        add("brass", M.cylinder("pipe_rose", 0.024, 0.004, loc=(x, RAD_Y + 0.03, 0.002), verts=12, mat=B,
+        add("brass", A.cyl_s("pipe_rose", 0.024, 0.004, loc=(x, RAD_Y + 0.03, 0.002), verts=12, mat=B,
                                 bevel=0.0012, segments=1))
 
 
 # ------------------------------------------------------------------ conduit / pipes / vent
 def collar(name, p, axis, r, length=0.035, mat="M_Steel_Dark"):
     rot = {"x": (0, math.pi / 2, 0), "y": (math.pi / 2, 0, 0), "z": (0, 0, 0)}[axis]
-    return M.cylinder(name, r, length, loc=p, rot=rot, verts=8, mat=mat, bevel=0.0012, segments=1)
+    return A.cyl_s(name, r, length, loc=p, rot=rot, verts=8, mat=mat, bevel=0.0012, segments=1)
 
 
 def services():
@@ -386,7 +386,7 @@ def services():
         fix.append(collar("cpc", (X0 + 0.025, y, 2.86), "y", 0.0125, 0.03, B))
         fix.append(box("sadc", (X0, y - 0.009, 2.851), (X0 + 0.016, y + 0.009, 2.869), B, 0.002))
     # cast junction box at the end of the conduit
-    fix.append(M.lathe("jbox", [(0.0, -0.052), (0.040, -0.052), (0.046, -0.048), (0.048, -0.040), (0.048, -0.010),
+    fix.append(A.lathe_s("jbox", [(0.0, -0.052), (0.040, -0.052), (0.046, -0.048), (0.048, -0.040), (0.048, -0.010),
                                 (0.052, -0.006), (0.052, 0.0)], loc=(-0.6, STEEL_Y, H), segments=16, mat=St))
     for k in range(4):
         a = math.pi / 4 + k * math.pi / 2
@@ -438,19 +438,20 @@ def safe_recess():
 def darkroom_fixture():
     bx, by, bz = BULB
     K = "M_Bakelite"
-    parts = [M.lathe("dr_rose", [(0.0, -0.024), (0.030, -0.024), (0.040, -0.018), (0.046, -0.007), (0.046, 0.0)],
+    parts = [A.lathe_s("dr_rose", [(0.0, -0.024), (0.030, -0.024), (0.040, -0.018), (0.046, -0.007), (0.046, 0.0)],
                      loc=(bx, by, DH), segments=16, mat=K),
              A.tube("dr_cord", [(bx, by, DH - 0.02), (bx, by, 2.44)], 0.0035, sides=6, mat="M_Fabric"),
-             M.lathe("dr_socket", [(0.0, 2.372), (0.017, 2.372), (0.020, 2.379), (0.020, 2.414), (0.013, 2.430),
+             A.lathe_s("dr_socket", [(0.0, 2.372), (0.017, 2.372), (0.020, 2.379), (0.020, 2.414), (0.013, 2.430),
                                    (0.006, 2.442), (0.0, 2.446)], loc=(bx, by, 0), segments=14, mat=K)]
     base = [(0.0, 2.346)]
     for k in range(4):
         z = 2.348 + k * 0.006
         base += [(0.0125, z), (0.0137, z + 0.003)]
     base += [(0.013, 2.372), (0.0, 2.372)]
-    parts.append(M.lathe("dr_base", base, loc=(bx, by, 0), segments=12, mat="M_Brass_Aged"))
+    parts.append(A.lathe_s("dr_base", base, loc=(bx, by, 0), segments=12, mat="M_Brass_Aged"))
+    A.presmooth(parts)
     fixture = M.join(parts, "darkroom_fixture")
-    bulb = M.lathe("darkroom_bulb", [(0.0, 2.236), (0.012, 2.239), (0.024, 2.252), (0.030, 2.270), (0.031, 2.290),
+    bulb = A.lathe_s("darkroom_bulb", [(0.0, 2.236), (0.012, 2.239), (0.024, 2.252), (0.030, 2.270), (0.031, 2.290),
                                      (0.028, 2.310), (0.021, 2.327), (0.015, 2.340), (0.0125, 2.347)],
                    loc=(bx, by, 0), segments=16, mat="M_Emissive_Red")
     M.set_origin(bulb, (bx, by, bz))
@@ -480,9 +481,11 @@ def build():
     fixture, bulb = darkroom_fixture()
     objs = {}
     for g, lst in groups.items():
+        A.presmooth(lst)
         objs[g] = M.join(lst, GROUP_NAMES[g])
+    A.presmooth(glass + [bulb])
     wg = M.join(glass, "window_glass")
-    M.finalize()
+    A.finalize_uv()
     for g in ("walnut", "panel"):
         A.grain_uv(objs[g])
     report = " ".join(f"{GROUP_NAMES[g]}={A.tris(o)}" for g, o in objs.items())
@@ -544,11 +547,17 @@ def main():
     if on("3"):   # west wall: bookcase opening, chalkboard zone, vent, pipe
         shot(NAME + "_3", (1.8, 0.2, 1.6), (-3.0, -0.4, 1.7), west=True)
     if on("4"):   # darkroom from the opening
-        shot(NAME + "_4", (-3.3, 0.45, 1.5), (-4.8, 0.75, 1.75), lens=14, dark=True)
+        shot(NAME + "_4", (-3.33, 0.0, 1.1), (-4.3, 0.9, 1.27), lens=10, dark=True)
     if on("5"):   # ceiling: beams, roses, conduit
         shot(NAME + "_5", (-1.8, -1.6, 1.5), (1.2, 1.0, 3.3), lens=20)
     if on("6"):   # window, sill, bars and radiator close-up
         shot(NAME + "_6", (0.85, 1.05, 1.55), (1.55, 2.6, 1.45), lens=24)
+    if on("7"):   # detail: vent grille, copper pipe entry, beam corbel
+        shot(NAME + "_7", (-2.1, -0.9, 2.45), (-3.0, -1.45, 2.88), lens=30, res=(800, 500))
+    if on("8"):   # detail: radiator valves
+        shot(NAME + "_8", (0.75, 1.55, 0.95), (1.45, 2.4, 0.35), lens=28, res=(800, 500))
+    if on("9"):   # detail: safe recess + chair-rail cut
+        shot(NAME + "_9", (1.45, -1.55, 1.45), (2.2, -2.5, 1.2), lens=32, res=(800, 500))
 
 
 main()

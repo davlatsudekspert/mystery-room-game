@@ -223,7 +223,7 @@ func _build_uv_ink() -> void:
 func _build_shards() -> void:
 	var spots := {
 		"under_desk": Vector3(-0.85, 0.011, -2.25), "bookshelf_top": Vector3(-2.85, 2.16, -0.3),
-		"radiator": Vector3(1.85, 0.08, -2.38), "coat_pocket": Vector3(2.52, 1.12, -2.02),
+		"radiator": Vector3(1.78, 0.05, -2.33), "coat_pocket": Vector3(2.37, 1.07, -1.98),
 		"darkroom": Vector3(-4.55, 0.011, 0.15),
 	}
 	for id: String in spots:
@@ -308,7 +308,7 @@ func _build_lights() -> void:
 	red.light_color = Color("ff2a1a")
 	red.light_energy = 0.0
 	red.omni_range = 3.2
-	red.position = Vector3(-3.6, 2.3, -0.6)
+	red.position = Vector3(-4.0, 2.2, -0.6)
 	add_child(red)
 	lights["safelight"] = red
 
