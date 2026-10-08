@@ -84,6 +84,7 @@ var _uv_dwell := 0.0
 var _uv_target := ""
 var _ending := false
 var capture_mode := false # set by QA capture script: no intro, no input
+var _darkroom_seen := false
 
 
 func _ready() -> void:
@@ -871,6 +872,9 @@ func _on_view_changed(id: String) -> void:
 	var fill: OmniLight3D = lights["focus_fill"]
 	create_tween().tween_property(fill, "light_energy", 0.0 if cam.is_root() else 0.9, 0.6)
 	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor"]
+	if id == "darkroom" and not _darkroom_seen:
+		_darkroom_seen = true
+		get_tree().create_timer(1.0).timeout.connect(func() -> void: hud.call("caption", tr("doc.darkroom_note"), 7.0))
 	(lights["shadow_lamp"] as SpotLight3D).visible = in_dark
 	(lights["moon"] as DirectionalLight3D).shadow_enabled = not in_dark
 	_uv_aim = get_viewport().get_visible_rect().size * 0.5
