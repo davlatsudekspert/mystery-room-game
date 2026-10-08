@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "M_Liquid_Crimson"
+transparency = 1
+albedo_color = Color(0.5569, 0.1059, 0.1647, 0.75)
+metallic = 0
+roughness = 0.1

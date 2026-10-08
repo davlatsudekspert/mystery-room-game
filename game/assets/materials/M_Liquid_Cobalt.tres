@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "M_Liquid_Cobalt"
+transparency = 1
+albedo_color = Color(0.1216, 0.2431, 0.6196, 0.75)
+metallic = 0
+roughness = 0.1
