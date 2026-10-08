@@ -4,7 +4,23 @@
 - Android package / iOS bundle id: `com.mysteryroom.forgotteninstitute`
 - Never reuse NFCSTORE ids, keys or workflows.
 
-## Workflows (`.github/workflows/`)
+## iOS → TestFlight via Codemagic (active path)
+GitHub Actions is currently blocked at the account level (billing), so the iOS pipeline runs on **Codemagic**. The config is `codemagic.yaml` in the repo root, workflow `ios-testflight`, branch `main`.
+
+| Item | Value |
+|---|---|
+| App Store Connect auth | Codemagic team integration **NFCSTORE ASC**. The API key is team-level, so it is reused safely; no NFCSTORE app records are touched |
+| Signing | `ios_signing: distribution_type: app_store`, `bundle_identifier: com.mysteryroom.forgotteninstitute`. Uses the team's existing Apple Distribution certificate |
+| Build number | Taken from App Store Connect: the latest TestFlight build + 1 |
+| Output | Signed IPA, uploaded to TestFlight (`submit_to_testflight: true`) |
+| Secrets in repo | **None** |
+
+One-time setup before the first run:
+1. Register the App ID `com.mysteryroom.forgotteninstitute` in Apple Developer.
+2. Create the app in App Store Connect.
+3. In Codemagic, add or fetch an App Store provisioning profile for that bundle id under Team settings → Code signing identities.
+
+## GitHub Actions workflows (`.github/workflows/`, paused until account billing is restored)
 All workflows are **manual** (`workflow_dispatch`). Actions minutes in a private repository count against the account's free quota, and macOS minutes count 10×. Runs therefore happen only when the owner starts them.
 
 | Workflow | Runner | What it does |

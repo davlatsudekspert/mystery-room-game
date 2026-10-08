@@ -1,0 +1,106 @@
+# MYSTERY ROOM: The Forgotten Institute — iOS build on Codemagic → TestFlight.
+#
+# The project is a Godot 4.7.2 game (not Flutter): Godot exports an Xcode project, then Codemagic's
+# CLI tools sign it with the team's App Store distribution identity and build the IPA.
+# No secrets live in this file — authentication comes from the Codemagic team integration
+# "NFCSTORE ASC" (App Store Connect API key) and the uploaded code-signing identities.
+#
+# One-time setup (Codemagic UI / Apple):
+#   1. Apple Developer → Identifiers: register App ID  com.mysteryroom.forgotteninstitute
+#   2. App Store Connect → Apps → "+": create the app with that bundle ID
+#   3. Codemagic → Team settings → Code signing identities → iOS provisioning profiles:
+#      "Fetch profiles" (or create) an App Store profile for com.mysteryroom.forgotteninstitute
+#      — it must use the existing Apple Distribution certificate.
+
+workflows:
+  ios-testflight:
+    name: Mystery Room iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: NFCSTORE ASC
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.mysteryroom.forgotteninstitute
+      vars:
+        BUNDLE_ID: com.mysteryroom.forgotteninstitute
+        GODOT_VERSION: "4.7.2"
+        XCODE_PROJECT: build/ios/MysteryRoom.xcodeproj
+      xcode: latest
+    cache:
+      cache_paths:
+        - $HOME/godot
+    scripts:
+      - name: Install Godot and the iOS export template
+        script: |
+          set -e
+          GODOT_DIR="$HOME/godot"
+          mkdir -p "$GODOT_DIR"
+          if [ ! -x "$GODOT_DIR/Godot.app/Contents/MacOS/Godot" ]; then
+            curl -sSL -o /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_macos.universal.zip"
+            unzip -q /tmp/godot.zip -d "$GODOT_DIR"
+          fi
+          TPL="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$TPL"
+          if [ ! -f "$GODOT_DIR/ios.zip" ]; then
+            curl -sSL -o /tmp/templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+            unzip -q -j /tmp/templates.tpz templates/ios.zip templates/version.txt -d "$GODOT_DIR"
+          fi
+          cp "$GODOT_DIR/ios.zip" "$GODOT_DIR/version.txt" "$TPL/"
+          echo "GODOT=$GODOT_DIR/Godot.app/Contents/MacOS/Godot" >> $CM_ENV
+
+      - name: Next build number from App Store Connect (latest + 1)
+        script: |
+          set -e
+          APP_ID=$(app-store-connect apps list --bundle-id-identifier "$BUNDLE_ID" --strict-match-identifier --json | python3 -c "import json,sys; a=json.load(sys.stdin); print(a[0]['id'] if a else '')")
+          if [ -z "$APP_ID" ]; then
+            echo "App record for $BUNDLE_ID not found in App Store Connect — create it first (see header)."
+            exit 1
+          fi
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_ID" 2>/dev/null || echo 0)
+          BUILD_NUMBER=$((LATEST + 1))
+          echo "Latest TestFlight build: $LATEST → building $BUILD_NUMBER"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
+
+      - name: Team ID from the installed App Store profile
+        script: |
+          set -e
+          PROFILE=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision | head -1)
+          security cms -D -i "$PROFILE" > /tmp/profile.plist
+          TEAM_ID=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" /tmp/profile.plist)
+          echo "TEAM_ID=$TEAM_ID" >> $CM_ENV
+
+      - name: Export the Xcode project from Godot
+        script: |
+          set -e
+          cd game
+          sed -i '' "s/^application\/app_store_team_id=.*/application\/app_store_team_id=\"$TEAM_ID\"/" export_presets.cfg
+          sed -i '' "s/^application\/export_project_only=.*/application\/export_project_only=true/" export_presets.cfg
+          sed -i '' "s/^application\/version=.*/application\/version=\"$BUILD_NUMBER\"/" export_presets.cfg
+          "$GODOT" --headless --import || true
+          mkdir -p ../build/ios
+          "$GODOT" --headless --export-release "iOS" "../$XCODE_PROJECT"
+          INFO=$(find ../build/ios -maxdepth 2 -name "*-Info.plist" | head -1)
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$INFO" || \
+            /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$INFO"
+          ls -la ../build/ios
+
+      - name: Apply signing profiles
+        script: xcode-project use-profiles --project "$XCODE_PROJECT"
+
+      - name: Build IPA
+        script: |
+          set -e
+          SCHEME=$(xcodebuild -list -project "$XCODE_PROJECT" -json | python3 -c "import json,sys; print(json.load(sys.stdin)['project']['schemes'][0])")
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
