@@ -19,6 +19,7 @@ Languages: **English · Русский · Oʻzbekcha** (Latin).
 | Localization (EN → RU → UZ) | `tools/localization/*.py` → `game/localization/strings.csv` |
 | QA renders | `docs/previews/`, `qa/blender/` |
 | Release pipeline, monetization, store texts | `docs/RELEASE_PIPELINE.md`, `docs/MONETIZATION.md`, `docs/STORE_LISTING.md` |
+| Testing on a phone (builds, checklist) | `docs/TESTING_ON_DEVICE.md` |
 | Status / next steps | `DEVELOPMENT_STATUS.md`, `NEXT_STEPS.md` |
 
 ## Quick start (Linux)

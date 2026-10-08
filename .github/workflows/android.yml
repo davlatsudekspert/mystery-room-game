@@ -109,8 +109,8 @@ jobs:
           test -s ~/release.keystore || { echo "::error::ANDROID_KEYSTORE_BASE64 secret is missing"; exit 1; }
           mkdir -p build/android
           cd game
-          godot --headless --install-android-build-template || true
-          godot --headless --export-release "Android AAB" ../build/android/mystery-room-release.aab
+          # the template flag only works together with an export (on its own it starts the editor and waits)
+          godot --headless --install-android-build-template --export-release "Android AAB" ../build/android/mystery-room-release.aab
           ls -la ../build/android
           # the bundle must carry the upload key's signature
           jarsigner -verify ../build/android/mystery-room-release.aab | tail -1
