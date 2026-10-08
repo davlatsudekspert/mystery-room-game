@@ -161,7 +161,7 @@ func _build_models() -> void:
 		var e: Array = EXTRA[id]
 		_spawn(id, e[0], e[1], e[2], e[3], "parts" if e[3] != "" else "none")
 	# echo figure (finale only)
-	var echo := _spawn("echo_leyla", "echo_leyla_sitting", Vector3(-0.38, 0, -1.55), 0.0, "", "none")
+	var echo := _spawn("echo_leyla", "echo_leyla_sitting", Vector3(-0.4, 0, -1.33), 0.0, "", "none")
 	if echo:
 		var mat := ShaderMaterial.new()
 		mat.shader = load("res://src/fx/echo.gdshader")
