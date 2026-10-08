@@ -5,7 +5,7 @@
 - Never reuse NFCSTORE ids, keys or workflows.
 
 ## Current state
-- GitHub Actions: on 2026-10-08 the owner reported that the billing block is lifted. The manual runs at 18:40 and 18:46 UTC still ended after about 3 s, with no runner assigned and no logs. That is the billing-lock signature, so check **Settings → Billing and licensing** before the next run.
+- GitHub Actions works again (2026-10-08 19:24 UTC). `tests.yml` and the `android.yml` debug build pass on GitHub-hosted runners. Earlier runs had ended after about 3 s with no runner while the account billing block was being lifted.
 - Codemagic was evaluated and **cancelled** by the owner. Its config was removed; it can be recovered from commit `c7ffd7e`.
 - Meanwhile, Android debug APKs are built and verified locally in the dev container.
 

@@ -10,7 +10,7 @@ _Last updated: 2026-10-08_
 | 3 — Interactive room & puzzles | ✅ Chapter 1 playable end to end | `lab7.tscn` with HUD (inventory with 3D icons, inspect, notebook with UV page, hints, pause, choice, chapter complete) and a touch camera. **`qa/playthrough.tscn` completes Chapter 1 entirely through taps on the real 3D scene: 13/13 steps plus 5/5 optional Lumen shards, 0 logic fallbacks** (see "QA playthrough" below) |
 | 4 — Polish, UI, sound | 🔶 In progress | State-aware captions, drag-to-tune radio, soft dust motes, 1979 flashback staging, bookcase reveal camera. Lighting review continues |
 | 5 — Localization & tests | ✅ Done for Chapter 1 | 299 keys EN → RU → UZ. The validator checks Uzbek Latin only, placeholders and font coverage. Layout-fit test at text scale 1.3. UI screenshots in all three languages (`qa/ui_screens.tscn`) |
-| 6 — Android build | 🔶 Debug APK built locally | Signed arm64 debug APK, `apksigner verify` OK, ~123 MB, with the mobile texture policy (ETC2/ASTC, mipmaps, size limits). **Not yet tested on a physical device** |
+| 6 — Android build | 🔶 Debug APK on CI | Signed arm64 debug APK, built locally (`apksigner verify` OK, ~123 MB) and on GitHub Actions. Mobile texture policy: ETC2/ASTC, mipmaps, size limits, ASTC 4x4 for close-up textures. **Not yet tested on a physical device** |
 | 7 — iOS preparation | 🔶 Ready to run, unverified | The Xcode project export was verified on Linux (scheme `MysteryRoom`, bundle `com.mysteryroom.forgotteninstitute`, automatic signing, iOS 15). The owner has added `IOS_TEAM_ID` and the `ASC_*` secrets. `ios.yml` has not run yet: it needs the App Store Connect app record, and GitHub Actions must start jobs again |
 | 8 — Store & monetization | 🔶 Partly | Purchase abstraction (mock/disabled providers), real payments disabled. `docs/MONETIZATION.md`, `docs/STORE_LISTING.md` (EN/RU/UZ), `docs/RELEASE_PIPELINE.md` |
 
@@ -37,9 +37,12 @@ The QA work fixed these problems:
 
 Budget: ≤ 150 draw calls (OK). Primitives are about 20% over the 150k target. The count includes the moon and spot-light shadow passes; one instance of every model is 245k triangles in total, and the darkroom set (~31k) is culled while unseen. LOD and shadow-caster trimming are planned. The texture memory figure is for uncompressed desktop textures; phones use ETC2/ASTC.
 
-## CI status
-- `tests.yml`, `android.yml` and `ios.yml` are manual (`workflow_dispatch`), within the free quota only.
-- On 2026-10-08 (18:40 and 18:46 UTC) the Android and Tests runs ended after 3 s with no runner assigned and no logs. That is the GitHub account billing lock signature, so the workflows themselves have not executed yet.
+## CI status (GitHub Actions, free quota, manual triggers)
+- After the billing block was lifted, the first runs at 18:40 and 18:46 UTC still got no runner. From 19:24 UTC jobs run normally.
+- ✅ `tests.yml` run 37831728496: 41 tests, 2494 checks, 0 failures (about 25 s).
+- ✅ `android.yml` debug run 37831976693: tests plus a signed debug APK. The artifact is 98 MB zipped and is kept for 7 days. The debug key is generated per run, so uninstall the previous build before installing a newer one.
+- ⏳ `android.yml` release (AAB + Play internal testing) waits for the upload keystore secrets.
+- ⏳ `ios.yml` waits for the App Store Connect app record. It runs on macOS, where 1 minute counts as 10 against the free quota.
 
 ## Known limitations
 - The dev container has no GPU. Screenshots use software Vulkan (lavapipe), so FPS measured here does not represent phones.
