@@ -1,0 +1,8 @@
+# Hero mechanisms and the Lumen shard (tools/blender/models/<script>; see docs/models/mechanisms.md)
+flip_clock.py
+gear_box.py
+wall_safe.py
+panel7.py
+mirror_stand.py
+light_sensor.py
+lumen_shard.py

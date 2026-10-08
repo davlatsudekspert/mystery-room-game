@@ -595,3 +595,200 @@ def render_setup(samples=64, bounces=6):
     sc.cycles.glossy_bounces = 3
     sc.cycles.transparent_max_bounces = 12
     sc.cycles.samples = samples
+
+
+# ================================================================ room-shell / joinery helpers
+def prepare_tinted(name: str, folder: str, tint: str, rough: float | None = None) -> bpy.types.Material:
+    """QA-preview material that reuses another CC0 texture folder multiplied by a tint
+    (e.g. M_Plaster_Stained = plaster_wall x yellow-brown). Godot uses <name>.tres instead."""
+    mat = bpy.data.materials.get(name)
+    if mat is not None:
+        return mat
+    mat = M.material(name, color=tint, rough=rough)
+    tex_dir = os.path.join(ROOT, "game", "assets", "textures", folder)
+    nt = mat.node_tree
+    bsdf = nt.nodes.get("Principled BSDF")
+    if os.path.isdir(tex_dir):
+        M._attach_pbr(nt, bsdf, tex_dir)
+        link = next((lk for lk in nt.links if lk.to_socket == bsdf.inputs["Base Color"]), None)
+        if link is not None:
+            mix = nt.nodes.new("ShaderNodeMix")
+            mix.data_type = "RGBA"
+            mix.blend_type = "MULTIPLY"
+            mix.inputs["Factor"].default_value = 1.0
+            src = link.from_socket
+            nt.links.remove(link)
+            a_in = next(i for i in mix.inputs if i.name == "A" and i.type == "RGBA")
+            b_in = next(i for i in mix.inputs if i.name == "B" and i.type == "RGBA")
+            out = next(o for o in mix.outputs if o.type == "RGBA")
+            nt.links.new(src, a_in)
+            b_in.default_value = M.hex_rgba(tint)
+            nt.links.new(out, bsdf.inputs["Base Color"])
+    return mat
+
+
+def frame_matrix(origin, ex, ey, ez) -> Matrix:
+    """4x4 matrix whose columns are the given axes (local -> world)."""
+    ex, ey, ez, o = Vector(ex), Vector(ey), Vector(ez), Vector(origin)
+    return Matrix(((ex.x, ey.x, ez.x, o.x), (ex.y, ey.y, ez.y, o.y), (ex.z, ey.z, ez.z, o.z), (0, 0, 0, 1)))
+
+
+def raised_field(name: str, a0: float, a1: float, b0: float, b1: float, inset: float, rise: float,
+                 matrix: Matrix, mat: str = "M_Wood_Panel", both: bool = False, half_t: float = 0.0,
+                 col=None) -> bpy.types.Object:
+    """Raised (fielded) panel: flat field + four sloped bevels, built in a local plane (a = right,
+    b = up, +z = out of the surface) and transformed by `matrix`. Open at the back (it sits on a
+    backing board) unless `both`, in which case it is a closed double-sided panel of thickness
+    2 * half_t + 2 * rise (for doors)."""
+    bm = bmesh.new()
+
+    def ring(z, ins):
+        return [bm.verts.new((a0 + ins, b0 + ins, z)), bm.verts.new((a1 - ins, b0 + ins, z)),
+                bm.verts.new((a1 - ins, b1 - ins, z)), bm.verts.new((a0 + ins, b1 - ins, z))]
+    base = ring(half_t, 0.0)
+    top = ring(half_t + rise, inset)
+    for i in range(4):
+        bm.faces.new((base[i], base[(i + 1) % 4], top[(i + 1) % 4], top[i]))
+    bm.faces.new(top)
+    if both:
+        bbase = ring(-half_t, 0.0)
+        btop = ring(-half_t - rise, inset)
+        for i in range(4):
+            bm.faces.new((bbase[(i + 1) % 4], bbase[i], btop[i], btop[(i + 1) % 4]))
+        bm.faces.new(list(reversed(btop)))
+        if half_t > 0:
+            for i in range(4):
+                bm.faces.new((bbase[i], bbase[(i + 1) % 4], base[(i + 1) % 4], base[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    o = obj_from_bm(name, bm, mat, col)
+    o.data.transform(matrix)
+    return o
+
+
+def rect_path(matrix: Matrix, a0: float, a1: float, b0: float, b1: float, z: float = 0.0):
+    """CCW rectangle (seen from +z of the local frame) as world points, for closed sweeps."""
+    return [tuple(matrix @ Vector(p)) for p in ((a0, b0, z), (a1, b0, z), (a1, b1, z), (a0, b1, z))]
+
+
+def offset_pts(pts, d):
+    return [tuple(Vector(p) + Vector(d)) for p in pts]
+
+
+def catmull(points, sub: int = 4):
+    """Catmull-Rom resample of a 3D polyline (keeps the end points)."""
+    pts = [Vector(p) for p in points]
+    if len(pts) < 3:
+        return pts
+    ext = [pts[0] * 2 - pts[1]] + pts + [pts[-1] * 2 - pts[-2]]
+    out = []
+    for i in range(1, len(ext) - 2):
+        p0, p1, p2, p3 = ext[i - 1], ext[i], ext[i + 1], ext[i + 2]
+        for k in range(sub):
+            t = k / sub
+            t2, t3 = t * t, t * t * t
+            out.append(0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+                              + (-p0 + 3 * p1 - 3 * p2 + p3) * t3))
+    out.append(pts[-1])
+    return out
+
+
+def resample_radii(points, radii, sub: int = 4):
+    """Linear resample of per-point radii to match catmull(points, sub)."""
+    out = []
+    for i in range(len(radii) - 1):
+        for k in range(sub):
+            out.append(radii[i] + (radii[i + 1] - radii[i]) * k / sub)
+    out.append(radii[-1])
+    return out
+
+
+def delete_faces(obj: bpy.types.Object, pred) -> None:
+    """Delete faces whose world centre / normal satisfy pred(center, normal) (hidden faces)."""
+    M.refresh()
+    mw = obj.matrix_world
+    rot = mw.to_3x3()
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    dead = [f for f in bm.faces if pred(mw @ f.calc_center_median(), (rot @ f.normal).normalized())]
+    if dead:
+        bmesh.ops.delete(bm, geom=dead, context="FACES")
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
+def qa_reset_render_objects() -> None:
+    for o in [o for o in bpy.context.scene.objects if o.name.startswith("QA")]:
+        bpy.data.objects.remove(o, do_unlink=True)
+
+
+def text_lowpoly(name: str, text: str, size: float, depth: float = 0.0, loc=(0, 0, 0), rot=(0, 0, 0),
+                 mat: str = "M_Brass_Polished", font_path: str | None = None, resolution: int = 2,
+                 align: str = "CENTER", col=None) -> bpy.types.Object:
+    """Like mrlib.text_mesh but with a low curve resolution and limited-dissolve cleanup, so sign
+    lettering / labels stay cheap (a glyph ~ 20-60 tris instead of several hundred)."""
+    curve = bpy.data.curves.new(name + "_txt", "FONT")
+    curve.body = text
+    curve.size = size
+    curve.extrude = depth
+    curve.resolution_u = resolution
+    curve.align_x = align
+    curve.align_y = "CENTER"
+    curve.fill_mode = "BOTH" if depth > 0 else "FRONT"
+    if font_path and os.path.exists(font_path):
+        curve.font = bpy.data.fonts.load(font_path, check_existing=True)
+    tmp = bpy.data.objects.new(name + "_tmp", curve)
+    bpy.context.scene.collection.objects.link(tmp)
+    dg = bpy.context.evaluated_depsgraph_get()
+    me = bpy.data.meshes.new_from_object(tmp.evaluated_get(dg))
+    bpy.data.objects.remove(tmp)
+    bpy.data.curves.remove(curve)
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=size * 1e-4)
+    bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(2.0), verts=bm.verts, edges=bm.edges)
+    bm.to_mesh(me)
+    bm.free()
+    obj = bpy.data.objects.new(name, me)
+    (col or bpy.context.scene.collection).objects.link(obj)
+    obj.location = loc
+    obj.rotation_euler = rot
+    M.assign(obj, mat)
+    return obj
+
+
+WOOD_SLOTS = ("M_Wood_Walnut", "M_Wood_Mahogany", "M_Wood_Panel")
+
+
+def grain_uv(obj: bpy.types.Object, slots=WOOD_SLOTS, ratio: float = 1.15, force=None) -> int:
+    """Run the wood grain along each member: after box_uv the grain (texture U) is horizontal,
+    so faces that are clearly longer along their V axis (stiles, legs, jambs, mullions) get their
+    UVs rotated 90 deg. `force(center, normal)` -> True/False/None overrides per face (e.g. to give
+    a whole raised panel vertical grain). Call after mrlib.finalize(). Returns rotated face count."""
+    me = obj.data
+    if not me.uv_layers:
+        return 0
+    uvl = me.uv_layers.active
+    M.refresh()
+    mw = obj.matrix_world
+    rot = mw.to_3x3()
+    names = [m.name if m else "" for m in me.materials]
+    count = 0
+    for p in me.polygons:
+        if names[p.material_index] not in slots:
+            continue
+        n = (rot @ p.normal).normalized()
+        c = mw @ p.center
+        f = force(c, n) if force else None
+        if f is None:
+            ax = max(range(3), key=lambda i: abs(n[i]))
+            ua, va = {0: (1, 2), 1: (0, 2), 2: (0, 1)}[ax]
+            pts = [mw @ me.vertices[v].co for v in p.vertices]
+            eu = max(q[ua] for q in pts) - min(q[ua] for q in pts)
+            ev = max(q[va] for q in pts) - min(q[va] for q in pts)
+            f = ev > ratio * eu
+        if f:
+            for li in p.loop_indices:
+                u, v = uvl.data[li].uv
+                uvl.data[li].uv = (v, -u)
+            count += 1
+    return count

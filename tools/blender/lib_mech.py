@@ -676,3 +676,213 @@ if os.environ.get("MR_PARTS"):
         return _orig_join(objs, name)
 
     M.join = _join_dbg
+
+
+# ---------------------------------------------------------------- wall-mounted mechanisms (safe, panel, sensor)
+EXTRA_MATERIALS.setdefault("M_Felt", ("3A3A3A", 1.0, 0.0, None, 1.0, None))
+EXTRA_MATERIALS.setdefault("M_Glass_Dark", ("0C0F10", 0.06, 0.0, None, 1.0, None))   # smoked display glass
+
+
+def box_mm(name: str, mn, mx, mat: str = "M_Steel_Painted", bevel: float = 0.002, segments: int = 1) -> bpy.types.Object:
+    """Bevelled box from its min / max corners."""
+    size = [mx[i] - mn[i] for i in range(3)]
+    loc = [(mx[i] + mn[i]) / 2 for i in range(3)]
+    return M.box(name, size, loc=loc, mat=mat, bevel=bevel, segments=segments)
+
+
+def prism_xz(name: str, pts, y0: float, y1: float, mat: str = "M_Steel_Painted") -> bpy.types.Object:
+    """Straight prism: polygon [(x, z), ...] in the front (XZ) plane, extruded from y0 to y1."""
+    bm = bmesh.new()
+    f = [bm.verts.new((x, y0, z)) for (x, z) in pts]
+    b = [bm.verts.new((x, y1, z)) for (x, z) in pts]
+    n = len(pts)
+    bm.faces.new(f)
+    bm.faces.new(b[::-1])
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((f[i], f[j], b[j], b[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    obj = _link(name, me)
+    M.assign(obj, mat)
+    return obj
+
+
+def bevel_where(obj, pred, width: float, segments: int = 1) -> None:
+    """Bevel the edges for which pred(co_a, co_b, edge) is true (mesh-local coordinates)."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    edges = [e for e in bm.edges if pred(e.verts[0].co, e.verts[1].co, e)]
+    if edges:
+        bmesh.ops.bevel(bm, geom=edges, offset=width, offset_type="OFFSET", segments=segments,
+                        profile=0.5, affect="EDGES", clamp_overlap=True)
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
+def bisect(obj, co, no) -> None:
+    """Cut every face crossing the plane (co, no) so materials can change there."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
+    bmesh.ops.bisect_plane(bm, geom=geom, plane_co=co, plane_no=no)
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
+def mat_faces(obj, fn) -> None:
+    """fn(center, normal) -> material name (or None to keep) for every polygon (mesh-local)."""
+    slots = {}
+    for p in obj.data.polygons:
+        nm = fn(p.center, p.normal)
+        if not nm:
+            continue
+        if nm not in slots:
+            slots[nm] = M.add_slot(obj, nm)
+        p.material_index = slots[nm]
+
+
+def planar_uv_rect(obj, u0: float, u1: float, v0: float, v1: float, axis: str = "Y",
+                   material_prefix: str = "M_Decal_", flip_u: bool = False) -> None:
+    """Exact 0..1 planar UVs over a known rectangle (mesh-local), e.g. a decal plate whose bevel would
+    otherwise shrink planar_uv's bounding box. axis Y: u from X, v from Z."""
+    me = obj.data
+    if not me.uv_layers:
+        me.uv_layers.new(name="UVMap")
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    uv = bm.loops.layers.uv.verify()
+    ui, vi = {"X": (1, 2), "Y": (0, 2), "Z": (0, 1)}[axis]
+    names = [m.name if m else "" for m in me.materials]
+    for f in bm.faces:
+        if f.material_index >= len(names) or not names[f.material_index].startswith(material_prefix):
+            continue
+        for loop in f.loops:
+            u = (loop.vert.co[ui] - u0) / (u1 - u0)
+            v = (loop.vert.co[vi] - v0) / (v1 - v0)
+            loop[uv].uv = ((1.0 - u) if flip_u else u, v)
+    bm.to_mesh(me)
+    bm.free()
+
+
+def recentre_xy(obj) -> None:
+    """Centre a text/2D mesh on its real glyph bounds in local XY (Blender's align_y uses the line box)."""
+    xs = [v.co.x for v in obj.data.vertices]
+    ys = [v.co.y for v in obj.data.vertices]
+    if xs:
+        obj.data.transform(Matrix.Translation((-(min(xs) + max(xs)) / 2, -(min(ys) + max(ys)) / 2, 0)))
+
+
+def label_front(name: str, text: str, size: float, x: float, y: float, z: float, mat: str = "M_Bakelite",
+                font: str = FONT_SANS_B, res: int = 2, spacing: float = 1.0) -> bpy.types.Object:
+    """Flat inlaid text centred on its glyph bounds at (x, z), lying on the plane y, facing -Y."""
+    t = text_flat(name, text, size, font=font, res=res, mat=mat, spacing=spacing)
+    recentre_xy(t)
+    t.data.transform(Matrix.Rotation(math.pi / 2, 4, "X"))
+    t.location = (x, y, z)
+    return t
+
+
+def flat_front(name: str, loops, x: float, y: float, z: float, mat: str = "M_Bakelite") -> bpy.types.Object:
+    """flat_shape() lying on the plane y, facing -Y, its 2D origin at (x, z)."""
+    obj = flat_shape(name, loops, mat=mat)
+    to_front(obj, y_back=y, x=x, z=z)
+    return obj
+
+
+def rivet_row(prefix: str, pts, r: float, y: float, mat: str = "M_Steel_Dark", segs: int = 8, normal=(0, -1, 0)):
+    return [rivet(f"{prefix}{i}", r, (px, y, pz), normal=normal, mat=mat, segs=segs) for i, (px, pz) in enumerate(pts)]
+
+
+def along(obj, axis_from=(0, 0, 1), axis_to=(0, -1, 0)) -> None:
+    """Rotate mesh data so local axis_from points along axis_to."""
+    q = Vector(axis_from).normalized().rotation_difference(Vector(axis_to).normalized())
+    obj.data.transform(q.to_matrix().to_4x4())
+
+
+def qa_wall(hole_w: float, hole_h: float, hole_cz: float = 0.0, hole_cx: float = 0.0, w: float = 2.4,
+            h: float = 2.0, cz: float = 0.0, t: float = 0.1, color: str = "8C8574") -> bpy.types.Object:
+    """QA-only plaster wall whose face is the plane Y = 0 (model back plane / flush face), optional hole."""
+    mat = bpy.data.materials.get("QA_Wall") or M.material("QA_Wall", color=color, rough=0.9)
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.scale(bm, vec=Vector((w, t, h)), verts=bm.verts)
+    bmesh.ops.translate(bm, vec=Vector((0, t / 2, cz)), verts=bm.verts)
+    me = bpy.data.meshes.new("QA_wall")
+    bm.to_mesh(me)
+    bm.free()
+    obj = _link("QA_wall", me)
+    obj.data.materials.append(mat)
+    if hole_w > 0:
+        cut = M.box("QA_cut", (hole_w, t * 3, hole_h), loc=(hole_cx, 0, hole_cz), bevel=0)
+        M.boolean(obj, cut)
+        obj.data.materials.clear()
+        obj.data.materials.append(mat)
+    return obj
+
+
+def mitred_ring(prefix: str, ow: float, oh: float, wall: float, y0: float, y1: float, r_out: float = 0.0,
+                n_arc: int = 3, bevel: float = 0.003, bev_seg: int = 2, mat: str = "M_Steel_Painted"):
+    """Rectangular frame ring seen from the front (XZ), extruded from y0 (front) to y1, built as four
+    mitred prisms {'l','r','t','b'} so no single collider AABB covers the opening.
+    Outer corners are rounded with r_out (the depth-wise edges); the front face edges are bevelled
+    except the mitre lines, so the pieces meet seamlessly."""
+    hw, hh = ow / 2, oh / 2
+    iw, ih = hw - wall, hh - wall
+    r = max(r_out, 0.0)
+    corners = {"bl": (-1, -1, 225.0), "tl": (-1, 1, 135.0), "tr": (1, 1, 45.0), "br": (1, -1, 315.0)}
+
+    def arc(key, a0, a1):
+        sx, sz, _ = corners[key]
+        cx, cz = sx * (hw - r), sz * (hh - r)
+        if r <= 1e-6:
+            return [(sx * hw, sz * hh)]
+        return [(cx + r * math.cos(math.radians(a0 + (a1 - a0) * i / n_arc)),
+                 cz + r * math.sin(math.radians(a0 + (a1 - a0) * i / n_arc))) for i in range(n_arc + 1)]
+
+    def inner(key):
+        sx, sz, _ = corners[key]
+        return (sx * iw, sz * ih)
+
+    def split(key):
+        sx, sz, a = corners[key]
+        if r <= 1e-6:
+            return (sx * hw, sz * hh)
+        return (sx * (hw - r) + r * math.cos(math.radians(a)), sz * (hh - r) + r * math.sin(math.radians(a)))
+
+    polys = {
+        "l": arc("bl", 225, 180) + arc("tl", 180, 135)[1:] + [inner("tl"), inner("bl")],
+        "t": arc("tl", 135, 90) + arc("tr", 90, 45)[1:] + [inner("tr"), inner("tl")],
+        "r": arc("tr", 45, 0) + arc("br", 0, -45)[1:] + [inner("br"), inner("tr")],
+        "b": arc("br", -45, -90) + arc("bl", -90, -135)[1:] + [inner("bl"), inner("br")],
+    }
+    mitres = set()
+    for k in corners:
+        a, b = split(k), inner(k)
+        mitres.add(frozenset(((round(a[0], 5), round(a[1], 5)), (round(b[0], 5), round(b[1], 5)))))
+    out = {}
+    for side, pts in polys.items():
+        clean = []
+        for p in pts:
+            if not clean or (abs(clean[-1][0] - p[0]) > 1e-7 or abs(clean[-1][1] - p[1]) > 1e-7):
+                clean.append(p)
+        if abs(clean[0][0] - clean[-1][0]) < 1e-7 and abs(clean[0][1] - clean[-1][1]) < 1e-7:
+            clean.pop()
+        obj = prism_xz(f"{prefix}_{side}", clean, y0, y1, mat=mat)
+
+        def front(a, b, e, _y=y0):
+            if abs(a.y - _y) > 1e-6 or abs(b.y - _y) > 1e-6:
+                return False
+            key = frozenset(((round(a.x, 5), round(a.z, 5)), (round(b.x, 5), round(b.z, 5))))
+            return key not in mitres
+        if bevel > 0:
+            bevel_where(obj, front, bevel, bev_seg)
+        out[side] = obj
+    return out
+
+
+def faceted(obj, angle_deg: float = 5.0) -> None:
+    """Re-shade after finalize() so cut-glass jewels and crystals show crisp facets."""
+    M.smooth(obj, angle_deg)

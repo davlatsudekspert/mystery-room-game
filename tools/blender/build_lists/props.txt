@@ -1,0 +1,5 @@
+# props built by the props agent (one script per line)
+bookshelf.py
+lab_bench.py
+echo_leyla_sitting.py
+shadow_lock.py

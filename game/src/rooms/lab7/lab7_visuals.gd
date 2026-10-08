@@ -11,10 +11,10 @@ const DRAWER_TRAVEL := 0.26
 const GEAR_SIGN := -1.0
 const LID_OPEN_DEG := -105.0
 const SAFE_DOOR_OPEN_DEG := -110.0
-const SWITCH_OFF_DEG := -35.0
-const SWITCH_ON_DEG := 35.0
-const LEVER_OFF_DEG := -40.0
-const LEVER_ON_DEG := 40.0
+const SWITCH_OFF_DEG := 0.0
+const SWITCH_ON_DEG := -70.0
+const LEVER_OFF_DEG := 0.0
+const LEVER_ON_DEG := -80.0
 const SHELF_OPEN_DEG := -85.0
 const CABINET_OPEN_DEG := -100.0
 const DOOR_OPEN_DEG := 95.0
@@ -156,7 +156,8 @@ func _build_safe_display() -> void:
 	_safe_label.shaded = false
 	if disp:
 		disp.add_child(_safe_label)
-		_safe_label.position = Vector3(0, 0, 0.004)
+		var aabb := (disp as MeshInstance3D).get_aabb() if disp is MeshInstance3D else AABB()
+		_safe_label.position = aabb.get_center() + Vector3(0, 0, aabb.size.z * 0.5 + 0.003)
 	else:
 		room.add_child(_safe_label)
 		_safe_label.global_position = Vector3(2.2, 1.48, 2.47)
@@ -179,6 +180,8 @@ func apply_state(animated: bool) -> void:
 	if nb:
 		nb.visible = not s["taken"].get("notebook", false)
 	# P4 safe
+	_rot(part("wall_safe", "IA_safe_handle"), Vector3.BACK, -90.0 if s["safe_open"] else 0.0, animated, 0.5)
+	_slide(part("wall_safe", "safe_bolts"), Vector3(-0.024 if s["safe_open"] else 0.0, 0, 0), animated)
 	_rot(part("wall_safe", "IA_safe_door"), Vector3.UP, SAFE_DOOR_OPEN_DEG if s["safe_open"] else 0.0, animated, 1.2)
 	if _safe_label:
 		var inp: String = s["safe_input"]
@@ -197,6 +200,7 @@ func apply_state(animated: bool) -> void:
 	if handle:
 		handle.visible = s["handle_installed"]
 	_rot(part("panel7", "IA_main_lever"), Vector3.RIGHT, LEVER_ON_DEG if (s["main_on"] or s["power_on"]) else LEVER_OFF_DEG, animated, 0.2, true)
+	_rot(part("panel7", "gauge_needle"), Vector3.BACK, -79.0 if (s["main_on"] or s["power_on"]) else 0.0, animated, 1.4)
 	var lamps := logic.lamps()
 	for j in 4:
 		_lamp(part("panel7", "lamp_%d" % j), lamps[j] == 1)
@@ -225,8 +229,8 @@ func apply_state(animated: bool) -> void:
 		_rot(part("lumen_projector", "IA_ring_%d" % i), Vector3.BACK, RING_SIGN * (int(s["rings"][i]) - 5) * 60.0, animated, 0.25)
 	_rot(part("lumen_projector", "IA_projector_lever"), Vector3.RIGHT, 35.0 if s["beam_on"] else 0.0, animated, 0.3)
 	# P12 mirrors
-	_rot(part("mirror_stand", "IA_mirror_mount"), Vector3.UP, 90.0 - int(s["mirrors"][0]) * 45.0 - 90.0, animated, 0.35)
-	_rot(part("mirror_stand_b", "IA_mirror_mount"), Vector3.UP, 90.0 - int(s["mirrors"][1]) * 45.0 - 90.0, animated, 0.35)
+	_rot(part("mirror_stand", "IA_mirror_mount"), Vector3.UP, 90.0 - int(s["mirrors"][0]) * 45.0, animated, 0.35)
+	_rot(part("mirror_stand_b", "IA_mirror_mount"), Vector3.UP, 90.0 - int(s["mirrors"][1]) * 45.0, animated, 0.35)
 	var mb := part("mirror_stand_b", "mirror")
 	if mb:
 		mb.visible = s["mirror_b_mounted"]
@@ -506,7 +510,7 @@ func _update_beam() -> void:
 		d.modulate = Color("cff6ff")
 		d.size = Vector3(0.17, 0.1, 0.17)
 		_beam_root.add_child(d)
-		d.global_position = Vector3(2.985, y, 0.12)
+		d.global_position = Vector3(2.948, y, 0.12)
 		d.global_rotation = Vector3(0, 0, deg_to_rad(90))
 
 

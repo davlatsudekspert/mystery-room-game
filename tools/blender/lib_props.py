@@ -328,8 +328,9 @@ def moulding(name, profile_yz, length, loc=(0, 0, 0), rot=(0, 0, 0), mat="M_Wood
     left, right = [], []
     for (y, z) in profile_yz:
         # mitre: the forward-projecting part (more negative y) is longer on mitred ends
-        xl = -length / 2 + ((-y) if miter_left else 0.0)
-        xr = length / 2 - ((-y) if miter_right else 0.0)
+        # `length` is measured along the back plane (y = 0); mitred ends grow by the projection
+        xl = -length / 2 - ((-y) if miter_left else 0.0)
+        xr = length / 2 + ((-y) if miter_right else 0.0)
         left.append(bm.verts.new((xl, y, z)))
         right.append(bm.verts.new((xr, y, z)))
     n = len(profile_yz)
@@ -561,3 +562,183 @@ def report(name) -> None:
         tris = sum(len(p.vertices) - 2 for p in o.data.polygons) if o.type == "MESH" else 0
         print(f"[props]   {o.name:28s} {o.type:5s} tris={tris:5d} origin={tuple(round(c, 4) for c in mw.translation)} "
               f"parent={o.parent.name if o.parent else '-'} mats={[m.name for m in o.data.materials] if o.type == 'MESH' else ''}")
+
+
+# ================================================================ room-coordinate, export and QA helpers
+# (shadow lock, darkroom props, chalkboard, poster, desk lamp, evidence board, Strand echo)
+def gd(x, y, z) -> Vector:
+    """Godot room coordinates -> Blender (x, -z, y)."""
+    return Vector((x, -z, y))
+
+
+def export_lean(name: str) -> str:
+    """mrlib.export_glb without embedded images: Godot swaps every material by slot name, and
+    the QA preview textures would otherwise bloat the GLB by megabytes."""
+    os.makedirs(M.MODELS_DIR, exist_ok=True)
+    path = os.path.join(M.MODELS_DIR, name + ".glb")
+    bpy.ops.export_scene.gltf(
+        filepath=path, export_format="GLB", use_selection=False, export_apply=True, export_yup=True,
+        export_materials="EXPORT", export_image_format="NONE", export_cameras=False, export_lights=False,
+        export_extras=True)
+    print(f"[props] exported {path} ({M.tri_count()} tris, {os.path.getsize(path) // 1024} KB)")
+    return path
+
+
+def alpha_decal_material(name: str, image: str, color: str = "FFFFFF", rough: float = 0.9):
+    """Decal preview material whose texture alpha cuts the surface (painted emblem, stencils)."""
+    mat = M.material(name, color=color, rough=rough, image=image)
+    nt = mat.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    for nd in nt.nodes:
+        if nd.type == "TEX_IMAGE":
+            nt.links.new(nd.outputs["Alpha"], bsdf.inputs["Alpha"])
+            break
+    if hasattr(mat, "surface_render_method"):
+        mat.surface_render_method = "DITHERED"
+    return mat
+
+
+def lathe_axis(name, profile, axis: str = "Y", sign: float = 1.0, segments: int = 32,
+               mat: str = "M_Brass_Aged", loc=(0, 0, 0), rot=(0, 0, 0)):
+    """mrlib.lathe whose revolution axis (profile z) is baked onto local +/-X, +/-Y or Z."""
+    o = M.lathe(name, profile, segments=segments, mat=mat)
+    if axis == "Y":
+        o.data.transform(Matrix.Rotation(-sign * math.pi / 2, 4, "X"))
+    elif axis == "X":
+        o.data.transform(Matrix.Rotation(sign * math.pi / 2, 4, "Y"))
+    elif sign < 0:
+        o.data.transform(Matrix.Rotation(math.pi, 4, "X"))
+    o.location = loc
+    o.rotation_euler = rot
+    return o
+
+
+def tapered_leg(name, top: float, bottom: float, h: float, loc=(0, 0, 0), mat: str = "M_Wood_Walnut",
+                bevel: float = 0.003, foot_inset=(0.0, 0.0)):
+    """Square leg tapering from `top` to `bottom` (side length) over height h; base at loc z.
+    foot_inset shifts the foot (x, y) so the taper happens on the inner faces only."""
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    for v in bm.verts:
+        if v.co.z < 0:
+            v.co.x = v.co.x * bottom + foot_inset[0]
+            v.co.y = v.co.y * bottom + foot_inset[1]
+        else:
+            v.co.x *= top
+            v.co.y *= top
+        v.co.z = (v.co.z + 0.5) * h
+    M._bevel_bm(bm, bevel, 1)
+    obj = M._new_obj(name, bm)
+    obj.location = loc
+    M.assign(obj, mat)
+    return obj
+
+
+def qa_material(name: str, colour: str, rough: float = 0.85):
+    """QA-only material (lower-case qa_ names survive mrlib.render_preview's QA cleanup)."""
+    mat = bpy.data.materials.get(name)
+    if mat is None:
+        mat = M.material(name, color=colour, rough=rough)
+    return mat
+
+
+def qa_box(name: str, size, loc, colour: str = "B8B2A0", rough: float = 0.9):
+    """Plain proxy geometry for QA renders (walls, floor). Call after export."""
+    o = M.box(name, size, loc=loc, mat="M_Plaster_Wall", bevel=0.0)
+    o.data.materials.clear()
+    o.data.materials.append(qa_material("qa_" + colour, colour, rough))
+    return o
+
+
+def qa_light(name: str, kind: str, loc, energy: float, colour: str = "FFFFFF", radius: float = 0.05,
+             direction=None, half_angle_deg: float = 30.0, blend: float = 0.2):
+    """QA-only Cycles light (lower-case name so it survives between renders)."""
+    ld = bpy.data.lights.new(name, kind)
+    ld.energy = energy
+    ld.color = M.hex_rgba(colour)[:3]
+    if kind in ("POINT", "SPOT"):
+        ld.shadow_soft_size = radius
+    if kind == "SPOT":
+        ld.spot_size = math.radians(2 * half_angle_deg)
+        ld.spot_blend = blend
+    if kind == "AREA":
+        ld.size = radius
+    lo = bpy.data.objects.new(name, ld)
+    bpy.context.scene.collection.objects.link(lo)
+    lo.location = loc
+    if direction is not None:
+        lo.rotation_euler = Vector(direction).to_track_quat("-Z", "Y").to_euler()
+    return lo
+
+
+def render_threads(n: int = 2) -> None:
+    """The QA farm is shared by several agents: cap Cycles threads."""
+    r = bpy.context.scene.render
+    r.threads_mode = "FIXED"
+    r.threads = n
+
+
+def rrect_ring(w: float, d: float, r: float, n: int = 4):
+    """Counter-clockwise rounded rectangle (x = width, y = depth) with n points per corner."""
+    r = max(1e-5, min(r, w / 2 - 1e-5, d / 2 - 1e-5))
+    pts = []
+    for (cx, cy, a0) in ((w / 2 - r, -d / 2 + r, -math.pi / 2), (w / 2 - r, d / 2 - r, 0.0),
+                         (-w / 2 + r, d / 2 - r, math.pi / 2), (-w / 2 + r, -d / 2 + r, math.pi)):
+        for i in range(n):
+            a = a0 + (math.pi / 2) * i / max(1, n - 1)
+            pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    return pts
+
+
+def rrect_loft(name: str, rings, mat: str = "M_Brass_Aged", n: int = 4, loc=(0, 0, 0), cap_bottom: bool = True,
+               cap_top: bool = True, ring_mats=None):
+    """Stepped/moulded solid from rounded-rect cross-sections [(w, d, corner_r, z), ...] bottom to top
+    (lamp bases, plinths, trays). ring_mats[i] = material name for the band between ring i and i+1."""
+    bm = bmesh.new()
+    loops = [[bm.verts.new((x, y, z)) for (x, y) in rrect_ring(w, d, r, n)] for (w, d, r, z) in rings]
+    mats = [mat] + [m for m in (ring_mats or []) if m and m != mat]
+    mats = list(dict.fromkeys(mats))
+    m = len(loops[0])
+    for i in range(len(loops) - 1):
+        a, b = loops[i], loops[i + 1]
+        mi = mats.index(ring_mats[i]) if ring_mats and i < len(ring_mats) and ring_mats[i] else 0
+        for k in range(m):
+            f = bm.faces.new((a[k], a[(k + 1) % m], b[(k + 1) % m], b[k]))
+            f.material_index = mi
+    if cap_bottom:
+        bm.faces.new(list(reversed(loops[0])))
+    if cap_top:
+        bm.faces.new(loops[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    obj = bm_obj(name, bm, mats)
+    obj.location = loc
+    return obj
+
+
+def flat_text_strips(name, x0, z0, width, rows, row_h=0.0016, gap=0.0042, y=0.0, mat="M_Fabric", seed=1,
+                     headline=None):
+    """Fake printed text: thin strips (one quad per line, ragged right) facing -Y, for newspapers/notes.
+    headline = (height, n_lines) for bold lines on top. Returns the object."""
+    rnd = random.Random(seed)
+    verts, faces = [], []
+    z = z0
+
+    def strip(xa, xb, za, zb):
+        i = len(verts)
+        verts.extend([(xa, y, za), (xb, y, za), (xb, y, zb), (xa, y, zb)])
+        faces.append((i, i + 1, i + 2, i + 3))
+
+    if headline:
+        hh, hn = headline
+        for _ in range(hn):
+            strip(x0, x0 + width * rnd.uniform(0.7, 1.0), z - hh, z)
+            z -= hh + gap * 0.9
+    for k in range(rows):
+        frac = rnd.uniform(0.82, 1.0) if k % 5 != 4 else rnd.uniform(0.3, 0.6)
+        strip(x0, x0 + width * frac, z - row_h, z)
+        z -= row_h + gap
+    obj = mesh_obj(name, verts, faces, [mat])
+    fix_normals(obj)
+    if obj.data.polygons and obj.data.polygons[0].normal.y > 0:
+        obj.data.flip_normals()
+    return obj

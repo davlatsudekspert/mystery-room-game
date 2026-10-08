@@ -222,9 +222,9 @@ func _build_uv_ink() -> void:
 
 func _build_shards() -> void:
 	var spots := {
-		"under_desk": Vector3(-0.85, 0.02, -2.25), "bookshelf_top": Vector3(-2.85, 2.13, -0.3),
+		"under_desk": Vector3(-0.85, 0.011, -2.25), "bookshelf_top": Vector3(-2.85, 2.16, -0.3),
 		"radiator": Vector3(1.85, 0.08, -2.38), "coat_pocket": Vector3(2.52, 1.12, -2.02),
-		"darkroom": Vector3(-4.55, 0.02, 0.15),
+		"darkroom": Vector3(-4.55, 0.011, 0.15),
 	}
 	for id: String in spots:
 		var shard := ModelUtil.spawn("lumen_shard", self, Transform3D(Basis(Vector3.UP, randf() * TAU), spots[id]), "none")
