@@ -29,17 +29,21 @@ Prerequisites:
 3. Play App Signing is enabled.
 4. The first AAB is uploaded manually once. After that, the API can upload.
 
-### Apple App Store / TestFlight
+### Apple App Store / TestFlight (Xcode cloud signing: no Mac or .p12 needed)
 | Secret | How to get it |
 |---|---|
-| `IOS_TEAM_ID` | developer.apple.com → Membership |
-| `IOS_DIST_CERT_P12_BASE64`, `IOS_DIST_CERT_PASSWORD` | Create an **Apple Distribution** certificate and export it as .p12 from Keychain (needs a Mac once). Then `base64 -i cert.p12` |
-| `IOS_PROVISION_PROFILE_BASE64` | An App Store provisioning profile for the bundle id above, base64-encoded |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64` | App Store Connect → Users and Access → Integrations → App Store Connect API. Create a key with the "App Manager" role |
+| `IOS_TEAM_ID` | developer.apple.com → Membership → Team ID |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → "+". The role must be **Admin** (cloud-managed distribution certificates require it) |
+| `ASC_KEY_P8_BASE64` | Base64 of the downloaded `AuthKey_XXXX.p8`, from `base64 -i AuthKey_XXXX.p8` |
 
-Prerequisites:
-1. Apple Developer Program membership, which costs **$99/year** and requires the owner's decision.
-2. An app record in App Store Connect with the bundle id above.
+One-time setup in App Store Connect:
+1. Register the bundle id `com.mysteryroom.forgotteninstitute` under developer.apple.com → Identifiers.
+2. Create the app record (Apps → "+").
+
+The workflow then:
+1. exports the Godot Xcode project;
+2. archives it with `-allowProvisioningUpdates` and the API key, so Xcode manages certificates and profiles;
+3. uploads the build to TestFlight (`destination=upload`).
 
 ## Status (verified in the dev container)
 - ✅ Debug APK builds locally:

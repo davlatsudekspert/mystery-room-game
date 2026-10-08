@@ -1,20 +1,25 @@
-# MYSTERY ROOM — iOS build on macOS + optional TestFlight upload.
-# Manual trigger only. macOS runner minutes count 10x against the private-repo quota: run only with owner consent.
-# Required secrets (never commit them):
-#   IOS_TEAM_ID                     Apple Developer Team ID
-#   IOS_DIST_CERT_P12_BASE64        Apple Distribution certificate (.p12), base64
-#   IOS_DIST_CERT_PASSWORD          password of the .p12
-#   IOS_PROVISION_PROFILE_BASE64    App Store provisioning profile for com.mysteryroom.forgotteninstitute, base64
-#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64   App Store Connect API key (for TestFlight upload)
+# MYSTERY ROOM — iOS build on macOS with Xcode cloud signing + TestFlight upload.
+# Manual trigger only (macOS minutes count 10x against the free private-repo quota).
+#
+# Owner setup (one time, no Mac needed):
+#   1. App Store Connect → Users and Access → Integrations → App Store Connect API → "+"
+#      Role: Admin (needed for cloud-managed distribution certificates). Download the .p8 once.
+#   2. Repository secrets:
+#        IOS_TEAM_ID         (developer.apple.com → Membership → Team ID)
+#        ASC_KEY_ID          (Key ID of the API key)
+#        ASC_ISSUER_ID       (Issuer ID shown above the keys list)
+#        ASC_KEY_P8_BASE64   (base64 of the downloaded AuthKey_XXXX.p8)
+#   3. App Store Connect → Apps → "+" New App with bundle id com.mysteryroom.forgotteninstitute
+#      (register the bundle id under developer.apple.com → Identifiers first if it is not listed).
 name: iOS build
 
 on:
   workflow_dispatch:
     inputs:
       upload_to_testflight:
-        description: "Upload the signed IPA to TestFlight"
+        description: "Upload the build to TestFlight"
         type: boolean
-        default: false
+        default: true
 
 env:
   GODOT_VERSION: "4.7.2"
@@ -23,9 +28,19 @@ env:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check secrets
+        env:
+          TEAM: ${{ secrets.IOS_TEAM_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          if [ -z "$TEAM" ] || [ -z "$KEY" ]; then
+            echo "::error::Missing IOS_TEAM_ID / ASC_* secrets — see the header of this workflow."
+            exit 1
+          fi
 
       - name: Install Godot (macOS) and iOS templates
         run: |
@@ -37,57 +52,67 @@ jobs:
           curl -sSL -o /tmp/t.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
           unzip -q -j /tmp/t.tpz templates/ios.zip templates/version.txt -d "$T"
 
-      - name: Import signing assets into a temporary keychain
+      - name: App Store Connect API key
         env:
-          P12: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
-          P12_PW: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
-          PROFILE: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8_BASE64 }}
         run: |
-          if [ -z "$P12" ] || [ -z "$PROFILE" ]; then
-            echo "SIGNING=none" >> $GITHUB_ENV
-            echo "::warning::No signing secrets: exporting an unsigned Xcode project only."
-            exit 0
-          fi
-          KC=$RUNNER_TEMP/build.keychain-db
-          security create-keychain -p ci "$KC"
-          security set-keychain-settings -lut 21600 "$KC"
-          security unlock-keychain -p ci "$KC"
-          echo "$P12" | base64 --decode > $RUNNER_TEMP/dist.p12
-          security import $RUNNER_TEMP/dist.p12 -P "$P12_PW" -A -t cert -f pkcs12 -k "$KC"
-          security list-keychain -d user -s "$KC"
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/mysteryroom.mobileprovision
-          echo "SIGNING=ok" >> $GITHUB_ENV
+          mkdir -p "$RUNNER_TEMP/keys"
+          echo "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" >> $GITHUB_ENV
 
-      - name: Export iOS
+      - name: Export Xcode project from Godot
         env:
           TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
         run: |
           cd game
+          sed -i '' "s/^application\/app_store_team_id=.*/application\/app_store_team_id=\"$TEAM_ID\"/" export_presets.cfg
+          sed -i '' "s/^application\/export_project_only=.*/application\/export_project_only=true/" export_presets.cfg
+          sed -i '' "s/^application\/version=.*/application\/version=\"${{ github.run_number }}\"/" export_presets.cfg
           "$GODOT" --headless --import || true
           mkdir -p ../build/ios
-          if [ "$SIGNING" = "ok" ]; then
-            sed -i '' "s/^application\/app_store_team_id=.*/application\/app_store_team_id=\"$TEAM_ID\"/" export_presets.cfg
-            "$GODOT" --headless --export-release "iOS" ../build/ios/MysteryRoom.ipa
-          else
-            sed -i '' "s/^application\/export_project_only=.*/application\/export_project_only=true/" export_presets.cfg
-            "$GODOT" --headless --export-release "iOS" ../build/ios/MysteryRoom.xcodeproj || true
-          fi
+          "$GODOT" --headless --export-release "iOS" ../build/ios/MysteryRoom.xcodeproj
           ls -la ../build/ios
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mystery-room-ios
-          path: build/ios/
-          retention-days: 7
-
-      - name: Upload to TestFlight
-        if: inputs.upload_to_testflight && env.SIGNING == 'ok'
+      - name: Archive (automatic cloud signing)
         env:
+          TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8_BASE64 }}
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "$ASC_KEY_P8" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
-          xcrun altool --upload-app -f build/ios/MysteryRoom.ipa -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          xcodebuild -project build/ios/MysteryRoom.xcodeproj -scheme MysteryRoom -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/ios/MysteryRoom.xcarchive archive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" | tail -40
+
+      - name: Export IPA (and upload to TestFlight)
+        env:
+          TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          DEST=export
+          if [ "${{ inputs.upload_to_testflight }}" = "true" ]; then DEST=upload; fi
+          cat > build/ios/ExportOptions.plist <<EOT
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>${DEST}</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          EOT
+          xcodebuild -exportArchive -archivePath build/ios/MysteryRoom.xcarchive -exportPath build/ios/export \
+            -exportOptionsPlist build/ios/ExportOptions.plist -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tail -40
+          ls -la build/ios/export || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mystery-room-ios
+          path: build/ios/export/
+          retention-days: 7

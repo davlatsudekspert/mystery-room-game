@@ -106,7 +106,7 @@ jobs:
         with:
           name: mystery-room-android-${{ inputs.build_type }}
           path: build/android/*
-          retention-days: 14
+          retention-days: 7
 
       - name: Upload to Google Play (internal testing, draft)
         if: inputs.build_type == 'release' && inputs.upload_to_play
