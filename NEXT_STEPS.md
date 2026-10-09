@@ -2,9 +2,21 @@
 
 How the work is organised (from 2026-10-09): the main session is the game director. Helper agents run in parallel; their results are reviewed and committed to `main`. If a session stops, the next one continues from this file, `DEVELOPMENT_STATUS.md`, `docs/GAMEPLAY_QA.md` and `docs/QUALITY_REPORT.md`.
 
+**Running now (2026-10-09, afternoon):**
+- main menu redesign in the owner's "The Room" direction (gear box hero, serif text items, entrance motion);
+- Ch3 model group A (shells, lift, doors), and groups B+C (Choir Hall props, control desk, cabinets, ports);
+- Ch3 room scene integration (`underground_room.gd`, `playthrough_ch3`);
+- store listing (letter-style description, hero screenshots).
+
+Next in the queue:
+- the HUD restyle after the menu: banners with gold rules, an inventory column on the left, a round pause button;
+- Ch3 groups D, E and F (at most two Blender agents at once).
+
+**Top priority:** the iOS crash on New Game (TestFlight build 2). Build 5 adds crash recovery (CrashGuard, safe graphics), the last stage in the menu, and the log in the Files app. See docs/TESTING_ON_DEVICE.md, "Device reports".
+
 | Track | Owner | Next |
 |---|---|---|
-| Game (3D, puzzles, story, UX) | director | Chapter 2 release, Chapter 3 scene, lighting and performance passes |
+| Game (3D, puzzles, story, UX) | director | iOS crash, game feel (camera done: smooth follow, glide, arcs), Chapter 3 integration review |
 | Android / Google Play | agent 1 | Release AAB path, closed-testing plan (12 testers × 14 days check), tester invitation plan → `docs/release/GOOGLE_PLAY_TESTING.md` |
 | iOS / TestFlight | agent 2 | Read-only check of the existing App Store Connect record "Mystery Room: Lost Institute" (no duplicate app), bundle id match, IPA build → `docs/release/IOS_TESTFLIGHT.md` |
 | QA / gameplay | agent 3 | Real-scene playthroughs of every chapter on many variant seeds, softlock/save/load/endings, mobile text and touch |
