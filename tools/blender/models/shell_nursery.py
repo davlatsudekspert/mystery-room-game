@@ -55,8 +55,14 @@ TILE_PROFILE = [(-0.035, 0.0), (-0.03, 0.012), (-0.018, 0.03), (-0.006, 0.06), (
 
 # ====================================================================== walls / floor / ceiling
 def nursery_walls():
-    path = [(CAMP_EX[1], Z0), (X1, Z0), (X1, Z1), (PASS[1], Z1), (PASS[0], Z1), (X0, Z1), (X0, DOOR_Z), (X0, -DOOR_Z),
-            (X0, CAMP_SZ[1])]
+    hw, d = 0.20, 0.12                                       # tile-clad pilasters
+    path = [(CAMP_EX[1], Z0), (X1, Z0)]
+    for z in (-2.6, 1.4):                                    # east wall, going +z (bump toward -x)
+        path += [(X1, z - hw), (X1 - d, z - hw), (X1 - d, z + hw), (X1, z + hw)]
+    path += [(X1, Z1)]
+    for x in (11.0, 8.5):                                    # south wall, going -x (bump toward -z)
+        path += [(x + hw, Z1), (x + hw, Z1 - d), (x - hw, Z1 - d), (x - hw, Z1)]
+    path += [(PASS[1], Z1), (PASS[0], Z1), (X0, Z1), (X0, DOOR_Z), (X0, -DOOR_Z), (X0, CAMP_SZ[1])]
     w = K.wall_sweep("walls", path, TILE_PROFILE, TILE, closed=False)
 
     def opening(c, n):
@@ -140,6 +146,15 @@ def nursery_pipes():
         wheel.data.transform(Matrix.Translation((x, 2.80, -3.66)) @ Matrix.Rotation(math.radians(-90), 4, "X"))
         parts.append(wheel)
         parts.append(K.gcyl("vstem", 0.01, 2.70, 2.80, base=(x, 0, -3.66), axis=(0, 1, 0), segments=4, mat=FROST, caps=False))
+    # a riser in the north-east corner and a cold-water run along the east wall above the seed library
+    parts.append(K.V.tube("riser", [(12.86, 0.0, -3.86), (12.86, 2.92, -3.86), (12.86, 2.92, -3.80)], 0.05, sides=10, mat=FROST,
+                          fillet=0.10))
+    parts.append(K.V.tube("erun", [(12.86, 2.92, -3.80), (12.82, 3.30, -3.40), (12.82, 3.30, 3.86), (12.82, 0.0, 3.86)], 0.045,
+                          sides=10, mat=FROST, fillet=0.18))
+    for z in (-2.0, 0.0, 2.0):
+        ring = M.torus("band", 0.05, 0.008, major_seg=10, minor_seg=4, mat=FROST)
+        ring.data.transform(Matrix.Translation((12.82, 3.30, z)))
+        parts.append(ring)
     for p in parts:
         A.hint(p, 50.0)
     return K.part("nursery_pipes", parts)
