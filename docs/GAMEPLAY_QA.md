@@ -81,6 +81,7 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 | Area | Level | Evidence |
 |---|---|---|
 | Logic P1–P12, both lens paths, softlock fuzz | AUTOMATED TESTED (logic) | `tools/run_tests.sh` |
+| Per-game variant answers (docs/VARIANTS.md) | AUTOMATED TESTED (logic + 3D taps) | 60-seed logic tests: solvable, unique, saved and reproducible. Real-scene playthrough with `--seed=777` on 2026-10-09: valves 4-2-4, punch 10011100, clicks 3-9-8 / dial 398, splice f1 f3 f2 f0, focus 7, vault variant. **94 taps, 0 fallbacks** |
 | 41 models in the room, every puzzle interaction | INTEGRATED | `docs/models/CH2_MANIFEST.md` (41/41) |
 | Full chapter by real 3D taps, both lens paths | AUTOMATED TESTED (3D taps) | `playthrough_ch2` on 2026-10-09:<br>• leave path: P1–P12, P11b and the finale, **86 taps, 0 logic fallbacks**;<br>• take path: P1–P12 and the finale, **78 taps, 0 logic fallbacks**.<br>Screenshots are in `docs/previews/ch2/`, with phone frames in `docs/previews/ch2/phone/` |
 | Every main view and the booth views | VISUALLY VERIFIED | Tap maps and playthrough screenshots (software renderer) |
