@@ -310,7 +310,9 @@ QA (`shell_nursery*.png`, the east blast door, `shell_lift`, `shell_gallery` and
    south-west arcs (x ≈ ±0.6, z ≈ 1.45) fall inside the frame's bottom corners: measured by projecting the GLB
    vertices into the 960 × 640 camera, the rim reaches the bottom edge there (`shell_gallery_3.png`). The support
    ledge under the glass was trimmed to 1 cm (r 1.49) so nothing of the rim shows *inside* the glass circle. If the
-   corners must be clean, the view needs a narrower FOV or a camera nearer the glass.
+   corners must be clean, the view needs a narrower FOV or a camera nearer the glass. The small bright dot near
+   the bottom of that render is `key_gallery`'s highlight on the glass (the spot is above and behind the camera);
+   expect the same in Godot unless the key light's specular is lowered for this view.
 6. **Drum wall outer face** (r 4.5) is not modelled: every opening through the drum is lined (door tunnels by
    `blast_door`, the shutter tunnel by `IA_tunnel_shutter`), so no outer face is visible.
 7. **`mrlib.PREVIEW` not edited**: the new slots' preview values are injected at run time by
