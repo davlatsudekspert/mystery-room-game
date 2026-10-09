@@ -62,7 +62,8 @@ func _ready() -> void:
 				_gear_rest.append(g.transform.basis)
 	# storytelling around the hero, kept clear of it: the stopped clock, Leyla's tea and spectacles
 	ModelUtil.spawn("flip_clock", self, Transform3D(Basis(Vector3.UP, deg_to_rad(36.0)), Vector3(-0.29, 0.78, -0.13)), "none")
-	ModelUtil.spawn("cc0/tea_set_01/tea_set_01", self, Transform3D(Basis(Vector3.UP, 0.3), Vector3(0.4, 0.78, -0.3)), "none")
+	# (the tea set waits just right of the frame; the drift brings its cup to the edge now and then)
+	ModelUtil.spawn("cc0/tea_set_01/tea_set_01", self, Transform3D(Basis(Vector3.UP, PI + 0.3), Vector3(0.56, 0.78, -0.26)), "none")
 	ModelUtil.spawn("cc0/round_spectacles/round_spectacles", self, Transform3D(Basis(Vector3.UP, 0.9), Vector3(-0.06, 0.78, 0.26)), "none")
 	_lamp = OmniLight3D.new()
 	_lamp.light_color = Color("ffb46b")

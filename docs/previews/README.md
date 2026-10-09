@@ -23,3 +23,4 @@ Frames from a run that finished Chapter 1 entirely through taps on the real scen
 
 ## `ui/`: menus and overlays in EN / RU / UZ (`qa/ui_screens.tscn`)
 These cover the trilingual language picker, the dimmed settings panel, the main menus, a hint, the pause menu, the inspect view, the notebook, the finale choice and the chapter-complete screen.
+`menu_en.jpg` / `menu_ru.jpg` / `menu_uz.jpg` (phone), `menu_tablet_en.jpg`, `menu_pressed_en.jpg` and `menu_before_after.jpg` show the main menu redesign (gear box hero, serif text items; see `docs/UI_UX.md` → Main menu). The older `en_main_menu.jpg` / `uz_main_menu.jpg` / `main_menu_logo_en_ru_uz.jpg` show the previous menu.
