@@ -962,8 +962,9 @@ func intro_keys() -> Array[String]:
 	return ["intro2.1", "intro2.2"]
 
 
+## The first goal, said once when the intro hands over (the badge in the inventory carries her number).
 func intro_caption_key() -> String:
-	return ""
+	return "cap2.goal"
 
 
 # ================================================================== helpers

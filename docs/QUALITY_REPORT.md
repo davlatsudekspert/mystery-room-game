@@ -38,13 +38,13 @@ All screenshots and frame counts come from the software renderer in the dev cont
 | 1 | 8 | Archive, booth, film and vault screenshots (`docs/previews/ch2/`) | The film's on-screen image is a little dim; no phone captures |
 | 2 | 8.5 | 12 puzzles + P11b on two Ch1 paths; 0 fallbacks on both (86 and 78 taps). Variant answers for the valves, punch card, tape clicks/dial, splice order, focus and vault overlay | Unproven with players |
 | 3 | 7.5 | The voice diary, the 1979 film, Leyla's echo, the 42nd silhouette, the key choice | Unproven with players |
-| 4 | 7.5 | Tap maps found and fixed covered cards and dividers, a blocked hatch, an unreadable diagram and a too-low projector view | No real-finger test yet |
+| 4 | 8 | Tap maps and the first-time-player review found and fixed: covered cards and dividers, a blocked hatch, an unreadable diagram, a too-low projector view, and the catalogue that could not be reached from the hall (now a hanging sign and walking) | No real-finger test yet |
 | 5 | 6 | As for Chapter 1 (UI audit in progress) | Being fixed |
 | 6 | 7 | 42 sounds, an ambience and 2 music cues, checked by measurement and spectrogram | Not heard on a device |
-| 7 | 5.5 | Hall view: 216 draw calls and ~161k primitives after the first optimisation pass (was 222 / 239k) | Further reduction; FPS on a phone |
+| 7 | 6 | Hall view: 198 draw calls and ~126k primitives (was 222 / 239k): one spot shadow instead of a dual-paraboloid omni | Draw calls still over 150; FPS on a phone |
 | 8 | 8 | Tests pass; real-tap playthroughs pass on both paths and on a variant seed (in progress) | No human run |
 | 9 | 8 | Localized decals (badge, cards, rules, labels) in EN/RU/UZ | No native-speaker review |
-| 10 | 5 | Not yet released in the chapter list (`released: false`) | Finish the player review, then release |
+| 10 | 6 | Released in the chapter list (paid bundle; tester builds open it). Player review: 1 small UI issue left | Real payments and store review |
 
 ## Fixes found by QA in this round (see `docs/GAMEPLAY_QA.md`)
 - Chapter 2 crash on every "use item" tap: `ItemDB.is_tool` clashed with Godot's `Script.is_tool()`.
