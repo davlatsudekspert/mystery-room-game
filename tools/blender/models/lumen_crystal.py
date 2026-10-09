@@ -2,7 +2,8 @@
 vault's light lock).
 
 A clear crystal disc, 50 mm across and 6 mm thick, with a flat polished front and a shallow 12-facet
-rose-cut back, held in a thin knurled brass bezel (54.5 mm, 7.2 mm deep) with front and back lips.
+rose-cut back, held in a thin turned brass bezel (54.5 mm, 7.2 mm deep, two fine grooves round its band) with front
+and back lips.
 Eight engraved index dots ring the front lip (one every 45 deg, the 12 o'clock one a short bar), so a
 rotation of the crystal in the vault's collars reads at a glance. A small brass grip tab with a hole
 stands up from the bezel at 12 o'clock.
@@ -39,13 +40,14 @@ def build():
     gem = [(0.0, -TC), (0.0105, -TC + 0.0007), (0.0195, -TC + 0.0019), (RC, -0.0009), (RC, TC - 0.0006),
            (RC - 0.0006, TC), (0.0, TC)]
     crystal = D.revolve(NAME, gem, direction=Y, segments=24, mat="M_Crystal")
-    # bezel: closed annular section revolved (front lip, groove for the crystal edge, back lip), knurled band
+    # bezel: closed annular section revolved (front lip, groove for the crystal edge, back lip)
     c = 0.0005
-    prof = [(RL, -HB), (RO - c, -HB), (RO, -HB + c), (RO, -0.0024), (RO, -0.0018, "k"), (RO, 0.0018, "k"),
-            (RO, 0.0024), (RO, HB - c), (RO - c, HB), (RL + 0.0004, HB), (RL, HB - 0.0004), (RL, TC + 0.0001),
-            (RC + 0.0002, TC + 0.0001), (RC + 0.0002, -TC - 0.0001), (RL, -TC - 0.0001), (RL, -HB)]
-    bezel = D.revolve("bezel", prof, direction=Y, segments=48, knurl=0.00045, mat="M_Brass_Aged",
-                      cap_bottom=False, cap_top=False)
+    g = 0.00035          # two fine turned grooves on the outer band
+    prof = [(RL, -HB), (RO - c, -HB), (RO, -HB + c), (RO, -0.0014 - g), (RO - g, -0.0014), (RO, -0.0014 + g),
+            (RO, 0.0014 - g), (RO - g, 0.0014), (RO, 0.0014 + g), (RO, HB - c), (RO - c, HB), (RL + 0.0004, HB),
+            (RL, HB - 0.0004), (RL, TC + 0.0001), (RC + 0.0002, TC + 0.0001), (RC + 0.0002, -TC - 0.0001),
+            (RL, -TC - 0.0001), (RL, -HB)]
+    bezel = D.revolve("bezel", prof, direction=Y, segments=48, mat="M_Brass_Aged", cap_bottom=False, cap_top=False)
     parts = [bezel]
     # engraved index dots on the front lip: one every 45 deg, a short bar at 12 o'clock
     yf = -HB - 0.00004
@@ -79,7 +81,7 @@ def build():
 
 def post():
     D.resmooth(bpy.data.objects[NAME], 10.0)
-    D.resmooth(bpy.data.objects["crystal_bezel"], 18.0)          # crisp knurl ridges
+    D.resmooth(bpy.data.objects["crystal_bezel"], 40.0)          # crisp grooves, smooth round band
     C.uv_rect_all(bpy.data.objects["crystal_face"], -FACE_R, FACE_R, -FACE_R, FACE_R, axis="Y")
 
 

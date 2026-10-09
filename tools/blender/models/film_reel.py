@@ -14,7 +14,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-import bpy  # noqa: E402
 import mrlib as M  # noqa: E402
 import lib_mech as L  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
@@ -71,7 +70,8 @@ def build():
     for z, d in ((zf + FT / 2, 1), (-zf - FT / 2, -1)):
         boss = L.lathe2("boss", [(HUB_R + 0.0035, 0.0), (HUB_R + 0.0020, 0.0007 * d), (0.0072, 0.0007 * d)],
                         segments=32, mat="M_Chrome", cap_bottom=False, cap_top=False)
-        rib = L.lathe2("rib", [(R - 0.0028, 0.0), (R - 0.0048, 0.0005 * d), (R - 0.0068, 0.0)], segments=64, mat="M_Chrome", cap_bottom=False, cap_top=False)
+        rib = L.lathe2("rib", [(R - 0.0028, 0.0), (R - 0.0048, 0.0005 * d), (R - 0.0068, 0.0)], segments=56,
+                       mat="M_Chrome", cap_bottom=False, cap_top=False)
         for o in (boss, rib):
             o.location = (0, 0, z)
             M.apply_transform(o)
@@ -86,9 +86,9 @@ def build():
     parts.append(hub)
     # film pack: amber annulus with winding steps on both sides
     w = HW - 0.0004
-    pack = L.lathe2("film_pack", [(HUB_R, -w), (0.038, -w + 0.00010), (0.052, -w - 0.00006), (0.063, -w + 0.00012),
-                                  (PACK_R, -w + 0.0001), (PACK_R, w - 0.0001), (0.061, w + 0.00012), (0.048, w - 0.00006),
-                                  (0.036, w + 0.00010), (HUB_R, w)],
+    pack = L.lathe2("film_pack", [(HUB_R, -w), (0.038, -w + 0.00010), (0.052, -w - 0.00006),
+                                  (0.063, -w + 0.00012), (PACK_R, -w + 0.0001), (PACK_R, w - 0.0001),
+                                  (0.061, w + 0.00012), (0.048, w - 0.00006), (0.036, w + 0.00010), (HUB_R, w)],
                     segments=40, mat="M_Film", cap_bottom=False, cap_top=False)
     parts.append(pack)
     # splicing tape holding the film's end (a short band on the pack's rim)

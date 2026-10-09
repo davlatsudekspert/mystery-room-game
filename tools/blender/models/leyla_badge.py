@@ -105,7 +105,8 @@ def clip():
         verts += [(-w2, y, z), (w2, y, z), (w2, y, z - 0.0006), (-w2, y, z - 0.0006)]
     for i in range(len(lever) - 1):
         a, b = 4 * i, 4 * (i + 1)
-        faces += [(a, a + 1, b + 1, b), (a + 3, b + 3, b + 2, a + 2), (a, b, b + 3, a + 3), (a + 1, a + 2, b + 2, b + 1)]
+        faces += [(a, a + 1, b + 1, b), (a + 3, b + 3, b + 2, a + 2), (a, b, b + 3, a + 3),
+                  (a + 1, a + 2, b + 2, b + 1)]
     faces += [(0, 3, 2, 1), (4 * n, 4 * n + 1, 4 * n + 2, 4 * n + 3)]
     lv = C.D.mesh("clip_lever", verts, faces, mat="M_Chrome")
     me = lv.data

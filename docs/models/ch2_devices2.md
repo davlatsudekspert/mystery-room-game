@@ -298,9 +298,15 @@ touches the top edge.
 | File | Shows |
 |---|---|
 | `slide_projector.png` | The in-game `slide_projector` view: slide in, lamp on, toggle ON |
-| `slide_projector_2.png` | Hero: the whole stand from the operator side |
-| `slide_projector_3.png` | Stage close-up: the slide in the carrier, the rotation knob, the toggle |
-| `slide_projector_4.png` | Rest: no slide, lamp off |
+| `slide_projector_2.png` | Hero: the whole stand, wide, from the booth's south-east corner |
+| `slide_projector_3.png` | Close-up of the operator side: carrier end, rotation knob with its index line, peep window, toggle (ON) |
+| `slide_projector_4.png` | Rest, in the `slide_projector` view: no slide, lamp off, toggle OFF |
+| `slide_projector_5.png` | Hero: the head from the front-left: objective, stage plates, carrier with the slide, knob, switch box |
+
+The slide inside the gate cannot be seen from the contract `slide_projector` camera, which looks from
+behind and to the left: the lamp house and condenser hide the stage centre, as on a real lantern. From
+that view the carrier, the knob and the glow show the state; the slide itself shows from the front or
+side (`slide_projector_5.png`).
 
 ---
 

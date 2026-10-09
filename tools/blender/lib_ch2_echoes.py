@@ -851,8 +851,36 @@ def import_ctx(name: str, pos_godot, yaw: float):
     return lib_arch.import_glb(path, loc=g2b(*pos_godot), rot_z_deg=yaw)
 
 
+def point_light(name: str, pos_godot, watts: float, color: str = "FFC58A", radius: float = 0.1):
+    """QA point light in Godot coordinates (QA_ prefix -> removed after the render)."""
+    ld = bpy.data.lights.new("QA_" + name, "POINT")
+    ld.energy = watts
+    ld.color = mrlib.hex_rgba(color)[:3]
+    ld.shadow_soft_size = radius
+    lo = bpy.data.objects.new("QA_" + name, ld)
+    bpy.context.scene.collection.objects.link(lo)
+    lo.location = g2b(*pos_godot)
+    return lo
+
+
+def glow(obj_name: str, color: str = "CFF6FF", strength: float = 1.2) -> None:
+    """Give an imported part its own emissive copy of its materials (the game's echo highlight)."""
+    o = bpy.data.objects.get(obj_name)
+    if o is None or o.type != "MESH":
+        return
+    for i, m in enumerate(o.data.materials):
+        if m is None:
+            continue
+        mc = m.copy()
+        bsdf = mc.node_tree.nodes.get("Principled BSDF") if mc.use_nodes else None
+        if bsdf is not None:
+            bsdf.inputs["Emission Color"].default_value = mrlib.hex_rgba(color)
+            bsdf.inputs["Emission Strength"].default_value = strength
+        o.data.materials[i] = mc
+
+
 def context_render(name: str, figure_objs, body, pos, yaw, build_ctx, cam_godot, target_godot, lens_fov_deg=None,
-                   lens=None, res=(960, 640), samples=28, lamp=None):
+                   lens=None, res=(960, 640), samples=28, lamp=None, points=None):
     """Figure (ghost look) at its world placement inside a dim proxy/imported context, seen from a game view.
 
     cam/target are Godot world points; `lens_fov_deg` = the game camera's vertical FOV.
@@ -872,6 +900,10 @@ def context_render(name: str, figure_objs, body, pos, yaw, build_ctx, cam_godot,
     lights = [((0.3, 0.2, 1.0), 260, "FFC58A", 2.0), ((-0.6, -0.8, 0.5), 60, "9FB4C8", 3.0)]
     if lamp is not None:
         lights = lamp
+    if points:
+        for i, (pp, w, col, rad) in enumerate(points):
+            point_light(f"pt{i}", pp, w, col, rad)
+        lights = [((0, 0, 1), 0.0001, "FFFFFF", 1.0)]
     path = mrlib.render_preview(name, g2b(*cam_godot), g2b(*target_godot), lens=lens, res=res, samples=samples,
                                 world_strength=0.05, lights=lights)
     _restore(figure_objs, saved)

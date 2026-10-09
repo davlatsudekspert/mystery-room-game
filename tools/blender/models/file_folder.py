@@ -87,9 +87,9 @@ def build():
                        verts=12, mat="M_Cardboard", bevel=0.0)
     parts.append(spine)
     # linen reinforcement over the tab and the typed label
-    tab_l = L.curve_solid("tab_linen", [L.rrect4(TAB_OUT + 0.0090, TAB_Y1 - TAB_Y0 + 0.0040, (0.0030, 0.0030, 0.0, 0.0), 3,
-                                                 cx=W / 2 + (TAB_OUT - 0.0090) / 2, cy=(TAB_Y0 + TAB_Y1) / 2)],
-                          0.0002, bevel=0.0, mat="M_Linen")
+    linen = L.rrect4(TAB_OUT + 0.0090, TAB_Y1 - TAB_Y0 + 0.0040, (0.0030, 0.0030, 0.0, 0.0), 3,
+                     cx=W / 2 + (TAB_OUT - 0.0090) / 2, cy=(TAB_Y0 + TAB_Y1) / 2)
+    tab_l = L.curve_solid("tab_linen", [linen], 0.0002, bevel=0.0, mat="M_Linen")
     tab_l.location = (0, 0, CT)
     M.apply_transform(tab_l)
     parts.append(tab_l)
@@ -100,7 +100,8 @@ def build():
     parts.append(label)
     txt = L.text_flat("tab_text", "0417", 0.0052, font=MONO, res=1, mat="M_Bakelite")
     L.recentre_xy(txt)
-    txt.data.transform(Matrix.Translation((lx, (TAB_Y0 + TAB_Y1) / 2, CT + 0.00025)) @ Matrix.Rotation(math.pi / 2, 4, "Z"))
+    txt.data.transform(Matrix.Translation((lx, (TAB_Y0 + TAB_Y1) / 2, CT + 0.00025))
+                       @ Matrix.Rotation(math.pi / 2, 4, "Z"))
     parts.append(txt)
     # closure: brown fibre washer with a brass rivet, string wound round it
     btn = L.lathe2("button", [(BTN_R, 0.0), (BTN_R, 0.0005), (BTN_R - 0.0006, 0.0008), (0.0026, 0.0008),

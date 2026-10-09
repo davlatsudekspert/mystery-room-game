@@ -474,7 +474,7 @@ def renders(body, heads):
     eye = g(B.g(B_PIVOT + Vector((0, 0.02, 0.17))))
     his_back = g(B.M.to_3x3() @ Vector((0.0, -1.0, 0.0)))
     his_left = g(B.M.to_3x3() @ Vector((-1.0, 0.0, 0.0)))
-    L.clay(NAME + "_12", tuple(Vector(fr(*(eye + his_back * 0.30 + his_left * 0.22 + Vector((0, 0.12, 0)))))),
+    L.clay(NAME + "_12", tuple(Vector(fr(*(eye + his_back * 0.08 + his_left * 0.42 + Vector((0, 0.22, 0)))))),
            fr(*led), lens=45, res=(640, 640))
     # in context: the game's hall view (root free look) and the screen view
     L.context_render(NAME + "_9", objs, body, PLACE, YAW, stacks_context, (3.8, 1.65, 1.8), (0.0, 1.3, -2.2),

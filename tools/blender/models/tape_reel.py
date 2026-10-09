@@ -1,8 +1,9 @@
 """tape_reel.glb — Leyla's 5-inch tape reel (three of them: 1996, 1997, 1998; same model, label swapped).
 
-A glossy black plastic (M_Lacquer_Black) 5-inch reel (Ø 127 mm): two 1.2 mm flanges with a stiffening rim and three kidney
-windows each, a 54 mm hub with a keyed spindle hole (three keyways), wound with brown 1/4-inch tape
-(M_Tape) to Ø 104 mm; the pack shows its slightly uneven winding through the windows.
+A glossy black plastic (M_Lacquer_Black) 5-inch reel (Ø 127 mm): two 1.2 mm flanges with a stiffening
+rim and three kidney windows each, a 54 mm hub with a keyed spindle hole (three keyways), wound with
+brown 1/4-inch tape (M_Tape) to Ø 104 mm, the tape end held by a strip of splicing tape; the pack shows
+its slightly uneven winding through the windows.
 `label` is its own object: a round paper hub label (outer Ø 51 mm, spindle hole Ø 9 mm) on the top
 flange, UV 0..1 over its bounding square (u left -> right, v bottom -> top seen from above with the
 reel's 'top' toward Godot -Z), default slot M_Decal_TapeLabel_1996; ItemDress sets the year.
@@ -17,7 +18,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import bpy  # noqa: E402
 import mrlib as M  # noqa: E402
 import lib_mech as L  # noqa: E402
-import lib_devices as D  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 
 NAME = "tape_reel"

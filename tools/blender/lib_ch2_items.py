@@ -6,7 +6,8 @@ resmoothing), move the centre of mass to the origin, export game/assets/models/<
 Differences: QA renders go to qa/blender/ch2/, Cycles uses 2 fixed threads (shared machine), the
 Chapter 2 material slots are created with their contract preview colours, decal slots load their
 images from game/assets/textures/decals/ch2/ when they exist, and every build checks its required
-part names (own objects, identity rotation at rest) and prints its size / bottom in Godot axes.
+part names (own objects, identity rotation at rest), prints its size / bottom in Godot axes and runs
+a back-face check.
 
 Conventions: metres, Blender Z-up; Godot = Blender (x, z, -y). Flat items are built lying in the
 Blender XY plane with the hero face up (+Z) and their top edge toward Blender +Y (= Godot -Z), so the
@@ -17,8 +18,9 @@ Main helpers
   text_loops(body, size)      2D outline loops of a text (for stamped / pierced digits in curve_solid)
   union_circle(poly, ...)     2D union of an outline and an overlapping circle (key eyes)
   key_shank(...)              turned key shank along Blender -Y with beads and a domed tip
-  ward_bit(...)               flat key bit plate with ward notches
-  item_main(...)              the build / export / check / QA pipeline
+  backface_check()            renders 14 views with back faces in red (Godot culls back faces)
+  inspect_cam(dist)           QA camera matching ItemDB's 70 deg inspect tilt for flat items
+  item_main(...)              the build / export / check / QA pipeline (C.LIGHTS = C.SOFT for paper)
 """
 from __future__ import annotations
 
@@ -28,7 +30,7 @@ import sys
 
 import bmesh
 import bpy
-from mathutils import Matrix, Vector
+from mathutils import Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mrlib as M  # noqa: E402
@@ -81,14 +83,6 @@ def card_pos_x(k: int, w: float = CARD_W) -> float:
     return -w / 2 + (k - 0.5) * w / 8
 
 
-def decal_path(slot: str) -> str:
-    return os.path.join(DECALS_CH2, DECALS[slot][0])
-
-
-def have_decal(slot: str) -> bool:
-    return os.path.exists(decal_path(slot))
-
-
 def ensure_materials() -> None:
     D.ensure_materials()
     for name, (hx, rough, metal, alpha) in CH2_SLOTS.items():
@@ -117,11 +111,6 @@ def drop_cap(obj, z: float, up: bool = True, tol: float = 2e-6) -> None:
     def pred(c, n):
         return abs(c.z - z) < tol and ((n.z > 0.99) if up else (n.z < -0.99))
     L.drop_faces(obj, pred)
-
-
-def drop_front_cap(obj, y: float, tol: float = 2e-6) -> None:
-    """Delete the flat faces lying in the plane y that face -Y (the front)."""
-    L.drop_faces(obj, lambda c, n: abs(c.y - y) < tol and n.y < -0.99)
 
 
 def uv_rect_all(obj, x0: float, x1: float, y0: float, y1: float, axis: str = "Z") -> None:
@@ -221,29 +210,6 @@ def key_shank(name: str, profile, y_top: float, mat: str, segments: int = 14) ->
     prof = [(r, d) for (r, d) in profile]
     return D.revolve(name, prof, direction=(0, -1, 0), loc=(0, y_top, 0), segments=segments, mat=mat,
                      up_hint=(0, 0, 1), cap_bottom=prof[0][0] > 0, cap_top=prof[-1][0] > 0)
-
-
-def ward_bit(name: str, y0: float, y1: float, x_root: float, reach: float, t: float, wards, mat: str,
-             bevel: float = 0.0003) -> bpy.types.Object:
-    """Flat key bit: a plate from y0 (toward the tip) to y1 (toward the bow) along the shank, from
-    x_root out to x_root + reach (+X). wards: [(y_a, y_b, depth)] notches cut in from the outer edge.
-    Centred on z = 0 (thickness t)."""
-    pts = [(x_root, y0), (x_root + reach, y0)]
-    xo = x_root + reach
-    for (ya, yb, dep) in sorted(wards, key=lambda w: w[0]):
-        pts += [(xo, ya), (xo - dep, ya), (xo - dep, yb), (xo, yb)]
-    pts += [(xo, y1), (x_root, y1)]
-    bit = L.curve_solid(name, [pts], t, bevel=bevel, bevel_res=0, mat=mat)
-    bit.location = (0, 0, -t / 2)
-    return bit
-
-
-def eye_ring(name: str, cx: float, cy: float, r_in: float, r_out: float, t: float, mat: str,
-             n: int = 20) -> bpy.types.Object:
-    ring = L.curve_solid(name, [L.circle(r_out, n, cx=cx, cy=cy), L.circle(r_in, n, cx=cx, cy=cy)], t,
-                         bevel=min(0.0005, t * 0.3), bevel_res=1, mat=mat)
-    ring.location = (0, 0, -t / 2)
-    return ring
 
 
 # ---------------------------------------------------------------- checks

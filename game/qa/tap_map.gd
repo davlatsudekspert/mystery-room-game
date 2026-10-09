@@ -1,13 +1,13 @@
 extends Node
 ## QA "tap map": renders camera views of a real chapter room and marks every tappable part in view.
-## For each part it taps the projected centre of its collider through the room's own raycast and colours the mark:
-##   green  = the tap reaches this part;
-##   red    = the tap lands on another part (named on the image) — a player aiming at it would hit that instead;
-##   grey   = the centre is off-screen or behind the camera.
+## It taps a 5×5 grid over the part's own screen area through the room's raycast and colours the mark:
+##   green  = at least 3 sample points reach the part;
+##   orange = only 1–2 do (a small or mostly covered target);
+##   red    = none do; the part most often hit instead is named.
 ## Run: xvfb-run -a godot --path game res://qa/tap_map.tscn -- --chapter=ch2 --views=cat_drawer,splicer --out=<dir>
 ##        [--steps=N] (solver steps first) [--do=open_cat_drawer:4,pick_divider:1] (logic calls with int args)
 ##        [--until=booth_open] (solver steps until that state key is true) [--lens=take|leave]
-## Writes <view>.png and tap_map.txt (one line per red or grey part).
+## Writes <view>.png and tap_map.txt (one line per orange or red part).
 
 var out_dir := "/tmp/tap_map"
 var room: Node3D
@@ -71,6 +71,8 @@ func _run() -> void:
 	await _settle(1.5)
 	var cam: RoomCamera = room.get("cam")
 	for v in views:
+		if room.has_method("prepare_view"):
+			room.call("prepare_view", v)
 		cam.go(v, true)
 		await _settle(0.9)
 		await _map(v)
@@ -100,26 +102,42 @@ func _map(view_id: String) -> void:
 		var part := str(b.get_meta("part", ""))
 		if part == "":
 			continue
-		# the visible middle of the part: its mesh bounds (trimesh colliders sit at the mesh origin)
-		var p := b.global_position
 		var mi := b.get_parent() as MeshInstance3D
-		if mi != null and mi.mesh != null:
-			p = mi.global_transform * mi.mesh.get_aabb().get_center()
-		elif b.get_child_count() > 0 and b.get_child(0) is Node3D:
-			p = (b.get_child(0) as Node3D).global_position
-		if cam.is_position_behind(p) or cam.global_position.distance_to(p) > 6.0:
+		var r := _screen_rect(cam, mi) if mi != null and mi.mesh != null else Rect2()
+		if r.size == Vector2.ZERO or not rect.intersects(r):
 			continue
-		var sp := cam.unproject_position(p)
-		if not rect.has_point(sp):
+		# sample the part's own screen area like a player tapping what they see
+		var hits := 0
+		var total := 0
+		var centroid := Vector2.ZERO
+		var others: Dictionary = {}
+		var inner := r.grow_individual(-r.size.x * 0.1, -r.size.y * 0.1, -r.size.x * 0.1, -r.size.y * 0.1)
+		for gy in 5:
+			for gx in 5:
+				var sp := inner.position + inner.size * Vector2((gx + 0.5) / 5.0, (gy + 0.5) / 5.0)
+				if not rect.has_point(sp):
+					continue
+				total += 1
+				var hit: Dictionary = room.call("raycast", sp)
+				var got := "" if hit.is_empty() else str(room.call("resolve", hit)["part"])
+				if got == part:
+					hits += 1
+					centroid += sp
+				else:
+					others[got] = int(others.get(got, 0)) + 1
+		if total == 0:
 			continue
-		var hit: Dictionary = room.call("raycast", sp)
-		var got := ""
-		if not hit.is_empty():
-			got = str(room.call("resolve", hit)["part"])
-		var ok := got == part
-		marks.append({"pos": sp, "part": part, "ok": ok, "got": got})
-		if not ok:
-			lines.append("%s: %s → %s" % [view_id, part, got if got != "" else "(nothing)"])
+		var pos := centroid / hits if hits > 0 else r.get_center()
+		var top := ""
+		var best := 0
+		for k: String in others:
+			if int(others[k]) > best:
+				best = int(others[k])
+				top = k
+		marks.append({"pos": pos, "part": part, "hits": hits, "got": top})
+		if hits < 3:
+			lines.append("%s: %s reachable at %d/%d sample points (mostly hits %s)" % [view_id, part, hits, total,
+				top if top != "" else "(nothing)"])
 	var layer := CanvasLayer.new()
 	layer.layer = 100
 	var canvas := _Marks.new()
@@ -133,13 +151,28 @@ func _map(view_id: String) -> void:
 	layer.queue_free()
 
 
+func _screen_rect(cam: Camera3D, mi: MeshInstance3D) -> Rect2:
+	var ab := mi.mesh.get_aabb()
+	var r := Rect2()
+	for k in 8:
+		var wp := mi.global_transform * ab.get_endpoint(k)
+		if cam.is_position_behind(wp):
+			return Rect2()
+		var sp := cam.unproject_position(wp)
+		r = Rect2(sp, Vector2.ZERO) if k == 0 else r.expand(sp)
+	return r
+
+
 class _Marks extends Control:
 	var marks: Array[Dictionary] = []
 
 	func _draw() -> void:
 		var font := ThemeDB.fallback_font
 		for m: Dictionary in marks:
-			var c := Color(0.2, 1.0, 0.35) if m["ok"] else Color(1.0, 0.25, 0.2)
-			draw_circle(m["pos"], 6.0, c)
-			var label: String = m["part"] if m["ok"] else "%s→%s" % [m["part"], m["got"]]
-			draw_string(font, m["pos"] + Vector2(8, 4), label.replace("IA_", ""), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, c)
+			var h: int = m["hits"]
+			var c := Color(0.2, 1.0, 0.35) if h >= 3 else (Color(1.0, 0.7, 0.1) if h > 0 else Color(1.0, 0.25, 0.2))
+			draw_circle(m["pos"], 5.0, c)
+			var label: String = str(m["part"]).replace("IA_", "")
+			if h < 3:
+				label += " %d→%s" % [h, str(m["got"]).replace("IA_", "")]
+			draw_string(font, m["pos"] + Vector2(7, 4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, c)

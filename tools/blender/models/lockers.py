@@ -84,20 +84,21 @@ def K_mat_down(obj):
 
 def number_plate(n, xc, y):
     parts = []
-    plate = F.gpoly(f"np_plate{n}", [A.rounded_rect(0.086, 0.050, 0.008, 2)], 0.0022, (xc, y, DOOR_Z1), (1, 0, 0),
-                    (0, 1, 0), mat=EN, bevel=0.0006, drop_bottom=True)
+    plate = F.gpoly(f"np_plate{n}", [A.rounded_rect(0.086, 0.050, 0.008, 1)], 0.0022, (xc, y, DOOR_Z1), (1, 0, 0),
+                    (0, 1, 0), mat=EN, bevel=0.0, drop_bottom=True)
     parts.append(plate)
-    parts.append(F.gpoly(f"np_rim{n}", [A.rounded_rect(0.090, 0.054, 0.009, 2), A.rounded_rect(0.086, 0.050, 0.008, 2)],
+    parts.append(F.gpoly(f"np_rim{n}", [A.rounded_rect(0.090, 0.054, 0.009, 1), A.rounded_rect(0.086, 0.050, 0.008, 1)],
                          0.0026, (xc, y, DOOR_Z1), (1, 0, 0), (0, 1, 0), mat=CR, bevel=0.0, drop_bottom=True))
-    parts.append(gtext(f"np_txt{n}", str(n), 0.040, (xc, y, DOOR_Z1 + 0.0024), font=F.FONT_SANS_B, mat=INK, res=2))
+    parts.append(gtext(f"np_txt{n}", str(n), 0.044, (xc, y, DOOR_Z1 + 0.0024), font=F.FONT_SANS_B, mat=INK, res=2))
     for s in (-1, 1):
-        parts.append(F.screw(f"np_rivet{n}{s}", 0.0024, (xc + s * 0.035, y, DOOR_Z1 + 0.0022), "z", mat=CR, segs=6))
+        parts.append(F.gcyl(f"np_rivet{n}{s}", 0.0024, 0.0008, (xc + s * 0.036, y, DOOR_Z1 + 0.0022), axis="z", verts=6,
+                            mat=CR, bevel=0.0, smooth=0))
     return parts
 
 
 def keyhole(n, x, y):
-    esc = F.glathe(f"kh_esc{n}", [(0.0115, 0.0), (0.0115, 0.0008), (0.0098, 0.0022), (0.0, 0.0028)], (x, y, DOOR_Z1),
-                   axis="z", segments=14, mat=BR)
+    esc = F.glathe(f"kh_esc{n}", [(0.0115, 0.0), (0.0100, 0.0020), (0.0, 0.0028)], (x, y, DOOR_Z1),
+                   axis="z", segments=10, mat=BR)
     slot = [(-0.0016, -0.0062), (0.0016, -0.0062), (0.0013, -0.0005)] + \
            [(0.0029 * math.cos(a), 0.0016 + 0.0029 * math.sin(a)) for a in
             [math.radians(-60 + 300 * k / 7) for k in range(8)]] + [(-0.0013, -0.0005)]
@@ -109,11 +110,11 @@ def keyhole(n, x, y):
 def lift_handle(n, x, y):
     """Chrome lift handle: escutcheon plate + a vertical pull bar on two posts."""
     parts = []
-    parts.append(F.gpoly(f"lh_plate{n}", [A.rounded_rect(0.030, 0.110, 0.012, 3)], 0.003, (x, y, DOOR_Z1), (1, 0, 0),
-                         (0, 1, 0), mat=CR, bevel=0.0008, drop_bottom=True))
+    parts.append(F.gpoly(f"lh_plate{n}", [A.rounded_rect(0.030, 0.110, 0.012, 2)], 0.003, (x, y, DOOR_Z1), (1, 0, 0),
+                         (0, 1, 0), mat=CR, bevel=0.0, drop_bottom=True))
     bar = A.tube(f"lh_bar{n}", [G(x, y - 0.040, DOOR_Z1 + 0.002), G(x, y - 0.040, DOOR_Z1 + 0.020),
                                 G(x, y + 0.040, DOOR_Z1 + 0.020), G(x, y + 0.040, DOOR_Z1 + 0.002)],
-                 0.0055, sides=8, fillet=0.010, fillet_segs=3, mat=CR)
+                 0.0055, sides=6, fillet=0.010, fillet_segs=2, mat=CR)
     parts.append(bar)
     return parts
 
@@ -123,12 +124,8 @@ def build_door(n):
     xc = (x0 + x1) / 2
     ym = (y0 + y1) / 2
     parts = []
-    pan = gbox(f"door_pan{n}", (x0, y0, DOOR_Z0), (x1, y1, DOOR_Z1), ST, 0.0025, 2)
+    pan = gbox(f"door_pan{n}", (x0, y0, DOOR_Z0), (x1, y1, DOOR_Z1), ST, 0.003, 1)
     parts.append(pan)
-    # a shallow pressed panel line (stiffening bead) around the face
-    parts.append(F.gpoly(f"door_bead{n}", [A.rounded_rect(x1 - x0 - 0.05, y1 - y0 - 0.05, 0.012, 2),
-                                           A.rounded_rect(x1 - x0 - 0.058, y1 - y0 - 0.058, 0.010, 2)],
-                         0.0012, (xc, ym, DOOR_Z1 - 0.0002), (1, 0, 0), (0, 1, 0), mat=ST, bevel=0.0, drop_bottom=True))
     parts += louvre_bank(f"t{n}", xc, y1 - 0.045, 6)
     parts += louvre_bank(f"b{n}", xc, y0 + 0.145, 6)
     parts += number_plate(n, xc, y1 - 0.205)
@@ -137,8 +134,8 @@ def build_door(n):
     parts += lift_handle(n, hx, ym - 0.005)
     # hinge knuckles on the left edge (the hinge axis = pivot line)
     for k, dy in enumerate((0.31, -0.31)):
-        parts.append(F.gcyl(f"knuckle{n}{k}", 0.0045, 0.05, (x0 - GAP, ym + dy - 0.025, DOOR_Z1), axis="y", verts=8,
-                            mat=ST, bevel=0.0008))
+        parts.append(F.gcyl(f"knuckle{n}{k}", 0.0045, 0.05, (x0 - GAP, ym + dy - 0.025, DOOR_Z1), axis="y", verts=6,
+                            mat=ST, bevel=0.0))
     door = F.part(f"IA_locker_{n}", parts, pivot=(x0 - GAP, ym, DOOR_Z1))
     return door
 
@@ -212,7 +209,7 @@ def build_interior():
     parts.append(gbox("l9_mirror_frame", (xc - 0.06, 0.82, 0.012), (xc + 0.06, 0.925, 0.016), CR, 0.001))
     parts.append(gbox("l9_mirror", (xc - 0.055, 0.825, 0.016), (xc + 0.055, 0.92, 0.0168), "M_Glass_Dark", 0.0))
     scarf = M.box("l9_scarf", (0.20, 0.13, 0.035), loc=G(xc - 0.03, SHELF_Y + 0.003 + 0.0175, 0.19), mat="M_Fabric",
-                  bevel=0.012, segments=3)
+                  bevel=0.012, segments=2)
     scarf.data.transform(F.Matrix.Rotation(math.radians(8), 4, "Z"))
     parts.append(scarf)
     catch = (xc, yb_j - r + ROD_R, HOOK_Z + r)     # top of the rod at the bottom of the J

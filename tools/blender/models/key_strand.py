@@ -16,7 +16,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-import bpy  # noqa: E402
 import mrlib as M  # noqa: E402
 import lib_mech as L  # noqa: E402
 import lib_ch2_items as C  # noqa: E402

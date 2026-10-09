@@ -5,7 +5,6 @@ edges) pierced right through with **Leyla's sign** — a crescent opening to the
 a vertical row inside its opening (proportions taken from glyph_sign.png, sign height 20.5 mm) — a turned
 collar, a thin round shank (Ø 4.5 mm) with a domed tip and a small flag bit with one ward and a
 chamfered corner.
-A small hanging eye (Ø 7.2 mm, hole Ø 3.4 mm) crowns the bow, as on Strand's key, for the vault cradle hook.
 Lies flat (broad faces Godot +-Y, hero face up), the bow toward Godot -Z (the top in the inspect view),
 the bit toward +Z sticking out to +X. Origin at the centre of mass.
     blender -b --factory-startup -P tools/blender/models/key_leyla.py [-- --no-render]
@@ -22,10 +21,9 @@ import lib_ch2_items as C  # noqa: E402
 NAME = "key_leyla"
 MAT = "M_Steel_Dark"
 T = 0.0030            # bow plate
-BY = 0.0234           # bow centre (Blender y; +Y = Godot -Z)
+BY = 0.029            # bow centre (Blender y; +Y = Godot -Z)
 RX, RY = 0.0135, 0.0160
-EYE_Y, EYE_R, EYE_HOLE = BY + RY + 0.0020, 0.0036, 0.0017     # hanging eye on top of the bow
-TOP = EYE_Y + EYE_R                                           # eye top; the tip is at TOP - 0.110
+TOP = BY + RY                                                 # bow top; the tip is at TOP - 0.110
 SIGN_H = 0.0205       # crescent height (glyph_sign.png: 410 px of 512)
 PX = SIGN_H / 410.0   # metres per glyph pixel
 
@@ -76,9 +74,7 @@ def dots():
 
 def build():
     bow_out = [(RX * math.cos(t), BY + RY * math.sin(t)) for t in (math.tau * i / 48 for i in range(48))]
-    bow_out = C.union_circle(bow_out, 0.0, EYE_Y, EYE_R, n=12)
-    eye = L.circle(EYE_HOLE, 10, cx=0.0, cy=EYE_Y)
-    bow = L.curve_solid(NAME, [bow_out, eye, crescent()] + dots(), T, bevel=0.0005, bevel_res=1, mat=MAT)
+    bow = L.curve_solid(NAME, [bow_out, crescent()] + dots(), T, bevel=0.0005, bevel_res=1, mat=MAT)
     bow.location = (0, 0, -T / 2)
     M.apply_transform(bow)
     # turned collar + slender shank with a domed tip (from inside the bow down to the tip at y = -0.065)

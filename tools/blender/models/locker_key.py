@@ -5,7 +5,8 @@ ring hole, a flat blade with four bitting cuts, a milled groove along it and a
 pointed tip. A blackened steel split ring (Ø 19 mm wire ring) joins it to a round aged-brass tag
 (Ø 30 mm, 1.2 mm) stamped with a big **9** (17 mm; 3D: the numeral is sunk 0.4 mm into the tag, its
 floor darkened) inside a stamped border ring broken at the hole. The 9 reads upright in the inspect
-view (the tag lies above the ring, the numeral's top away from the hole). Key and tag rest on the ring wire where they cross it.
+view (the tag lies above the ring, the numeral's top away from the hole). Key and tag rest on the ring
+wire where they cross it.
 Lies flat (Godot +Y up), the tag toward Godot -Z (the top in the inspect view), the key's blade toward
 +Z. Origin at the centre of mass.
     blender -b --factory-startup -P tools/blender/models/locker_key.py [-- --no-render]
@@ -15,7 +16,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-import bpy  # noqa: E402
 import mrlib as M  # noqa: E402
 import lib_mech as L  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
@@ -45,8 +45,8 @@ def key_shape():
     a_l = math.atan2(yb - bow_c[1], -hw - bow_c[0]) % math.tau
     a_r = math.atan2(yb - bow_c[1], hw - bow_c[0]) % math.tau - math.tau
     n = 36
-    arc = [(bow_c[0] + bow_r * math.cos(a_l + (a_r - a_l) * i / n), bow_c[1] + bow_r * math.sin(a_l + (a_r - a_l) * i / n))
-           for i in range(1, n)]
+    angles = [a_l + (a_r - a_l) * i / n for i in range(1, n)]
+    arc = [(bow_c[0] + bow_r * math.cos(a), bow_c[1] + bow_r * math.sin(a)) for a in angles]
     outline = list(reversed(blade + arc))
     hole = L.circle(0.0028, 16)
     return outline, hole, yb, bow_c
@@ -106,10 +106,13 @@ def build():
                    mat="M_Steel_Dark")
     M.apply_transform(ring)
     # the split: a second, slightly offset turn over a quarter of the ring
-    turn = L.tube("ring_turn", [(RING_C[0] + (RING_R - 0.0004) * math.cos(a), RING_C[1] + (RING_R - 0.0004) * math.sin(a),
-                                 WIRE + 0.0011 * (1 - abs(a - math.radians(-20)) / math.radians(40)) ** 0.5 * 0.9)
-                                for a in [math.radians(-60 + 8 * i) for i in range(11)]], WIRE * 0.95,
-                  mat="M_Steel_Dark", bevel_res=1, res_u=2)
+    turn_pts = []
+    for k in range(11):                       # the second turn rises over the first in its middle
+        a = math.radians(-60 + 8 * k)
+        rise = 0.0011 * 0.9 * (1 - abs(a - math.radians(-20)) / math.radians(40)) ** 0.5
+        turn_pts.append((RING_C[0] + (RING_R - 0.0004) * math.cos(a), RING_C[1] + (RING_R - 0.0004) * math.sin(a),
+                         WIRE + rise))
+    turn = L.tube("ring_turn", turn_pts, WIRE * 0.95, mat="M_Steel_Dark", bevel_res=1, res_u=2)
     hard = M.join(key_parts[1:] + tag_parts + [ring, turn], "key_ring_tag")
     M.set_parent(hard, key)
     return [key]
@@ -118,7 +121,7 @@ def build():
 def main():
     C.item_main(NAME, build, shots=[
         ("", (0.04, -0.10, 0.11), (0.0, -0.002, 0.0), 50),
-        ("_2", C.inspect_cam(0.18), (0.0, 0.0, 0.0), 50),
+        ("_2", C.inspect_cam(0.21), (0.0, -0.005, 0.0), 50),
     ])
 
 

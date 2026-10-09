@@ -4,13 +4,14 @@ drawer 2 (Chapter 2, leave path). Same face and hair as echo_leyla_sitting (Chap
 Output: game/assets/models/echo_leyla_standing.glb (Godot axes below; the model faces +Z)
   echo_body  origin = floor between her feet. Height to the crown ~1.65 m. Lab coat to just below the knee
              over a skirt, stockings, low block-heel shoes. Her RIGHT arm points forward-down at the target
-             TARGET_G (model-local Godot), her left hand hangs relaxed. Body turned 10 deg (hips) .. 24 deg
-             (chest) to her left toward the drawer, head 34 deg left and pitched down.
+             TARGET_G (model-local Godot), her left hand hangs relaxed. Body turned 6 deg (hips) .. 16 deg
+             (chest) to her left toward the drawer, head 18 deg left and pitched down.
   echo_head  head + neck + hair + bun, child of echo_body, origin = neck pivot (base of the neck inside the
              collar), identity rotation. Rotate about its local +Y to turn the head.
 Placement (docs/models/ch2.md section 1): world (-4.15, 0, 2.62), yaw -90. With that placement model +Z =
-world -X and model +X = world +Z, so TARGET_G = (0.18, 0.68, 0.40) is the front centre of slide-cabinet drawer 2
-(world (-4.55, 0.68, 2.80)). The pointing line (wrist -> index tip) passes within a few cm of it.
+world -X and model +X = world +Z, so TARGET_G = (0.045, 0.675, 0.40) is the front centre of slide-cabinet drawer 2
+(world (-4.55, 0.675, 2.665): group B2 centred the 0.46 m cabinet at world z 2.665, see slide_cabinet.py). The
+pointing line (index knuckle -> tip) passes within a few cm of it; the tip stops ~9 cm short.
 Material: one slot, M_Echo (replaced in Godot by the additive light-echo shader). One closed shell per object.
 
 Run: blender -b --factory-startup -P tools/blender/models/echo_leyla_standing.py [-- --no-render] [-- --dev <dir>]
@@ -37,12 +38,12 @@ BUDGET = 14000
 BODY_TRIS, HAND_TRIS, HEAD_TRIS = 7900, 1150, 2900
 
 PLACE, YAW = (-4.15, 0.0, 2.62), -90.0
-TARGET_G = (0.18, 0.68, 0.40)                 # drawer 2 front centre, model-local Godot
-TARGET = L.godot_to_build(TARGET_G)           # build space: (-0.18, 0.40, 0.68)
+TARGET_G = (0.045, 0.675, 0.40)               # drawer 2 front centre, model-local Godot
+TARGET = L.godot_to_build(TARGET_G)           # build space: (-0.045, 0.40, 0.675)
 
 # ------------------------------------------------------------------ skeleton (build space: +Y forward, +X her right)
-YAW_HIP, YAW_CHEST = 14.0, 30.0
-SP = L.Spine(hip_xy=(-0.012, 0.0), neck_xy=(-0.052, 0.070), z_hip=0.86, z_neck=1.41,
+YAW_HIP, YAW_CHEST = 6.0, 16.0
+SP = L.Spine(hip_xy=(-0.012, 0.0), neck_xy=(-0.034, 0.077), z_hip=0.86, z_neck=1.41,
              yaw_hip=YAW_HIP, yaw_chest=YAW_CHEST, z_twist0=0.9, z_twist1=1.24)
 
 
@@ -69,7 +70,7 @@ ELBOW = {s: E.ik2(SHOULDER[s], WRIST[s], UPPER_ARM, FOREARM, ELBOW_POLE[s]) for 
 
 PIVOT = SP.point(1.405, (0.0, 0.004, 0))       # neck pivot (echo_head origin)
 NECK_D = L.neck_dir(YAW_CHEST + 3.0, 21.0, side_tilt=-3.0)
-HEAD_YAW, HEAD_PITCH, HEAD_ROLL = 37.0, -25.0, -4.0
+HEAD_YAW, HEAD_PITCH, HEAD_ROLL = 20.0, -27.0, -4.0
 
 
 # ------------------------------------------------------------------ body
@@ -310,24 +311,24 @@ def pointing_report(info):
           f"distance to target {to_t.length:.3f} m, pointing line misses the target by {miss * 100:.1f} cm")
 
 
+BOOTH_LIGHTS = [((-3.0, 2.6, 2.85), 70.0, "FFC58A", 0.05),       # the booth's bare bulb (booth_bulb)
+                ((-2.0, 2.4, 2.4), 18.0, "FFD9A8", 0.3)]           # spill through the door / window
+
+
 def booth_context():
-    """Proxy booth: floor, west wall, slide cabinet with drawer 2 highlighted, projectors (Godot coords)."""
-    L.proxy("floor", (4.0, 0.02, 1.5), (-3.05, -0.01, 2.8), color="2B2A27")
-    L.proxy("wall_w", (0.1, 2.8, 1.5), (-5.05, 1.4, 2.8), color="3A4A40")
-    L.proxy("wall_s", (4.0, 2.8, 0.1), (-3.05, 1.4, 3.55), color="3A4A40")
-    L.proxy("wall_n", (4.0, 1.6, 0.1), (-3.05, 0.8, 2.05), color="3A4A40")
-    L.proxy("cab_plinth", (0.45, 0.30, 0.60), (-4.775, 0.15, 2.8), color="2A1C12")
-    L.proxy("cab_top", (0.45, 0.10, 0.60), (-4.775, 1.0, 2.8), color="3A2616")
-    for i in range(5):
-        y = 0.95 - 0.11 * (i + 0.5)
-        L.proxy(f"cab_d{i}", (0.45, 0.104, 0.58), (-4.775, y, 2.8), color="6A4A2A" if i != 2 else "B08A50",
-                emit="CFF6FF" if i == 2 else None)
-    L.proxy("filmproj_base", (0.45, 0.06, 0.45), (-2.9, 0.03, 2.65), color="25282B")
-    L.proxy("filmproj_column", (0.14, 1.5, 0.14), (-2.9, 0.78, 2.65), color="25282B")
-    L.proxy("filmproj", (0.55, 0.42, 0.32), (-2.9, 1.82, 2.65), color="30343A")
-    L.proxy("slideproj_column", (0.06, 1.7, 0.06), (-2.35, 0.85, 2.45), color="30343A")
-    L.proxy("slideproj", (0.28, 0.16, 0.24), (-2.35, 1.82, 2.45), color="30343A")
-    L.proxy("splicer", (1.2, 0.9, 0.5), (-3.9, 0.45, 3.25), color="3A2616")
+    """The real room and booth furniture where they exist (else proxies); drawer 2 glows as in the game."""
+    if not L.import_ctx("room_archive", (0, 0, 0), 0):
+        L.proxy("floor", (4.0, 0.02, 1.5), (-3.05, -0.01, 2.8), color="2B2A27")
+        L.proxy("wall_w", (0.1, 2.8, 1.5), (-5.05, 1.4, 2.8), color="3A4A40")
+        L.proxy("wall_s", (4.0, 2.8, 0.1), (-3.05, 1.4, 3.55), color="3A4A40")
+    if L.import_ctx("slide_cabinet", (-5.0, 0, 2.8), 90.0):
+        L.glow("QA_imp_IA_slide_drawer_2")
+    else:
+        L.proxy("cabinet", (0.45, 1.05, 0.46), (-4.775, 0.525, 2.665), color="6A4A2A")
+    for nm, pos, yaw in (("film_projector", (-2.9, 0, 2.65), 180.0), ("slide_projector", (-2.35, 0, 2.45), 180.0),
+                         ("film_splicer", (-3.9, 0, 3.5), 180.0), ("lens_case", (-3.75, 1.45, 3.37), 180.0),
+                         ("booth_door", (-1.55, 0, 2.0), 180.0)):
+        L.import_ctx(nm, pos, yaw)
 
 
 def renders(body, head, info_r):
@@ -340,13 +341,13 @@ def renders(body, head, info_r):
     hc_r = (tip + wr_r) * 0.5
     hc_l = wr_l + Vector((0.0, -0.09, 0.0))
     # clay: three-quarter (her left front, the pointing side), front, side
-    L.clay(NAME, fr(1.45, 1.35, 2.1), fr(0.02, 0.86, 0.1), lens=50, res=(520, 640))
+    L.clay(NAME, fr(-2.0, 1.35, 1.45), fr(0.0, 0.86, 0.14), lens=50, res=(520, 640))
     L.clay(NAME + "_2", fr(-0.2, 1.2, 3.0), fr(0.0, 0.86, 0.05), lens=50, res=(520, 640))
     L.clay(NAME + "_3", fr(2.9, 1.15, 0.45), fr(0.0, 0.85, 0.12), lens=50, res=(520, 640))
     # in-game look: front, three-quarter back (the booth side), side
     L.ghost(NAME + "_4", objs, fr(1.2, 1.3, 2.6), fr(0.02, 0.86, 0.1), lens=50, res=(520, 640))
     L.ghost(NAME + "_5", objs, fr(-1.7, 1.45, -2.2), fr(0.0, 0.88, 0.05), lens=50, res=(520, 640))
-    L.ghost(NAME + "_6", objs, fr(2.9, 1.15, 0.45), fr(0.0, 0.85, 0.12), lens=50, res=(520, 640))
+    L.ghost(NAME + "_6", objs, fr(-2.9, 1.15, 0.45), fr(0.0, 0.85, 0.12), lens=50, res=(520, 640))
     # hands (finger count, separation) and the pointing line
     L.clay(NAME + "_7", tuple(Vector(fr(*hc_r)) + Vector(fr(0.42, 0.10, 0.10))), fr(*hc_r), lens=60, res=(640, 640))
     L.clay(NAME + "_8", tuple(Vector(fr(*hc_l)) + Vector(fr(0.40, 0.05, 0.22))), fr(*hc_l), lens=60, res=(640, 640))
@@ -358,9 +359,10 @@ def renders(body, head, info_r):
     L.clay(NAME + "_12", tuple(Vector(fr(*hcen)) + Vector(fr(*(look * 0.55)))), fr(*hcen), lens=65, res=(640, 640))
     # in context: the game's booth view, and a side view that shows the gesture (suggested walk camera)
     L.context_render(NAME + "_9", objs, body, PLACE, YAW, booth_context, (-1.55, 1.6, 2.6), (-4.6, 1.1, 2.9),
-                     lens_fov_deg=62)
-    L.context_render(NAME + "_10", objs, body, PLACE, YAW, booth_context, (-3.05, 1.55, 3.3), (-4.35, 0.95, 2.62),
-                     lens_fov_deg=56)
+                     lens_fov_deg=62, points=BOOTH_LIGHTS)
+    # suggested camera for the walk: inside the booth, north-east of her, sees her right arm and the drawer face
+    L.context_render(NAME + "_10", objs, body, PLACE, YAW, booth_context, (-3.25, 1.55, 2.2), (-4.4, 0.9, 2.66),
+                     lens_fov_deg=56, points=BOOTH_LIGHTS)
 
 
 def dev_hands():

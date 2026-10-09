@@ -1,0 +1,4 @@
+# Chapter 2 light-echo figures (group E, lib_ch2_echoes.py on top of lib_echo.py)
+echo_leyla_standing.py
+echo_archivist.py
+echo_scientists.py

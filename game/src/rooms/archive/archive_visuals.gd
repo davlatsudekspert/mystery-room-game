@@ -5,7 +5,7 @@ extends Node
 ## logic.state (plus a few purely visual toggles such as an opened tray door), so a loaded save reproduces
 ## the scene. Axes and angles follow docs/models/ch2.md.
 
-const CAT_DRAWER_TRAVEL := 0.30
+const CAT_DRAWER_TRAVEL := 0.40 # the whole tray clears the carcass, so the back sections can be seen
 const DIVIDER_TILT_DEG := 20.0
 const VALVE_STEP_DEG := -72.0
 const GAUGE_STEP_DEG := -22.5
@@ -280,10 +280,12 @@ func _apply_catalogue(animated: bool) -> void:
 			continue
 		var divider := ModelUtil.find(_tray, "IA_divider_%d" % g)
 		var z := (divider.position.z if divider else 0.0) - 0.006 - n * 0.0026
-		var lift := 0.014 + (0.02 if n >= 5 else 0.0)
+		# The picked section rises out of the tray in two rows (cards 5–9 a step higher), so all ten staggered tabs
+		# stand clear of the dividers in front and of each other, and each one can be tapped.
+		var lift := 0.055 + (0.02 if n >= 5 else 0.0)
 		var is_leyla := open == ArchiveLogic.CAT_DRAWER and g == ArchiveLogic.CAT_GROUP and n == ArchiveLogic.CAT_CARD
 		if is_leyla and s["card_shown"]:
-			lift = 0.07
+			lift = 0.11
 		var target := Transform3D(base.basis, Vector3(base.origin.x, base.origin.y + lift, z))
 		_to(card, target, animated, 0.3)
 		room.call("set_present", card, not (is_leyla and leyla_taken))
@@ -303,14 +305,43 @@ func _apply_catalogue(animated: bool) -> void:
 
 ## The cat_drawer view follows the open drawer (each drawer sits at a different height/column).
 func frame_cat_drawer(i: int) -> void:
+	var cam: RoomCamera = room.get("cam")
 	var cat := model("card_catalogue")
-	var drawer := part("card_catalogue", "IA_cat_drawer_%d" % i)
-	if cat == null or drawer == null:
+	var tray := _cat_tray_open_xform(i)
+	if cat == null or tray == Transform3D():
+		return
+	# Look down into the pulled-out tray from just above its front edge, so the divider tabs fill the screen.
+	var out := cat.global_basis.z.normalized()
+	var c: Vector3 = tray * Vector3(0, 0.06, 0)
+	cam.add_view("cat_drawer", c + out * 0.26 + Vector3(0, 0.34, 0), c - out * 0.03, 46.0)
+
+
+## Close-up of the raised section behind divider g: the card tabs are small, so the camera comes in until each
+## tab is a comfortable finger target on a phone. Back returns to the tray.
+func frame_cat_section(g: int) -> void:
+	var cam: RoomCamera = room.get("cam")
+	var cat := model("card_catalogue")
+	var tray := _cat_tray_open_xform(int(logic.state["cat_drawer"]))
+	var divider := ModelUtil.find(_tray, "IA_divider_%d" % g) if _tray else null
+	if cat == null or tray == Transform3D() or divider == null:
 		return
 	var out := cat.global_basis.z.normalized()
-	var front: Vector3 = drawer.get_parent().global_transform * ((rest.get(drawer, drawer.transform) as Transform3D).origin) + out * CAT_DRAWER_TRAVEL
-	var cam: RoomCamera = room.get("cam")
-	cam.add_view("cat_drawer", front + out * 0.42 + Vector3(0, 0.5, 0), front - out * 0.2 + Vector3(0, -0.05, 0), 44.0)
+	var rest_z: float = (rest.get(divider, divider.transform) as Transform3D).origin.z
+	var focus: Vector3 = tray * Vector3(0, 0.125, rest_z - 0.02)
+	cam.add_view("cat_section", focus + out * 0.16 + Vector3(0, 0.13, 0), focus - out * 0.01, 42.0)
+
+
+## The tray's transform once drawer i is fully open. The tray rides on the drawer, which may still be sliding,
+## so this is computed from the drawer's rest pose plus its travel.
+func _cat_tray_open_xform(i: int) -> Transform3D:
+	var cat := model("card_catalogue")
+	var drawer := part("card_catalogue", "IA_cat_drawer_%d" % i)
+	var mount := part("card_catalogue", "cat_tray_mount_%d" % i)
+	if cat == null or drawer == null or mount == null or not drawer.is_ancestor_of(mount):
+		return Transform3D()
+	var open_pose: Transform3D = drawer.get_parent().global_transform * (rest.get(drawer, drawer.transform) as Transform3D)
+	open_pose.origin += cat.global_basis.z.normalized() * CAT_DRAWER_TRAVEL
+	return open_pose * (drawer.global_transform.affine_inverse() * mount.global_transform)
 
 
 func _apply_splicer(animated: bool) -> void:

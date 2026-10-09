@@ -5,6 +5,7 @@ extends RefCounted
 
 const MAT_DIR := "res://assets/materials/%s.tres"
 const LARGE_PART_M := 0.15
+const THIN_PART_M := 0.006
 static var _mat_cache: Dictionary = {}
 
 
@@ -74,14 +75,20 @@ static func build_colliders(root: Node3D, mode: String) -> void:
 		var is_ia := mi.name.begins_with("IA_")
 		# Large interactive parts (drawers, doors, panels) get an exact trimesh too, so their bounding box
 		# never covers the small controls mounted on them (drawer digits, knobs, keyholes).
-		if is_ia and mi.mesh.get_aabb().get_longest_axis_size() <= LARGE_PART_M:
+		# Thin interactive parts (cards, divider guides, paper) also get an exact shape: an inflated box would cover
+		# the empty space beside their tabs and steal taps meant for the card or tab standing behind.
+		var thin := is_ia and mi.mesh.get_aabb().size[mi.mesh.get_aabb().get_shortest_axis_index()] < THIN_PART_M
+		if is_ia and not thin and mi.mesh.get_aabb().get_longest_axis_size() <= LARGE_PART_M:
 			var aabb := mi.mesh.get_aabb()
 			var box := BoxShape3D.new()
 			box.size = (aabb.size + Vector3.ONE * 0.004).max(Vector3.ONE * 0.012)
 			shape.shape = box
 			shape.position = aabb.get_center()
 		else:
-			shape.shape = mi.mesh.create_trimesh_shape()
+			var tri := mi.mesh.create_trimesh_shape()
+			if thin and tri != null:
+				tri.backface_collision = true # a card can be tapped from either side
+			shape.shape = tri
 		body.add_child(shape)
 		mi.add_child(body)
 		body.set_meta("part", str(mi.name) if is_ia else "")

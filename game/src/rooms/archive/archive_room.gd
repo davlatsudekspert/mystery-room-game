@@ -65,12 +65,12 @@ const HOTSPOT_VIEW := {
 	"lens_case": "lens_case", "vault_inside": "vault_inside",
 }
 const DEEPER := {
-	"catalogue": ["cat_drawer"], "stacks": ["ledger"], "lockers": ["locker9"], "desk": ["punch", "deck"],
+	"catalogue": ["cat_drawer", "cat_section"], "stacks": ["ledger"], "lockers": ["locker9"], "desk": ["punch", "deck"],
 	"vault": ["vault_ports"], "screen": ["socket"], "booth_door": ["dial"],
 }
 const CAPTION := {
 	"hall": "obj2.hall", "west": "obj2.hall", "booth": "obj2.booth", "catalogue": "obj2.catalogue",
-	"cat_drawer": "obj2.catalogue", "compressor": "obj2.compressor", "station": "obj2.station", "chart": "obj2.chart",
+	"cat_drawer": "obj2.catalogue", "cat_section": "obj2.catalogue", "compressor": "obj2.compressor", "station": "obj2.station", "chart": "obj2.chart",
 	"desk": "obj2.desk", "punch": "obj2.punch", "deck": "obj2.deck", "lockers": "obj2.lockers", "locker9": "obj2.lockers",
 	"stacks": "obj2.stacks", "grille": "obj2.grille", "ledger": "obj2.ledger", "reading": "obj2.reading",
 	"hatch": "obj2.hatch", "booth_door": "obj2.booth_door", "dial": "obj2.booth_door", "splicer": "obj2.splicer",
@@ -79,6 +79,7 @@ const CAPTION := {
 	"vault_ports": "obj2.vault", "vault_inside": "obj2.vault_open", "shutter": "obj2.shutter",
 }
 ## Views that are inside the projection booth (the booth interior is only drawn while one is active).
+const CAT_VIEWS := ["catalogue", "cat_drawer", "cat_section"]
 const BOOTH_VIEWS := ["booth", "projector", "splicer", "slides", "slide_projector", "lens_case"]
 const VAULT_VIEWS := ["vault", "vault_ports", "vault_inside", "vault_mouth"]
 
@@ -117,6 +118,15 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	GameState.in_game = false
+
+
+## Views whose camera depends on the state are framed here first (used by the room and by QA tools).
+func prepare_view(id: String) -> void:
+	var s := (logic as ArchiveLogic).state
+	if id == "cat_drawer":
+		visuals.frame_cat_drawer(maxi(0, int(s["cat_drawer"])))
+	elif id == "cat_section":
+		visuals.frame_cat_section(maxi(0, int(s["cat_group"])))
 
 
 func _on_language_changed(_code: String) -> void:
@@ -486,15 +496,18 @@ func _interact_catalogue(p: String, _r: Dictionary) -> void:
 	var cur := cam.current()
 	if p.begins_with("IA_cat_drawer_"):
 		var i := int(p.substr(14))
-		if cur not in ["catalogue", "cat_drawer"]:
+		if cur not in CAT_VIEWS:
 			cam.go("catalogue")
 			return
 		l.open_cat_drawer(i)
 		return
-	if p.begins_with("IA_divider_") and cur == "cat_drawer":
+	if p.begins_with("IA_divider_") and cur in ["cat_drawer", "cat_section"]:
 		l.pick_divider(int(p.substr(11)))
 		return
-	if p.begins_with("IA_card_") and cur == "cat_drawer":
+	if p.begins_with("IA_card_") and cur == "cat_drawer" and int(s["cat_group"]) >= 0:
+		cam.go("cat_section") # the tabs are small from the tray view: come closer first
+		return
+	if p.begins_with("IA_card_") and cur == "cat_section":
 		var n := int(p.substr(8))
 		if s["card_shown"] and n == ArchiveLogic.CAT_CARD and l.can_take("index_card"):
 			l.take("index_card")
@@ -504,7 +517,7 @@ func _interact_catalogue(p: String, _r: Dictionary) -> void:
 	if p.begins_with("Item_index_card") and l.can_take("index_card"):
 		l.take("index_card")
 		return
-	if cur != "catalogue" and cur != "cat_drawer":
+	if cur not in CAT_VIEWS:
 		cam.go("catalogue")
 	elif int(s["cat_drawer"]) >= 0 and cur == "catalogue":
 		cam.go("cat_drawer")
@@ -745,7 +758,7 @@ func _process(_delta: float) -> void:
 # ====================================================================== events → feedback
 func view_changed_hook(id: String) -> void:
 	var fill: OmniLight3D = lights["focus_fill"]
-	var e := 0.0 if cam.is_root() else (1.3 if id in ["catalogue", "cat_drawer", "grille", "hatch", "locker9", "ledger", "lens_case", "slides"] else 0.9)
+	var e := 0.0 if cam.is_root() else (1.3 if id in ["catalogue", "cat_drawer", "cat_section", "grille", "hatch", "locker9", "ledger", "lens_case", "slides"] else 0.9)
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	visuals.update_visibility(id)
 	visuals.receiver_view(id)
@@ -777,10 +790,15 @@ func _feedback(e: String) -> void:
 			if int(arg) >= 0:
 				visuals.frame_cat_drawer(int(arg))
 				cam.go("cat_drawer")
-			elif cam.current() == "cat_drawer":
+			elif cam.current() in ["cat_drawer", "cat_section"]:
 				cam.go("catalogue")
 		"cat_group":
 			AudioManager.sfx("card_flick", -2.0)
+			visuals.frame_cat_section(int(arg))
+			if cam.current() == "cat_section":
+				cam.refresh()
+			else:
+				cam.go("cat_section")
 		"cat_card":
 			AudioManager.sfx("card_flick", -3.0, 1.1)
 			hud.call("message", tr("msg.c2_card_other") % arg)

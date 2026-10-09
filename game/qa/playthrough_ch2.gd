@@ -138,7 +138,27 @@ func _tap_point(model: String, part: String, frac: Vector2) -> Vector2:
 	var vs := get_viewport().get_visible_rect().size
 	if sp.x < 0 or sp.y < 0 or sp.x > vs.x or sp.y > vs.y:
 		return Vector2(-1, -1)
-	return sp
+	if frac != Vector2.ZERO or not part.begins_with("IA_") or _resolves_to(sp, part):
+		return sp
+	# The middle of a part's bounds can be covered or empty (a deep drawer seen from above, a card behind a tab):
+	# a player taps where the part is actually visible, so look for such a point, nearest the middle first.
+	var best := sp
+	var best_d := INF
+	for gy in 7:
+		for gx in 7:
+			var p := r.position + r.size * Vector2(0.1 + 0.8 * gx / 6.0, 0.1 + 0.8 * gy / 6.0)
+			if p.x < 0 or p.y < 0 or p.x > vs.x or p.y > vs.y:
+				continue
+			var d := p.distance_to(r.get_center())
+			if d < best_d and _resolves_to(p, part):
+				best = p
+				best_d = d
+	return best
+
+
+func _resolves_to(sp: Vector2, part: String) -> bool:
+	var h: Dictionary = room.call("raycast", sp)
+	return not h.is_empty() and str(room.call("resolve", h)["part"]) == part
 
 
 func tap(model: String, part: String, frac: Vector2 = Vector2.ZERO) -> void:

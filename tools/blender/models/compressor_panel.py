@@ -50,6 +50,7 @@ PLATE = (-0.44, 0.44, 1.02, 1.42)       # piping plate x0, x1, y0, y1
 PLATE_T = 0.004
 SRC_Y, SNK_Y = 1.10, 1.34               # terminal ring centres on the plate
 RING_R = 0.031
+INLAY_MAT = "M_Brass_Polished"          # piping-plate lines, rings and letters (contract: brass inlay)
 LINE_W, LINE_GAP = 0.006, 0.008         # inlay strip width; clear gap between the two strips of a double
 POS_PULLEY = (0.0, 0.40, 0.335)         # motor axis point (x varies)
 
@@ -177,7 +178,7 @@ def build_plate():
     parts.append(C.sm(base, 40.0))
     pf = C.front_frame(0.0, 0.0, FACE_Z + PLATE_T)
     frame = C.solid_g("plate_frame", L.outline_ring(x1 - x0 - 0.016, y1 - y0 - 0.016, 0.008, 0.0035, 3), 0.0008,
-                      pf, u=cx, v=cy, bevel=0.0, mat="M_Brass_Polished", drop_bottom=True)
+                      pf, u=cx, v=cy, bevel=0.0, mat=INLAY_MAT, drop_bottom=True)
     parts.append(frame)
     h = 0.0009
     for path, double in plate_lines():
@@ -188,15 +189,15 @@ def build_plate():
         else:
             bands = [C.polyline_band(path, -LINE_W / 2, LINE_W / 2)]
         for bd in bands:
-            parts.append(C.solid_g("inlay", [bd], h, pf, bevel=0.0, mat="M_Brass_Polished", drop_bottom=True))
+            parts.append(C.solid_g("inlay", [bd], h, pf, bevel=0.0, mat=INLAY_MAT, drop_bottom=True))
     # terminal rings with letters (sources bottom: A B C over the valves; sinks top: P F under the gauges)
     terms = [("A", VALVES["a"], SRC_Y), ("B", VALVES["b"], SRC_Y), ("C", VALVES["c"], SRC_Y),
              ("P", GAUGES["p"], SNK_Y), ("F", GAUGES["f"], SNK_Y)]
     for letter, tx, ty in terms:
         parts.append(C.shape_g("tring", L.circle_line(RING_R, 0.0034, 24), pf, u=tx, v=ty, lift=h,
-                               mat="M_Brass_Polished"))
+                               mat=INLAY_MAT))
         parts.append(C.text_g("tletter", letter, 0.036, pf, u=tx, v=ty, lift=0.0004, font=C.FONT_SANS_B,
-                              mat="M_Brass_Polished", res=1))
+                              mat=INLAY_MAT, res=1))
     for sx in (-1, 1):
         for sy in (-1, 1):
             parts.append(C.rivet_g("privet", 0.0035, (cx + sx * (x1 - x0 - 0.026) / 2, cy + sy * (y1 - y0 - 0.026) / 2,
@@ -503,19 +504,34 @@ def pose_solved(on: bool):
 def qa():
     C.qa_tweak()
     args = C.qa_args()
+    shots = None
+    for a in args:
+        if a.startswith("--shots="):
+            shots = set(a.split("=", 1)[1].split(","))
+
+    def want(n):
+        return shots is None or n in shots
     roots = C.model_roots()
     # hero in a studio (model space)
-    if "--only-views" not in args:
+    if want("1"):
         C.studio(NAME, tuple(C.G(0.95, 1.55, 2.05)), tuple(C.G(0.0, 1.05, 0.10)), lens=32, floor_z=0.0)
+    if want("2"):
         C.studio(NAME + "_2", tuple(C.G(0.0, 1.30, 0.95)), tuple(C.G(0.0, 1.28, 0.09)), lens=30, floor_z=0.0)
-    # in the room: hall placement, compressor view (rest), solved pose, and a close-up of the plate
+    # in the room: compressor view (rest), solved pose (valves 1-2-2, P = 5, F = 4), hall angle, valve close-up
     place(roots)
     C.qa_room()
     C.qa_hall_lights()
-    C.render(NAME + "_3", (3.65, 1.45, 0.8), (5.0, 1.25, 0.8), 52.0)
+    if want("3"):
+        C.render(NAME + "_3", (3.65, 1.45, 0.8), (5.0, 1.25, 0.8), 52.0)
     pose_solved(True)
-    C.render(NAME + "_4", (3.65, 1.45, 0.8), (5.0, 1.25, 0.8), 52.0)
-    C.render(NAME + "_5", (3.2, 1.15, 1.9), (5.0, 0.75, 0.6), 50.0)
+    if want("4"):
+        C.render(NAME + "_4", (3.65, 1.45, 0.8), (5.0, 1.25, 0.8), 52.0)
+    if want("5"):
+        C.render(NAME + "_5", (3.2, 1.15, 1.9), (5.0, 0.75, 0.6), 50.0)
+    if want("6"):
+        C.render(NAME + "_6", (4.35, 1.12, 0.8), (5.0, 0.86, 0.8), 40.0)
+    if want("7"):
+        C.render(NAME + "_7", (4.40, 1.62, 0.8), (5.0, 1.62, 0.8), 40.0)
 
 
 def place(roots):

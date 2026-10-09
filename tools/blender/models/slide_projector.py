@@ -438,8 +438,10 @@ def main():
     lamp(parts, True)
     if on("1"):    # in-game slide_projector view: slide in, lamp on
         C.render(NAME, (-1.75, 1.95, 2.95), (-2.35, 1.8, 2.45), 44.0, res=(960, 540))
-    if on("2"):    # hero: three-quarter from the operator side, whole stand
-        C.render(NAME + "_2", (-1.55, 1.55, 3.30), (-2.36, 1.05, 2.45), 50.0, res=(720, 900))
+    if on("2"):    # hero: the whole stand from the booth's south-east corner (wide: the booth is 1.4 m deep)
+        C.render(NAME + "_2", (-1.20, 1.18, 3.42), (-2.36, 1.02, 2.45), 74.0, res=(720, 900))
+    if on("5"):    # hero: the head from the front-left (objective, stage, carrier, knob, switch box)
+        C.render(NAME + "_5", (-1.93, 1.99, 2.24), (-2.34, 1.86, 2.46), 46.0, res=(960, 640))
     if on("3"):    # stage close-up: carrier, slide, rotation knob, toggle
         C.render(NAME + "_3", (-1.98, 1.98, 2.72), (-2.30, 1.84, 2.42), 36.0, res=(960, 640))
     if on("4"):    # rest: lamp off, no slide

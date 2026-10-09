@@ -296,7 +296,7 @@ def magnifier_stand(prefix, base):
 def build_dressing():
     d = []
     d += open_ledger("ledger_a", (-0.29, TOP, 0.09), -7.0, w=0.21, d=0.30, cover="M_Linen", seed=3)
-    d += open_ledger("ledger_b", (0.27, TOP, -0.15), 11.0, w=0.17, d=0.25, h=0.012, cover="M_Book_Brown", seed=8)
+    d += open_ledger("ledger_b", (0.28, TOP, -0.255), 6.0, w=0.15, d=0.22, h=0.012, cover="M_Book_Brown", seed=8)
     d += closed_ledger("ledger_c", (0.585, TOP, -0.215), 4.0, w=0.20, d=0.27, cover="M_Book_Green")
     d += closed_ledger("ledger_d", (0.588, TOP + 0.045, -0.222), -3.0, w=0.19, d=0.25, h=0.035, cover="M_Linen")
     d += magnifier_stand("magnifier", (-0.60, TOP, -0.26))

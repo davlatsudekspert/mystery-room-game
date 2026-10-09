@@ -82,7 +82,8 @@ def meter():
         parts.append(L.flat_front(f"bar_{k}", [bar(th, R_SCALE, 0.0016 + 0.0009 * k, 0.0017)], 0.0, YF - 0.00016, 0.0,
                                   mat=mat))
     sx, sz = polar(40, R_SCALE + 0.0007)
-    parts.append(L.flat_front("rest_dot", [L.circle(0.0007, 8, cx=sx, cy=sz)], 0.0, YF - 0.00016, 0.0, mat="M_Bakelite"))
+    parts.append(L.flat_front("rest_dot", [L.circle(0.0007, 8, cx=sx, cy=sz)], 0.0, YF - 0.00016, 0.0,
+                              mat="M_Bakelite"))
     # glass in front of the needle, inside the bezel
     parts.append(L.flat_front("meter_glass", [win], 0.0, YF - 0.0012, MZ, mat="M_Glass"))
     return parts
@@ -162,7 +163,8 @@ def antenna():
             (0.0021, 0.0250), (0.0021, 0.0400), (0.0017, 0.0405), (0.0015, 0.0410), (0.0015, 0.0510),
             (0.0021, 0.0514), (0.0026, 0.0530), (0.0022, 0.0548), (0.0, 0.0556)]
     ant = L.lathe2("antenna", prof, segments=10, mat="M_Chrome")
-    ant.data.transform(Matrix.Translation((ANT_X, 0.0, BH / 2 - 0.0010)) @ Matrix.Rotation(math.radians(10), 4, "Y"))     # leans out to +X
+    lean = Matrix.Rotation(math.radians(10), 4, "Y")              # leans out to +X
+    ant.data.transform(Matrix.Translation((ANT_X, 0.0, BH / 2 - 0.0010)) @ lean)
     base = M.box("antenna_base", (0.0090, 0.0090, 0.0030), loc=(ANT_X, 0.0, BH / 2 + 0.0005), mat="M_Chrome",
                  bevel=0.0008, segments=1)
     return [ant, base]
