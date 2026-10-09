@@ -5,7 +5,7 @@ The renders come from the QA scenes, run through tools/qa_run.sh (one window siz
     tools/qa_run.sh -- --resolution 2560x1440 res://qa/playthrough.tscn -- --out=<R>/ch1_169_en --seed=4242 --lang=en
     tools/qa_run.sh -- --resolution 2868x1320 res://qa/playthrough_ch2.tscn -- --out=<R>/ch2_iph_en --seed=777
 Folder names: <R>/<chapter>_<shape>_<lang>, chapter ch1|ch2, shape 169 (16:9, 2560x1440) | iph (2868x1320) |
-ipad (2752x2064), lang en|ru. A missing language falls back to en.
+ipad (2752x2064), lang en|ru. A store size is only written when all its renders exist in that language.
 
     python3 tools/store/make_store_graphics.py --renders=<R>     # writes docs/store/**
     python3 tools/store/make_store_graphics.py --check-text      # character / byte counts of the listing texts
@@ -27,7 +27,7 @@ import os
 import re
 import sys
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "docs", "store")
@@ -41,11 +41,11 @@ SHOTS: list[tuple[str, str, str]] = [
     ("01_laboratory", "ch1", "lab_powered"),
     ("02_projector_beam", "ch1", "projector_beam_on"),
     ("03_radio", "ch1", "radio_tuned_41m"),
-    ("04_darkroom", "ch1", "darkroom"),
-    ("05_shadow_lock", "ch1", "shadow_emblem_recorded"),
+    ("04_uv_ink", "ch1", "uv_desk_mark"),
+    ("05_shadow_sculpture", "ch1", "shadow_misaligned"), # unsolved: the aligned emblem is lore, the same in every game
     ("06_archive_hall", "ch2", "hall_start"),
     ("07_film_projection", "ch2", "film_frame"),
-    ("08_archive_vault", "ch2", "vault_closed"),
+    ("08_echoes", "ch2", "echo_stacks"),
 ]
 
 # App Store sizes (landscape) and the render shape each one is made from. 6.5" and 6.3" are downscaled from the
@@ -53,12 +53,13 @@ SHOTS: list[tuple[str, str, str]] = [
 APPLE_SIZES = [("iphone_6.9", (2868, 1320), "iph"), ("iphone_6.5", (2688, 1242), "iph"),
     ("iphone_6.3", (2622, 1206), "iph"), ("ipad_13", (2752, 2064), "ipad")]
 PLAY_SIZE = (2560, 1440)
-JPEG = {"quality": 90, "optimize": True, "subsampling": "4:2:0"}
+JPEG = {"quality": 85, "optimize": True, "subsampling": "4:2:0"}
 
 
 # ====================================================================== helpers
-def find_render(renders: str, chapter: str, shape: str, lang: str, shot: str) -> str:
-    for lg in (lang, "en"):
+def find_render(renders: str, chapter: str, shape: str, lang: str, shot: str, strict: bool = False) -> str:
+    """The newest QA shot named `shot` in <renders>/<chapter>_<shape>_<lang>/ (EN as a fallback unless strict)."""
+    for lg in (lang,) if strict else (lang, "en"):
         hits = sorted(glob.glob(os.path.join(renders, "%s_%s_%s" % (chapter, shape, lg), "*_%s.png" % shot)))
         if hits:
             return hits[-1]
@@ -83,15 +84,21 @@ def save_jpg(im: Image.Image, path: str) -> None:
 
 # ====================================================================== screenshots
 def screenshots(renders: str, langs: list[str]) -> None:
+    """Each store size is written only when every shot has a render of that shape in that language; a missing set
+    is reported and skipped, never filled in from another shape or language."""
+    targets = [("google_play", "screenshots", PLAY_SIZE, "169", "play")]
+    targets += [("app_store", os.path.join("screenshots", sid), size, shape, "apple") for sid, size, shape in APPLE_SIZES]
     for lang in langs:
-        loc = LOCALES[lang]
-        for name, chapter, shot in SHOTS:
-            src = Image.open(find_render(renders, chapter, "169", lang, shot)).convert("RGB")
-            save_jpg(cover(src, PLAY_SIZE), os.path.join(OUT, "google_play", "screenshots", loc["play"], name + ".jpg"))
-            for size_id, size, shape in APPLE_SIZES:
-                src = Image.open(find_render(renders, chapter, shape, lang, shot)).convert("RGB")
-                save_jpg(cover(src, size), os.path.join(OUT, "app_store", "screenshots", size_id, loc["apple"], name + ".jpg"))
-        print("screenshots:", lang)
+        for store, sub, size, shape, key in targets:
+            try:
+                srcs = [find_render(renders, chapter, shape, lang, shot, strict=True) for _n, chapter, shot in SHOTS]
+            except FileNotFoundError as e:
+                print("skip %s %s %s: %s" % (store, sub, lang, e))
+                continue
+            for (name, _c, _s), src in zip(SHOTS, srcs):
+                im = Image.open(src).convert("RGB")
+                save_jpg(cover(im, size), os.path.join(OUT, store, sub, LOCALES[lang][key], name + ".jpg"))
+            print("screenshots: %s %s %s" % (store, sub, lang))
 
 
 # ====================================================================== Play icon + feature graphic
@@ -103,30 +110,38 @@ def icon() -> None:
     im.resize((512, 512), Image.LANCZOS).save(path, optimize=True)
 
 
-def feature(renders: str, lang: str, bg_shot: tuple[str, str, str], crop: tuple[float, float, float]) -> None:
-    """1024x500: a real game frame (a HUD-free window of a render), the logo in the safe centre.
+# Feature graphic background: a view_probe frame of the lit lab with the Lumen beam on (Chapter 1, so the graphic
+# shows only content every store build offers), rendered at 2868x1320:
+#   tools/qa_run.sh -- --resolution 2868x1320 res://qa/view_probe.tscn -- --out=<R>/fg_probe --from=p12 \
+#       --seed=4242 "--cam=beamwide:0.6,1.7,-1.6:-0.6,1.15,1.6:55"
+# The crop box (x0, y0, width) keeps clear of the HUD: the ceiling lamp ends at y≈110, the hint plate starts at y≈1058.
+FEATURE_SRC = os.path.join("fg_probe", "cam_beamwide.png")
+FEATURE_BOX = (600, 112, 1921)
+FEATURE_LOGO_H = 360
+FEATURE_LOGO_CX = 440
 
-    bg_shot = (chapter, shape, QA shot name); crop = (centre x, centre y, width) of the background window as
-    fractions of the render."""
-    src = Image.open(find_render(renders, bg_shot[0], bg_shot[1], lang, bg_shot[2])).convert("RGB")
-    cw = crop[2] * src.width
-    ch = cw * 500 / 1024
-    cx, cy = crop[0] * src.width, crop[1] * src.height
-    box = (round(cx - cw / 2), round(cy - ch / 2), round(cx + cw / 2), round(cy + ch / 2))
-    bg = src.crop(box).resize((1024, 500), Image.LANCZOS)
-    bg = ImageEnhance.Brightness(bg).enhance(0.92)
-    # a soft dark vignette behind the logo only, so the gold lettering reads on any frame
-    shade = Image.new("L", (1024, 500), 0)
-    ImageDraw.Draw(shade).ellipse((262, 20, 762, 480), fill=150)
-    shade = shade.filter(ImageFilter.GaussianBlur(70))
-    bg = Image.composite(Image.new("RGB", bg.size, (14, 18, 22)), bg, shade)
+
+def feature(renders: str, lang: str) -> None:
+    """1024x500, no alpha: a real game frame, the localized logo left of centre, the beam and projector beside it."""
+    src = Image.open(os.path.join(renders, FEATURE_SRC)).convert("RGB")
+    x0, y0, w = FEATURE_BOX
+    h = w * 500 / 1024
+    bg = src.crop((x0, y0, x0 + w, round(y0 + h))).resize((1024, 500), Image.LANCZOS)
     logo_file = {"en": "logo_en.png", "ru": "logo_ru.png"}[lang]
     logo = Image.open(os.path.join(ROOT, "game", "assets", "ui", "logo", logo_file)).convert("RGBA")
-    k = 430 / logo.height
-    logo = logo.resize((round(logo.width * k), 430), Image.LANCZOS)
+    k = FEATURE_LOGO_H / logo.height
+    logo = logo.resize((round(logo.width * k), FEATURE_LOGO_H), Image.LANCZOS)
+    x = round(FEATURE_LOGO_CX - logo.width / 2)
+    y = (500 - logo.height) // 2
+    # a soft dark halo behind the logo only, so the gold lettering reads on the lit wall
+    shade = Image.new("L", (1024, 500), 0)
+    ImageDraw.Draw(shade).ellipse((x - 20, y, x + logo.width + 20, y + logo.height), fill=140)
+    shade = shade.filter(ImageFilter.GaussianBlur(50))
+    bg = Image.composite(Image.new("RGB", bg.size, (14, 18, 22)), bg, shade)
     out = bg.convert("RGBA")
-    out.alpha_composite(logo, ((1024 - logo.width) // 2, (500 - logo.height) // 2))
+    out.alpha_composite(logo, (x, y))
     path = os.path.join(OUT, "google_play", "feature_graphic_%s.jpg" % LOCALES[lang]["play"])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     out.convert("RGB").save(path, "JPEG", quality=93, optimize=True, subsampling="4:4:4")
 
 
@@ -134,7 +149,6 @@ def feature(renders: str, lang: str, bg_shot: tuple[str, str, str], crop: tuple[
 def contact_sheet() -> None:
     font = ImageFont.truetype(FONT, 22)
     font_b = ImageFont.truetype(FONT, 30)
-    font_b.set_variation_by_axes([700, 100]) if hasattr(font_b, "set_variation_by_axes") else None
     rows: list[tuple[str, list[str]]] = []
     gp = os.path.join(OUT, "google_play")
     rows.append(("Google Play: icon 512, feature graphic 1024x500 (EN, RU)",
@@ -157,6 +171,8 @@ def contact_sheet() -> None:
     sheet = Image.new("RGB", (width, height), (24, 24, 28))
     d = ImageDraw.Draw(sheet)
     d.text((pad, pad), "MYSTERY ROOM: store assets (docs/store/)", font=font_b, fill=(232, 205, 140))
+    d.text((pad + 640, pad + 8), "Orange frame = Chapter 2 (06-08): upload only once Chapter 2 can be unlocked in the store build",
+        font=font, fill=(240, 150, 60))
     y = pad + 50
     for title, files in rows:
         d.text((pad, y), title, font=font, fill=(220, 220, 220))
@@ -168,6 +184,8 @@ def contact_sheet() -> None:
             if x + t.width > width - pad:
                 break
             sheet.paste(t, (x, y))
+            if os.path.basename(f)[:3] in ("06_", "07_", "08_"):
+                d.rectangle((x - 3, y - 3, x + t.width + 2, y + th + 2), outline=(240, 150, 60), width=3)
             x += t.width + pad
         y += th + pad
     sheet = sheet.crop((0, 0, width, y + pad))
@@ -246,7 +264,7 @@ def main() -> int:
     langs = a.langs.split(",")
     icon()
     for lang in langs:
-        feature(a.renders, lang, ("ch1", "beam_first_mirror"), (0.5, 0.42, 0.78))
+        feature(a.renders, lang)
     screenshots(a.renders, langs)
     contact_sheet()
     print("written to", OUT)
