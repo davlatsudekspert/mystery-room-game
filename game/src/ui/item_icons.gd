@@ -12,6 +12,7 @@ var _pivot: Node3D
 var _cache: Dictionary = {}
 var _queue: Array[String] = []
 var _busy := false
+var logic: RoomLogic # optional: lets item variations (punched holes) follow the state
 
 
 func _ready() -> void:
@@ -77,6 +78,7 @@ func _pump() -> void:
 	if n != null:
 		_pivot.rotation = Vector3.ZERO
 		n.rotation.x = deg_to_rad(ItemDB.view_tilt(id))
+		ItemDress.apply(id, n, logic)
 		var aabb := _aabb(n)
 		var radius := maxf(0.01, aabb.size.length() * 0.5)
 		n.position = -aabb.get_center()

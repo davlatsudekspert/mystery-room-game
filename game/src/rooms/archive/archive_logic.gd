@@ -42,9 +42,9 @@ const CRYSTALS: Array[String] = ["crystal_lens", "crystal_blank_1", "crystal_bla
 
 ## Receiver strength (0..5) per camera view for each hidden reel (docs P6 table).
 const RECEIVER_TABLE := {
-	"tape_1996": {"hall": 1, "catalogue": 4, "grille": 5, "stacks": 1, "lockers": 1},
-	"tape_1997": {"hall": 2, "catalogue": 1, "stacks": 4, "ledger": 5, "reading": 2, "hatch": 1, "deck": 1},
-	"tape_1998": {"hall": 2, "stacks": 2, "ledger": 1, "reading": 4, "hatch": 5, "lockers": 2, "deck": 1},
+	"tape_1996": {"hall": 1, "west": 3, "catalogue": 4, "grille": 5, "stacks": 1, "lockers": 1},
+	"tape_1997": {"hall": 2, "west": 2, "catalogue": 1, "stacks": 4, "ledger": 5, "reading": 2, "hatch": 1, "deck": 1},
+	"tape_1998": {"hall": 2, "west": 1, "stacks": 2, "ledger": 1, "reading": 4, "hatch": 5, "lockers": 2, "deck": 1},
 }
 
 ## spot -> item it yields, plus the state flag that must be true for the spot to be reachable
@@ -79,6 +79,7 @@ func default_state() -> Dictionary:
 		"pressure_ok": false,
 		"card_in_punch": false,
 		"punch_keys": [0, 0, 0, 0, 0, 0, 0, 0],
+		"last_punch": [0, 0, 0, 0, 0, 0, 0, 0], # holes of the request card in play (for its picture)
 		"request_ok": false, # the punched card in hand / canister carries the right pattern
 		"canister": "", # "" | "request_card"
 		"dest": 0,
@@ -255,6 +256,7 @@ func pull_punch_lever() -> Array[String]:
 		return _end()
 	state["card_in_punch"] = false
 	state["request_ok"] = _arr_eq(state["punch_keys"], PUNCH_CODE)
+	state["last_punch"] = (state["punch_keys"] as Array).duplicate()
 	state["punch_keys"] = [0, 0, 0, 0, 0, 0, 0, 0]
 	_add_item("request_card")
 	_emit("card_punched")
@@ -820,6 +822,14 @@ func item_desc_key(id: String) -> String:
 
 func item_glows(id: String) -> bool:
 	return crystal_image(id) != ""
+
+
+func intro_keys() -> Array[String]:
+	return ["intro2.1", "intro2.2"]
+
+
+func intro_caption_key() -> String:
+	return ""
 
 
 # ================================================================== helpers

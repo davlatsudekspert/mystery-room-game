@@ -134,6 +134,16 @@ func item_glows(_id: String) -> bool:
 	return false
 
 
+## Override: the intro cards shown on a fresh chapter start.
+func intro_keys() -> Array[String]:
+	return ["intro.1", "intro.2"]
+
+
+## Override: the caption shown when the intro hands over control ("" = none).
+func intro_caption_key() -> String:
+	return "cap.maglock"
+
+
 ## Override: extra events after a successful combination (still inside the action).
 func _on_combined(_result: String) -> void:
 	pass

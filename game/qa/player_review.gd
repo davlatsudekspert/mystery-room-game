@@ -160,7 +160,7 @@ func _centre_of(n: Node3D) -> Vector3:
 func look_toward(p: Vector3) -> void:
 	var c := cam()
 	var dir := (p - c.global_position).normalized()
-	var base := c.views[c.current()]
+	var base: Dictionary = c.views[c.current()]
 	var t := Transform3D(Basis.IDENTITY, base["pos"]).looking_at(base["target"], Vector3.UP)
 	var fwd0 := -t.basis.z
 	var yaw := rad_to_deg(atan2(fwd0.x, fwd0.z) - atan2(dir.x, dir.z))

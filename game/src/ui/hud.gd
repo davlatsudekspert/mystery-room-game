@@ -16,6 +16,10 @@ var _hint_btn: IconButton
 var _pause_btn: IconButton
 var _inv_panel: PanelContainer
 var _inv_box: HBoxContainer
+var _inv_scroll: ScrollContainer
+var _meter: PanelContainer
+var _meter_bars: Array[ColorRect] = []
+const INV_MAX_W := 1180.0 # wider inventories scroll sideways
 var _act_inspect: IconButton
 var _act_combine: IconButton
 var _combine_mode := false
@@ -32,6 +36,7 @@ func bind(r: Node3D) -> void:
 	logic = r.get("logic")
 	layer = 10
 	icons = ItemIcons.new()
+	icons.logic = logic
 	add_child(icons)
 	icons.icon_ready.connect(func(_id: String, _t: Texture2D) -> void: _refresh_inventory())
 	_build()
@@ -117,9 +122,14 @@ func _build() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	_inv_panel.add_child(row)
+	_inv_scroll = ScrollContainer.new()
+	_inv_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_inv_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_inv_scroll.custom_minimum_size = Vector2(0, 116)
+	row.add_child(_inv_scroll)
 	_inv_box = HBoxContainer.new()
 	_inv_box.add_theme_constant_override("separation", 10)
-	row.add_child(_inv_box)
+	_inv_scroll.add_child(_inv_box)
 	_act_inspect = IconButton.make("inspect", 104)
 	_act_inspect.pressed.connect(func() -> void: show_inspect(logic.selected))
 	row.add_child(_act_inspect)
@@ -174,6 +184,8 @@ func _refresh_inventory() -> void:
 		_inv_box.add_child(l)
 	for id in logic.inventory:
 		_inv_box.add_child(_slot(id))
+	var n := maxi(1, logic.inventory.size())
+	_inv_scroll.custom_minimum_size.x = minf(n * 122.0 - 10.0, INV_MAX_W) if not logic.inventory.is_empty() else 360.0
 	var has_sel := logic.selected != ""
 	_act_inspect.visible = has_sel
 	_act_combine.visible = has_sel and logic.inventory.size() > 1 and logic.selected != "uv_lamp"
@@ -272,7 +284,8 @@ func caption(text: String, seconds: float = 3.5) -> void:
 
 
 func set_view(id: String, is_root: bool, caption_key: String) -> void:
-	_back_btn.visible = not is_root or id == "darkroom"
+	var main := str(room.call("main_root")) if room.has_method("main_root") else ""
+	_back_btn.visible = not is_root or id == "darkroom" or (main != "" and id != main)
 	set_caption(caption_key)
 
 
@@ -488,6 +501,7 @@ func show_inspect(id: String) -> void:
 	cam.fov = 32.0
 	vp.add_child(cam)
 	var model := ModelUtil.spawn(ItemDB.model_path(id), pivot, Transform3D.IDENTITY, "none")
+	ItemDress.apply(id, model, logic)
 	var radius := 0.1
 	if model:
 		model.rotation.x = deg_to_rad(ItemDB.view_tilt(id))
@@ -562,6 +576,13 @@ func show_document(doc: String) -> void:
 			_show_evidence()
 		"darkroom_note":
 			_show_paper([tr("doc.darkroom_note")])
+		"badge", "index_card":
+			_show_picture("res://assets/textures/decals/ch2/%s.png" % doc, Vector2(1000, 630) if doc == "badge" else Vector2(1100, 660))
+		"personnel_file":
+			_show_paper([tr("doc2.file")])
+		"tape_1996", "tape_1997", "tape_1998":
+			var heard: bool = logic.state.has("clicks_heard") and (logic.state["clicks_heard"] as Array).has(doc)
+			_show_paper([tr("doc2." + doc) if heard else tr("item.%s.desc" % doc)])
 
 
 const NB_PAGES := 8
@@ -736,6 +757,57 @@ func _show_evidence() -> void:
 	v.add_child(c)
 
 
+## A document that is a picture (badge, index card): shown large on the dimmed screen.
+func _show_picture(path: String, size: Vector2) -> void:
+	var o := _open_overlay(0.85)
+	var c := CenterContainer.new()
+	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	c.offset_bottom = -110
+	o.add_child(c)
+	var t := TextureRect.new()
+	t.texture = load(path) if ResourceLoader.exists(path) else null
+	t.custom_minimum_size = size
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	c.add_child(t)
+	_close_button_bottom(o)
+
+
+# ====================================================================== receiver meter (Chapter 2)
+## Signal strength of Leyla's pocket receiver for the current view: 0..5 bars, -1 hides the meter.
+func set_meter(level: int) -> void:
+	if _meter == null:
+		_meter = PanelContainer.new()
+		var sb := UITheme.panel_box(0.8, 14)
+		sb.set_content_margin_all(14)
+		_meter.add_theme_stylebox_override("panel", sb)
+		var safe := _safe_margins()
+		_meter.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_meter.offset_right = -(safe.z + 28)
+		_meter.offset_left = -(safe.z + 28 + 250)
+		_meter.offset_top = safe.y + 130
+		_meter.offset_bottom = safe.y + 230
+		_root.add_child(_meter)
+		var v := VBoxContainer.new()
+		_meter.add_child(v)
+		var t := UITheme.label("item.pocket_receiver.name", 20, UITheme.MUTED)
+		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(t)
+		var h := HBoxContainer.new()
+		h.alignment = BoxContainer.ALIGNMENT_CENTER
+		h.add_theme_constant_override("separation", 8)
+		v.add_child(h)
+		for i in 5:
+			var bar := ColorRect.new()
+			bar.custom_minimum_size = Vector2(30, 14 + 9 * i)
+			bar.size_flags_vertical = Control.SIZE_SHRINK_END
+			h.add_child(bar)
+			_meter_bars.append(bar)
+	_meter.visible = level >= 0
+	for i in 5:
+		_meter_bars[i].color = Color("7dff9a") if i < level else Color(1, 1, 1, 0.12)
+
+
 func _close_button_bottom(o: Control) -> void:
 	var bottom := CenterContainer.new()
 	bottom.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -771,8 +843,10 @@ func play_intro() -> void:
 	tap.offset_right = 400
 	tap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	o.add_child(tap)
-	AudioManager.ambience("amb_lab_dark", true, -6.0, 3.0)
-	for key in ["intro.1", "intro.2"]:
+	var own_impact := room.has_method("intro_impact") # Chapter 2+: the room plays its own opening beat
+	if not own_impact:
+		AudioManager.ambience("amb_lab_dark", true, -6.0, 3.0)
+	for key in logic.intro_keys():
 		lbl.text = tr(key)
 		lbl.modulate.a = 0.0
 		var tw := create_tween()
@@ -782,15 +856,17 @@ func play_intro() -> void:
 		tw2.tween_property(lbl, "modulate:a", 0.0, 0.6)
 		await tw2.finished
 	room.call("play_opening_camera")
-	AudioManager.sfx("door_slam")
-	AudioManager.sfx("maglock_release", -4.0, 0.8)
-	AudioManager.haptic(120)
+	if not own_impact:
+		AudioManager.sfx("door_slam")
+		AudioManager.sfx("maglock_release", -4.0, 0.8)
+		AudioManager.haptic(120)
 	var fade := create_tween()
 	fade.tween_property(o, "color:a", 0.0, 1.6)
 	await fade.finished
 	o.queue_free()
 	set_busy(false)
-	caption(tr("cap.maglock"))
+	if logic.intro_caption_key() != "":
+		caption(tr(logic.intro_caption_key()))
 	await get_tree().create_timer(1.2).timeout
 	caption(tr("tut.look") + "  " + tr("tut.tap"), 5.0)
 
