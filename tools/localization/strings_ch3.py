@@ -4,6 +4,18 @@ Puzzle-critical information is never carried by these texts alone (numbers/symbo
 Symbols (◆ ▲ ● ■ ☼ ☾ ✦) are not in the UI font, so texts name them in words."""
 
 S = [
+# ---------------------------------------------------------------- symbol names and prism positions (level-3 hints)
+("sym.sun", "sun", "солнце", "quyosh"),
+("sym.moon", "moon", "луна", "oy"),
+("sym.star", "star", "звезда", "yulduz"),
+("sym.triangle", "triangle", "треугольник", "uchburchak"),
+("sym.circle", "circle", "круг", "doira"),
+("sym.square", "square", "квадрат", "kvadrat"),
+("hint.c3_pos.-2", "two steps left", "на два шага левее", "ikki qadam chapda"),
+("hint.c3_pos.-1", "one step left", "на шаг левее", "bir qadam chapda"),
+("hint.c3_pos.0", "centred", "по центру", "markazda"),
+("hint.c3_pos.1", "one step right", "на шаг правее", "bir qadam oʻngda"),
+("hint.c3_pos.2", "two steps right", "на два шага правее", "ikki qadam oʻngda"),
 # ---------------------------------------------------------------- items
 ("item.strand_key.desc3", "Heavy brass with a star. The tag reads: \"For the Choir.\"", "Тяжёлая латунь со звездой. На бирке: «Для Хора».", "Yulduzli ogʻir jez kalit. Yorliqda: «Xor uchun»."),
 ("item.leyla_key.desc3", "Plain steel with a crescent. The tag reads: \"For the Nursery.\"", "Простая сталь с полумесяцем. На бирке: «Для Питомника».", "Yarim oyli oddiy poʻlat kalit. Yorliqda: «Koʻchatxona uchun»."),
@@ -137,12 +149,12 @@ H = {
 "c3_heart": [
     ("Strand kept his meter locked.", "Странд держал свой прибор под замком.", "Strand asbobini qulf ostida saqlagan."),
     ("\"My heart keeps the count.\" Look at the strip on his lamp.", "«Моё сердце ведёт счёт». Посмотрите на ленту на его лампе.", "«Yuragim sanoqni saqlaydi». Chirogʻidagi tasmaga qarang."),
-    ("Count the peaks in each bracket: sun 4, moon 2, star 6.", "Сосчитайте пики в каждой скобке: солнце 4, луна 2, звезда 6.", "Har bir qavsdagi choʻqqilarni sanang: quyosh 4, oy 2, yulduz 6."),
+    ("Count the peaks in each bracket: sun %d, moon %d, star %d.", "Сосчитайте пики в каждой скобке: солнце %d, луна %d, звезда %d.", "Har bir qavsdagi choʻqqilarni sanang: quyosh %d, oy %d, yulduz %d."),
 ],
 "c3_choir": [
     ("The Choir is out of tune.", "Хор расстроен.", "Xor sozlanmagan."),
     ("Measure each tube with the meter. The chalk staircase shows what each slot needs.", "Измерьте каждую трубу прибором. Меловая лесенка показывает, что нужно каждому гнезду.", "Har bir quvurni asbob bilan oʻlchang. Boʻr bilan chizilgan zinapoya har bir uyachaga nima kerakligini koʻrsatadi."),
-    ("Slots, left to right: 4 6 2 7 1 5 3. Then strike the master hammer.", "Гнёзда слева направо: 4 6 2 7 1 5 3. Затем ударьте главным молотом.", "Uyachalar chapdan oʻngga: 4 6 2 7 1 5 3. Soʻng bosh bolgʻa bilan uring."),
+    ("Slots, left to right: %s. Then strike the master hammer.", "Гнёзда слева направо: %s. Затем ударьте главным молотом.", "Uyachalar chapdan oʻngga: %s. Soʻng bosh bolgʻa bilan uring."),
 ],
 "c3_restore": [
     ("The desk is dead.", "Пульт мёртв.", "Pult jonsiz."),
@@ -152,37 +164,37 @@ H = {
 "c3_startup": [
     ("The hall must be started in the right order.", "Зал нужно запускать в правильном порядке.", "Zalni toʻgʻri tartibda ishga tushirish kerak."),
     ("Watch the operator through all three crystal ports. The counter tells you the step.", "Наблюдайте за оператором через все три кристальных окна. Счётчик показывает шаг.", "Operatorni uchala billur tuynukdan kuzating. Hisoblagich qadamni koʻrsatadi."),
-    ("Levers 4, 2, 5, 1, 3, then the knob to the circle.", "Рычаги 4, 2, 5, 1, 3, затем ручку на круг.", "Dastaklar 4, 2, 5, 1, 3, soʻng murvatni doiraga buring."),
+    ("Levers %s, then the knob to the circle.", "Рычаги %s, затем ручку на круг.", "Dastaklar %s, soʻng murvatni doiraga buring."),
 ],
 "c3_seed": [
     ("Leyla grew crystals from seeds.", "Лейла выращивала кристаллы из затравок.", "Leyla billurlarni urugʻdan oʻstirgan."),
     ("Her log on the working autoclave shows the seed's cross-section, drawn turned.", "Её журнал на рабочем автоклаве показывает срез затравки, нарисованный повёрнутым.", "Ishlaydigan avtoklavdagi jurnalida urugʻ kesimi burilgan holda chizilgan."),
-    ("Row 2, drawer 3. A cloudy crystal remelts back into its seed.", "Ряд 2, ящик 3. Мутный кристалл переплавляется обратно в затравку.", "2-qator, 3-tortma. Xira billur yana urugʻga eritiladi."),
+    ("Row %d, drawer %d. A cloudy crystal remelts back into its seed.", "Ряд %d, ящик %d. Мутный кристалл переплавляется обратно в затравку.", "%d-qator, %d-tortma. Xira billur yana urugʻga eritiladi."),
 ],
 "c3_grow": [
     ("The autoclave grows crystals.", "Автоклав выращивает кристаллы.", "Avtoklav billur oʻstiradi."),
     ("Leyla's curve on the wall: three steps. Set the cam drum's pegs to match.", "Кривая Лейлы на стене: три ступени. Выставьте по ним штифты барабана.", "Devordagi Leyla egri chizigʻi: uch pogʻona. Baraban qoziqchalarini shunga moslang."),
-    ("Seed in the chamber, pegs 5, 2, 4, close, then pull the start lever.", "Затравку в камеру, штифты 5, 2, 4, закройте и потяните пусковой рычаг.", "Urugʻni kameraga, qoziqchalar 5, 2, 4, yoping va ishga tushirish dastagini torting."),
+    ("Seed in the chamber, pegs %d, %d, %d, close, then pull the start lever.", "Затравку в камеру, штифты %d, %d, %d, закройте и потяните пусковой рычаг.", "Urugʻni kameraga, qoziqchalar %d, %d, %d, yoping va ishga tushirish dastagini torting."),
 ],
 "c3_prisms": [
     ("The seal wants coloured light.", "Печати нужен цветной свет.", "Muhrga rangli nur kerak."),
     ("Colours add where fans overlap. Match each rim's shapes.", "Цвета складываются там, где веера перекрываются. Совместите фигуры каждого ободка.", "Yelpigʻichlar ustma-ust tushgan joyda ranglar qoʻshiladi. Har bir gardish shakllarini moslang."),
-    ("Left prism centred, right prism one step left.", "Левая призма по центру, правая — на шаг левее.", "Chap prizma markazda, oʻng prizma bir qadam chapda."),
+    ("Left prism %s, right prism %s.", "Левая призма %s, правая призма %s.", "Chap prizma %s, oʻng prizma %s."),
 ],
 "c3_melody": [
     ("Leyla left a recording.", "Лейла оставила запись.", "Leyla yozuv qoldirgan."),
     ("She taps four notes. Her crystals sing the same notes. Watch the waveforms.", "Она отстукивает четыре ноты. Её кристаллы поют те же ноты. Следите за волнами.", "U toʻrtta nota chaladi. Billurlari xuddi shu notalarni kuylaydi. Toʻlqinlarni kuzating."),
-    ("Crystals 3, 1, 4, 2, counting from the smallest.", "Кристаллы 3, 1, 4, 2, считая от самого маленького.", "Billurlar 3, 1, 4, 2, eng kichigidan sanab."),
+    ("Crystals %s, counting from the smallest.", "Кристаллы %s, считая от самого маленького.", "Billurlar %s, eng kichigidan sanab."),
 ],
 "c3_rings": [
     ("The door listens to the Array.", "Дверь слушает Решётку.", "Eshik Panjarani tinglaydi."),
     ("Look down through the glass floor. Each ring shows a sign.", "Посмотрите вниз сквозь стеклянный пол. На каждом кольце знак.", "Shisha pol orqali pastga qarang. Har bir halqada belgi bor."),
-    ("Outer ring: moon, then triangle, then star, inner: circle.", "Внешнее кольцо: луна, затем треугольник, затем звезда, внутреннее: круг.", "Tashqi halqa: oy, soʻng uchburchak, soʻng yulduz, ichki: doira."),
+    ("Outer ring: %s, then %s, then %s, inner: %s.", "Внешнее кольцо: %s, затем %s, затем %s, внутреннее: %s.", "Tashqi halqa: %s, soʻng %s, soʻng %s, ichki: %s."),
 ],
 "c3_resonance": [
     ("Strand's plate shows a shape.", "На табличке Странда — фигура.", "Strand lavhasida shakl bor."),
     ("Seat the Nursery crystal in the console cradle. Turn both knobs until the figure matches the plate.", "Вставьте кристалл Питомника в гнездо пульта. Крутите обе ручки, пока фигура не совпадёт с табличкой.", "Koʻchatxona billurini pult uyachasiga qoʻying. Shakl lavhaga mos kelguncha ikkala murvatni buring."),
-    ("X 3, Y 2.", "X 3, Y 2.", "X 3, Y 2."),
+    ("X %d, Y %d.", "X %d, Y %d.", "X %d, Y %d."),
 ],
 "c3_finale": [
     ("Two of them wait for you.", "Двое ждут вас.", "Ikkovi sizni kutmoqda."),

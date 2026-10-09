@@ -20,7 +20,12 @@ func _ready() -> void:
 	var failures: Array[String] = []
 	var t0 := Time.get_ticks_msec()
 	for f in files:
-		var script: GDScript = load("res://tests/" + f)
+		var script := load("res://tests/" + f) as GDScript
+		if script == null or not script.can_instantiate():
+			# a parse error must fail the run, not hang it (the runner never reached quit() before)
+			failures.append("%s: the script does not load (parse error?)" % f)
+			print("[%s] ✗ does not load" % f)
+			continue
 		var suite: Object = script.new()
 		var names: Array[String] = []
 		for m in suite.get_method_list():

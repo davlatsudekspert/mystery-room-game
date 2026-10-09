@@ -358,6 +358,17 @@ epi2.leyla_key,You take Leyla's key. Her way down leads through the crystal vaul
 epi2.echoes,Three kept echoes walk free tonight.,Этой ночью три сохранённых эха обрели свободу.,Bu tun uchta saqlangan aks-sado ozod boʻldi.
 epi2.recorder,"Somewhere below, a recorder clicks on.",Где-то внизу щёлкает и включается магнитофон.,Pastda qayerdadir magnitofon chiq etib yoqildi.
 achv.echoes_of_the_archive,Echoes of the Archive,Эхо архива,Arxiv aks-sadolari
+sym.sun,sun,солнце,quyosh
+sym.moon,moon,луна,oy
+sym.star,star,звезда,yulduz
+sym.triangle,triangle,треугольник,uchburchak
+sym.circle,circle,круг,doira
+sym.square,square,квадрат,kvadrat
+hint.c3_pos.-2,two steps left,на два шага левее,ikki qadam chapda
+hint.c3_pos.-1,one step left,на шаг левее,bir qadam chapda
+hint.c3_pos.0,centred,по центру,markazda
+hint.c3_pos.1,one step right,на шаг правее,bir qadam oʻngda
+hint.c3_pos.2,two steps right,на два шага правее,ikki qadam oʻngda
 item.strand_key.desc3,"Heavy brass with a star. The tag reads: ""For the Choir.""",Тяжёлая латунь со звездой. На бирке: «Для Хора».,Yulduzli ogʻir jez kalit. Yorliqda: «Xor uchun».
 item.leyla_key.desc3,"Plain steel with a crescent. The tag reads: ""For the Nursery.""",Простая сталь с полумесяцем. На бирке: «Для Питомника».,Yarim oyli oddiy poʻlat kalit. Yorliqda: «Koʻchatxona uchun».
 item.key_diamond.name,Diamond key,Ключ-ромб,Rombli kalit
@@ -619,34 +630,34 @@ hint.c3_interlock.2,The plate shows which key frees which. Each lock shows the s
 hint.c3_interlock.3,"Diamond into II, triangle into I, circle into III, each turned OFF. The square opens the office.","Ромб — в II, треугольник — в I, круг — в III, каждый выключить. Квадрат открывает кабинет.","Romb — II ga, uchburchak — I ga, doira — III ga, har birini oʻchiring. Kvadrat kabinetni ochadi."
 hint.c3_heart.1,Strand kept his meter locked.,Странд держал свой прибор под замком.,Strand asbobini qulf ostida saqlagan.
 hint.c3_heart.2,"""My heart keeps the count."" Look at the strip on his lamp.",«Моё сердце ведёт счёт». Посмотрите на ленту на его лампе.,«Yuragim sanoqni saqlaydi». Chirogʻidagi tasmaga qarang.
-hint.c3_heart.3,"Count the peaks in each bracket: sun 4, moon 2, star 6.","Сосчитайте пики в каждой скобке: солнце 4, луна 2, звезда 6.","Har bir qavsdagi choʻqqilarni sanang: quyosh 4, oy 2, yulduz 6."
+hint.c3_heart.3,"Count the peaks in each bracket: sun %d, moon %d, star %d.","Сосчитайте пики в каждой скобке: солнце %d, луна %d, звезда %d.","Har bir qavsdagi choʻqqilarni sanang: quyosh %d, oy %d, yulduz %d."
 hint.c3_choir.1,The Choir is out of tune.,Хор расстроен.,Xor sozlanmagan.
 hint.c3_choir.2,Measure each tube with the meter. The chalk staircase shows what each slot needs.,"Измерьте каждую трубу прибором. Меловая лесенка показывает, что нужно каждому гнезду.",Har bir quvurni asbob bilan oʻlchang. Boʻr bilan chizilgan zinapoya har bir uyachaga nima kerakligini koʻrsatadi.
-hint.c3_choir.3,"Slots, left to right: 4 6 2 7 1 5 3. Then strike the master hammer.",Гнёзда слева направо: 4 6 2 7 1 5 3. Затем ударьте главным молотом.,Uyachalar chapdan oʻngga: 4 6 2 7 1 5 3. Soʻng bosh bolgʻa bilan uring.
+hint.c3_choir.3,"Slots, left to right: %s. Then strike the master hammer.",Гнёзда слева направо: %s. Затем ударьте главным молотом.,Uyachalar chapdan oʻngga: %s. Soʻng bosh bolgʻa bilan uring.
 hint.c3_restore.1,The desk is dead.,Пульт мёртв.,Pult jonsiz.
 hint.c3_restore.2,Every isolator must be ON. Read the plate backwards.,Все изоляторы должны быть включены. Прочитайте табличку в обратную сторону.,Barcha uzgichlar yoqilgan boʻlishi kerak. Lavhani teskari oʻqing.
 hint.c3_restore.3,"Close the office, then the square into III, the circle into I, the triangle into II, each turned ON.","Закройте кабинет, затем квадрат — в III, круг — в I, треугольник — в II, каждый включить.","Kabinetni yoping, soʻng kvadrat — III ga, doira — I ga, uchburchak — II ga, har birini yoqing."
 hint.c3_startup.1,The hall must be started in the right order.,Зал нужно запускать в правильном порядке.,Zalni toʻgʻri tartibda ishga tushirish kerak.
 hint.c3_startup.2,Watch the operator through all three crystal ports. The counter tells you the step.,Наблюдайте за оператором через все три кристальных окна. Счётчик показывает шаг.,Operatorni uchala billur tuynukdan kuzating. Hisoblagich qadamni koʻrsatadi.
-hint.c3_startup.3,"Levers 4, 2, 5, 1, 3, then the knob to the circle.","Рычаги 4, 2, 5, 1, 3, затем ручку на круг.","Dastaklar 4, 2, 5, 1, 3, soʻng murvatni doiraga buring."
+hint.c3_startup.3,"Levers %s, then the knob to the circle.","Рычаги %s, затем ручку на круг.","Dastaklar %s, soʻng murvatni doiraga buring."
 hint.c3_seed.1,Leyla grew crystals from seeds.,Лейла выращивала кристаллы из затравок.,Leyla billurlarni urugʻdan oʻstirgan.
 hint.c3_seed.2,"Her log on the working autoclave shows the seed's cross-section, drawn turned.","Её журнал на рабочем автоклаве показывает срез затравки, нарисованный повёрнутым.",Ishlaydigan avtoklavdagi jurnalida urugʻ kesimi burilgan holda chizilgan.
-hint.c3_seed.3,"Row 2, drawer 3. A cloudy crystal remelts back into its seed.","Ряд 2, ящик 3. Мутный кристалл переплавляется обратно в затравку.","2-qator, 3-tortma. Xira billur yana urugʻga eritiladi."
+hint.c3_seed.3,"Row %d, drawer %d. A cloudy crystal remelts back into its seed.","Ряд %d, ящик %d. Мутный кристалл переплавляется обратно в затравку.","%d-qator, %d-tortma. Xira billur yana urugʻga eritiladi."
 hint.c3_grow.1,The autoclave grows crystals.,Автоклав выращивает кристаллы.,Avtoklav billur oʻstiradi.
 hint.c3_grow.2,Leyla's curve on the wall: three steps. Set the cam drum's pegs to match.,Кривая Лейлы на стене: три ступени. Выставьте по ним штифты барабана.,Devordagi Leyla egri chizigʻi: uch pogʻona. Baraban qoziqchalarini shunga moslang.
-hint.c3_grow.3,"Seed in the chamber, pegs 5, 2, 4, close, then pull the start lever.","Затравку в камеру, штифты 5, 2, 4, закройте и потяните пусковой рычаг.","Urugʻni kameraga, qoziqchalar 5, 2, 4, yoping va ishga tushirish dastagini torting."
+hint.c3_grow.3,"Seed in the chamber, pegs %d, %d, %d, close, then pull the start lever.","Затравку в камеру, штифты %d, %d, %d, закройте и потяните пусковой рычаг.","Urugʻni kameraga, qoziqchalar %d, %d, %d, yoping va ishga tushirish dastagini torting."
 hint.c3_prisms.1,The seal wants coloured light.,Печати нужен цветной свет.,Muhrga rangli nur kerak.
 hint.c3_prisms.2,Colours add where fans overlap. Match each rim's shapes.,"Цвета складываются там, где веера перекрываются. Совместите фигуры каждого ободка.",Yelpigʻichlar ustma-ust tushgan joyda ranglar qoʻshiladi. Har bir gardish shakllarini moslang.
-hint.c3_prisms.3,"Left prism centred, right prism one step left.","Левая призма по центру, правая — на шаг левее.","Chap prizma markazda, oʻng prizma bir qadam chapda."
+hint.c3_prisms.3,"Left prism %s, right prism %s.","Левая призма %s, правая призма %s.","Chap prizma %s, oʻng prizma %s."
 hint.c3_melody.1,Leyla left a recording.,Лейла оставила запись.,Leyla yozuv qoldirgan.
 hint.c3_melody.2,She taps four notes. Her crystals sing the same notes. Watch the waveforms.,Она отстукивает четыре ноты. Её кристаллы поют те же ноты. Следите за волнами.,U toʻrtta nota chaladi. Billurlari xuddi shu notalarni kuylaydi. Toʻlqinlarni kuzating.
-hint.c3_melody.3,"Crystals 3, 1, 4, 2, counting from the smallest.","Кристаллы 3, 1, 4, 2, считая от самого маленького.","Billurlar 3, 1, 4, 2, eng kichigidan sanab."
+hint.c3_melody.3,"Crystals %s, counting from the smallest.","Кристаллы %s, считая от самого маленького.","Billurlar %s, eng kichigidan sanab."
 hint.c3_rings.1,The door listens to the Array.,Дверь слушает Решётку.,Eshik Panjarani tinglaydi.
 hint.c3_rings.2,Look down through the glass floor. Each ring shows a sign.,Посмотрите вниз сквозь стеклянный пол. На каждом кольце знак.,Shisha pol orqali pastga qarang. Har bir halqada belgi bor.
-hint.c3_rings.3,"Outer ring: moon, then triangle, then star, inner: circle.","Внешнее кольцо: луна, затем треугольник, затем звезда, внутреннее: круг.","Tashqi halqa: oy, soʻng uchburchak, soʻng yulduz, ichki: doira."
+hint.c3_rings.3,"Outer ring: %s, then %s, then %s, inner: %s.","Внешнее кольцо: %s, затем %s, затем %s, внутреннее: %s.","Tashqi halqa: %s, soʻng %s, soʻng %s, ichki: %s."
 hint.c3_resonance.1,Strand's plate shows a shape.,На табличке Странда — фигура.,Strand lavhasida shakl bor.
 hint.c3_resonance.2,Seat the Nursery crystal in the console cradle. Turn both knobs until the figure matches the plate.,"Вставьте кристалл Питомника в гнездо пульта. Крутите обе ручки, пока фигура не совпадёт с табличкой.",Koʻchatxona billurini pult uyachasiga qoʻying. Shakl lavhaga mos kelguncha ikkala murvatni buring.
-hint.c3_resonance.3,"X 3, Y 2.","X 3, Y 2.","X 3, Y 2."
+hint.c3_resonance.3,"X %d, Y %d.","X %d, Y %d.","X %d, Y %d."
 hint.c3_finale.1,Two of them wait for you.,Двое ждут вас.,Ikkovi sizni kutmoqda.
 hint.c3_finale.2,Strand would keep them. Leyla would let them go.,Странд хочет их сохранить. Лейла — отпустить.,Strand ularni saqlab qolmoqchi. Leyla — qoʻyib yubormoqchi.
 hint.c3_finale.3,Choose.,Выбирайте.,Tanlang.

@@ -24,8 +24,9 @@ const LEVERS := 5
 const STARTUP: Array[int] = [4, 2, 5, 1, 3] # lever per counter step 1..5
 const KNOB_POSITIONS := 4 # 0 ○ (off), 1 ▲, 2 ●, 3 ■
 const KNOB_TARGET := 2
-## What each crystal port sees of the 1979 operator: counter step -> lever. Port C also sees the knob.
-const PORT_VIEWS := {"A": {2: 2, 4: 1}, "B": {1: 4, 5: 3}, "C": {3: 5}}
+## Which levers each crystal port can see the 1979 operator pull (port C also sees the knob). What a port shows is
+## the steps at which those levers go down: port_views(), from this game's lever order.
+const PORT_LEVERS := {"A": [1, 2], "B": [3, 4], "C": [5]}
 const KNOB_PORT := "C"
 # ------------------------------------------------------------------ E1 seed library
 ## Hexagonal lattice glyphs: 6 edges clockwise from the top, "1" = notched edge. Turning a glyph a third
@@ -62,6 +63,10 @@ const FREQ_MAX := 5
 const FREQ_START := 1
 const FREQ_X := 3
 const FREQ_Y := 2
+## Lissajous targets a game may draw: coprime, unequal, and with no equal-ratio twin in 1..5 (so exactly one knob
+## setting draws the plate's figure).
+const FREQ_TARGETS: Array = [[1, 3], [3, 1], [1, 4], [4, 1], [1, 5], [5, 1], [2, 3], [3, 2], [2, 5], [5, 2], [3, 4],
+	[4, 3], [3, 5], [5, 3], [4, 5], [5, 4]]
 # ------------------------------------------------------------------ optional
 const ECHOES: Array[String] = ["welder", "tech_a", "tech_b", "strand_rail"]
 const ECHO_ZONE := {"welder": "choir", "tech_a": "nursery", "tech_b": "nursery", "strand_rail": "gallery"}
@@ -84,6 +89,21 @@ const NURSERY_GOALS: Array[String] = ["c3_seed", "c3_grow", "c3_prisms", "c3_mel
 func default_state() -> Dictionary:
 	return {
 		"entry": "nursery", # "choir" (Strand's key) | "nursery" (Leyla's key)
+		# this game's answers (docs/VARIANTS.md); seed 0 = the canonical ones below
+		"seed": 0,
+		"v_choir": _plain(CHOIR_TARGET),
+		"v_startup": _plain(STARTUP),
+		"v_heart": _plain(CASE_CODE),
+		"v_glyphs": _plain(SEED_GLYPHS),
+		"v_seed_right": SEED_RIGHT,
+		"v_sketch": SEED_SKETCH,
+		"v_curve": _plain(PEGS_TARGET),
+		"v_prism": [PRISM_P, PRISM_Q],
+		"v_rims": _plain(RIMS),
+		"v_frame": _plain(FRAME_SIZES),
+		"v_melody": _plain(MELODY),
+		"v_rings": _plain(DRUM_TARGET),
+		"v_freq": [FREQ_X, FREQ_Y],
 		"has_lens": false, # Chapter 1 "take the lens"
 		"secret": false, # ch1_shards = 5 and ch2_echoes = 3: the 42nd socket glows
 		"taken": {},
@@ -215,7 +235,7 @@ func take(spot: String) -> Array[String]:
 			state["seed_from"] = int(state["seed_drawer"])
 			_add_item("seed_crystal")
 			_emit("seed_taken:%d" % int(state["seed_from"]))
-			if int(state["seed_from"]) == SEED_RIGHT and not state["seed_found"]:
+			if int(state["seed_from"]) == seed_right() and not state["seed_found"]:
 				state["seed_found"] = true
 				_emit("solved:seed")
 		"autoclave":
@@ -379,7 +399,7 @@ func turn_case_wheel(i: int, delta: int = 1) -> Array[String]:
 	var w: Array = state["case_wheels"]
 	w[i] = posmod(int(w[i]) + delta, CASE_DIGITS)
 	_emit("case_wheel:%d:%d" % [i, int(w[i])])
-	if _ints_eq(w, CASE_CODE):
+	if _ints_eq(w, case_code()):
 		state["case_open"] = true
 		_emit("case_opened")
 		_emit("solved:heart")
@@ -446,7 +466,7 @@ func strike_hammer() -> Array[String]:
 		_emit("nothing_happens")
 	elif state["choir_tuned"]:
 		_emit("choir_chord")
-	elif _ints_eq(rack(), CHOIR_TARGET):
+	elif _ints_eq(rack(), choir_target()):
 		state["choir_tuned"] = true
 		_emit("choir_chord")
 		_emit("solved:choir")
@@ -471,7 +491,7 @@ func pull_lever(n: int) -> Array[String]:
 		_emit("desk_dead")
 	elif int(state["levers"][n - 1]) == 1:
 		_emit("nothing_happens")
-	elif int(state["step"]) >= LEVERS or STARTUP[int(state["step"])] != n:
+	elif int(state["step"]) >= LEVERS or int(startup()[int(state["step"])]) != n:
 		_trip()
 	else:
 		state["levers"][n - 1] = 1
@@ -532,7 +552,7 @@ func _start_hall() -> void:
 # ================================================================== E1 seed library
 func open_seed_drawer(i: int) -> Array[String]:
 	_begin()
-	if not zone_open("nursery") or i < 0 or i >= SEED_GLYPHS.size():
+	if not zone_open("nursery") or i < 0 or i >= seed_glyphs().size():
 		_emit("nothing_happens")
 		return _end()
 	state["seed_drawer"] = -1 if int(state["seed_drawer"]) == i else i
@@ -545,7 +565,7 @@ func look(view: String) -> Array[String]:
 	_begin()
 	if view == "seed_library" and zone_open("nursery") and not state["has_lens"] and not state["echo_guided"]:
 		state["echo_guided"] = true
-		_emit("leyla_echo:%d" % SEED_RIGHT)
+		_emit("leyla_echo:%d" % seed_right())
 	return _end()
 
 
@@ -587,7 +607,7 @@ func pull_start_lever() -> Array[String]:
 		_emit("autoclave_empty")
 	elif state["chamber"] != "seed":
 		_emit("autoclave_full")
-	elif int(state["seed_from"]) == SEED_RIGHT and _ints_eq(state["pegs"], PEGS_TARGET):
+	elif int(state["seed_from"]) == seed_right() and _ints_eq(state["pegs"], pegs_target()):
 		state["chamber"] = "clear"
 		_emit("grew:clear")
 		if not state["crystal_grown"]:
@@ -607,6 +627,10 @@ func remelt() -> Array[String]:
 	else:
 		state["chamber"] = "seed"
 		_emit("remelted")
+		# the door swings open by itself, so the way back to the seed is obvious (design: open points)
+		if state["ac_closed"]:
+			state["ac_closed"] = false
+			_emit("autoclave_opened")
 	return _end()
 
 
@@ -622,9 +646,8 @@ static func receptor_light(p: int, q: int) -> Array[int]:
 	return r
 
 
-static func seal_accepts(p: int, q: int) -> bool:
-	var r := receptor_light(p, q)
-	return r[0] == RIMS[0] and r[1] == RIMS[1] and r[2] == RIMS[2]
+func seal_accepts(p: int, q: int) -> bool:
+	return _ints_eq(receptor_light(p, q), rims())
 
 
 func turn_prism(which: String, delta: int) -> Array[String]:
@@ -655,20 +678,22 @@ func play_recorder() -> Array[String]:
 ## Tap the crystal at frame place 0..3. A wrong note damps all four and resets the input.
 func tap_crystal(pos: int) -> Array[String]:
 	_begin()
-	if not state["camp_open"] or not zone_open("nursery") or pos < 0 or pos >= FRAME_SIZES.size():
+	var sizes := frame_sizes()
+	if not state["camp_open"] or not zone_open("nursery") or pos < 0 or pos >= sizes.size():
 		_emit("nothing_happens")
 		return _end()
-	var size := FRAME_SIZES[pos]
+	var size := int(sizes[pos])
 	_emit("crystal_note:%d" % size)
 	if state["shutter_open"]:
 		return _end()
 	var input: Array = state["melody_input"]
-	if input.size() >= MELODY.size() or MELODY[input.size()] != size:
+	var tune := melody()
+	if input.size() >= tune.size() or int(tune[input.size()]) != size:
 		state["melody_input"] = []
 		_emit("crystals_damped")
 		return _end()
 	input.append(size)
-	if input.size() == MELODY.size():
+	if input.size() == tune.size():
 		state["melody_input"] = []
 		state["shutter_open"] = true
 		_emit("shutter_open")
@@ -694,7 +719,7 @@ func pull_drum_handle() -> Array[String]:
 	_begin()
 	if not zone_open("gallery") or state["drum_open"]:
 		_emit("nothing_happens")
-	elif not _ints_eq(state["drums"], DRUM_TARGET):
+	elif not _ints_eq(state["drums"], drum_target()):
 		_emit("drum_wrong")
 	else:
 		state["drum_open"] = true
@@ -728,7 +753,7 @@ func scope_live() -> bool:
 func _check_resonance() -> void:
 	if state["array_awake"] or not scope_live():
 		return
-	if int(state["freq_x"]) == FREQ_X and int(state["freq_y"]) == FREQ_Y:
+	if _ints_eq([state["freq_x"], state["freq_y"]], freq_target()):
 		state["array_awake"] = true
 		_emit("array_awake")
 		_emit("echoes_appear")
@@ -925,7 +950,7 @@ func _wing_goal(wing: String) -> String:
 			return "c3_interlock"
 		return "c3_startup" if desk_live() else "c3_restore"
 	if not state["crystal_grown"]:
-		return "c3_grow" if int(state["seed_from"]) == SEED_RIGHT else "c3_seed"
+		return "c3_grow" if int(state["seed_from"]) == seed_right() else "c3_seed"
 	if not state["camp_open"]:
 		return "c3_prisms"
 	if not state["shutter_open"]:
@@ -984,6 +1009,209 @@ func intro_caption_key() -> String:
 
 
 # ================================================================== helpers
+# ================================================================== per-game answers (docs/VARIANTS.md)
+func choir_target() -> Array:
+	return state["v_choir"]
+
+
+func startup() -> Array:
+	return state["v_startup"]
+
+
+## What each crystal port shows: counter step -> lever, for the levers that port can see.
+func port_views() -> Dictionary:
+	var out := {}
+	var order := startup()
+	for port: String in PORT_LEVERS:
+		var seen := {}
+		for step in order.size():
+			if (PORT_LEVERS[port] as Array).has(int(order[step])):
+				seen[step + 1] = int(order[step])
+		out[port] = seen
+	return out
+
+
+func case_code() -> Array:
+	return state["v_heart"]
+
+
+func seed_glyphs() -> Array:
+	return state["v_glyphs"]
+
+
+func seed_right() -> int:
+	return int(state["v_seed_right"])
+
+
+func seed_sketch() -> String:
+	return str(state["v_sketch"])
+
+
+func pegs_target() -> Array:
+	return state["v_curve"]
+
+
+func rims() -> Array:
+	return state["v_rims"]
+
+
+func prism_target() -> Array:
+	return state["v_prism"]
+
+
+func frame_sizes() -> Array:
+	return state["v_frame"]
+
+
+func melody() -> Array:
+	return state["v_melody"]
+
+
+func drum_target() -> Array:
+	return state["v_rings"]
+
+
+func freq_target() -> Array:
+	return state["v_freq"]
+
+
+## Prism positions (p, q) whose light pattern is unique among all 25, lights every receptor and is not the start.
+static func prism_targets() -> Array:
+	var counts := {}
+	for p in range(PRISM_MIN, PRISM_MAX + 1):
+		for q in range(PRISM_MIN, PRISM_MAX + 1):
+			var key := str(receptor_light(p, q))
+			counts[key] = int(counts.get(key, 0)) + 1
+	var out: Array = []
+	for p in range(PRISM_MIN, PRISM_MAX + 1):
+		for q in range(PRISM_MIN, PRISM_MAX + 1):
+			var r := receptor_light(p, q)
+			if int(counts[str(r)]) == 1 and not r.has(0) and not (p == PRISM_START and q == PRISM_START):
+				out.append([p, q])
+	return out
+
+
+func apply_seed(game_seed: int) -> void:
+	state["seed"] = game_seed
+	if game_seed == 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = game_seed
+	# W3: the staircase, and a start like the canonical one: three tubes on the bench, two hung in each other's slot
+	var choir := _shuffled(rng, [1, 2, 3, 4, 5, 6, 7])
+	state["v_choir"] = choir
+	var tubes: Array = choir.duplicate()
+	var slots := _shuffled(rng, [0, 1, 2, 3, 4, 5, 6])
+	var bench: Array = []
+	for k in BENCH:
+		bench.append(tubes[slots[k]])
+		tubes[slots[k]] = 0
+	var a: int = slots[BENCH]
+	var b: int = slots[BENCH + 1]
+	var t: int = tubes[a]
+	tubes[a] = tubes[b]
+	tubes[b] = t
+	tubes.append_array(_shuffled(rng, bench))
+	state["tubes"] = tubes
+	# W4 and W2
+	state["v_startup"] = _shuffled(rng, [1, 2, 3, 4, 5])
+	state["v_heart"] = [rng.randi_range(2, 9), rng.randi_range(2, 9), rng.randi_range(2, 9)]
+	# E1
+	_draw_seed_library(rng)
+	# E2: three visible steps, never the pegs' start
+	var curve: Array = [1, 1, 1]
+	while curve[0] == curve[1] or curve[1] == curve[2] or _ints_eq(curve, PEGS_START):
+		curve = [rng.randi_range(1, PEG_MAX), rng.randi_range(1, PEG_MAX), rng.randi_range(1, PEG_MAX)]
+	state["v_curve"] = curve
+	# E3
+	var targets := prism_targets()
+	var pq: Array = targets[rng.randi_range(0, targets.size() - 1)]
+	state["v_prism"] = pq.duplicate()
+	state["v_rims"] = _plain(receptor_light(int(pq[0]), int(pq[1])))
+	# E4: the crystals' places and a melody that is not simply smallest to largest
+	state["v_frame"] = _shuffled(rng, [1, 2, 3, 4])
+	var tune: Array = [1, 2, 3, 4]
+	while _ints_eq(tune, [1, 2, 3, 4]):
+		tune = _shuffled(rng, [1, 2, 3, 4])
+	state["v_melody"] = tune
+	# H1: four different ring symbols, never all at the drums' start
+	state["v_rings"] = _shuffled(rng, [0, 1, 2, 3, 4, 5]).slice(0, 4)
+	# H2
+	state["v_freq"] = (FREQ_TARGETS[rng.randi_range(0, FREQ_TARGETS.size() - 1)] as Array).duplicate()
+
+
+## Twelve distinct lattice glyphs. The right seed is never three-fold symmetric. The library also holds the
+## sketch as drawn (not turned back), the glyph turned the wrong way, and one-notch twins of the right seed.
+func _draw_seed_library(rng: RandomNumberGenerator) -> void:
+	var right := ""
+	while right == "" or rotate_glyph(right, 1) == right:
+		right = _random_glyph(rng)
+	var glyphs: Array = [right, rotate_glyph(right, 1), rotate_glyph(right, -1)]
+	for e: int in _shuffled(rng, [0, 1, 2, 3, 4, 5]):
+		if glyphs.size() >= 6:
+			break
+		var twin := right.substr(0, e) + ("0" if right[e] == "1" else "1") + right.substr(e + 1)
+		if twin.count("1") > 0 and twin.count("1") < 6 and not glyphs.has(twin):
+			glyphs.append(twin)
+	while glyphs.size() < SEED_GLYPHS.size():
+		var g := _random_glyph(rng)
+		if not glyphs.has(g):
+			glyphs.append(g)
+	glyphs = _shuffled(rng, glyphs)
+	state["v_glyphs"] = glyphs
+	state["v_seed_right"] = glyphs.find(right)
+	state["v_sketch"] = rotate_glyph(right, 1)
+
+
+static func _random_glyph(rng: RandomNumberGenerator) -> String:
+	var g := ""
+	while g == "" or g.count("1") == 0 or g.count("1") == 6:
+		g = ""
+		for e in 6:
+			g += "1" if rng.randf() < 0.5 else "0"
+	return g
+
+
+static func _shuffled(rng: RandomNumberGenerator, a: Array) -> Array:
+	var out: Array = a.duplicate()
+	for i in range(out.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t: Variant = out[i]
+		out[i] = out[j]
+		out[j] = t
+	return out
+
+
+const SYMBOL_KEYS: Array[String] = ["sym.sun", "sym.moon", "sym.star", "sym.triangle", "sym.circle", "sym.square"]
+
+
+## Level-3 hints name this game's own answers.
+func hint_args(goal: String, level: int) -> Array:
+	if level < 3:
+		return []
+	match goal:
+		"c3_heart":
+			return case_code().duplicate()
+		"c3_choir":
+			return [" ".join(choir_target().map(func(v: Variant) -> String: return str(v)))]
+		"c3_startup":
+			return [", ".join(startup().map(func(v: Variant) -> String: return str(v)))]
+		"c3_seed":
+			return [seed_right() / SEED_COLUMNS + 1, seed_right() % SEED_COLUMNS + 1]
+		"c3_grow":
+			return pegs_target().duplicate()
+		"c3_prisms":
+			var pq := prism_target()
+			return [tr("hint.c3_pos.%d" % int(pq[0])), tr("hint.c3_pos.%d" % int(pq[1]))]
+		"c3_melody":
+			return [", ".join(melody().map(func(v: Variant) -> String: return str(v)))]
+		"c3_rings":
+			return drum_target().map(func(v: Variant) -> String: return tr(SYMBOL_KEYS[int(v)]))
+		"c3_resonance":
+			return freq_target().duplicate()
+	return []
+
+
 static func _ints_eq(a: Array, b: Array) -> bool:
 	if a.size() != b.size():
 		return false

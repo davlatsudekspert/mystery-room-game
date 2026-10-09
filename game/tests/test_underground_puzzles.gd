@@ -166,12 +166,14 @@ func test_startup_sequence_and_breaker() -> void:
 	check(l.pull_lever(1).has("hall_running"), "running")
 	# port data covers every step once
 	var seen := {}
-	for p: String in UndergroundLogic.PORT_VIEWS:
-		for c: int in UndergroundLogic.PORT_VIEWS[p]:
-			seen[c] = UndergroundLogic.PORT_VIEWS[p][c]
+	var views := l.port_views()
+	eq(views, {"A": {2: 2, 4: 1}, "B": {1: 4, 5: 3}, "C": {3: 5}}, "canonical port views")
+	for p: String in views:
+		for c: int in views[p]:
+			seen[c] = views[p][c]
 	eq(seen.size(), 5, "every counter step visible from one port")
 	for c: int in seen:
-		eq(int(seen[c]), UndergroundLogic.STARTUP[c - 1], "port view step %d" % c)
+		eq(int(seen[c]), int(l.startup()[c - 1]), "port view step %d" % c)
 
 
 func test_isolator_off_drops_a_half_startup() -> void:
@@ -286,9 +288,11 @@ func test_autoclave_cloudy_remelt_and_clear() -> void:
 	l.toggle_autoclave()
 	check(l.pull_start_lever().has("grew:cloudy"), "right seed, wrong pegs: cloudy")
 	check(l.pull_start_lever().has("autoclave_full"), "a crystal is already there")
-	l.remelt()
+	ev = l.remelt()
+	check(ev.has("autoclave_opened") and not l.state["ac_closed"], "a remelt opens the door by itself")
 	for _i in 5:
 		l.turn_peg(1) # 3 -> 2
+	l.toggle_autoclave()
 	ev = l.pull_start_lever()
 	check(ev.has("grew:clear") and ev.has("solved:grow"), "seed 6, pegs 5-2-4: clear")
 	l.toggle_autoclave()
@@ -298,10 +302,11 @@ func test_autoclave_cloudy_remelt_and_clear() -> void:
 
 
 func test_prism_solution_is_unique_by_brute_force() -> void:
+	var l := _new()
 	var sols: Array = []
 	for p in range(UndergroundLogic.PRISM_MIN, UndergroundLogic.PRISM_MAX + 1):
 		for q in range(UndergroundLogic.PRISM_MIN, UndergroundLogic.PRISM_MAX + 1):
-			if UndergroundLogic.seal_accepts(p, q):
+			if l.seal_accepts(p, q):
 				sols.append([p, q])
 	eq(sols, [[0, -1]], "P = 0, Q = -1 is the only combination of 25")
 	var start := UndergroundLogic.receptor_light(UndergroundLogic.PRISM_START, UndergroundLogic.PRISM_START)
@@ -310,6 +315,9 @@ func test_prism_solution_is_unique_by_brute_force() -> void:
 		if r != 0:
 			lit += 1
 	eq(lit, 1, "the start lights only one receptor")
+
+
+func test_prism_turntables_open_the_camp() -> void:
 	var l := _new("leyla_key")
 	check(l.play_recorder().has("nothing_happens"), "camp closed")
 	check(l.tap_crystal(0).has("nothing_happens"), "crystals behind the seal")
@@ -515,3 +523,101 @@ func test_game_state_starts_chapter_3() -> void:
 	SaveSystem.delete_game()
 	SaveSystem.save_path = SaveSystem.SAVE_PATH
 	GameState.profile = saved
+
+
+# ------------------------------------------------------------------ per-game answers (docs/VARIANTS.md)
+## 60 seeds x both wings: every variant is well formed, unique where it must be, solvable by the solver,
+## saved with the game and identical after a load.
+func test_variants_are_solvable_unique_and_saved() -> void:
+	var seeds_ok := 0
+	var differ := 0
+	for n in 60:
+		var game_seed := 1000 + n * 7919
+		for key: String in ["strand_key", "leyla_key"]:
+			var l := _new(key)
+			l.apply_seed(game_seed)
+			var s := l.state
+			var ok := true
+			# W3: a permutation; the start keeps the canonical shape (3 on the bench, exactly 2 hung wrong)
+			var choir := l.choir_target().duplicate()
+			choir.sort()
+			ok = ok and choir == [1, 2, 3, 4, 5, 6, 7]
+			var t: Array = s["tubes"]
+			var all_tubes := t.filter(func(v: Variant) -> bool: return int(v) > 0)
+			all_tubes.sort()
+			ok = ok and all_tubes == [1, 2, 3, 4, 5, 6, 7]
+			var wrong := 0
+			var empty := 0
+			for k in UndergroundLogic.SLOTS:
+				if int(t[k]) == 0:
+					empty += 1
+				elif int(t[k]) != int(l.choir_target()[k]):
+					wrong += 1
+			ok = ok and empty == 3 and wrong == 2
+			# W4: the ports still show every step exactly once
+			var steps := 0
+			for p: String in l.port_views():
+				steps += (l.port_views()[p] as Dictionary).size()
+			ok = ok and steps == 5
+			# W2
+			for v: Variant in l.case_code():
+				ok = ok and int(v) >= 2 and int(v) <= 9
+			# E1: twelve distinct glyphs; exactly one drawer equals the sketch turned back; the right one is not
+			# three-fold symmetric; the sketch as drawn is in the library (a distractor)
+			var g := l.seed_glyphs()
+			var uniq := {}
+			for d: Variant in g:
+				uniq[str(d)] = true
+			ok = ok and g.size() == 12 and uniq.size() == 12
+			var back := UndergroundLogic.rotate_glyph(l.seed_sketch(), -1)
+			ok = ok and g.count(back) == 1 and g.find(back) == l.seed_right()
+			ok = ok and UndergroundLogic.rotate_glyph(back, 1) != back and g.has(l.seed_sketch())
+			# E2
+			var c := l.pegs_target()
+			ok = ok and int(c[0]) != int(c[1]) and int(c[1]) != int(c[2])
+			# E3: unique among the 25 positions, every receptor lit, and the start does not open the seal
+			var sols := 0
+			for p in range(UndergroundLogic.PRISM_MIN, UndergroundLogic.PRISM_MAX + 1):
+				for q in range(UndergroundLogic.PRISM_MIN, UndergroundLogic.PRISM_MAX + 1):
+					if l.seal_accepts(p, q):
+						sols += 1
+			ok = ok and sols == 1 and not l.rims().has(0)
+			ok = ok and not l.seal_accepts(UndergroundLogic.PRISM_START, UndergroundLogic.PRISM_START)
+			# E4 / H1 / H2
+			ok = ok and l.melody() != [1, 2, 3, 4]
+			var rings := {}
+			for v: Variant in l.drum_target():
+				rings[int(v)] = true
+			ok = ok and rings.size() == 4
+			ok = ok and UndergroundLogic.FREQ_TARGETS.has(l.freq_target())
+			if not ok:
+				check(false, "seed %d (%s): well-formed variant" % [game_seed, key])
+				continue
+			if l.choir_target() != [4, 6, 2, 7, 1, 5, 3] or l.startup() != [4, 2, 5, 1, 3]:
+				differ += 1
+			# hints name this game's answers
+			ok = ok and str(l.hint_args("c3_choir", 3)[0]) == " ".join(l.choir_target().map(func(v: Variant) -> String: return str(v)))
+			ok = ok and l.hint_args("c3_rings", 3).size() == 4 and l.hint_args("c3_seed", 2).is_empty()
+			# save -> load keeps every answer
+			var copy := UndergroundLogic.new()
+			ok = ok and copy.from_dict(l.to_dict()) and JSON.stringify(copy.to_dict()) == JSON.stringify(l.to_dict())
+			# the solver finishes the chapter with these answers
+			var guard := 0
+			while not l.state["complete"] and guard < 900:
+				UndergroundSolver.step(l, "leyla" if n % 2 == 0 else "strand")
+				guard += 1
+			ok = ok and l.state["complete"]
+			if ok:
+				seeds_ok += 1
+			else:
+				check(false, "seed %d (%s): solvable, saved, hints follow" % [game_seed, key])
+	eq(seeds_ok, 120, "120 variant games solved")
+	check(differ > 100, "the answers really change between games (%d of 120)" % differ)
+
+
+func test_remelt_opens_the_autoclave() -> void:
+	var l := _new("leyla_key")
+	l.state["chamber"] = "cloudy"
+	l.state["ac_closed"] = true
+	var ev := l.remelt()
+	check(ev.has("remelted") and ev.has("autoclave_opened") and not l.state["ac_closed"], "the door swings open after a remelt")

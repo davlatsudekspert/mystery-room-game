@@ -52,7 +52,7 @@ static func _choir(l: UndergroundLogic) -> void:
 				forward(l)
 			elif not s["case_open"]:
 				for i in 3:
-					while int(s["case_wheels"][i]) != UndergroundLogic.CASE_CODE[i] and not s["case_open"]:
+					while int(s["case_wheels"][i]) != int(l.case_code()[i]) and not s["case_open"]:
 						l.turn_case_wheel(i)
 			else:
 				for spot in ["office_lamp", "office_letters", "meter_case"]:
@@ -69,7 +69,7 @@ static func _choir(l: UndergroundLogic) -> void:
 		return
 	# W4: levers in the counter's order, then the knob to ●
 	if int(s["step"]) < UndergroundLogic.LEVERS:
-		l.pull_lever(UndergroundLogic.STARTUP[int(s["step"])])
+		l.pull_lever(int(l.startup()[int(s["step"])]))
 	else:
 		l.turn_knob(1)
 
@@ -146,14 +146,14 @@ static func tune(l: UndergroundLogic) -> void:
 	var t: Array = s["tubes"]
 	var hand := int(s["tube_hand"])
 	if hand != 0:
-		l.tap_tube(UndergroundLogic.CHOIR_TARGET.find(hand))
+		l.tap_tube(l.choir_target().find(hand))
 		return
 	for k in UndergroundLogic.SLOTS:
-		if int(t[k]) != UndergroundLogic.CHOIR_TARGET[k]:
+		if int(t[k]) != int(l.choir_target()[k]):
 			if int(t[k]) != 0:
 				l.tap_tube(k)
 			else:
-				l.tap_tube(t.find(UndergroundLogic.CHOIR_TARGET[k]))
+				l.tap_tube(t.find(int(l.choir_target()[k])))
 			return
 	l.strike_hammer()
 
@@ -161,7 +161,7 @@ static func tune(l: UndergroundLogic) -> void:
 # ------------------------------------------------------------------ Nursery
 static func _nursery(l: UndergroundLogic) -> void:
 	var s := l.state
-	var right := UndergroundLogic.SEED_RIGHT
+	var right := l.seed_right()
 	if not s["crystal_grown"]:
 		var from := int(s["seed_from"])
 		if from >= 0 and from != right:
@@ -181,14 +181,14 @@ static func _nursery(l: UndergroundLogic) -> void:
 	if not s["camp_open"]:
 		var p := int(s["prism_p"])
 		var q := int(s["prism_q"])
-		if p != UndergroundLogic.PRISM_P:
-			l.turn_prism("p", signi(UndergroundLogic.PRISM_P - p))
+		if p != int(l.prism_target()[0]):
+			l.turn_prism("p", signi(int(l.prism_target()[0]) - p))
 		else:
-			l.turn_prism("q", signi(UndergroundLogic.PRISM_Q - q))
+			l.turn_prism("q", signi(int(l.prism_target()[1]) - q))
 		return
 	if not s["shutter_open"]:
-		var want: int = UndergroundLogic.MELODY[(s["melody_input"] as Array).size()]
-		l.tap_crystal(UndergroundLogic.FRAME_SIZES.find(want))
+		var want := int(l.melody()[(s["melody_input"] as Array).size()])
+		l.tap_crystal(l.frame_sizes().find(want))
 
 
 ## A wrong seed is in play: remelt it if needed and put it back in its drawer.
@@ -216,7 +216,7 @@ static func _grow(l: UndergroundLogic) -> void:
 			l.remelt()
 		"seed":
 			for i in 3:
-				while int(s["pegs"][i]) != UndergroundLogic.PEGS_TARGET[i]:
+				while int(s["pegs"][i]) != int(l.pegs_target()[i]):
 					l.turn_peg(i)
 			if not s["ac_closed"]:
 				l.toggle_autoclave()
@@ -232,7 +232,7 @@ static func _grow(l: UndergroundLogic) -> void:
 static func _rings(l: UndergroundLogic) -> void:
 	var s := l.state
 	for i in 4:
-		while int(s["drums"][i]) != UndergroundLogic.DRUM_TARGET[i]:
+		while int(s["drums"][i]) != int(l.drum_target()[i]):
 			l.turn_drum(i)
 	l.pull_drum_handle()
 
@@ -249,8 +249,8 @@ static func _resonance(l: UndergroundLogic) -> void:
 		l.use_item_on("nursery_crystal", "cradle")
 		return
 	var x := int(s["freq_x"])
-	if x != UndergroundLogic.FREQ_X:
-		l.turn_freq("x", signi(UndergroundLogic.FREQ_X - x))
+	if x != int(l.freq_target()[0]):
+		l.turn_freq("x", signi(int(l.freq_target()[0]) - x))
 		return
 	var y := int(s["freq_y"])
-	l.turn_freq("y", signi(UndergroundLogic.FREQ_Y - y))
+	l.turn_freq("y", signi(int(l.freq_target()[1]) - y))
