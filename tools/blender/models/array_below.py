@@ -185,8 +185,8 @@ def qa(parts, args):
     target = [1, 3, 2, 4]                                     # DRUM_TARGET / v_rings seed 0: moon, triangle, star, circle
     for i, q in enumerate(parts["syms"]):
         img = os.path.join(S.DECALS3, S.DECAL_FILE[S.DRUM_ORDER[target[i]]])
-        K.override(q, K.image_emitter(f"qa_sym_{i}", img, strength=3.0, tint=(0.8, 0.96, 1.0)))
-    lum = K.glow("qa_lumen", "CFF6FF", 4.0)
+        K.override(q, K.image_emitter(f"qa_sym_{i}", img, strength=6.0, tint=(0.85, 0.98, 1.0)))
+    lum = K.glow("qa_lumen", "7FC8D8", 1.1)            # dormant: the code dims the rings
     for r in parts["rings"]:
         K.override(r, lum)
     K.light("array_up", "SPOT", (0.0, -29.0, 0.0), 60000.0, "CFF6FF", radius=1.0, target=(0.0, 5.0, 0.0), spot_deg=40)

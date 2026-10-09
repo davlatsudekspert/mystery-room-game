@@ -5,7 +5,7 @@ a brass bezel round a cream enamel face with a scale arc, 7 major and 6 minor ti
 3D numerals, a brass rest-stop pin at the left and the black `needle` under a brass pivot cap. Below the dial a
 brass push button and Strand's mark (ring and meridian) inlaid in brass; four brass screws. On top a brass
 ferrule and probe rod ending in a small tuning fork (`probe_tip` between the tine tips). A black leather wrist
-strap hangs from a brass D-ring at the bottom left corner.
+strap runs through a brass ring at the bottom left corner and lies folded up against the back.
 Parts (own objects, identity at rest):
 - `needle`: pivot at the dial's needle pivot, rotates about local +Z (Godot; the axis faces the viewer).
   Identity = the left stop, pointing at polar 142.5 deg (counter-clockwise from +X as the player sees the face).
@@ -136,17 +136,18 @@ def probe():
 
 
 def strap():
-    """Leather wrist loop through a brass D-ring at the bottom left corner, hanging in the plane y = 0.006."""
-    rx, rz, y = -0.0300, -BH / 2 - 0.0012, 0.0060
+    """Leather wrist loop through a brass ring at the bottom left corner, folded up flat against the back (so
+    the meter still stands on its base)."""
+    rx, rz, y = -0.0290, -BH / 2 + 0.0050, BD / 2 + 0.0010
     ring = M.torus("d_ring", 0.0042, 0.0009, loc=(rx, y, rz), rot=(math.pi / 2, 0, 0), major_seg=12, minor_seg=5,
                    mat=BR)
-    ctrl = [(rx + 0.0030, rz - 0.0020), (rx + 0.0052, rz - 0.0140), (rx + 0.0040, rz - 0.0300),
-            (rx - 0.0005, rz - 0.0420), (rx - 0.0060, rz - 0.0330), (rx - 0.0085, rz - 0.0170),
-            (rx - 0.0050, rz - 0.0030)]
-    path = [(p.x, y, p.y) for p in A.catmull([(px, pz, 0.0) for (px, pz) in ctrl], 3)]
-    prof = [(-0.0007, -0.0042), (0.0007, -0.0042), (0.0007, 0.0042), (-0.0007, 0.0042)]
+    ctrl = [(rx + 0.0034, rz + 0.0030), (rx + 0.0085, rz + 0.0140), (rx + 0.0080, rz + 0.0320),
+            (rx + 0.0010, rz + 0.0460), (rx - 0.0060, rz + 0.0330), (rx - 0.0070, rz + 0.0150),
+            (rx - 0.0034, rz + 0.0030)]
+    path = [(p.x, y + 0.0007, p.y) for p in A.catmull([(px, pz, 0.0) for (px, pz) in ctrl], 3)]
+    prof = [(-0.0040, -0.0007), (0.0040, -0.0007), (0.0040, 0.0007), (-0.0040, 0.0007)]
     band = A.sweep("strap", prof, path, up=(0, 1, 0), mat=BK)
-    keeper = M.box("strap_keeper", (0.0060, 0.0100, 0.0040), loc=(rx - 0.0003, y, rz - 0.0050), mat=BK,
+    keeper = M.box("strap_keeper", (0.0140, 0.0030, 0.0050), loc=(rx + 0.0005, y + 0.0012, rz + 0.0120), mat=BK,
                    bevel=0.0008, segments=1)
     return [ring, band, keeper]
 
@@ -182,7 +183,7 @@ def report():
     G.report_point("needle pivot", obj_name="needle")
     G.report_point("probe_tip", obj_name="probe_tip")
     lo, hi = D.bounds()
-    G.report_point("bottom of the item (strap loop)", point=(0.0, 0.0, lo.z))
+    G.report_point("bottom of the item (body base)", point=(0.0, 0.0, lo.z))
     G.report_point("top of the item (probe fork)", point=(0.0, 0.0, hi.z))
 
 
