@@ -1,13 +1,23 @@
-# Google Play store listing: MYSTERY ROOM (EN / RU)
+# Google Play store listing: MYSTERY ROOM (EN / RU, plus UZ for later)
 
 Play Console → **Grow users → Store presence → Main store listing** (Russian: «Основная страница в Google Play»).
 - Default language: **English (United States) – en-US**.
 - Translation: **Russian – ru-RU** (Translations → Manage translations → Add your own translation text).
-- Play has **no Uzbek** listing language, so the EN and RU texts say the game is fully playable in Uzbek.
+- Play has **no Uzbek** listing language [P3], so the EN and RU texts say the game is fully playable in Uzbek. The UZ text at the end is kept for the game's own pages or a future store language.
 
-Payments are still off (`REAL_PAYMENTS_ENABLED = false`), and store builds show Chapter 2 as locked ("coming soon"). The texts therefore only say what the build does today: **Chapter 1 is free, more chapters are coming**. They make no purchase promise and no price claim.
+**Description structure (owner's request, 2026-10-09):**
+1. a short letter from Leyla to the player, in our own words;
+2. a separator line;
+3. one plain sentence on the business model;
+4. five feature bullets.
 
-Limits are from the Play Console Help (see `../README.md`, sources P1–P3): app name ≤ 30 characters, short description ≤ 80, full description ≤ 4,000. The counts below were measured by `tools/store/make_store_graphics.py --check-text`.
+The owner sent another game's App Store page as a structural reference only. No text, art or badges were taken from it.
+
+**Payments are still off** (`REAL_PAYMENTS_ENABLED = false`). Store builds show Chapter 2 as locked ("coming soon"). The business-model sentence therefore says the purchase is **planned and not on sale yet**, with no price.
+
+Limits are from the Play Console Help (`../README.md`, sources P1–P4): app name ≤ 30 characters, short description ≤ 80, full description ≤ 4,000. The counts below were measured by `tools/store/make_store_graphics.py --check-text`.
+- The separator `◆ ——— ◆` is a single line. Play's special-character rule targets the title, icon and developer name [P4].
+- If Play's review ever objects, replace the separator with an empty line.
 
 ---
 
@@ -25,24 +35,22 @@ A 3D mystery escape room. Light remembers. Find out what it kept.
 
 ### Full description (≤ 4,000)
 ```text
-On 14 November 1979 every clock in the Meridian Institute stopped at 03:17, and forty-one scientists were never seen again.
+If this reaches you, the Institute has kept its silence long enough.
+Every clock in the building stopped at 03:17, and forty-one of us never came home.
+I hid what I could: in drawers, in ink that only one lamp can show, in plain sight.
+Search slowly. Nothing in that room is there by chance.
+The light remembers. Ask it gently.
+Laboratory 7. Please finish what I could not. — L.
 
-Decades later, a parcel arrives for you: an old lab badge and a single line. "Laboratory 7. Please finish what I could not."
+◆ ——— ◆
 
-Step into Laboratory 7, a hand-crafted 3D room frozen at the moment everyone vanished. Search the desk, read the notes, bring back the power and tune the old radio. Somewhere in this room, the light is still waiting.
+Chapter 1 is free to play in full. One purchase that unlocks the rest of the investigation, the later chapters, is planned and not on sale yet.
 
-• Hand-crafted 3D rooms full of tactile brass mechanisms
-• Fair, logical puzzles with no random guessing
-• A three-step hint system for when you are stuck
-• Most puzzle answers change with every new game, so you solve it yourself, not from a walkthrough
-• Signature Lumen mechanics: record light in a crystal, project it as a key and steer a living beam with mirrors
-• UV ink, radio beacons, electrical circuits, shadows and hidden rooms
-• An original story told through objects, handwriting and light
-• Choices that carry into the next chapters
+• Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
+• One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
+• Most puzzle answers change with every new game, so no walkthrough can solve it for you
 • Fully playable in English, Russian and Uzbek
-• Works offline. No ads, no energy, no subscriptions, no account
-
-Chapter 1, "The Locked Laboratory", is free to play from start to finish. More chapters are coming.
+• No ads and no data collected. Works offline
 ```
 
 ---
@@ -61,32 +69,63 @@ Mystery Room: Забытый институт
 
 ### Полное описание (≤ 4 000)
 ```text
-14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез.
+Если это дошло до тебя, институт молчал достаточно долго.
+Все часы в здании остановились в 03:17, и сорок один из нас так и не вернулся домой.
+Я спрятала всё, что смогла: в ящиках, в чернилах, которые видны лишь под одной лампой, на самом виду.
+Ищи не спеша. В той комнате ничего не лежит случайно.
+Свет помнит. Спроси его бережно.
+Лаборатория 7. Пожалуйста, закончи то, что не смогла я. — Л.
 
-Спустя десятилетия вам приходит посылка: старый пропуск лаборатории и одна строка: «Лаборатория 7. Пожалуйста, закончи то, что не смогла я».
+◆ ——— ◆
 
-Войдите в Лабораторию 7 — 3D-комнату, застывшую в момент исчезновения. Обыщите стол, прочитайте записи, верните питание и настройте старое радио. Где-то здесь свет всё ещё ждёт.
+Глава 1 бесплатна целиком. Одна покупка, открывающая остальное расследование — следующие главы, — запланирована и пока не продаётся.
 
-• Атмосферные 3D-комнаты с латунными механизмами, которые приятно трогать
-• Честные логичные головоломки без случайного угадывания
-• Трёхступенчатые подсказки, если вы застряли
-• Большинство ответов меняется в каждой новой игре: решение не списать из прохождения
-• Фирменные механики Люмена: запишите свет в кристалл, спроецируйте его как ключ и управляйте живым лучом с помощью зеркал
-• Невидимые чернила, радиомаяки, электрические цепи, тени и тайные комнаты
-• Оригинальная история, рассказанная через предметы, почерк и свет
-• Решения, которые влияют на следующие главы
+• Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
+• Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
+• Большинство ответов меняется в каждой новой игре: прохождение из интернета за вас её не решит
 • Полностью на английском, русском и узбекском
-• Работает без интернета. Без рекламы, энергии, подписок и аккаунтов
+• Без рекламы и без сбора данных. Работает без интернета
+```
 
-Глава 1 «Запертая лаборатория» бесплатна целиком. Новые главы уже в работе.
+---
+
+## Uzbek (not a Play listing language; kept for later)
+
+### Toʻliq tavsif (≤ 4,000)
+```text
+Agar bu xat sizga yetib kelgan boʻlsa, institut yetarlicha uzoq jim turdi.
+Binodagi barcha soatlar 03:17 da toʻxtadi va oramizdan qirq bir kishi uyiga qaytmadi.
+Qoʻlimdan kelganini yashirdim: tortmalarga, faqat bitta chiroq koʻrsatadigan siyohga, koʻz oldidagi joylarga.
+Shoshilmay qidiring. U xonada hech narsa tasodifan turmaydi.
+Yorugʻlik eslaydi. Undan ehtiyotkorlik bilan soʻrang.
+7-laboratoriya. Iltimos, men tugata olmagan ishni tugating. — L.
+
+◆ ——— ◆
+
+1-bob toʻliq bepul. Tergovning qolgan qismini, yaʼni keyingi boblarni ochadigan bitta xarid rejalashtirilgan, hozircha sotuvda yoʻq.
+
+• 1979-yildagi realistik 3D xonalar: yongʻoq panellar, jez mexanizmlar va qizil nurli fotolaboratoriya
+• Bir barmoq bilan boshqaruv: yaqindan koʻrish uchun bosing, dastakni burash yoki chiroq bilan yoritish uchun suring
+• Aksariyat jumboqlarning javobi har yangi oʻyinda oʻzgaradi, internetdagi yechim uni siz uchun yechib bermaydi
+• Ingliz, rus va oʻzbek tillarida toʻliq
+• Reklama yoʻq, hech qanday maʼlumot toʻplanmaydi. Internetsiz ishlaydi
 ```
 
 ---
 
 ## When real payments are switched on (not before)
-Replace the last paragraph only after the purchase works in the store build and the IARC questionnaire says "purchases: yes" (`docs/BUSINESS_STRATEGY.md` §9):
-- EN: `Chapter 1, "The Locked Laboratory", is free to play from start to finish. One optional purchase unlocks the next chapters.`
-- RU: `Глава 1 «Запертая лаборатория» бесплатна целиком. Одна необязательная покупка открывает следующие главы.`
+Replace only the business-model sentence. Do this after the purchase works in the store build and the IARC questionnaire says "purchases: yes" (`docs/BUSINESS_STRATEGY.md` §9):
+- EN: `Chapter 1 is free to play in full. One purchase unlocks the rest of the investigation, the later chapters.`
+- RU: `Глава 1 бесплатна целиком. Одна покупка открывает остальное расследование — следующие главы.`
+- UZ: `1-bob toʻliq bepul. Bitta xarid tergovning qolgan qismini, yaʼni keyingi boblarni ochadi.`
+
+## Fact check of the bullets
+| Claim | Where it is true |
+|---|---|
+| One-finger controls | Every action is a tap or a one-finger drag. Pinch-to-zoom and two-finger back are optional; the on-screen back button does the same (input setup in `game/src/rooms/room_base.gd` and `lab7_room.gd`; back button in `game/src/ui/hud.gd`) |
+| Answers change every game | `docs/VARIANTS.md`: on for players. Story anchors (03:17, 41 staff) stay fixed, hence "most" |
+| No data collected, offline | No `INTERNET` permission in the APK/AAB; no analytics or ads (`docs/release/GOOGLE_PLAY_TESTING.md` §5) |
+| Three languages | `game/localization/strings.csv` (en, ru, uz) |
 
 ## Other listing fields (unchanged from `PLAY_VA_APPSTORE_QOLLANMA.txt` §1.5)
 - App or game: **Game**. Category: **Puzzle**. Tags: Puzzle, Escape room, Mystery, Adventure (those that exist in the list).

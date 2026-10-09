@@ -12,7 +12,15 @@ Limits are from Apple's App Store Connect Help (see `../README.md`, sources A2�
 
 Russian letters take 2 bytes each in UTF-8, so the RU keyword list is short on purpose. The counts below were measured by `tools/store/make_store_graphics.py --check-text`.
 
-Payments are off in store builds, which show Chapter 2 as "coming soon". The texts describe only what the build does (App Review Guideline 2.3). Promotional text, keywords and subtitle carry no price wording (Guideline 2.3.7).
+**Description structure (owner's request, 2026-10-09):** the same as on Play.
+1. A short letter from Leyla to the player.
+2. A separator line.
+3. One sentence on the business model.
+4. Five feature bullets.
+
+The full rationale, the Uzbek version and the fact check are in `../google_play/LISTING.md`.
+
+Payments are off in store builds, which show Chapter 2 as "coming soon". So the business-model sentence says the purchase is **planned and not on sale yet** and gives no price. The texts describe only what the build does (App Review Guideline 2.3). Promotional text, keywords and subtitle carry no price wording (Guideline 2.3.7).
 
 ---
 
@@ -41,24 +49,22 @@ escape,puzzle,adventure,riddle,detective,quest,clues,logic,laboratory,secret,off
 
 ### Description (≤ 4,000)
 ```text
-On 14 November 1979 every clock in the Meridian Institute stopped at 03:17, and forty-one scientists were never seen again.
+If this reaches you, the Institute has kept its silence long enough.
+Every clock in the building stopped at 03:17, and forty-one of us never came home.
+I hid what I could: in drawers, in ink that only one lamp can show, in plain sight.
+Search slowly. Nothing in that room is there by chance.
+The light remembers. Ask it gently.
+Laboratory 7. Please finish what I could not. — L.
 
-Decades later, a parcel arrives for you: an old lab badge and a single line. "Laboratory 7. Please finish what I could not."
+◆ ——— ◆
 
-Step into Laboratory 7, a hand-crafted 3D room frozen at the moment everyone vanished. Search the desk, read the notes, bring back the power and tune the old radio. Somewhere in this room, the light is still waiting.
+Chapter 1 is free to play in full. One purchase that unlocks the rest of the investigation, the later chapters, is planned and not on sale yet.
 
-• Hand-crafted 3D rooms full of tactile brass mechanisms
-• Fair, logical puzzles with no random guessing
-• A three-step hint system for when you are stuck
-• Most puzzle answers change with every new game, so you solve it yourself, not from a walkthrough
-• Signature Lumen mechanics: record light in a crystal, project it as a key and steer a living beam with mirrors
-• UV ink, radio beacons, electrical circuits, shadows and hidden rooms
-• An original story told through objects, handwriting and light
-• Choices that carry into the next chapters
+• Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
+• One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
+• Most puzzle answers change with every new game, so no walkthrough can solve it for you
 • Fully playable in English, Russian and Uzbek
-• Works offline. No ads, no energy, no subscriptions, no account
-
-Chapter 1, "The Locked Laboratory", is free to play from start to finish. More chapters are coming.
+• No ads and no data collected. Works offline
 ```
 
 ---
@@ -88,24 +94,22 @@ Mystery Room: Забытый институт
 
 ### Description (≤ 4,000)
 ```text
-14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез.
+Если это дошло до тебя, институт молчал достаточно долго.
+Все часы в здании остановились в 03:17, и сорок один из нас так и не вернулся домой.
+Я спрятала всё, что смогла: в ящиках, в чернилах, которые видны лишь под одной лампой, на самом виду.
+Ищи не спеша. В той комнате ничего не лежит случайно.
+Свет помнит. Спроси его бережно.
+Лаборатория 7. Пожалуйста, закончи то, что не смогла я. — Л.
 
-Спустя десятилетия вам приходит посылка: старый пропуск лаборатории и одна строка: «Лаборатория 7. Пожалуйста, закончи то, что не смогла я».
+◆ ——— ◆
 
-Войдите в Лабораторию 7 — 3D-комнату, застывшую в момент исчезновения. Обыщите стол, прочитайте записи, верните питание и настройте старое радио. Где-то здесь свет всё ещё ждёт.
+Глава 1 бесплатна целиком. Одна покупка, открывающая остальное расследование — следующие главы, — запланирована и пока не продаётся.
 
-• Атмосферные 3D-комнаты с латунными механизмами, которые приятно трогать
-• Честные логичные головоломки без случайного угадывания
-• Трёхступенчатые подсказки, если вы застряли
-• Большинство ответов меняется в каждой новой игре: решение не списать из прохождения
-• Фирменные механики Люмена: запишите свет в кристалл, спроецируйте его как ключ и управляйте живым лучом с помощью зеркал
-• Невидимые чернила, радиомаяки, электрические цепи, тени и тайные комнаты
-• Оригинальная история, рассказанная через предметы, почерк и свет
-• Решения, которые влияют на следующие главы
+• Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
+• Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
+• Большинство ответов меняется в каждой новой игре: прохождение из интернета за вас её не решит
 • Полностью на английском, русском и узбекском
-• Работает без интернета. Без рекламы, энергии, подписок и аккаунтов
-
-Глава 1 «Запертая лаборатория» бесплатна целиком. Новые главы уже в работе.
+• Без рекламы и без сбора данных. Работает без интернета
 ```
 
 ---
