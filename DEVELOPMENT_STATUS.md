@@ -25,7 +25,7 @@ _Last updated: 2026-10-09_
 - **Audio:** 42 sounds, the ambience and 2 music cues.
 - **Decals:** 28 decals; the ones with words exist in EN, RU and UZ and are swapped at runtime by `DecalLoc`.
 - **Not yet done:** the player-style review (an agent is running it); then `released: true`.
-- **Performance:** the hall view measured 213 draw calls / 152k primitives (budget 150 / 150k). The shadowed pendant now uses a downward spot cone (one shadow pass) instead of a dual-paraboloid omni (re-measure pending).
+- **Performance:** the hall view measures 144 draw calls / 86k primitives (budget 150 / 150k; was 213 / 152k). Dust no longer casts shadows: as a moving caster it forced a shadow-map redraw every frame. Shelf contents and the book row are merged into one mesh each. `tap_map --breakdown` lists what each model, mesh and shadow costs.
 
 ## Per-game puzzle variants (anti-walkthrough)
 `docs/VARIANTS.md`. **On for players since 2026-10-09** (`GameState.variant_seed = -1`). Every new game draws its own answers, the evidence on screen follows them, and story anchors (03:17, 1979, 0417) stay fixed. The seed is saved with the game, and Continue keeps it (tested).

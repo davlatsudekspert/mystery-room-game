@@ -41,7 +41,7 @@ All screenshots and frame counts come from the software renderer in the dev cont
 | 4 | 8 | Tap maps and the first-time-player review found and fixed: covered cards and dividers, a blocked hatch, an unreadable diagram, a too-low projector view, and the catalogue that could not be reached from the hall (now a hanging sign and walking) | No real-finger test yet |
 | 5 | 6 | As for Chapter 1 (UI audit in progress) | Being fixed |
 | 6 | 7 | 42 sounds, an ambience and 2 music cues, checked by measurement and spectrogram | Not heard on a device |
-| 7 | 6 | Hall view: 198 draw calls and ~126k primitives (was 222 / 239k): one spot shadow instead of a dual-paraboloid omni | Draw calls still over 150; FPS on a phone |
+| 8 | 6 | Hall view: **144 draw calls, ~86k primitives** (was 198 / 126k; budget 150 / 150k). The `tap_map --breakdown` QA tool found that the floating dust, as a moving shadow caster, made the spot light redraw its shadow map every frame: 30 draw calls. Dust no longer casts shadows (Ch1 and the menu gain too). Shelf contents and the book row now draw as one mesh each (`ModelUtil.merge_static`). Stacks view 106, desk 67 | FPS on a phone |
 | 8 | 8 | Tests pass; real-tap playthroughs pass on both paths and on a variant seed (in progress) | No human run |
 | 9 | 8 | Localized decals (badge, cards, rules, labels) in EN/RU/UZ | No native-speaker review |
 | 10 | 6 | Released in the chapter list (paid bundle; tester builds open it). Player review: 1 small UI issue left | Real payments and store review |
