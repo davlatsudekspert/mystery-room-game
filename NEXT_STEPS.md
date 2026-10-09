@@ -1,11 +1,21 @@
 # Next Steps
 
-1. **Real-device test**: run the checklist in `docs/TESTING_ON_DEVICE.md` with the CI debug APK, then fix what shows up.
-2. **iOS on GitHub Actions**: run `ios.yml` once the App Store Connect app record exists. `tests.yml` and the `android.yml` debug build already pass.
-3. **Release signing**:
-   - Android: the upload key is created. The owner adds the 3 `ANDROID_*` secrets. Then run `android.yml` with release, upload the first AAB by hand to Play internal testing, and automate later uploads with a service account.
-   - iOS: the API key needs the Admin role, because cloud-managed distribution certificates require it.
-4. **Privacy policy inside the app**: done. Settings has a "Privacy policy" link to https://sites.google.com/view/mysteryroom-privacy. Check that it opens the browser on a real phone.
-5. **Performance pass**: primitives ~175–183k, target 150k. Use mesh LODs on the heaviest props and simpler colliders where taps never happen.
-6. **Lighting and polish pass**: the darkroom red mood, beam glow, finale timing. Add a short tutorial nudge if testers stall at the first drawer.
-7. **Chapter 2** ("The Missing Scientist"): build on `docs/CHAPTER2_DESIGN.md` and the existing data hooks (`choices.ch1_lens`, `ch1_shards`).
+1. **Chapter 2 integration:**
+   - finish the last models (`docs/models/CH2_MANIFEST.md`);
+   - fix the tap problems the tap map shows (`qa/tap_map.tscn`);
+   - run `qa/playthrough_ch2.tscn` with `--lens=take` and with `--lens=leave` until there are 0 fallbacks;
+   - play it like a player: first 30 s, dry spells, hints, save/continue, both endings;
+   - take real Godot screenshots (overview, mechanism close-ups, phone frame, dark/light);
+   - then set `released: true` for ch2 in `game/src/core/chapters.gd`.
+2. **Chapter 1 regression:** re-run `qa/playthrough.tscn` and `qa/player_review.tscn` after the lighting change. The review script now aims like a player: it taps visible parts and pulls the drawer by its side.
+3. **Real-device test:** run the checklist in `docs/TESTING_ON_DEVICE.md` with the CI debug APK, then fix what shows up.
+4. **Release signing:**
+   - Android: the owner adds the 3 `ANDROID_*` secrets, then run `android.yml` with release and upload the first AAB by hand to Play internal testing.
+   - iOS: the API key needs the Admin role.
+5. **Play Console:** finish the remaining declarations and the store listing.
+6. **Logo rights:** the owner confirms where the logo artwork came from and that it may be used commercially (`docs/ASSET_LICENSES.md`).
+7. **Chapter 3:**
+   - turn `docs/CHAPTER3_DESIGN.md` into the logic, solver and tests;
+   - write the model contract `docs/models/ch3.md`;
+   - start the build agents.
+8. **Performance pass:** Chapter 1 has ~175–183k primitives against a 150k target. Use LODs and fewer shadow casters.
