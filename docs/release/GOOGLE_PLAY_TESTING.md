@@ -24,6 +24,8 @@ _Last updated: 2026-10-09. Package `com.mysteryroom.forgotteninstitute`. Sources
 ---
 
 ## First manual upload (2026-10-09)
+**Use the CI build (recommended).** After the owner added the three `ANDROID_*` secrets, `android.yml` run #6 (37942708580, release, `upload_to_play=false`, `beta_unlock=true`) built and verified the AAB on CI: versionCode **6**, versionName 0.1.0, targetSdk 36, VIBRATE only, signer SHA-256 = the upload key (`E5:D8:…:D1:3E`), `beta_unlock` present, 193,592,852 bytes. Download it from the run page → Artifacts → `mystery-room-android-release` (kept 7 days): https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37942708580. Once versionCode 6 is on Play, the local versionCode 2 build below can no longer be uploaded and is only a fallback.
+
 A release AAB for the first, manual Internal testing upload was built locally in the dev container. Nothing was uploaded, and no workflow was run.
 
 | What | Value |
