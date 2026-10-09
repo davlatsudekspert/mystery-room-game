@@ -3,6 +3,9 @@ extends Camera3D
 ## View-stack camera for point-and-explore rooms.
 ## Root views allow free look (yaw 360°, clamped pitch, pinch zoom); focus views are fixed close-ups
 ## entered by tapping hotspots and left with Back. Transitions are tweened (or shortened with reduce_motion).
+## Feel: drags and pinches move a goal that the camera follows smoothly every frame (uneven touch rates never
+## jitter), a released swipe glides on and slows down, and longer moves between views take a little longer and
+## ease back along a gentle arc instead of a straight line.
 
 signal view_changed(id: String)
 
@@ -10,6 +13,8 @@ const PITCH_MIN := -38.0
 const PITCH_MAX := 32.0
 const FOV_MIN := 32.0
 const FOV_MAX := 72.0
+const FOLLOW := 16.0 # 1/s: how quickly the view follows the finger (higher = snappier)
+const GLIDE_DAMP := 5.0 # 1/s: how quickly a released swipe slows down
 
 var views: Dictionary = {} # id -> {pos: Vector3, target: Vector3, fov: float, root: bool}
 var stack: Array[String] = []
@@ -19,6 +24,12 @@ var zoom_fov := 60.0
 var transitioning := false
 var _base_basis := Basis.IDENTITY
 var _tween: Tween
+var _yaw_goal := 0.0
+var _pitch_goal := 0.0
+var _fov_goal := 60.0
+var _glide := Vector2.ZERO # deg/s (yaw, pitch) carried on after the finger lifts
+var _dragging := false
+var _last_drag_ms := 0
 
 
 func add_view(id: String, pos: Vector3, target: Vector3, view_fov: float = 50.0, root: bool = false) -> void:
@@ -46,6 +57,7 @@ func go(id: String, instant: bool = false) -> void:
 		yaw = 0.0
 		pitch = 0.0
 		zoom_fov = v["fov"]
+		_sync_goals()
 	else:
 		var idx := stack.find(id)
 		if idx >= 0:
@@ -69,7 +81,12 @@ func back() -> bool:
 		return false
 	stack.pop_back()
 	var id := current()
-	_move_to(_view_transform(id), views[id]["fov"] if not views[id]["root"] else zoom_fov, false)
+	var t := _view_transform(id)
+	if views[id]["root"]:
+		# back to the room view facing where the player last looked from it (yaw/pitch are kept)
+		t.basis = (_base_basis.rotated(Vector3.UP, deg_to_rad(yaw)) * Basis(Vector3.RIGHT, deg_to_rad(pitch))).orthonormalized()
+		_sync_goals()
+	_move_to(t, views[id]["fov"] if not views[id]["root"] else zoom_fov, false)
 	view_changed.emit(id)
 	return true
 
@@ -79,22 +96,71 @@ func free_look(rel: Vector2) -> void:
 		return
 	var sens: float = 0.16 * float(Settings.get_value("look_sensitivity"))
 	var inv := -1.0 if Settings.get_value("invert_look") else 1.0
-	yaw = wrapf(yaw - rel.x * sens, -180.0, 180.0)
-	pitch = clampf(pitch - rel.y * sens * inv, PITCH_MIN, PITCH_MAX)
-	_apply_free_look()
+	var d := Vector2(-rel.x * sens, -rel.y * sens * inv)
+	_yaw_goal += d.x
+	_pitch_goal = clampf(_pitch_goal + d.y, PITCH_MIN, PITCH_MAX)
+	# the swipe's speed, smoothed over the last few events, is what a release carries on
+	var now := Time.get_ticks_msec()
+	var dt := clampf((now - _last_drag_ms) / 1000.0, 1.0 / 240.0, 0.1)
+	_glide = _glide.lerp(d / dt, 0.4) if _dragging else Vector2.ZERO
+	_last_drag_ms = now
+	_dragging = true
+
+
+## The finger lifted: the view glides on at the swipe's speed and slows down (not after a pause, nor with
+## reduce_motion).
+func release() -> void:
+	_dragging = false
+	if Settings.get_value("reduce_motion") or Time.get_ticks_msec() - _last_drag_ms > 90:
+		_glide = Vector2.ZERO
+	else:
+		_glide = _glide.limit_length(240.0)
 
 
 func zoom(factor: float) -> void:
 	if not is_root() or transitioning:
 		return
-	zoom_fov = clampf(zoom_fov / factor, FOV_MIN, FOV_MAX)
-	fov = zoom_fov
+	_fov_goal = clampf(_fov_goal / factor, FOV_MIN, FOV_MAX)
+	zoom_fov = _fov_goal
 
 
+## Applies yaw/pitch at once (QA tools aim this way) and makes them the goal, so nothing drifts afterwards.
 func _apply_free_look() -> void:
+	_sync_goals()
+	_apply_rotation()
+
+
+func _sync_goals() -> void:
+	_yaw_goal = yaw
+	_pitch_goal = pitch
+	_fov_goal = zoom_fov
+	_glide = Vector2.ZERO
+	_dragging = false
+
+
+func _apply_rotation() -> void:
 	var b := _base_basis.rotated(Vector3.UP, deg_to_rad(yaw))
 	b = b * Basis(Vector3.RIGHT, deg_to_rad(pitch))
 	global_basis = b.orthonormalized()
+
+
+## Root views: follow the drag/pinch goal smoothly, and let a released swipe glide.
+func _follow(delta: float) -> void:
+	if not _dragging and _glide.length_squared() > 0.01:
+		_yaw_goal += _glide.x * delta
+		_pitch_goal = clampf(_pitch_goal + _glide.y * delta, PITCH_MIN, PITCH_MAX)
+		if _pitch_goal <= PITCH_MIN or _pitch_goal >= PITCH_MAX:
+			_glide.y = 0.0
+		_glide *= exp(-GLIDE_DAMP * delta)
+	var k := 1.0 - exp(-FOLLOW * delta)
+	var dyaw := wrapf(_yaw_goal - yaw, -180.0, 180.0)
+	if absf(dyaw) < 0.001 and absf(_pitch_goal - pitch) < 0.001 and absf(_fov_goal - fov) < 0.01:
+		return
+	yaw = wrapf(yaw + dyaw * k, -180.0, 180.0)
+	_yaw_goal = yaw + wrapf(_yaw_goal - yaw, -180.0, 180.0) # keep the goal within half a turn of the view
+	pitch = lerpf(pitch, _pitch_goal, k)
+	fov = lerpf(fov, _fov_goal, k)
+	_apply_rotation()
 
 
 func _view_transform(id: String) -> Transform3D:
@@ -119,17 +185,29 @@ func _move_to(t: Transform3D, target_fov: float, instant: bool) -> void:
 	var from_q := from.basis.get_rotation_quaternion()
 	var to_q := t.basis.get_rotation_quaternion()
 	var from_fov := fov
-	var dur := 0.25 if Settings.get_value("reduce_motion") else 0.65
+	var dist := from.origin.distance_to(t.origin)
+	var calm := bool(Settings.get_value("reduce_motion"))
+	# longer moves take a little longer, and ease back along the destination's view axis on the way (an arc,
+	# through the open space the destination looks across) instead of sliding in a straight line
+	var dur := 0.25 if calm else clampf(0.5 + dist * 0.1, 0.55, 0.9)
+	var arc := 0.0 if calm else minf(dist * 0.08, 0.22)
+	var back := t.basis.z
 	_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	_tween.tween_method(func(k: float) -> void:
-		global_transform = Transform3D(Basis(from_q.slerp(to_q, k)), from.origin.lerp(t.origin, k))
+		var o := from.origin.lerp(t.origin, k) + back * arc * sin(PI * k)
+		global_transform = Transform3D(Basis(from_q.slerp(to_q, k)), o)
 		fov = lerpf(from_fov, target_fov, k), 0.0, 1.0, dur)
 	_tween.tween_callback(func() -> void: transitioning = false)
 
 
-## Small handheld sway so focus views feel alive (disabled by reduce_motion).
-func _process(_delta: float) -> void:
-	if transitioning or stack.is_empty() or Settings.get_value("reduce_motion"):
+## Root views follow the finger smoothly; focus views get a small handheld sway (disabled by reduce_motion).
+func _process(delta: float) -> void:
+	if transitioning or stack.is_empty():
+		return
+	if is_root():
+		_follow(delta)
+		return
+	if Settings.get_value("reduce_motion"):
 		return
 	if not is_root():
 		var t := Time.get_ticks_msec() / 1000.0

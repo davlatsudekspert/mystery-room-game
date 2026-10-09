@@ -162,7 +162,9 @@ func build_input() -> void:
 	touch.tapped.connect(_on_tap)
 	touch.dragged.connect(_on_drag)
 	touch.drag_started.connect(_on_drag_started)
-	touch.drag_ended.connect(func(_p: Vector2) -> void: _drag_captured = false)
+	touch.drag_ended.connect(func(_p: Vector2) -> void:
+		_drag_captured = false
+		cam.release())
 	touch.pinched.connect(func(f: float) -> void: cam.zoom(f))
 	touch.two_finger_tap.connect(go_back)
 
