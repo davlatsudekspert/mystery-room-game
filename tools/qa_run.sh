@@ -5,7 +5,8 @@
 # once) a run can deadlock inside the swapchain, or hang on exit after it has finished. Headless runs of the same
 # scenes do not hang, so this is an environment issue, not a game bug. This wrapper:
 #   - treats a "QA_DONE exit=N" line in the log as the result, even if the process then hangs on exit;
-#   - kills a run whose log has not grown for STALL seconds and retries it (up to 3 attempts).
+#   - kills a run whose log has not grown for STALL seconds and retries it (up to 3 attempts);
+#   - runs at most QA_SLOTS (default 2) rendered runs at once across all callers (memory).
 #
 #   tools/qa_run.sh [--stall=180] [--log=<file>] -- res://qa/playthrough_ch2.tscn -- --out=<dir> --lens=take
 set -u
@@ -22,6 +23,20 @@ done
 [ $# -gt 0 ] || { echo "usage: tools/qa_run.sh [--stall=S] [--log=F] -- <scene> [-- args]" >&2; exit 2; }
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LOG="${LOG:-$(mktemp /tmp/qa_run.XXXXXX.log)}"
+
+# A rendered Godot run takes 3–5 GB of RAM with the software renderer. Three or four at once got runs killed by
+# the out-of-memory killer, so at most QA_SLOTS (default 2) run together; the others wait for a free slot.
+SLOTS="${QA_SLOTS:-2}"
+exec 9>/dev/null
+while true; do
+	for i in $(seq 0 $((SLOTS - 1))); do
+		exec 9>"/tmp/qa_render_slot_$i.lock"
+		if flock -n 9; then
+			break 2
+		fi
+	done
+	sleep 5
+done
 
 for attempt in 1 2 3; do
 	: > "$LOG"
