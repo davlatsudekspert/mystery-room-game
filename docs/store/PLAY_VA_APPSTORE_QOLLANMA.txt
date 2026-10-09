@@ -119,10 +119,12 @@ Oradan oʻn yillar oʻtib, sizga posilka keladi: eski laboratoriya guvohnomasi v
 
 Birinchi bob bepul. Yangi boblar tayyorlanmoqda.
 
-Grafika (fayllar docs/store/graphics/ papkasida tayyor):
+Grafika (fayllar docs/store/google_play/ papkasida; toʻliq roʻyxat docs/store/README.md):
 - Значок приложения ...... icon_512.png (512×512)
-- Графический баннер ..... feature_1024x500.png (1024×500)
-- Скриншоты телефона ..... screenshot_*.png (kamida 4 tasini yuklang)
+- Графический баннер ..... feature_graphic_en-US.jpg / feature_graphic_ru-RU.jpg (1024×500)
+- Скриншоты телефона ..... screenshots/en-US/*.jpg (8 ta, 2560×1440); ru-RU uchun screenshots/ru-RU/
+- Планшет 7" va 10" ...... oʻsha 8 ta fayl
+- Matnlar ................ docs/store/google_play/LISTING.md (eng soʻnggi variant)
 
 1.4 «Контент приложения» (Policy → App content)
 -------------------------------------------------------------------------------

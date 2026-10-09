@@ -196,14 +196,14 @@ def sconce(k, a):
     mtx = Matrix(((ex.x, 0, d.x, w.x), (ex.y, 1, d.y, 0.0), (ex.z, 0, d.z, w.z), (0, 0, 0, 1)))
     y = SCONCE_Y
     parts = []
-    bp = K.plate("sc_plate", [L.rounded_rect(0.13, 0.30, 0.06, 5)], 0.012, mat=BRASS, bevel=0.003)
+    bp = K.plate("sc_plate", [L.rounded_rect(0.13, 0.30, 0.06, 4)], 0.012, mat=BRASS, bevel=0.0)
     bp.data.transform(Matrix.Translation((0, y - 0.10, 0.0)))
     parts.append(bp)
     arm = K.V.tube("sc_arm", [(0, y - 0.18, 0.01), (0, y - 0.18, 0.12), (0, y - 0.14, 0.20), (0, y - 0.07, 0.24)], 0.013,
-                   sides=8, mat=BRASS, fillet=0.04)
+                   sides=6, mat=BRASS, fillet=0.04)
     parts.append(arm)
     cup = K.glathe("sc_cup", [(0.0, -0.075), (0.03, -0.075), (0.05, -0.06), (0.075, -0.03), (0.088, 0.0), (0.084, 0.006),
-                              (0.072, -0.012), (0.0, -0.012)], (0, y, 0.25), (0, 1, 0), 16, BRASS, smooth=50.0)
+                              (0.072, -0.012), (0.0, -0.012)], (0, y, 0.25), (0, 1, 0), 12, BRASS, smooth=50.0)
     parts.append(cup)
     parts.append(K.glathe("sc_finial", [(0.0, 0.0), (0.014, 0.0), (0.008, -0.03), (0.0, -0.04)], (0, y - 0.075, 0.25),
                           (0, 1, 0), 8, BRASS, smooth=60.0))
@@ -235,13 +235,13 @@ def shutter_frame():
 
 def rim_and_brass():
     parts = []
-    rim = K.revolve("rim", [(1.44, -0.11), (1.44, -0.082), (1.50, -0.082), (1.50, 0.0), (1.506, 0.006), (1.614, 0.006),
+    rim = K.revolve("rim", [(1.49, -0.11), (1.49, -0.082), (1.50, -0.082), (1.50, 0.0), (1.506, 0.006), (1.614, 0.006),
                             (1.62, 0.0), (1.62, -0.11)], 0.0, 360.0, 64, BRASS)
     A.hint(rim, 40.0)
     parts.append(rim)
     for k in range(24):
         p = K.polar(1.56, 7.5 + 15.0 * k, 0.006)
-        parts.append(K.rivet("rimrv", 0.012, tuple(p), normal=(0, 1, 0), mat=BRASS, segs=6))
+        parts.append(K.rivet("rimrv", 0.012, tuple(p), normal=(0, 1, 0), mat=BRASS, segs=5))
     for r in (2.4, 3.6):
         parts.append(flat_poly("inlay", circle_xz(r + 0.02, 96), [circle_xz(r - 0.02, 96)], 0.0015, BRASS, up=True))
     parts.append(flat_poly("beamband", circle_xz(1.68, 48), [circle_xz(1.52, 48)], 4.119, BRASS, up=False))
@@ -251,18 +251,17 @@ def rim_and_brass():
 
 def rail():
     parts = []
-    top = M.torus("rail", RAIL_R, 0.025, major_seg=64, minor_seg=8, mat=BRASS)
+    top = M.torus("rail", RAIL_R, 0.025, major_seg=56, minor_seg=8, mat=BRASS)
     top.data.transform(Matrix.Translation((0, RAIL_TOP - 0.025, 0)) @ Matrix.Rotation(math.radians(-90), 4, "X"))
-    low = M.torus("rail2", RAIL_R, 0.014, major_seg=64, minor_seg=6, mat=BRASS)
+    low = M.torus("rail2", RAIL_R, 0.014, major_seg=56, minor_seg=6, mat=BRASS)
     low.data.transform(Matrix.Translation((0, 0.45, 0)) @ Matrix.Rotation(math.radians(-90), 4, "X"))
     A.hint(top, 70.0)
     A.hint(low, 70.0)
     parts += [top, low]
     for k in range(12):
         p = K.polar(RAIL_R, 15.0 + 30.0 * k, 0.0)
-        parts.append(K.glathe("post", [(0.0, 0.0), (0.06, 0.0), (0.06, 0.012), (0.032, 0.022), (0.019, 0.06),
-                                       (0.017, 0.43), (0.024, 0.45), (0.017, 0.47), (0.017, 0.97), (0.0, 0.975)],
-                              (p.x, 0.0, p.z), (0, 1, 0), 8, BRASS, smooth=50.0))
+        parts.append(K.glathe("post", [(0.06, 0.0), (0.06, 0.012), (0.03, 0.024), (0.018, 0.06), (0.018, 0.975)],
+                              (p.x, 0.0, p.z), (0, 1, 0), 8, BRASS, smooth=50.0, cap_bottom=False, cap_top=False))
     return K.part("gallery_rail", parts)
 
 
@@ -357,7 +356,8 @@ def qa(parts, args):
         K.clear_lights()
         K.light("key_gallery", "SPOT", (0.0, 4.4, 2.2), 900.0, "D6E6F2", radius=0.2, target=(0.0, 0.0, -1.4), spot_deg=60)
         K.light("array_up", "SPOT", (0.0, -6.0, 0.0), 9000.0, "CFF6FF", radius=1.2, target=(0.0, 5.0, 0.0), spot_deg=40)
-        K.light("shaft_glow", "AREA", (0.0, -0.4, 0.0), 160.0, "CFF6FF", radius=2.6, target=(0.0, 5.0, 0.0))
+        sg = K.light("shaft_glow", "AREA", (0.0, -0.4, 0.0), 160.0, "CFF6FF", radius=2.6, target=(0.0, 5.0, 0.0))
+        sg.visible_camera = sg.visible_glossy = sg.visible_transmission = False
         for k in (0, 3):
             p = bpy.data.objects[f"light_gallery_{k}"].matrix_world.translation
             K.light(f"sconce_{k}", "POINT", (p.x, p.z, -p.y), 70.0, "FFCF94", radius=0.06)

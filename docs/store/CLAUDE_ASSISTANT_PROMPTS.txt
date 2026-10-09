@@ -12,8 +12,9 @@ Qanday ishlatiladi:
 4) Yordamchi biror narsani tasdiqlashingizni soʻrasa, oʻqib chiqib javob bering.
 
 Yuklab olinadigan fayllar (GitHub: davlatsudekspert/mystery-room-game, papka
-docs/store/graphics/):
-   icon_512.png, feature_1024x500.png, screenshot_1.png … screenshot_8.png
+docs/store/google_play/; roʻyxati docs/store/README.md da):
+   icon_512.png, feature_graphic_en-US.jpg (+ feature_graphic_ru-RU.jpg),
+   screenshots/en-US/01_…jpg … 08_…jpg (+ screenshots/ru-RU/)
 .aab fayl (ichki test uchun) — ANDROID secretlar qoʻshilgandan keyin men
 beraman. Ungacha yordamchi bu qadamni oʻtkazib yuboradi.
 
@@ -75,7 +76,7 @@ TASKS, in this order:
    - Advertising ID: No, not used. Financial features: none. Health features: none.
 
 5. Main store listing ("Основная страница"), language en-US:
-   - Upload graphics from my computer (ask me where I saved them): app icon icon_512.png, feature graphic feature_1024x500.png, phone screenshots screenshot_1.png … screenshot_8.png.
+   - Upload graphics from my computer (ask me where I saved them): app icon icon_512.png, feature graphic feature_graphic_en-US.jpg, phone screenshots 01_*.jpg … 08_*.jpg from screenshots/en-US (for ru-RU: feature_graphic_ru-RU.jpg and screenshots/ru-RU).
    - Fill in the texts below.
    - Then add translations ru-RU and, if available, uz (Uzbek) with the texts below.
 

@@ -9,6 +9,7 @@ ipad (2752x2064), lang en|ru. A missing language falls back to en.
 
     python3 tools/store/make_store_graphics.py --renders=<R>     # writes docs/store/**
     python3 tools/store/make_store_graphics.py --check-text      # character / byte counts of the listing texts
+    python3 tools/store/make_store_graphics.py --table           # file / pixel / size table for README.md
 
 Writes (see docs/store/README.md):
     google_play/icon_512.png                         512x512 32-bit PNG
@@ -38,7 +39,7 @@ LOCALES = {"en": {"play": "en-US", "apple": "en-US"}, "ru": {"play": "ru-RU", "a
 # payments are off; see README). (output name, chapter, QA shot name)
 SHOTS: list[tuple[str, str, str]] = [
     ("01_laboratory", "ch1", "lab_powered"),
-    ("02_projector_beam", "ch1", "beam_first_mirror"),
+    ("02_projector_beam", "ch1", "projector_beam_on"),
     ("03_radio", "ch1", "radio_tuned_41m"),
     ("04_darkroom", "ch1", "darkroom"),
     ("05_shadow_lock", "ch1", "shadow_emblem_recorded"),
@@ -102,11 +103,12 @@ def icon() -> None:
     im.resize((512, 512), Image.LANCZOS).save(path, optimize=True)
 
 
-def feature(renders: str, lang: str, bg_shot: tuple[str, str], crop: tuple[float, float, float]) -> None:
-    """1024x500: a real game frame (the HUD-free band of a 2868x1320 render), the logo in the safe centre.
+def feature(renders: str, lang: str, bg_shot: tuple[str, str, str], crop: tuple[float, float, float]) -> None:
+    """1024x500: a real game frame (a HUD-free window of a render), the logo in the safe centre.
 
-    crop = (centre x, centre y, width) of the background window as fractions of the render."""
-    src = Image.open(find_render(renders, bg_shot[0], "iph", lang, bg_shot[1])).convert("RGB")
+    bg_shot = (chapter, shape, QA shot name); crop = (centre x, centre y, width) of the background window as
+    fractions of the render."""
+    src = Image.open(find_render(renders, bg_shot[0], bg_shot[1], lang, bg_shot[2])).convert("RGB")
     cw = crop[2] * src.width
     ch = cw * 500 / 1024
     cx, cy = crop[0] * src.width, crop[1] * src.height
@@ -211,15 +213,34 @@ def check_text() -> bool:
     return ok
 
 
+# ====================================================================== file table for README.md
+def table() -> None:
+    """Markdown rows: file, pixels, mode, size, from the files on disk."""
+    for f in sorted(glob.glob(os.path.join(OUT, "**", "*"), recursive=True)):
+        if os.path.isdir(f):
+            continue
+        rel = os.path.relpath(f, OUT)
+        kb = os.path.getsize(f) / 1024
+        if f.endswith((".png", ".jpg")):
+            im = Image.open(f)
+            print("| `%s` | %dx%d %s | %.0f KB |" % (rel, im.width, im.height, im.mode, kb))
+        else:
+            print("| `%s` | text | %.1f KB |" % (rel, kb))
+
+
 # ====================================================================== main
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--renders", help="folder with <chapter>_<shape>_<lang>/ render runs")
     ap.add_argument("--langs", default="en,ru")
     ap.add_argument("--check-text", action="store_true")
+    ap.add_argument("--table", action="store_true", help="print the README file table")
     a = ap.parse_args()
     if a.check_text:
         return 0 if check_text() else 1
+    if a.table:
+        table()
+        return 0
     if not a.renders:
         ap.error("--renders is required")
     langs = a.langs.split(",")

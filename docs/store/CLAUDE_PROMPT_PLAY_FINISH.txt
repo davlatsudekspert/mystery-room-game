@@ -52,8 +52,10 @@ TASKS, in this order:
    - Fill in the EN texts below.
    - Graphics are on my computer; ask me for the folder:
      - app icon: icon_512.png (512×512);
-     - feature graphic: feature_1024x500.png;
-     - phone screenshots: screenshot_1.png … screenshot_8.png.
+     - feature graphic: feature_graphic_en-US.jpg (1024×500);
+     - phone screenshots: 01_*.jpg … 08_*.jpg from screenshots/en-US (2560×1440);
+     - 7-inch and 10-inch tablet screenshots: the same eight files.
+     - For the ru-RU translation: feature_graphic_ru-RU.jpg and screenshots/ru-RU.
    - Save.
    - Then "Переводы / Управление переводами": add Russian (ru-RU) with the RU texts. If Uzbek (uz) is available, add it with the UZ texts. Save.
 

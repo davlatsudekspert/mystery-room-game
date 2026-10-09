@@ -323,8 +323,12 @@ def shoot(name, cam, target, vfov=50.0, res=(960, 640), samples=32, world=0.03):
 
 
 def light(name, kind, pos, energy, colour="FFE2C0", radius=0.05, target=None, spot_deg=None, blend=0.3):
-    """QA light at a Godot position (aim at a Godot target)."""
-    return V.qa_light(name, kind, pos, energy, colour, radius, target, spot_deg, blend)
+    """QA light at a Godot position (aim at a Godot target). Never visible to the camera (Cycles draws sized point /
+    spot / area lights as glowing shapes otherwise)."""
+    lo = V.qa_light(name, kind, pos, energy, colour, radius, target, spot_deg, blend)
+    lo.visible_camera = False
+    lo.visible_transmission = False
+    return lo
 
 
 def clear_lights() -> None:
