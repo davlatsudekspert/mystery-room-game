@@ -23,6 +23,38 @@ _Last updated: 2026-10-09. Package `com.mysteryroom.forgotteninstitute`. Sources
 
 ---
 
+## First manual upload (2026-10-09)
+A release AAB for the first, manual Internal testing upload was built locally in the dev container. Nothing was uploaded, and no workflow was run.
+
+| What | Value |
+|---|---|
+| File | `mystery-room-0.1.0-vc2-internal.aab` (handed to the owner by the director; not in the repo) |
+| Source | `main` at `cbd51ab`, clean `git archive` snapshot. `tools/run_tests.sh` on it: 95 tests, 8226 checks, **0 failures** |
+| versionCode / versionName | **2** / 0.1.0 |
+| Size | **193,591,313 bytes** (≈ 193.6 MB). bundletool download estimate: arm64-v8a ≈ 167.1 MB, armeabi-v7a ≈ 168.5 MB |
+| SHA-256 of the AAB file | `908b2e7266bade3f3d5e2cb2d29ad3683bbe36fe4c030bebfc2e7c0d63cd4894` |
+| Test features | `beta_unlock` **on**: Chapter 2 opens without a purchase. `REAL_PAYMENTS_ENABLED = false` |
+| How | Godot 4.7.2 `--install-android-build-template --export-release "Android AAB"`, Gradle heap 2 GB, 197 s. The upload keystore was read in place through the `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables. The preset was edited only in the build copy, with the same `version/code` sed and `beta_unlock` awk as `android.yml` |
+
+Verified: the `android.yml` verify step, run locally with `EXPECTED_VERSION_CODE=2` and `BETA_UNLOCK=true`, exited 0. Extra checks were run with `bundletool`, `keytool` and `jarsigner`.
+- package `com.mysteryroom.forgotteninstitute`, versionCode 2, versionName 0.1.0;
+- minSdk 24, targetSdk 36; not debuggable;
+- the only permission is `VIBRATE`;
+- ABIs arm64-v8a and armeabi-v7a; `PAGE_ALIGNMENT_16K`;
+- `jarsigner -verify`: jar verified. The `keytool -printcert -jarfile` signer SHA-256 is **exactly** the upload key's `E5:D8:42:…:D1:3E`;
+- `beta_unlock` is listed under `_custom_features` in `assetPackInstallTime/assets/project.binary`. This is the first real export with the `android.yml` preset edit, which closes that open point in sections 1 and 10.
+- JDK 21's `jarsigner` warns "signed in JarFile but is not signed in JarInputStream" for every entry. AGP writes `META-INF/` at the end of the bundle; the earlier Gradle AAB shows the same warning, and the signature still verifies.
+
+**Later CI builds** use versionCode = run number, so they will be **6 or higher** and Play accepts them after 2. versionCode 2 is now taken: never build another AAB with versionCode 2 or lower.
+
+**Egasi uchun qadamlar (oʻzbekcha):**
+1. Play Console → MYSTERY ROOM → Testing → Internal testing (Тестирование → Внутреннее тестирование) → **Create new release** (Создать выпуск).
+2. Ilova imzosi soʻralsa, **Play App Signing**ni qabul qiling: kalitni Google boshqaradi (Google-managed key, «Use Google-generated key»). Boshqa kalit yuklamang: bizning upload kalitimiz faqat yuklash uchun.
+3. `mystery-room-0.1.0-vc2-internal.aab` faylini yuklang. Play versiyani «2 (0.1.0)» deb koʻrsatishi kerak.
+4. Release notes maydoniga EN matnini `docs/release/whatsnew/whatsnew-en-US` faylidan, RU matnini `whatsnew-ru-RU` faylidan qoʻying: `<en-US>…</en-US>` va `<ru-RU>…</ru-RU>` teglari ichida.
+5. **Save** → **Review release** → **Start rollout to Internal testing**: ichki testerlarga chiqaring.
+6. **Testers** yorligʻida testerlarning email manzillarini qoʻshing, saqlang va ularga taklif havolasini (opt-in link) yuboring.
+
 ## 1. Verified on 2026-10-09 (evidence)
 | What | Result | How it was checked |
 |---|---|---|
@@ -251,6 +283,7 @@ Prerequisites:
 | Date | Run # = versionCode | versionName | Track / status | beta_unlock | Notes |
 |---|---|---|---|---|---|
 | — | — | — | — | — | No release run yet (secrets missing on 2026-10-08) |
+| 2026-10-09 | 2 (local build, not CI) | 0.1.0 | internal / first manual upload by the owner | true | Built from `cbd51ab` with the upload key; AAB SHA-256 `908b2e72…4cd4894`. See "First manual upload (2026-10-09)" |
 
 ## 10. Risks and open points
 - **Secrets and the first release run are unverified on CI.** The local Gradle build used JDK 21; CI uses JDK 17, which AGP 8.6.1 supports.
