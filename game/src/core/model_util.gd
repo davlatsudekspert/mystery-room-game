@@ -36,6 +36,49 @@ static func spawn(model: String, parent: Node3D, xform: Transform3D = Transform3
 	return inst
 
 
+## Draws many small static meshes under `root` whose names start with `prefix` (shelf contents, a row of books)
+## as one mesh with one surface per material, instead of one draw per mesh and material. The originals stay,
+## hidden, so their colliders still take taps. Returns the merged mesh, or null when there is nothing to merge.
+static func merge_static(root: Node3D, prefix: String) -> MeshInstance3D:
+	if root == null:
+		return null
+	var sources: Array[MeshInstance3D] = []
+	for mi in find_meshes(root):
+		if mi.mesh != null and mi.visible and str(mi.name).begins_with(prefix):
+			sources.append(mi)
+	if sources.size() < 2:
+		return null
+	var tools := {} # [material, vertex attributes] -> SurfaceTool
+	var shadow := GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for mi in sources:
+		var xf := mi.transform
+		var p := mi.get_parent()
+		while p != root and p is Node3D:
+			xf = (p as Node3D).transform * xf
+			p = p.get_parent()
+		if mi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+			shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		for i in mi.mesh.get_surface_count():
+			var key := [mi.get_active_material(i), mi.mesh.surface_get_format(i) & (Mesh.ARRAY_FORMAT_CUSTOM_BASE - 1)]
+			if not tools.has(key):
+				var st := SurfaceTool.new()
+				st.begin(Mesh.PRIMITIVE_TRIANGLES)
+				tools[key] = st
+			(tools[key] as SurfaceTool).append_from(mi.mesh, i, xf)
+	var am := ArrayMesh.new()
+	for key: Array in tools:
+		(tools[key] as SurfaceTool).commit(am)
+		am.surface_set_material(am.get_surface_count() - 1, key[0])
+	var merged := MeshInstance3D.new()
+	merged.name = prefix + "merged"
+	merged.mesh = am
+	merged.cast_shadow = shadow
+	root.add_child(merged)
+	for mi in sources:
+		mi.visible = false
+	return merged
+
+
 static func apply_materials(root: Node) -> void:
 	for mi: MeshInstance3D in find_meshes(root):
 		var mesh := mi.mesh

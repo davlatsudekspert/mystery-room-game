@@ -5,6 +5,9 @@ extends GPUParticles3D
 
 static func create(extents: Vector3, amount: int = 120) -> DustMotes:
 	var p := DustMotes.new()
+	# Dust must never cast shadows: a moving caster makes every shadowed light in range redraw its shadow map
+	# each frame (Godot keeps a still scene's shadows cached). In the Chapter 2 hall that was 30 draw calls.
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	p.amount = amount
 	p.lifetime = 14.0
 	p.preprocess = 14.0

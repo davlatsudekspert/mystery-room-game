@@ -172,6 +172,9 @@ func _build_models() -> void:
 	if leyla:
 		_prepare_echo(leyla, echo_mat.duplicate() as ShaderMaterial)
 		leyla.visible = false
+	# the shelves' contents and the desk's book row each draw as one mesh (one surface per material)
+	ModelUtil.merge_static(models.get("stacks_shelving"), "contents_")
+	ModelUtil.merge_static(models.get("cc_books"), "book_encyclopedia")
 	var dust := DustMotes.create(Vector3(4.5, 1.6, 3.2), 180)
 	dust.position = Vector3(0, 1.7, 0)
 	add_child(dust)
