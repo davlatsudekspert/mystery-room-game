@@ -26,16 +26,30 @@ LOG="${LOG:-$(mktemp /tmp/qa_run.XXXXXX.log)}"
 
 # A rendered Godot run takes 3–5 GB of RAM with the software renderer. Three or four at once got runs killed by
 # the out-of-memory killer, so at most QA_SLOTS (default 2) run together; the others wait for a free slot.
+# Waiting runs are served first come, first served: each takes a ticket, and only the oldest ticket may
+# grab a free slot (otherwise a caller that runs back to back could take every freed slot).
 SLOTS="${QA_SLOTS:-2}"
+QDIR=/tmp/qa_render_queue
+mkdir -p "$QDIR"
+TICKET="$QDIR/$(date +%s%N).$$"
+: > "$TICKET"
+trap 'rm -f "$TICKET"' EXIT
 exec 9>/dev/null
 while true; do
-	for i in $(seq 0 $((SLOTS - 1))); do
-		exec 9>"/tmp/qa_render_slot_$i.lock"
-		if flock -n 9; then
-			break 2
-		fi
+	for t in "$QDIR"/*; do
+		[ -e "$t" ] || continue
+		kill -0 "${t##*.}" 2>/dev/null || rm -f "$t" # the caller died while waiting
 	done
-	sleep 5
+	if [ "$(ls "$QDIR" | sort | head -1)" = "$(basename "$TICKET")" ]; then
+		for i in $(seq 0 $((SLOTS - 1))); do
+			exec 9>"/tmp/qa_render_slot_$i.lock"
+			if flock -n 9; then
+				rm -f "$TICKET"
+				break 2
+			fi
+		done
+	fi
+	sleep 3
 done
 
 for attempt in 1 2 3; do
