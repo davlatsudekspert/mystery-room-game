@@ -36,17 +36,25 @@ FONT = os.path.join(ROOT, "game", "assets", "fonts", "NotoSans-Variable.ttf")
 LOCALES = {"en": {"play": "en-US", "apple": "en-US"}, "ru": {"play": "ru-RU", "apple": "ru"}}
 
 # Store order: Chapter 1 first (free and playable in every build), then Chapter 2 (locked in store builds while
-# payments are off; see README). (output name, chapter, QA shot name)
-SHOTS: list[tuple[str, str, str]] = [
-    ("01_laboratory", "ch1", "lab_powered"),
-    ("02_projector_beam", "ch1", "projector_beam_on"),
-    ("03_radio", "ch1", "radio_tuned_41m"),
-    ("04_uv_ink", "ch1", "uv_desk_mark"),
-    ("05_shadow_sculpture", "ch1", "shadow_misaligned"), # unsolved: the aligned emblem is lore, the same in every game
-    ("06_archive_hall", "ch2", "hall_start"),
-    ("07_film_projection", "ch2", "film_frame"),
-    ("08_echoes", "ch2", "echo_stacks"),
+# payments are off; see README). (output name, chapter, QA shot name). Play allows 8 per device type.
+SHOTS: list[tuple[str, str, str]] = [ # 01 is the hero frame (HERO below)
+    ("02_laboratory", "ch1", "lab_powered"),
+    ("03_projector_beam", "ch1", "projector_beam_on"),
+    ("04_radio", "ch1", "radio_tuned_41m"),
+    ("05_uv_ink", "ch1", "uv_desk_mark"),
+    ("06_shadow_sculpture", "ch1", "shadow_misaligned"), # unsolved: the aligned emblem is lore, the same in every game
+    ("07_archive_hall", "ch2", "hall_start"),
+    ("08_film_projection", "ch2", "film_frame"),
 ]
+
+# Shot 01 is a hero frame: one object in the dark opening scene, with a caption band in the gold-rule style
+# ("◆ ——— caption ——— ◆", owner's request). It comes from a view_probe camera rendered 1.3x larger than the store
+# size and centre-cropped, which leaves the corner HUD buttons outside the frame. Folder: <R>/hero_<shape>/.
+HERO = ("01_gear_box", "cam_hero_gearbox")
+HERO_CAPTION = {"en": "Every clock stopped at 03:17", "ru": "Все часы остановились в 03:17"}
+HERO_BAND = 0.13 # band height as a share of the image height (Play: taglines ≤ 20% of the image)
+BRASS, BRASS_HI, INK = (201, 163, 94), (227, 194, 122), (14, 15, 18) # game/src/ui/ui_theme.gd
+FONT_TITLE = os.path.join(ROOT, "game", "assets", "fonts", "CormorantGaramond-SemiBold.ttf")
 
 # App Store sizes (landscape) and the render shape each one is made from. 6.5" and 6.3" are downscaled from the
 # 6.9" render (same ~2.17:1 shape, so the HUD layout is identical), cropping at most a few pixels.
@@ -99,6 +107,56 @@ def screenshots(renders: str, langs: list[str]) -> None:
                 im = Image.open(src).convert("RGB")
                 save_jpg(cover(im, size), os.path.join(OUT, store, sub, LOCALES[lang][key], name + ".jpg"))
             print("screenshots: %s %s %s" % (store, sub, lang))
+
+
+def caption_band(im: Image.Image, text: str) -> Image.Image:
+    """A dark band across the bottom HERO_BAND of the image with "◆ —— text —— ◆" in brass."""
+    w, h = im.size
+    bh = round(h * HERO_BAND)
+    out = im.convert("RGBA")
+    band = Image.new("RGBA", (w, bh), (0, 0, 0, 0))
+    bd = ImageDraw.Draw(band)
+    for y in range(bh): # fade in over the top third of the band
+        a = int(205 * min(1.0, y / (bh * 0.35)))
+        bd.line([(0, y), (w, y)], fill=INK + (a,))
+    font = ImageFont.truetype(FONT_TITLE, round(h * 0.05))
+    tb = bd.textbbox((0, 0), text, font=font)
+    tw, th = tb[2] - tb[0], tb[3] - tb[1]
+    cy = round(bh * 0.6)
+    bd.text(((w - tw) / 2 - tb[0], cy - th / 2 - tb[1]), text, font=font, fill=BRASS_HI + (255,))
+    gap = round(h * 0.03)
+    rule = round(min(w * 0.12, (w - tw) / 2 - gap * 3))
+    d = round(h * 0.011) # diamond half-size
+    lw = max(2, round(h * 0.0022))
+    for side in (-1, 1):
+        x_in = w / 2 + side * (tw / 2 + gap)
+        x_out = x_in + side * rule
+        bd.line([(x_in, cy), (x_out, cy)], fill=BRASS + (255,), width=lw)
+        xd = x_out + side * (d + gap * 0.4)
+        bd.polygon([(xd, cy - d), (xd + d, cy), (xd, cy + d), (xd - d, cy)], fill=BRASS_HI + (255,))
+    out.alpha_composite(band, (0, h - bh))
+    return out.convert("RGB")
+
+
+def hero(renders: str, langs: list[str]) -> None:
+    """Shot 01 for every store size: centre crop of the oversized render, then the localized caption band."""
+    targets = [("google_play", "screenshots", PLAY_SIZE, "169", "play")]
+    targets += [("app_store", os.path.join("screenshots", sid), size, shape, "apple") for sid, size, shape in APPLE_SIZES]
+    for store, sub, size, shape, key in targets:
+        src = os.path.join(renders, "hero_" + shape, HERO[1] + ".png")
+        if not os.path.exists(src):
+            print("skip hero %s %s: no %s" % (store, sub, src))
+            continue
+        im = Image.open(src).convert("RGB")
+        k = size[1] / (im.height / 1.3) # the probe window is 1.3x the store size in this shape
+        im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
+        x0, y0 = (im.width - size[0]) // 2, (im.height - size[1]) // 2
+        clean = im.crop((x0, y0, x0 + size[0], y0 + size[1]))
+        for lang in langs:
+            save_jpg(caption_band(clean, HERO_CAPTION[lang]), os.path.join(OUT, store, sub, LOCALES[lang][key], HERO[0] + ".jpg"))
+        if store == "google_play": # Play large screens: no added text on tablet screenshots
+            save_jpg(clean, os.path.join(OUT, store, "tablet_" + HERO[0] + "_no_caption.jpg"))
+    print("hero:", ", ".join(langs))
 
 
 # ====================================================================== Play icon + feature graphic
@@ -171,7 +229,7 @@ def contact_sheet() -> None:
     sheet = Image.new("RGB", (width, height), (24, 24, 28))
     d = ImageDraw.Draw(sheet)
     d.text((pad, pad), "MYSTERY ROOM: store assets (docs/store/)", font=font_b, fill=(232, 205, 140))
-    d.text((pad + 640, pad + 8), "Orange frame = Chapter 2 (06-08): upload only once Chapter 2 can be unlocked in the store build",
+    d.text((pad + 640, pad + 8), "Orange frame = Chapter 2 (07-08): upload only once Chapter 2 can be unlocked in the store build",
         font=font, fill=(240, 150, 60))
     y = pad + 50
     for title, files in rows:
@@ -184,7 +242,7 @@ def contact_sheet() -> None:
             if x + t.width > width - pad:
                 break
             sheet.paste(t, (x, y))
-            if os.path.basename(f)[:3] in ("06_", "07_", "08_"):
+            if os.path.basename(f)[:3] in ("07_", "08_"):
                 d.rectangle((x - 3, y - 3, x + t.width + 2, y + th + 2), outline=(240, 150, 60), width=3)
             x += t.width + pad
         y += th + pad
@@ -266,6 +324,7 @@ def main() -> int:
     for lang in langs:
         feature(a.renders, lang)
     screenshots(a.renders, langs)
+    hero(a.renders, langs)
     contact_sheet()
     print("written to", OUT)
     return 0
