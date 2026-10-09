@@ -291,17 +291,42 @@ def check_text() -> bool:
 
 # ====================================================================== file table for README.md
 def table() -> None:
-    """Markdown rows: file, pixels, mode, size, from the files on disk."""
+    """Markdown table for README.md: every file with its size and store field (screenshot folders in one row each)."""
+    field = {
+        "google_play/icon_512.png": "Play: App icon",
+        "google_play/feature_graphic_en-US.jpg": "Play: Feature graphic (en-US)",
+        "google_play/feature_graphic_ru-RU.jpg": "Play: Feature graphic (ru-RU)",
+        "google_play/tablet_01_gear_box_no_caption.jpg": "Play: 7-inch and 10-inch tablet screenshot 1 (no added text)",
+        "google_play/LISTING.md": "Play: app name, short and full description (EN, RU; UZ for later)",
+        "app_store/METADATA.md": "App Store: name, subtitle, promotional text, keywords, description (EN, RU), App Privacy, age rating",
+        "testflight/TEST_INFORMATION.md": "TestFlight: Test Information, What to Test, Beta App Review notes",
+        "store_assets_sheet.jpg": "Review only (contact sheet)",
+        "README.md": "This index",
+        "PLAY_VA_APPSTORE_QOLLANMA.txt": "Owner's step-by-step console guide (Uzbek); graphics paths point here",
+        "CLAUDE_ASSISTANT_PROMPTS.txt": "Browser-assistant prompts for both consoles (graphics paths updated)",
+        "CLAUDE_PROMPT_PLAY_FINISH.txt": "Browser-assistant prompt to finish the Play listing (graphics paths updated)",
+    }
+    print("| File(s) | Pixels | Size | Store field |")
+    print("|---|---|---|---|")
+    rows = []
     for f in sorted(glob.glob(os.path.join(OUT, "**", "*"), recursive=True)):
-        if os.path.isdir(f):
-            continue
         rel = os.path.relpath(f, OUT)
-        kb = os.path.getsize(f) / 1024
-        if f.endswith((".png", ".jpg")):
-            im = Image.open(f)
-            print("| `%s` | %dx%d %s | %.0f KB |" % (rel, im.width, im.height, im.mode, kb))
-        else:
-            print("| `%s` | text | %.1f KB |" % (rel, kb))
+        if os.path.isdir(f) or "/screenshots/" in "/" + rel or rel not in field:
+            continue
+        px = "%dx%d %s" % (Image.open(f).size + (Image.open(f).mode,)) if f.endswith((".png", ".jpg")) else "text"
+        rows.append("| `%s` | %s | %.0f KB | %s |" % (rel, px, os.path.getsize(f) / 1024, field[rel]))
+    for d in sorted(glob.glob(os.path.join(OUT, "*", "screenshots", "*", "*")) + glob.glob(os.path.join(OUT, "google_play", "screenshots", "*"))):
+        files = sorted(glob.glob(os.path.join(d, "*.jpg")))
+        if not files or not os.path.isdir(d):
+            continue
+        rel = os.path.relpath(d, OUT)
+        im = Image.open(files[0])
+        parts = rel.split(os.sep)
+        where = ("Play: phone screenshots (%s); 02-08 also for 7/10-inch tablets" % parts[-1]) if parts[0] == "google_play" \
+            else "App Store: %s screenshots (%s)" % (parts[-2].replace("_", " ").replace("iphone", "iPhone").replace("ipad", "iPad") + '"', parts[-1])
+        sizes = ", ".join("%s %d KB" % (os.path.basename(x)[:2], os.path.getsize(x) / 1024) for x in files)
+        rows.append("| `%s/` 01-%02d | %dx%d JPEG | %s | %s |" % (rel, len(files), im.width, im.height, sizes, where))
+    print("\n".join(rows))
 
 
 # ====================================================================== main
