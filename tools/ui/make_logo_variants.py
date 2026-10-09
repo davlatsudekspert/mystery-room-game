@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Localized logos and app icons from the owner's chosen logo (game/assets/ui/logo/logo_source.png).
+"""Localized logos and app icons from the owner's chosen logo (docs/brand/logo_source.png).
 
 The logo's subtitle "THE FORGOTTEN INSTITUTE" is baked into the artwork. Visible text must exist in EN, RU
 and UZ, so the RU/UZ versions repaint the subtitle banner and engrave the translated subtitle in the same
@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-SRC = os.path.join(ROOT, "game/assets/ui/logo/logo_source.png")
+SRC = os.path.join(ROOT, "docs/brand/logo_source.png")  # outside the Godot project, so it is not exported
 OUT = os.path.join(ROOT, "game/assets/ui/logo")
 FONT = os.path.join(ROOT, "game/assets/fonts/CormorantGaramond-Bold.ttf")
 
