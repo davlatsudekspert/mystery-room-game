@@ -106,6 +106,13 @@ S = [
 ("msg.c3_socket_dark", "The empty socket stays dark.", "Пустое гнездо остаётся тёмным.", "Boʻsh uyacha qorongʻi boʻlib qoldi."),
 ("msg.c3_socket_refused", "Only a crystal grown in the Nursery fits.", "Подходит только кристалл из Питомника.", "Faqat Koʻchatxonada oʻstirilgan billur toʻgʻri keladi."),
 ("msg.c3_echo_count", "Kept echoes released: %d / 4", "Освобождено эхо: %d / 4", "Ozod qilingan aks-sadolar: %d / 4"),
+# ---------------------------------------------------------------- scene messages (the room code)
+("msg.c3_gate_shut", "The lift gate on this side stays shut.", "Решётка лифта с этой стороны закрыта.", "Liftning bu tomondagi panjarasi yopiq."),
+("msg.c3_shutter_shut", "The tunnel ends at a closed crystal shutter.", "Туннель упирается в закрытую кристальную заслонку.", "Tunnel yopiq billur toʻsiqqa borib taqaladi."),
+("msg.c3_door_sealed", "The blast door is sealed.", "Гермодверь заперта.", "Himoya eshigi berk."),
+("msg.c3_drum_dead", "This drum lock is dead. The other door listens to the Array.", "Этот барабанный замок мёртв. Решётку слушает другая дверь.", "Bu barabanli qulf ishlamaydi. Panjarani boshqa eshik tinglaydi."),
+("msg.c3_cradle_empty", "The cradle is empty.", "Гнездо пусто.", "Uyacha boʻsh."),
+("msg.c3_seal_dark", "Three receptors wait for coloured light.", "Три приёмника ждут цветного света.", "Uchta qabul qilgich rangli yorugʻlikni kutmoqda."),
 # ---------------------------------------------------------------- captions (sound + story)
 ("cap3.lift", "[The lift gate rattles open]", "[Решётка лифта с лязгом открывается]", "[Lift panjarasi shaqillab ochildi]"),
 ("cap3.isolator", "[Clack. The isolator thunks over]", "[Щелчок. Изолятор переключается]", "[Chiq. Uzgich ogʻir tovush bilan oʻtdi]"),

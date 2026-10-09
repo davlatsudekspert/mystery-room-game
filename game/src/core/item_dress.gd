@@ -21,6 +21,16 @@ static func apply(id: String, node: Node3D, logic: RoomLogic = null) -> void:
 			label.material_override = m
 	elif id in ["crystal_sign", "crystal_mark"]:
 		glyph(node, "sign" if id == "crystal_sign" else "mark")
+	elif id == "ecg_strip":
+		ecg_trace(node, logic)
+	elif id == "cloudy_crystal":
+		var body := ModelUtil.find(node, "crystal_body") as MeshInstance3D
+		if body:
+			var milky := StandardMaterial3D.new()
+			milky.albedo_color = Color(0.86, 0.88, 0.9, 0.92)
+			milky.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			milky.roughness = 0.6
+			body.material_override = milky
 	elif id == "request_card" or id == "blank_card":
 		var pattern: Array = []
 		if id == "request_card" and logic != null and logic.state.has("last_punch"):
@@ -46,4 +56,20 @@ static func glyph(node: Node3D, image: String) -> void:
 	m.emission_energy_multiplier = 2.2
 	m.emission_texture = m.albedo_texture
 	m.roughness = 0.1
+	face.material_override = m
+
+
+## Strand's ECG strip shows this game's heart trace on its printed paper (docs/models/ch3.md §11 W2), wherever it
+## appears: at the office lamp, in the inventory icon and in the inspect view.
+static func ecg_trace(node: Node3D, logic: RoomLogic) -> void:
+	var face := ModelUtil.find(node, "strip_face") as MeshInstance3D
+	if face == null:
+		return
+	var peaks: Array = [4, 2, 6]
+	if logic != null and logic.state.has("v_heart"):
+		peaks = logic.state["v_heart"]
+	var m := ShaderMaterial.new()
+	m.shader = load("res://src/fx/ecg_trace.gdshader")
+	m.set_shader_parameter("paper", load("res://assets/textures/decals/ch3/ecg_paper.png"))
+	m.set_shader_parameter("peaks", Vector3i(int(peaks[0]), int(peaks[1]), int(peaks[2])))
 	face.material_override = m

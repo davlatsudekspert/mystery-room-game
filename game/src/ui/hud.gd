@@ -712,6 +712,12 @@ func show_document(doc: String) -> void:
 		"tape_1996", "tape_1997", "tape_1998":
 			var heard: bool = logic.state.has("clicks_heard") and (logic.state["clicks_heard"] as Array).has(doc)
 			_show_paper([tr("doc2." + doc) if heard else tr("item.%s.desc" % doc)])
+		"strand_letters":
+			_show_paper([tr("doc3.diagnosis")])
+		"strand_note":
+			_show_paper([tr("doc3.note")])
+		"growth_log":
+			_show_paper([tr("doc3.growth_log")])
 
 
 const NB_PAGES := 8
@@ -995,6 +1001,8 @@ func play_intro() -> void:
 		var tw2 := create_tween()
 		tw2.tween_property(lbl, "modulate:a", 0.0, 0.6)
 		await tw2.finished
+	# a room whose opening runs longer than the fade (Chapter 3's lift descent) keeps input locked until it ends
+	var hold: float = float(room.call("opening_seconds")) if room.has_method("opening_seconds") else 0.0
 	room.call("play_opening_camera")
 	if not own_impact:
 		AudioManager.sfx("door_slam")
@@ -1003,6 +1011,8 @@ func play_intro() -> void:
 	var fade := create_tween()
 	fade.tween_property(o, "color:a", 0.0, 1.6)
 	await fade.finished
+	if hold > 1.6:
+		await get_tree().create_timer(hold - 1.6).timeout
 	o.queue_free()
 	set_busy(false)
 	if logic.intro_caption_key() != "":

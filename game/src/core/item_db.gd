@@ -40,7 +40,7 @@ const ITEMS := {
 	"key_square": {"model": "key_square"},
 	"resonance_meter": {"model": "resonance_meter", "tool": "meter"},
 	"ecg_strip": {"model": "ecg_strip"},
-	"strand_letters": {"model": "letter"},
+	"strand_letters": {"model": "letter", "doc": "strand_letters"},
 	"seed_crystal": {"model": "seed_crystal"},
 	"nursery_crystal": {"model": "nursery_crystal"},
 	"cloudy_crystal": {"model": "nursery_crystal"},

@@ -16,7 +16,7 @@ uniform vec3 brass : source_color = vec3(0.66, 0.50, 0.26);
 uniform vec3 groove : source_color = vec3(0.10, 0.075, 0.05);
 uniform vec3 phosphor : source_color = vec3(0.40, 1.0, 0.55);
 
-const float TAU = 6.2831853;
+const float TWO_PI = 6.2831853;
 
 vec2 curve_at(float t, float a, float b) {
 	return vec2(cos(a * t), sin(b * t));
@@ -31,7 +31,7 @@ float dist_to_curve(vec2 q) {
 	for (int k = 0; k < 5; k++) {
 		if (k >= fa) break;
 		for (int s = -1; s <= 1; s += 2) {
-			float t = (float(s) * ax + TAU * float(k)) / a;
+			float t = (float(s) * ax + TWO_PI * float(k)) / a;
 			vec2 c = curve_at(t, a, b);
 			vec2 tg = vec2(-a * sin(a * t), b * cos(b * t));
 			float perp = abs((q.y - c.y) * tg.x) / max(length(tg), 1e-4);
@@ -42,7 +42,7 @@ float dist_to_curve(vec2 q) {
 	for (int k = 0; k < 5; k++) {
 		if (k >= fb) break;
 		for (int s = 0; s < 2; s++) {
-			float t = ((s == 0 ? ay : 3.14159265 - ay) + TAU * float(k)) / b;
+			float t = ((s == 0 ? ay : 3.14159265 - ay) + TWO_PI * float(k)) / b;
 			vec2 c = curve_at(t, a, b);
 			vec2 tg = vec2(-a * sin(a * t), b * cos(b * t));
 			float perp = abs((q.x - c.x) * tg.y) / max(length(tg), 1e-4);
