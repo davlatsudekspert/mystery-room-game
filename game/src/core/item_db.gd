@@ -68,5 +68,6 @@ static func view_tilt(id: String) -> float:
 	return 70.0 if id in FLAT else 0.0
 
 
-static func is_tool(id: String) -> bool:
+## (Not "is_tool": that name is taken by Script.is_tool() and a call through the class name hits it.)
+static func is_tool_item(id: String) -> bool:
 	return ITEMS.get(id, {}).has("tool")

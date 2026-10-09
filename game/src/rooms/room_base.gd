@@ -296,7 +296,7 @@ func _on_tap(screen: Vector2) -> void:
 		return
 	if hs == "":
 		return
-	if logic.selected != "" and not ItemDB.is_tool(logic.selected):
+	if logic.selected != "" and not ItemDB.is_tool_item(logic.selected):
 		var target := use_target(hs, p)
 		if target != "" and in_reach(hs):
 			var ev: Array = logic.call("use_item_on", logic.selected, target)
