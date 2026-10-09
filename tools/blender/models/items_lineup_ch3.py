@@ -87,7 +87,7 @@ def main():
     D.qa_tweak()
     lights = [((0.6, -1.0, 1.3), 260, "FFE2C0", 1.6), ((-1.2, -0.5, 0.8), 90, "BFD4FF", 2.0),
               ((0.2, 1.3, 1.5), 160, "FFFFFF", 1.2)]
-    C.shot("items_ch3", (0.03, -0.50, 0.42), (0.03, 0.06, 0.03), lens=40, floor_z=-0.03, samples=32,
+    C.shot("items_ch3", (0.03, -0.60, 0.56), (0.03, 0.07, 0.05), lens=40, floor_z=-0.03, samples=32,
            res=(960, 640), lights=lights)
 
 
