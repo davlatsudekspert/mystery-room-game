@@ -71,6 +71,15 @@ func _ready() -> void:
 	_menu = VBoxContainer.new()
 	_menu.add_theme_constant_override("separation", int(MENU_SEP))
 	_left.add_child(_menu)
+	# the small-caps line under the menu (where a title screen puts its copyright line); open panels cover it
+	_ver = UITheme.label(_version_text(), 20, UITheme.MUTED)
+	_ver.add_theme_font_override("font", _caps_font())
+	_ver.uppercase = true
+	_ver.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_ver.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_ver.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_ver.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_ver)
 	_dim = ColorRect.new()
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dim.color = Color(0, 0, 0, 0.62)
@@ -81,23 +90,6 @@ func _ready() -> void:
 	_panel_host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_panel_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_panel_host)
-	var ver: String = tr("ui.version") % ProjectSettings.get_setting("application/config/version", "0.1.0")
-	if Premium.tester_build():
-		# a tester's screenshot then says which renderer the phone ran (metal / vulkan / opengl3, mobile / gl_compatibility)
-		ver += "  ·  %s %s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_current_rendering_method()]
-		if CrashGuard.previous != "":
-			ver += "  ·  last stop: " + CrashGuard.previous # where the previous session ended without a clean pause
-		if bool(Settings.get_value("safe_graphics")):
-			ver += "  ·  safe"
-	# the small-caps line under the menu (where a title screen puts its copyright line)
-	_ver = UITheme.label(ver, 20, UITheme.MUTED)
-	_ver.add_theme_font_override("font", _caps_font())
-	_ver.uppercase = true
-	_ver.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_ver.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_ver.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_ver.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_ver)
 	_build_menu()
 	_entrance()
 	CrashGuard.mark("menu")
@@ -108,6 +100,18 @@ func _ready() -> void:
 	Loc.language_changed.connect(_on_language_changed)
 	Settings.changed.connect(_on_setting_changed)
 	get_viewport().size_changed.connect(_layout)
+
+
+func _version_text() -> String:
+	var ver: String = tr("ui.version") % ProjectSettings.get_setting("application/config/version", "0.1.0")
+	if Premium.tester_build():
+		# a tester's screenshot then says which renderer the phone ran (metal / vulkan / opengl3, mobile / gl_compatibility)
+		ver += "  ·  %s %s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_current_rendering_method()]
+		if CrashGuard.previous != "":
+			ver += "  ·  last stop: " + CrashGuard.previous # where the previous session ended without a clean pause
+		if bool(Settings.get_value("safe_graphics")):
+			ver += "  ·  safe"
+	return ver
 
 
 ## Display serif with a little letter spacing, for the version line (shown in capitals).
@@ -141,6 +145,7 @@ func _entrance() -> void:
 
 func _on_language_changed(_code: String) -> void:
 	_update_logo()
+	_ver.text = _version_text()
 	_build_menu()
 
 

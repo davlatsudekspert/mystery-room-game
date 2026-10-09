@@ -14,6 +14,7 @@ extends Node
 ##   --saved                start with a saved game, so the main menu shows Continue
 ##   --mobile               menus as on a phone or tablet (no Quit item): Settings.emulate["mobile"]
 ##   --highlight=N          show main menu item N (0 = first) pressed/hovered in the main menu shots
+##   --clean                do not draw the cutout zones on the screenshots (preview images; still measured)
 ##   --window=WxH           render window (default: the emulated screen). Same aspect = same canvas layout. Use one
 ##                          that fits the Xvfb screen (1280x1024) for builds that read DisplayServer's safe area
 ##                          directly: a window larger than the X screen makes it report bogus insets.
@@ -36,6 +37,7 @@ var insets: Array = [0, 0, 0, 0] # l, t, r, b in device px
 var text_scale := 1.0
 var window_size := Vector2i.ZERO
 var report: Dictionary = {}
+var clean := false # --clean: no cutout zones drawn on the screenshots
 var _cutout_layer: CanvasLayer
 
 
@@ -63,6 +65,8 @@ func _run() -> void:
 			mobile = true
 		elif a.begins_with("--highlight="):
 			highlight = int(a.substr(12))
+		elif a == "--clean":
+			clean = true
 		elif a.begins_with("--device="):
 			device = a.substr(9)
 	if device != "":
@@ -237,6 +241,7 @@ func _apply_screen() -> void:
 	# mark the emulated cutout / home-indicator zones on the screenshots
 	_cutout_layer = CanvasLayer.new()
 	_cutout_layer.layer = 127
+	_cutout_layer.visible = not clean
 	add_child(_cutout_layer)
 	var k2 := vis.x / float(screen_size.x)
 	var zones := [Rect2(0, 0, insets[0] * k2, vis.y), Rect2(0, 0, vis.x, insets[1] * k2),
