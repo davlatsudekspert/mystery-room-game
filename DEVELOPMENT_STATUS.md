@@ -22,6 +22,14 @@ _Last updated: 2026-10-09_
 - **Decals:** 28 decals; the ones with words exist in EN, RU and UZ and are swapped at runtime by `DecalLoc`.
 - **Not yet done:** the full 3D playthrough on both lens paths, and real Godot screenshots. Per-chapter status levels are in `docs/GAMEPLAY_QA.md`.
 
+## Per-game puzzle variants (anti-walkthrough)
+`docs/VARIANTS.md`. Every new game draws its own answers; the evidence on screen follows them, and story anchors (03:17, 1979, 0417) stay fixed. The seed is saved with the game.
+- **Chapter 1:** the gear-box start, the safe cipher glyphs (code = the poster's dots) and the beacon numbers (= the encyclopedia volumes).
+- **Chapter 2:** the gauge marks (valve answer), index-card notches (8 card arts × 3 languages), tape clicks and booth dial, splice order, focus mark and vault engraving (drawn in the shader).
+- **Hints:** level-3 hints name the player's own answer.
+- **Tests:** 60-seed tests (solvable, unique, saved, reproducible) plus a real-scene Chapter 2 playthrough on seed 777 (94 taps, 0 fallbacks).
+- **Off for now:** players still get the canonical answers (`GameState.variant_seed = 0`) until the Chapter 1 seeded run and the Chapter 2 player review finish.
+
 ## Chapter 3
 Design draft: `docs/CHAPTER3_DESIGN.md`.
 
