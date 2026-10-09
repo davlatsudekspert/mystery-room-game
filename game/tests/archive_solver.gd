@@ -48,7 +48,7 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 			return
 		if s["card_in_punch"]:
 			for i in 8:
-				if int(s["punch_keys"][i]) != ArchiveLogic.PUNCH_CODE[i]:
+				if int(s["punch_keys"][i]) != int(l.punch_code()[i]):
 					l.toggle_punch_key(i)
 			l.pull_punch_lever()
 			return

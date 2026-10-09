@@ -39,6 +39,13 @@ QA = os.path.join(ROOT, "qa")
 # ---- puzzle data (mirrors archive_logic.gd) -------------------------------------------------
 BADGE_NO = "0417"
 PUNCH_CODE = [1, 0, 1, 1, 0, 0, 1, 0]          # notched / punched positions 1..8
+# Per-game variants (docs/VARIANTS.md): the index card's notches. Pattern 0 is the canonical one and keeps the
+# plain file names (index_card.png); pattern k > 0 writes index_card_p<k>.png. Must match
+# ArchiveLogic.PUNCH_PATTERNS in game/src/rooms/archive/archive_logic.gd.
+PUNCH_PATTERNS = [
+    [1, 0, 1, 1, 0, 0, 1, 0], [0, 1, 1, 0, 1, 0, 0, 1], [1, 1, 0, 0, 0, 1, 1, 0], [1, 0, 0, 1, 1, 1, 0, 0],
+    [0, 1, 0, 1, 0, 0, 1, 1], [0, 0, 1, 1, 1, 0, 1, 0], [1, 1, 0, 1, 0, 0, 0, 1], [0, 1, 1, 0, 0, 1, 0, 1],
+]
 SPLICE_SHADOWS = [3, 1, 4, 2]                  # film strip k -> shadow length (units)
 TAPE_SPEED = "4.75"                            # SPEEDS[SPEED_RIGHT]
 TAPE_YEARS = (1996, 1997, 1998)
@@ -1362,7 +1369,7 @@ def punch_positions(pen: Pen, numbers: bool = True, ring_w: float = 3.0):
             pen.text(x, HOLE_V_PX + HOLE_R_PX + 26, str(k), F_SANS_B, 30)
 
 
-def index_card(lang: str = "en"):
+def index_card(lang: str = "en", pattern: int = 0):
     W, H = CARD_W, CARD_H
     rng = np.random.default_rng(800)
     rgb = paper(W, H, base=(246, 240, 222), seed=801, stains=1, vignette=0.12, fibres=0.8)
@@ -1408,12 +1415,12 @@ def index_card(lang: str = "en"):
     rgb = paint(rgb, np.clip(blur(hm, 3) - hm, 0, 1), "#8A7A5A", 0.6)
     # handling: thumb grime on the top edge, soft fold, foxing
     rgb = multiply(rgb, edge_wear(W, H, 805, 26, 0.16), "#8C7650")
-    alpha = card_outline_alpha([k + 1 for k, b in enumerate(PUNCH_CODE) if b])
+    alpha = card_outline_alpha([k + 1 for k, b in enumerate(PUNCH_PATTERNS[pattern]) if b])
     cut = 1 - alpha
     rgb = paint(rgb, np.clip(blur(cut, 2.0) - cut, 0, 1), "#7A6848", 0.55)   # cut edges darken slightly
     alpha = np.clip(alpha - hm, 0, 1)
     rgb = paint(rgb, 1 - alpha, "#2A2620")
-    save(to_img(rgb, alpha), lname("index_card.png", lang))
+    save(to_img(rgb, alpha), lname("index_card.png" if pattern == 0 else f"index_card_p{pattern}.png", lang))
 
 
 def request_card(lang: str = "en"):
@@ -2954,7 +2961,7 @@ register("vault_engraving", vault_engraving)
 for _k in range(4):
     register(f"film_strip_{_k}", (lambda k: (lambda: film_strip(k)))(_k))
 register("reel_can_lid", reel_can_lid)
-register("index_card", _per_lang(index_card), True)
+register("index_card", lambda langs: [index_card(lang, k) for k in range(len(PUNCH_PATTERNS)) for lang in langs], True)
 register("request_card", _per_lang(request_card), True)
 register("badge", _per_lang(badge), True)
 register("routing_chart", _per_lang(routing_chart), True)

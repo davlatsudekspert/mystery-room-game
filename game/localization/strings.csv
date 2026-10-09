@@ -553,7 +553,7 @@ hint.c2_compressor.2,The plate shows which valve feeds which gauge. Both needles
 hint.c2_compressor.3,"Valves: A %d, B %d, C %d.","Вентили: A %d, B %d, C %d.","Ventillar: A %d, B %d, C %d."
 hint.c2_punch.1,The stacks only answer punched requests.,Хранилище отвечает только на пробитые запросы.,Fond faqat teshilgan soʻrovlarga javob beradi.
 hint.c2_punch.2,Take a blank card from the station tray and copy the index card's notches with the punch.,Возьмите чистый бланк из лотка станции и перенесите вырезы с карточки на перфоратор.,Stansiya laganidan boʻsh karta oling va kartochkadagi kesiklarni teshgichda takrorlang.
-hint.c2_punch.3,"Keys 1, 3, 4 and 7 down (1 0 1 1 0 0 1 0), then pull the lever.","Клавиши 1, 3, 4 и 7 вниз (1 0 1 1 0 0 1 0), затем рычаг.","1, 3, 4 va 7-tugmalarni bosing (1 0 1 1 0 0 1 0), soʻng dastakni torting."
+hint.c2_punch.3,"Press keys %s (%s), then pull the lever.","Нажмите клавиши %s (%s), затем рычаг.","%s-tugmalarni bosing (%s), soʻng dastakni torting."
 hint.c2_dispatch.1,Requests travel by tube.,Запросы путешествуют по трубам.,Soʻrovlar quvur orqali yuboriladi.
 hint.c2_dispatch.2,The chart on the wall shows where request cards go.,"Схема на стене показывает, куда отправлять бланки.",Devordagi sxema soʻrov kartalari qayerga ketishini koʻrsatadi.
 hint.c2_dispatch.3,"Card in the canister, dial on the book, pull the lever.","Карту в капсулу, диск на книгу, потяните рычаг.","Kartani kapsulaga soling, diskni kitobga qoʻying, dastakni torting."

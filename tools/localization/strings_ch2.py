@@ -154,7 +154,7 @@ H = {
 "c2_punch": [
     ("The stacks only answer punched requests.", "Хранилище отвечает только на пробитые запросы.", "Fond faqat teshilgan soʻrovlarga javob beradi."),
     ("Take a blank card from the station tray and copy the index card's notches with the punch.", "Возьмите чистый бланк из лотка станции и перенесите вырезы с карточки на перфоратор.", "Stansiya laganidan boʻsh karta oling va kartochkadagi kesiklarni teshgichda takrorlang."),
-    ("Keys 1, 3, 4 and 7 down (1 0 1 1 0 0 1 0), then pull the lever.", "Клавиши 1, 3, 4 и 7 вниз (1 0 1 1 0 0 1 0), затем рычаг.", "1, 3, 4 va 7-tugmalarni bosing (1 0 1 1 0 0 1 0), soʻng dastakni torting."),
+    ("Press keys %s (%s), then pull the lever.", "Нажмите клавиши %s (%s), затем рычаг.", "%s-tugmalarni bosing (%s), soʻng dastakni torting."),
 ],
 "c2_dispatch": [
     ("Requests travel by tube.", "Запросы путешествуют по трубам.", "Soʻrovlar quvur orqali yuboriladi."),

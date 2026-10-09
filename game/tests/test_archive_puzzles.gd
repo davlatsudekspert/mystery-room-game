@@ -346,3 +346,14 @@ func test_vault_variant_reachable() -> void:
 		check(l.vault_rot_target() != ArchiveLogic.ROT_RIGHT_START and l.vault_rot_target() != 0,
 			"seed %d: the right image starts off its target" % seed)
 		check(l.vault_zoom_target() >= 1 and l.vault_zoom_target() < ArchiveLogic.ZOOM_STEPS, "seed %d: zoom target in range" % seed)
+
+
+func test_punch_variant_matches_card_art() -> void:
+	for seed in range(1, 41):
+		var l := ArchiveLogic.new()
+		l.apply_seed(seed)
+		var k := int(l.state["v_punch"])
+		check(k >= 1 and k < ArchiveLogic.PUNCH_PATTERNS.size(), "seed %d: a non-canonical notch pattern" % seed)
+		check(ResourceLoader.exists("res://assets/textures/decals/ch2/index_card_p%d.png" % k), "seed %d: its card art exists" % seed)
+		for lang in ["ru", "uz"]:
+			check(ResourceLoader.exists("res://assets/textures/decals/ch2/index_card_p%d_%s.png" % [k, lang]), "seed %d: %s card art exists" % [seed, lang])

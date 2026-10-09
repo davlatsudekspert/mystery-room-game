@@ -249,11 +249,11 @@ func run() -> void:
 	await use("blank_card")
 	await act("card_punch", "IA_punch_slot", func() -> bool: return s["card_in_punch"], func() -> void: L.use_item_on("blank_card", "punch"), "card into punch")
 	for i in 8:
-		if ArchiveLogic.PUNCH_CODE[i] == 1:
+		if int(L.punch_code()[i]) == 1:
 			await act("card_punch", "IA_punch_key_%d" % i, func() -> bool: return int(s["punch_keys"][i]) == 1, func() -> void: L.toggle_punch_key(i), "key %d" % (i + 1))
 	await shot("punch_keys")
 	await act("card_punch", "IA_punch_lever", func() -> bool: return L.has_item("request_card"), func() -> void: L.pull_punch_lever(), "punch lever")
-	step("P3 punch 10110010 → request card", L.has_item("request_card") and s["request_ok"])
+	step("P3 punch %s → request card" % "".join(L.punch_code().map(func(b: Variant) -> String: return str(int(b)))), L.has_item("request_card") and s["request_ok"])
 	# P4 dispatch to the stacks
 	await view("hall")
 	await view("station")

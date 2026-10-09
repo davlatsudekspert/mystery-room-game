@@ -11,6 +11,12 @@ const VALVE_POSITIONS := 5
 const PRESSURE_TARGET := 5 # P = A + 2B
 const FLOW_TARGET := 4 # F = 2A + C
 const PUNCH_CODE: Array[int] = [1, 0, 1, 1, 0, 0, 1, 0]
+## Index-card notch patterns for per-game variants (docs/VARIANTS.md); 0 is PUNCH_CODE. The art for pattern k is
+## decals/ch2/index_card_p<k>.png (tools/textures/make_decals_ch2.py PUNCH_PATTERNS, same order).
+const PUNCH_PATTERNS := [
+	[1, 0, 1, 1, 0, 0, 1, 0], [0, 1, 1, 0, 1, 0, 0, 1], [1, 1, 0, 0, 0, 1, 1, 0], [1, 0, 0, 1, 1, 1, 0, 0],
+	[0, 1, 0, 1, 0, 0, 1, 1], [0, 0, 1, 1, 1, 0, 1, 0], [1, 1, 0, 1, 0, 0, 0, 1], [0, 1, 1, 0, 0, 1, 0, 1],
+]
 const DEST_COUNT := 6 # 0 director, 1 stacks, 2 laboratories, 3 booth, 4 records office, 5 vault (sealed)
 const DEST_STACKS := 1
 const LOCKER_COUNT := 12
@@ -98,6 +104,7 @@ func default_state() -> Dictionary:
 		"v_focus": FOCUS_SHARP,
 		"v_targets": [PRESSURE_TARGET, FLOW_TARGET], # green marks on gauges P and F
 		"v_vault": [ROT_RIGHT_TARGET, ZOOM_TARGET], # the right image's rotation and zoom in the engraving
+		"v_punch": 0, # index into PUNCH_PATTERNS (the notches on Leyla's index card)
 		"dial_input": "",
 		"booth_open": false,
 		"splice": [-1, -1, -1, -1], # frame per slot
@@ -201,6 +208,7 @@ func apply_seed(seed: int) -> void:
 	state["v_focus"] = rng.randi_range(3, FOCUS_STEPS - 2) # never the start mark, never an end stop
 	var pool := valve_target_pool()
 	state["v_targets"] = pool[rng.randi_range(0, pool.size() - 1)]
+	state["v_punch"] = rng.randi_range(1, PUNCH_PATTERNS.size() - 1)
 	var rots: Array = [1, 2, 3, 4, 6, 7] # never the start position (5), never upright (0)
 	state["v_vault"] = [rots[rng.randi_range(0, rots.size() - 1)], rng.randi_range(1, ZOOM_STEPS - 1)]
 
@@ -222,6 +230,10 @@ func splice_order() -> Array:
 	var order: Array = [0, 1, 2, 3]
 	order.sort_custom(func(a: int, b: int) -> bool: return int(state["v_shadows"][a]) > int(state["v_shadows"][b]))
 	return order
+
+
+func punch_code() -> Array:
+	return PUNCH_PATTERNS[clampi(int(state["v_punch"]), 0, PUNCH_PATTERNS.size() - 1)]
 
 
 func focus_sharp() -> int:
@@ -277,6 +289,12 @@ func hint_args(goal: String, level: int) -> Array:
 			return state["v_clicks"].duplicate()
 		"c2_focus":
 			return [focus_sharp()]
+		"c2_punch":
+			var keys: Array = []
+			for i in 8:
+				if int(punch_code()[i]) == 1:
+					keys.append(str(i + 1))
+			return [", ".join(keys), " ".join(punch_code().map(func(b: Variant) -> String: return str(int(b))))]
 		"c2_align":
 			return [vault_rot_target(), vault_zoom_target()]
 	return []
@@ -367,7 +385,7 @@ func pull_punch_lever() -> Array[String]:
 		_emit("punch_empty")
 		return _end()
 	state["card_in_punch"] = false
-	state["request_ok"] = _arr_eq(state["punch_keys"], PUNCH_CODE)
+	state["request_ok"] = _arr_eq(state["punch_keys"], punch_code())
 	state["last_punch"] = (state["punch_keys"] as Array).duplicate()
 	state["punch_keys"] = [0, 0, 0, 0, 0, 0, 0, 0]
 	_add_item("request_card")

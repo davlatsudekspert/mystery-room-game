@@ -1,6 +1,6 @@
 class_name DecalLoc
 extends RefCounted
-## Language variants of decals that show words (badge, index card, archive rules…).
+## Language variants of decals that show words (badge, index card, archive rules…), and per-game puzzle variants.
 ## The generator writes `<name>.png` (English) plus `<name>_ru.png` / `<name>_uz.png`. Materials keep pointing at
 ## the English file; this swaps the albedo texture of every decal material in a node tree to the current language.
 ## Decal materials are shared resources, so one swap covers every model, icon and inspect view that uses them.
@@ -9,14 +9,32 @@ const DECAL_MATERIAL_PREFIX := "res://assets/materials/M_Decal_"
 const EN_META := "decal_en_path"
 
 static var _touched: Array[StandardMaterial3D] = []
+## Per-game puzzle variants (docs/VARIANTS.md): base file name -> suffix, e.g. "index_card" -> "_p3" picks
+## index_card_p3.png (and index_card_p3_ru.png). Set by the room before it builds its models.
+static var variant_suffix: Dictionary = {}
 
 
-## The language variant of an English texture path, or the path itself when there is no variant.
+## Clear the variant table when a room is built (variants belong to one game).
+static func set_variants(table: Dictionary) -> void:
+	variant_suffix = table.duplicate()
+	refresh()
+
+
+## The language (and variant) version of an English texture path, or the path itself when there is none.
 static func localized_path(en_path: String, lang: String = "") -> String:
-	var code := lang if lang != "" else Loc.current()
-	if code == "en" or en_path == "":
+	if en_path == "":
 		return en_path
-	var p := "%s_%s.%s" % [en_path.get_basename(), code, en_path.get_extension()]
+	var code := lang if lang != "" else Loc.current()
+	var base := en_path.get_basename()
+	var ext := en_path.get_extension()
+	var suffix: String = variant_suffix.get(base.get_file(), "")
+	if suffix != "" and ResourceLoader.exists("%s%s.%s" % [base, suffix, ext]):
+		base += suffix
+	var p := "%s.%s" % [base, ext]
+	if code != "en":
+		var lp := "%s_%s.%s" % [base, code, ext]
+		if ResourceLoader.exists(lp):
+			p = lp
 	return p if ResourceLoader.exists(p) else en_path
 
 

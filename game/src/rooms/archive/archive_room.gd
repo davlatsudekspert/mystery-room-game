@@ -96,6 +96,9 @@ func _ready() -> void:
 	logic = GameState.logic
 	GameState.in_game = true
 	make_environment(Color("0a0c0d"), Color("2a3a36"), 0.5, Color("1a2826"), 0.014)
+	# this game's own index-card notches (docs/VARIANTS.md); the art is picked before anything is built
+	var punch := int((logic as ArchiveLogic).state["v_punch"])
+	DecalLoc.set_variants({"index_card": "_p%d" % punch} if punch > 0 else {})
 	_build_models()
 	_build_lights()
 	build_camera()
