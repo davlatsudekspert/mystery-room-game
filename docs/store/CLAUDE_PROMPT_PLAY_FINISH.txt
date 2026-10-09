@@ -1,0 +1,137 @@
+You are helping me finish setting up my Android game in Google Play Console in this Chrome browser. I am already logged in. Talk to me in Uzbek. The Play Console interface is in Russian.
+
+SAFETY RULES — follow them strictly:
+- Work ONLY on the app "Mystery Room: Lost Institute" (package com.mysteryroom.forgotteninstitute). Do NOT open, edit, publish, pause or delete any other app in this developer account. Other apps there are a separate live business and must stay untouched.
+- Never type, read aloud or store passwords, 2-step codes, keystore files or keystore passwords. If a login or verification is needed, stop and ask me to do it.
+- Do NOT start any release (Production, Open, Closed or Internal testing), do NOT send anything for review and do NOT make the app public.
+- Do NOT create in-app products, subscriptions or prices. Do NOT change the payments profile, account details, users and permissions, API access or any other account-level setting.
+- Legal or terms checkboxes: show them to me and let ME tick them.
+- Before publishing anything to the web (the privacy policy page) and before any step that cannot be undone, stop and ask me "Davom etaymi?".
+- If the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- At the end, give me a short report in Uzbek: what was done, what is left, and what needs my action.
+
+ALREADY DONE (only check, do not redo):
+- the app is created;
+- Content rating (IARC) is submitted;
+- Data safety is answered: no data collected, no data shared;
+- App access is set to "Нет" (no restricted sections).
+
+TASKS, in this order:
+
+1. Privacy policy page (required by Google Play and Apple):
+   a) Try Google Sites first:
+      - Open https://sites.google.com/new in a new tab, signed in to the same Google account.
+      - Create a blank site named "Mystery Room — Privacy Policy".
+      - Insert a text box and paste the PRIVACY POLICY TEXT below. Replace [email] with the developer account email shown in Play Console; confirm it with me.
+      - Ask me before publishing. Then publish it, visible to everyone on the web, with the web address "mysteryroom-privacy".
+      - Copy the public URL.
+   b) If Google Sites shows an error (for example 403):
+      - Open https://gist.github.com instead. I am logged in to GitHub; if not, ask me to log in.
+      - Filename: privacy-policy.md. Paste the same text.
+      - Ask me, then choose "Create public gist" (it must be PUBLIC, not secret).
+      - Copy the gist URL.
+   c) Reload the URL to make sure it opens. Then go to Play Console → Мониторинг и улучшение → Правила и программы → Контент приложения → Политика конфиденциальности. Paste the URL and save.
+
+2. Remaining App content declarations (Контент приложения). Answer each, then save:
+   - Реклама: No, the app has no ads.
+   - Целевая аудитория и контент:
+     - ages 13–15, 16–17 and 18+ only. Never select any age under 13;
+     - "May unintentionally appeal to children": No.
+   - Рекламный идентификатор (if listed): No, the app does not use the advertising ID.
+   - Государственные приложения: No. Финансовые функции: none. Здоровье: not a health app.
+   - Новостные приложения: not a news app. COVID-19: not a COVID-19 app.
+   - Check that "Учетные данные / Доступ к приложению" = "Нет" and "Безопасность данных" are saved.
+
+3. Store settings (Привлечение пользователей → Присутствие в Google Play → Настройки магазина, or wherever "Категория и контактные данные" is):
+   - App or game: Игра. Category: Головоломки (Puzzle).
+   - Tags: the closest available ones (Puzzle, Escape room, Mystery, Adventure).
+   - Contact email: the developer account email (confirm with me). Leave the website and phone empty.
+   - Save.
+
+4. Main store listing (Основная страница), default language en-US:
+   - Fill in the EN texts below.
+   - Graphics are on my computer; ask me for the folder:
+     - app icon: icon_512.png (512×512);
+     - feature graphic: feature_1024x500.png;
+     - phone screenshots: screenshot_1.png … screenshot_8.png.
+   - Save.
+   - Then "Переводы / Управление переводами": add Russian (ru-RU) with the RU texts. If Uzbek (uz) is available, add it with the UZ texts. Save.
+
+5. Pricing: the app must stay "Бесплатное". Country/region selection is only needed for a production release, so skip it unless the console requires it now (if it does, ask me).
+
+6. Go to the Dashboard (Панель управления) and tell me which setup tasks are still incomplete. Do NOT start any testing release; my developer will provide the .aab build later.
+
+STORE TEXTS
+
+[en-US]
+Title: Mystery Room: Lost Institute
+Short description: A 3D mystery escape room. Light remembers. Find out what it kept.
+Full description:
+On 14 November 1979 every clock in the Meridian Institute stopped at 03:17 — and forty-one scientists were never seen again.
+
+Decades later, a parcel arrives for you with an old lab badge and a single line: "Laboratory 7. Please finish what I could not."
+
+• Hand-crafted 3D rooms full of tactile brass mechanisms
+• Fair, logical puzzles with a three-step hint system and no random guessing
+• Signature Lumen mechanics: record light in a crystal and project it as a key, steer a living beam with mirrors
+• UV ink, radio beacons, electrical circuits, shadows and hidden rooms
+• A haunting original story told through objects, handwriting and light
+• Choices that carry into later chapters
+• Fully playable in English, Russian and Uzbek, and offline
+• No ads, no energy, no subscriptions
+
+Chapter 1 is free. More chapters are coming.
+
+[ru-RU]
+Title: Mystery Room: Забытый институт
+Short description: 3D-головоломка-побег. Свет помнит. Узнайте, что он сохранил.
+Full description:
+14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез.
+
+Спустя десятилетия вам приходит посылка: старый пропуск лаборатории и одна строка: «Лаборатория 7. Пожалуйста, закончи то, что не смогла я».
+
+• Атмосферные 3D-комнаты с латунными механизмами, которые приятно трогать
+• Честные логичные головоломки и трёхступенчатые подсказки, без угадывания
+• Фирменные механики Люмена: запишите свет в кристалл и спроецируйте его как ключ, управляйте живым лучом с помощью зеркал
+• Невидимые чернила, радиомаяки, электрические цепи, тени и тайные комнаты
+• Оригинальная история, рассказанная через предметы, почерк и свет
+• Решения, которые влияют на следующие главы
+• Полностью на английском, русском и узбекском, работает без интернета
+• Без рекламы, энергии и подписок
+
+Первая глава бесплатна. Новые главы уже в работе.
+
+[uz] (only if Play offers Uzbek)
+Title: Mystery Room: Sirli institut
+Short description: 3D sirli qochish oʻyini. Yorugʻlik eslaydi. U nimani saqlaganini biling.
+Full description:
+1979-yil 14-noyabrda «Meridian» institutidagi barcha soatlar 03:17 da toʻxtadi va qirq bir olim izsiz gʻoyib boʻldi.
+
+Oradan oʻn yillar oʻtib, sizga posilka keladi: eski laboratoriya guvohnomasi va bir qator yozuv: «7-laboratoriya. Iltimos, men tugata olmagan ishni tugating».
+
+• Qoʻl bilan ushlab koʻrgingiz keladigan jez mexanizmlarga toʻla 3D xonalar
+• Adolatli, mantiqiy jumboqlar va uch bosqichli maslahat tizimi, taxmin qilish shart emas
+• Oʻziga xos Lumen mexanikalari: yorugʻlikni billurga yozib oling, uni kalit sifatida proyeksiya qiling, tirik nurni koʻzgular bilan boshqaring
+• Koʻrinmas siyoh, radiomayoqlar, elektr zanjirlari, soyalar va maxfiy xonalar
+• Buyumlar, qoʻlyozmalar va yorugʻlik orqali hikoya qilinadigan original syujet
+• Keyingi boblarga taʼsir qiladigan tanlovlar
+• Ingliz, rus va oʻzbek tillarida toʻliq, internetsiz ishlaydi
+• Reklama, energiya va obuna yoʻq
+
+Birinchi bob bepul. Yangi boblar tayyorlanmoqda.
+
+PRIVACY POLICY TEXT
+Privacy Policy — Mystery Room: The Forgotten Institute
+Last updated: 9 October 2026
+
+1. Data we collect: none. The game does not collect, store on any server, sell or share any personal information. It has no user accounts, no advertising, no analytics and no third-party tracking SDKs.
+2. Data stored on your device: your game progress and settings are saved only on your own device. Uninstalling the game deletes them.
+3. Internet: the game works fully offline and does not send data over the internet.
+4. Permissions: the game only uses vibration for haptic feedback.
+5. Children: the game is not directed at children under 13 and does not knowingly collect any data from anyone.
+6. Purchases: if optional in-app purchases are added in the future, payments are processed entirely by Google Play or the Apple App Store. We never see your payment details. This policy will be updated before such a change.
+7. Contact: [email]
+
+Политика конфиденциальности: Игра не собирает, не передаёт и не продаёт персональные данные. Нет аккаунтов, рекламы, аналитики и трекеров. Прогресс хранится только на вашем устройстве. Игра работает без интернета. Связь: [email]
+
+Maxfiylik siyosati: Oʻyin hech qanday shaxsiy maʼlumot toʻplamaydi va uzatmaydi. Hisob, reklama va analitika yoʻq. Oʻyin jarayoni faqat qurilmangizda saqlanadi. Oʻyin internetsiz ishlaydi. Aloqa: [email]
