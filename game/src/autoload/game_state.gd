@@ -6,7 +6,7 @@ signal chapter_started(chapter_id: String)
 signal hint_shown(goal: String, level: int)
 
 const AUTOSAVE_DELAY := 0.75
-const COLLECT_ACHIEVEMENT := {"ch1": "light_remembers", "ch2": "echoes_of_the_archive"}
+const COLLECT_ACHIEVEMENT := {"ch1": "light_remembers", "ch2": "echoes_of_the_archive", "ch3": "echoes_of_the_deep"}
 
 var chapter_id := ""
 var logic: RoomLogic

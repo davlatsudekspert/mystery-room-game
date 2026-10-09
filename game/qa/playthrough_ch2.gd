@@ -117,7 +117,9 @@ func _rect(n: Node3D, own_only: bool) -> Rect2:
 		for k in 8:
 			var wp := mi.global_transform * ab.get_endpoint(k)
 			if cam().is_position_behind(wp):
-				return Rect2()
+				if own_only:
+					return Rect2()
+				continue # a whole model seen from close up: frame the part of it in front of the camera
 			var sp := cam().unproject_position(wp)
 			if first:
 				r = Rect2(sp, Vector2.ZERO)
@@ -387,7 +389,7 @@ func run() -> void:
 	await act("projection_screen", "IA_screen_socket", func() -> bool: return s["sign_recorded"], func() -> void: L.use_item_on("crystal_blank_1", "screen_socket"), "blank crystal in socket")
 	await _settle(1.0)
 	await shot("socket_recorded")
-	await act("projection_screen", "Item_socket", func() -> bool: return L.has_item("crystal_sign"), func() -> void: L.take_from_socket(), "take sign crystal")
+	await act("projection_screen", "IA_screen_socket", func() -> bool: return L.has_item("crystal_sign"), func() -> void: L.take_from_socket(), "take sign crystal")
 	step("P11 sign recorded", s["sign_recorded"] and L.has_item("crystal_sign"))
 	# P11b (leave path): record Strand's mark with the slide projector
 	if not s["has_lens"]:
@@ -417,7 +419,7 @@ func run() -> void:
 		await view("socket")
 		await use("crystal_blank_2")
 		await act("projection_screen", "IA_screen_socket", func() -> bool: return s["mark_recorded"], func() -> void: L.use_item_on("crystal_blank_2", "screen_socket"), "second blank in socket")
-		await act("projection_screen", "Item_socket", func() -> bool: return L.has_item("crystal_mark"), func() -> void: L.take_from_socket(), "take mark crystal")
+		await act("projection_screen", "IA_screen_socket", func() -> bool: return L.has_item("crystal_mark"), func() -> void: L.take_from_socket(), "take mark crystal")
 		step("P11b mark recorded", s["mark_recorded"])
 	# optional echoes: hold a crystal and tap each one
 	await view("hall")

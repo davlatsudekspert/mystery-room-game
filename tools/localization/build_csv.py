@@ -7,13 +7,14 @@ from strings_core import S as CORE
 from strings_ch1 import S as CH1
 from strings_hints import H
 from strings_ch2 import S as CH2, H as H2
+from strings_ch3 import S as CH3, H as H3
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "game", "localization", "strings.csv")
 LANGS = ["en", "ru", "uz"]  # fixed order: EN (default) → RU → UZ (Latin)
 
-rows = list(CORE) + list(CH1) + list(CH2)
-for goal, levels in list(H.items()) + list(H2.items()):
+rows = list(CORE) + list(CH1) + list(CH2) + list(CH3)
+for goal, levels in list(H.items()) + list(H2.items()) + list(H3.items()):
     assert len(levels) == 3, goal
     for i, (en, ru, uz) in enumerate(levels, 1):
         rows.append((f"hint.{goal}.{i}", en, ru, uz))

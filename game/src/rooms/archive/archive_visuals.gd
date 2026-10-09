@@ -468,7 +468,8 @@ func _set_beam(key: String, on: bool, lens: Node3D) -> void:
 		_beams[key] = b
 	b.visible = true
 	var dir := (to - from).normalized()
-	b.global_basis = Basis(Quaternion(Vector3.DOWN, dir)).scaled(Vector3(1, length, 1))
+	# stretch along the cone's own axis: Basis.scaled() would scale in world axes and turn the beam into a slab
+	b.global_basis = Basis(Quaternion(Vector3.DOWN, dir)) * Basis.from_scale(Vector3(1, length, 1))
 	b.global_position = (from + to) * 0.5
 
 

@@ -183,3 +183,62 @@ Each row shows level 1 (nudge), level 2 (where to look) and level 3 (answer).
 - **Mechanisms:** the interlock clack, isolator thunk, the breaker trip and arc, seven tube pitches and the chord, the autoclave hiss and growth shimmer, prism turntable clicks, four crystal notes, the oscillograph tone.
 - **Story audio:** Leyla's recorder voice (murmur with captions, like Chapter 2).
 - **Music:** `music_underground` and `music_underground_finale`.
+
+## Implementation data
+Values the design above left open, as implemented in `game/src/rooms/underground/underground_logic.gd`
+(`UndergroundLogic`). The puzzle answers above are unchanged. Indices are 0-based in code.
+
+### Profile and zones
+- `ch2_key = strand_key` → `entry = "choir"`; `leyla_key` or **no Chapter 2 save** → `entry = "nursery"` (the Chapter 2 epilogue points at Leyla's recorder). The start inventory holds that key (its tag is item text `item.<key>.desc3`), plus `crystal_lens` on the take path.
+- The entry wing is open from the start. The other wing opens only through H1. Using the other key on the other lift gate gives `gate_wrong_key`.
+- First wing finished (W4 or E4) → `gallery_awake`. Choir first: W4 also opens the **west** blast door, and H1 opens the **east** one. Nursery first: E4 opens the shutter into the Gallery, and H1 opens the **west** blast door. In the second wing the same puzzle only sends power or light to the console (`console_power:choir` / `console_power:nursery`).
+- `secret = ch1_shards >= 5 and ch2_echoes >= 3`.
+
+### W1 / W1b interlock (trapped keys)
+| Cabinet | Lock face takes | Holds behind the glass |
+|---|---|---|
+| I (`cabinet_0`) | ▲ `key_triangle` | ● `key_circle` |
+| II (`cabinet_1`) | ◆ `key_diamond` | ▲ `key_triangle` |
+| III (`cabinet_2`) | ● `key_circle` | ■ `key_square` |
+- All isolators start ON with their held keys in place. ◆ hangs on the desk hook and can be hung back.
+- ON → OFF needs the lock-face key in place, which then stays trapped while OFF. The held key is free only while OFF. OFF → ON needs the held key back. Wrong attempts give `isolator_no_key`, `isolator_held_missing`, `key_trapped` or `key_wrong_lock`.
+- ■ in the office door opens it. The door can then be closed and reopened freely, but ■ stays trapped while the door is open.
+- **Desk lockout (clarification):** the desk starts dead, with a lockout tag. It arms (`desk_armed`, puzzle "restore") once every isolator is back ON after the office has been opened, and after that it is live whenever all isolators are ON. Without this rule, the desk would be live at the start (all isolators ON) and W1 and W1b could be skipped.
+
+### W2 / W3 / W4
+- Meter case: three wheels 0–9 (sun, moon, star), starting at 0-0-0. It opens by itself at **4-2-6**. Tapping the latch while it is shut gives `case_locked`.
+- Office pick-ups: `ecg_strip` (lamp), `strand_letters` (desk), `resonance_meter` (case).
+- Choir: places 0–6 are the rack slots and 7–9 the bench. Each value is the meter reading, and length = 8 − reading. Start: `[4,0,7,2,0,5,0 | 6,1,3]`. A tap lifts, hangs or swaps with the tube in hand. Once the hammer rings a clean chord, the rack locks.
+- Startup: the levers must follow 4 2 5 1 3. Any other lever, or the knob reaching ● early or with the Choir untuned, trips the breaker: levers up, counter 0, knob ○. The knob has 4 positions: 0 ○ (off), 1 ▲, 2 ●, 3 ■, with target ●. Turning an isolator OFF in the middle of a startup also drops the levers.
+- Port views (counter → lever): A {2→2, 4→1}; B {1→4, 5→3}; C {3→5} plus the knob.
+
+### E1 / E2 Nursery
+- Seed glyphs: a hexagon's 6 edges are read clockwise from the top, with `1` for a notch. Turning a glyph a third of a turn clockwise shifts it by 2 edges. Drawers are numbered row-major in 3 rows × 4 columns:
+
+| Row | Col 1 | Col 2 | Col 3 | Col 4 |
+|---|---|---|---|---|
+| 1 | 110110 | 001101 (the sketch as drawn) | 100100 | 111100 |
+| 2 | 010110 | 110000 | **110100 (right seed)** | 100101 (mirror) |
+| 3 | 010100 | 101010 | 110101 | 111000 |
+
+- The log sketch is `001101`, the right glyph turned a third of a turn clockwise. Six distractors differ from the answer by one notch. The glyph you get by turning the sketch the *wrong* way (`010011`) is in no drawer, so the turn direction cannot mislead.
+- Only one seed may be out of its drawer at a time. Taking another seed while holding one in your hand swaps them. Otherwise you get `seed_in_play`.
+- Autoclave: the pegs run 1–6 and start at 1-1-1. The door must be open to load or unload and closed to start. The seed from row 2, column 3 with pegs 5-2-4 grows `nursery_crystal`. Anything else grows `cloudy_crystal`, which `remelt()` turns back into the same seed.
+- Leave path: the first `look("seed_library")` plays Leyla's echo touching row 2, column 3 (`leyla_echo:6`).
+
+### E3 / E4
+- Prisms: P and Q each run −2..2 with end stops and start at +2. Band k of a prism at position v falls on receptor v + k (receptors 0–2). P's bands are ▲ ● ■ and Q's are ■ ● ▲. A receptor accepts when its set of bands equals its rim exactly. **P = 0, Q = −1** is the only solution, and the test re-checks it by brute force. At the start, only receptor 3 is lit (▲ + ■).
+- Shutter frame, left to right: crystal sizes **3, 4, 2, 1** (1 = smallest). The melody by size is 3 1 4 2, which is frame positions 1, 4, 2, 3 counted from the left. Neither a left-to-right sweep nor the size numbers read as positions plays the melody. A wrong note gives `crystals_damped` and resets the input.
+
+### Gallery
+- Drum symbols: 0 ☼, 1 ☾, 2 ✦, 3 ▲, 4 ●, 5 ■. Wheels are ordered outer → inner, each starts at ☼, and the target is ☾ ▲ ✦ ●. The handle checks the wheels and gives `drum_wrong` if they are off.
+- H2: knobs X and Y run 1–5 with end stops and start at 1. The oscilloscope is live only when the Choir is running, the shutter is open and `nursery_crystal` sits in the cradle. Other crystals give `cradle_refused`. The crystal can always be taken back out, and the Array stays awake.
+- Secret: with `secret` true, the 42nd socket takes `nursery_crystal` (`secret_echo` plays once and sets `true_ending`), and the crystal can be taken back. Without `secret`, the socket gives `socket_dark`.
+- Kept echoes: `welder` (Choir), `tech_a` and `tech_b` (Nursery), `strand_rail` (Gallery). On the take path an echo is visible while a crystal is selected, in its own zone. On either path it is also visible "through a port" (`release_echo(id, true)`, Choir Hall open).
+- Finale options are `strand` and `leyla`. Profile output: `ch3_trust`, `ch3_echoes` (0–4), `ch3_true_ending`.
+
+### Ids
+- Items: `key_diamond`, `key_triangle`, `key_circle`, `key_square`, `resonance_meter`, `ecg_strip`, `strand_letters`, `seed_crystal`, `nursery_crystal`, `cloudy_crystal` (plus the existing `strand_key`, `leyla_key` and `crystal_lens`).
+- Puzzles (`solved:<id>`): interlock, heart, choir, restore, startup, seed, grow, prisms, melody, rings, resonance.
+- Hint goals follow the table above with a `c3_` prefix, as in Chapter 2 (`c3_interlock` … `c3_finale`). The order depends on the entry wing: first wing → `c3_rings` → second wing → `c3_resonance` → `c3_finale`.
+- Strings: `tools/localization/strings_ch3.py` (`msg.c3_*`, `cap3.*`, `obj3.*`, `doc3.*`, `echo3.*`, `intro3.*`, `epi3.*`, `ui.trust_*`, `ui.choice_trust_prompt`, `achv.echoes_of_the_deep`). Symbols are written as words because the UI font (Noto Sans) has no ◆ ▲ ● ■ ☼ ☾ ✦ glyphs.

@@ -10,7 +10,8 @@ const LIST: Array[Dictionary] = [
 		"scene": "res://src/rooms/archive/archive.tscn", "logic": "res://src/rooms/archive/archive_logic.gd",
 		"product": "full_game", "released": false}, # released once the room scene passes its playthrough
 	{"id": "ch3", "number": 3, "title": "chapter.ch3.title", "subtitle": "chapter.ch3.subtitle",
-		"scene": "", "logic": "", "product": "full_game", "released": false},
+		"scene": "", "logic": "res://src/rooms/underground/underground_logic.gd",
+		"product": "full_game", "released": false}, # logic only; the room scene comes next
 	{"id": "ch4", "number": 4, "title": "chapter.ch4.title", "subtitle": "chapter.ch4.subtitle",
 		"scene": "", "logic": "", "product": "full_game", "released": false},
 ]

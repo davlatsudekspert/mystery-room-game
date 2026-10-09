@@ -33,10 +33,22 @@ const ITEMS := {
 	"emblem_slide": {"model": "glass_slide"},
 	"strand_key": {"model": "key_strand"},
 	"leyla_key": {"model": "key_leyla"},
+	# Chapter 3 (models are built with the Chapter 3 room; until then the inventory shows the item name)
+	"key_diamond": {"model": "key_diamond"},
+	"key_triangle": {"model": "key_triangle"},
+	"key_circle": {"model": "key_circle"},
+	"key_square": {"model": "key_square"},
+	"resonance_meter": {"model": "resonance_meter", "tool": "meter"},
+	"ecg_strip": {"model": "ecg_strip"},
+	"strand_letters": {"model": "letter"},
+	"seed_crystal": {"model": "seed_crystal"},
+	"nursery_crystal": {"model": "nursery_crystal"},
+	"cloudy_crystal": {"model": "nursery_crystal"},
 }
 
 const FLAT := ["notebook", "strand_letter", "leyla_photo", "brass_key", "leyla_badge", "index_card", "blank_card",
-	"request_card", "personnel_file", "emblem_slide", "strand_key", "leyla_key", "locker_key"]
+	"request_card", "personnel_file", "emblem_slide", "strand_key", "leyla_key", "locker_key", "key_diamond",
+	"key_triangle", "key_circle", "key_square", "ecg_strip", "strand_letters"]
 
 
 static func exists(id: String) -> bool:
