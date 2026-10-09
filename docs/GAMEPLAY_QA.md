@@ -10,7 +10,15 @@ How each chapter has been checked. The five status levels are never mixed:
 | **VISUALLY VERIFIED** | Someone looked at real Godot screenshots of it (not Blender renders). |
 | **HUMAN TESTED** | A person played it on a device. |
 
-**Nothing is HUMAN TESTED yet.** No physical phone has run the game. Automated play proves the chapter can be finished and does not break; it does not prove the chapter is fun or clear. Only playtesters can tell us that.
+**Not HUMAN TESTED yet.**
+- The first phone run, on the owner's iPhone with TestFlight build 2 on 2026-10-09, reached the main menu, which works. New Game then crashed while loading Chapter 1 (docs/TESTING_ON_DEVICE.md, "Device reports"). No chapter has been played on a device yet.
+- Automated play proves a chapter can be finished and does not break. It does not prove the chapter is fun or clear; only playtesters can tell us that.
+
+**Regression runs** (real 3D scene, solver-driven taps; exit 0 = no failed step and no logic fallback):
+
+| Date | Change under test | Chapter 1 | Chapter 2 |
+|---|---|---|---|
+| 2026-10-09 | camera feel (smooth follow, glide, arcs), dust without shadows, merged shelf meshes, crash recovery, launch/name fixes | seed 4242: all steps ✓, 100 taps, 0 fallbacks | seed 4096, leave path: all steps ✓, 83 taps, 0 fallbacks |
 
 All screenshots come from the software renderer in the dev container (lavapipe, no GPU), so colours and frame rate are only indicative of phones.
 
