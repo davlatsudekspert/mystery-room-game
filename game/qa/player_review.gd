@@ -168,7 +168,26 @@ func look_toward(p: Vector3) -> void:
 	c.yaw = wrapf(-yaw, -180.0, 180.0)
 	c.pitch = clampf(pitch, RoomCamera.PITCH_MIN, RoomCamera.PITCH_MAX)
 	c.call("_apply_free_look")
+	if not _on_screen(p):
+		# the analytic aim can miss (a camera still settling, a steep target): sweep like a player turning round
+		var best_yaw := c.yaw
+		var best_d := INF
+		for step in 36:
+			c.yaw = wrapf(step * 10.0 - 180.0, -180.0, 180.0)
+			c.call("_apply_free_look")
+			if c.is_position_behind(p):
+				continue
+			var d := c.unproject_position(p).distance_to(get_viewport().get_visible_rect().get_center())
+			if d < best_d:
+				best_d = d
+				best_yaw = c.yaw
+		c.yaw = best_yaw
+		c.call("_apply_free_look")
 	await _settle(0.3)
+
+
+func _on_screen(p: Vector3) -> bool:
+	return not cam().is_position_behind(p) and get_viewport().get_visible_rect().grow(-40.0).has_point(cam().unproject_position(p))
 
 
 ## Tap the screen point of a world position (or a node's projected centre).
@@ -244,10 +263,34 @@ func explore_dark() -> void:
 			continue
 		await look_toward(_centre_of(n))
 		var before := cam().current()
+		var hv: Dictionary = room.get_script().get_script_constant_map().get("HOTSPOT_VIEW", {})
+		var expected: String = hv.get(str(n.get_meta("hotspot", "")), "")
 		await tap_at(_centre_of(n))
 		await did("tap " + id)
-		if cam().current() == before:
-			note("  ! tapping %s from the room did not move the camera (blocked by something in front?)" % id)
+		if expected != "" and cam().current() != before and cam().current() != expected:
+			note("  ! the middle of %s opened «%s», not its own view «%s»" % [id, cam().current(), expected])
+			await to_root()
+			await look_toward(_centre_of(n))
+		if cam().current() == before or (expected != "" and cam().current() != expected):
+			# the middle of a model's bounds can be empty space (a mirror on a thin stand): a player taps the
+			# part they can see, so try each of the object's tap areas before calling it unreachable
+			var reached := ""
+			for body in n.find_children("*", "StaticBody3D", true, false):
+				var cs := body.get_child(0) as Node3D
+				var p := cs.global_position if cs else (body as Node3D).global_position
+				if cam().is_position_behind(p) or not get_viewport().get_visible_rect().has_point(cam().unproject_position(p)):
+					continue
+				await tap_at(p)
+				if cam().current() != before and (expected == "" or cam().current() == expected):
+					reached = str(body.get_meta("part", body.name))
+					break
+				if not cam().is_root():
+					await to_root()
+					await look_toward(_centre_of(n))
+			if reached != "":
+				note("  (tapping the %s of %s reaches it)" % [reached, id])
+			else:
+				note("  ! tapping %s from the room did not move the camera (blocked by something in front?)" % id)
 		await shot("look_" + id)
 	await to_root()
 
@@ -266,7 +309,11 @@ func mistakes() -> void:
 	await _settle(0.9)
 	cam().go("drawer")
 	await _settle(0.9)
-	await tap_part("desk", "IA_drawer_top")
+	# pull it by the side of its front, not the code wheels in the middle
+	var drawer := ModelUtil.find(model("desk"), "IA_drawer_top") as MeshInstance3D
+	if drawer:
+		var ab := drawer.get_aabb()
+		await tap_at(drawer.global_transform * (ab.position + ab.size * Vector3(0.12, 0.5, 0.5)))
 	await did("pull the locked drawer", true)
 	await shot("drawer_locked_message")
 	# safe: a wrong code

@@ -3,6 +3,7 @@ extends Node
 ## 3D parts (raycast → hotspot → logic), like a player. A step falls back to a direct logic call only when the
 ## tap did not work, and every fallback is reported with what the tap hit instead.
 ## Run: xvfb-run -a godot --path game res://qa/playthrough_ch2.tscn -- --out=<dir> [--lens=take|leave] [--lang=ru]
+## A quick logic-flow run without screenshots: godot --headless --path game res://qa/playthrough_ch2.tscn -- …
 ## Exit code 0 = chapter completed with no failed step and no fallback.
 
 var out_dir := "/tmp/ch2_playthrough"
@@ -61,6 +62,8 @@ func _perf(label: String) -> void:
 
 func shot(name: String) -> void:
 	await _settle(0.3)
+	if DisplayServer.get_name() == "headless": # logic-flow runs without a renderer: no pixels to save
+		return
 	await RenderingServer.frame_post_draw
 	shot_n += 1
 	var p := "%s/%02d_%s.png" % [out_dir, shot_n, name]
