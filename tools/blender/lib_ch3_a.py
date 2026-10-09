@@ -415,7 +415,26 @@ def restore(obj, old) -> None:
 
 
 def qa_import(name, pos=(0, 0, 0), yaw=0.0, prefix="qa_"):
-    return V.qa_import(V.model_glb(name), pos, yaw, prefix=prefix)
+    """Import a neighbouring GLB for a QA scene and swap its plain glTF materials (base factors only, the export is
+    lean) for this scene's textured preview materials of the same slot name."""
+    holder = V.qa_import(V.model_glb(name), pos, yaw, prefix=prefix)
+    if holder is None:
+        return None
+    for o in bpy.data.objects:
+        if not o.name.startswith(prefix) or o.type != "MESH":
+            continue
+        for slot in o.material_slots:
+            m = slot.material
+            if m is None:
+                continue
+            base = m.name.split(".")[0]
+            if base != m.name:
+                if bpy.data.materials.get(base) is None:
+                    M.material(base)
+                slot.material = bpy.data.materials[base]
+            elif base.startswith("M_") and not any(n.type == "TEX_IMAGE" for n in m.node_tree.nodes):
+                pass
+    return holder
 
 
 def qa_place(objs, pos, yaw_deg, name="qa_place"):

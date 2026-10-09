@@ -269,6 +269,23 @@ def flat_hand(prefix, palm_pt, F, N, right, scale=1.0, curl=1.0, spread=None, wi
     return objs, wr, info
 
 
+def hand_to_tip(prefix, target, F, N, right, curls, tip=1, spread=None, scale=1.0, width=0.078, finger_r=0.0084,
+                thumb=None):
+    """A hand whose fingertip `tip` (0 index .. 3 little) lands on `target`: built once to measure the wrist ->
+    tip offset, then rebuilt at the corrected wrist. Returns (parts, wrist, info)."""
+    F = vec(F).normalized()
+    w0 = vec(target) - F * 0.17 * scale
+    objs, info = hand(prefix + "_probe", w0, F, N, right, curls, spread=spread, thumb=thumb, scale=scale, width=width,
+                      finger_r=finger_r)
+    off = info["tips"][tip] - w0
+    for o in objs:
+        bpy.data.objects.remove(o, do_unlink=True)
+    wr = vec(target) - off
+    objs, info = hand(prefix, wr, F, N, right, curls, spread=spread, thumb=thumb, scale=scale, width=width,
+                      finger_r=finger_r)
+    return objs, wr, info
+
+
 def relaxed_hand(prefix, el, wr, right, scale=1.0, pron=8.0, bend=(0.0, 0.10, -0.05), curl=1.0):
     F = (vec(wr) - vec(el)).normalized()
     F = (F + Vector(bend)).normalized()
