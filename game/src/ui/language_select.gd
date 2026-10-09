@@ -9,12 +9,11 @@ func _ready() -> void:
 	bg.color = UITheme.INK
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
-	var c := CenterContainer.new()
-	c.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(c)
+	var c := UITheme.safe_center(self)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 24)
-	c.add_child(v)
+	v.add_theme_constant_override("separation", 18)
+	var max_h := UITheme.usable_rect().size.y
+	c.add_child(UITheme.scroll_fit(v, null, max_h)) # never taller than the screen, whatever the text size
 	var t := UITheme.title("MYSTERY ROOM", 80)
 	t.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	t.autowrap_mode = TextServer.AUTOWRAP_OFF

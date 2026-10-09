@@ -1,10 +1,19 @@
 extends Control
 ## Main menu: animated 3D background, Continue / New Game / Chapters / Settings, store notices.
+## Text and buttons follow UITheme's screen-based sizing; the logo gives way when the buttons need the height.
 
 var _menu: VBoxContainer
-var _panel_host: CenterContainer
+var _left: VBoxContainer
+var _panel_host: Control # dialogs (settings, chapters, confirm) are centred inside the safe area in here
 var _dim: ColorRect # darkens the menu behind an open panel
 var _logo: TextureRect
+var _gap: Control
+var _ver: Label
+
+const LOGO_SIZE := Vector2(620, 465)
+
+var _safe_seen := Vector4.ZERO
+var _safe_poll := 0.0
 
 
 func _ready() -> void:
@@ -24,50 +33,59 @@ func _ready() -> void:
 	shade.color = Color(0, 0, 0, 0.25)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(shade)
-	var left := VBoxContainer.new()
-	left.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	left.offset_left = 100
-	left.offset_right = 900
-	left.alignment = BoxContainer.ALIGNMENT_CENTER
-	left.add_theme_constant_override("separation", 16)
-	add_child(left)
+	_left = VBoxContainer.new()
+	_left.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	_left.alignment = BoxContainer.ALIGNMENT_CENTER
+	_left.add_theme_constant_override("separation", 16)
+	add_child(_left)
 	# The logo artwork carries the subtitle, so there is one image per language (tools/ui/make_logo_variants.py).
 	_logo = TextureRect.new()
-	_logo.custom_minimum_size = Vector2(620, 465)
 	_logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_logo.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	left.add_child(_logo)
+	_left.add_child(_logo)
 	_update_logo()
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 18)
-	left.add_child(gap)
+	_gap = Control.new()
+	_gap.custom_minimum_size = Vector2(0, 18)
+	_left.add_child(_gap)
 	_menu = VBoxContainer.new()
 	_menu.add_theme_constant_override("separation", 14)
-	left.add_child(_menu)
+	_left.add_child(_menu)
 	_dim = ColorRect.new()
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dim.color = Color(0, 0, 0, 0.62)
 	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dim.visible = false
 	add_child(_dim)
-	_panel_host = CenterContainer.new()
+	_panel_host = Control.new()
 	_panel_host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_panel_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_panel_host)
-	var ver := UITheme.label(tr("ui.version") % ProjectSettings.get_setting("application/config/version", "0.1.0"), 18, UITheme.MUTED)
-	ver.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	ver.offset_left = -360
-	ver.offset_top = -60
-	ver.offset_right = -30
-	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(ver)
+	_ver = UITheme.label(tr("ui.version") % ProjectSettings.get_setting("application/config/version", "0.1.0"), 20, UITheme.MUTED)
+	_ver.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_ver.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_ver.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(_ver)
 	_build_menu()
 	AudioManager.music("music_menu", 3.0)
-	Loc.language_changed.connect(func(_c: String) -> void:
-		_update_logo()
-		_build_menu())
+	Loc.language_changed.connect(_on_language_changed)
+	Settings.changed.connect(_on_setting_changed)
+	get_viewport().size_changed.connect(_layout)
+
+
+func _on_language_changed(_code: String) -> void:
+	_update_logo()
+	_build_menu()
+
+
+func _on_setting_changed(key: String) -> void:
+	if key == "text_scale":
+		theme = UITheme.build()
+		UITheme.rescale(self)
+		_build_menu()
 
 
 func _update_logo() -> void:
@@ -78,8 +96,49 @@ func _update_logo() -> void:
 	_logo.tooltip_text = tr("game.title") + " — " + tr("game.subtitle")
 
 
+func _process(delta: float) -> void:
+	# a 180° turn (sensor_landscape) moves the camera cutout to the other side without resizing the window
+	_safe_poll += delta
+	if _safe_poll >= 0.5:
+		_safe_poll = 0.0
+		if UITheme.safe_margins() != _safe_seen:
+			_layout()
+
+
+## Places the menu column inside the safe area and sizes the logo to the height the buttons leave.
+func _layout() -> void:
+	var safe := UITheme.safe_margins()
+	_safe_seen = safe
+	var u := UITheme.usable_rect()
+	_left.offset_left = maxf(100.0, safe.x + 60.0)
+	_left.offset_right = _left.offset_left + maxf(800.0, 520.0 * UITheme.wscale() + 40.0)
+	_left.offset_top = u.position.y
+	_left.offset_bottom = -((UITheme.metrics()["canvas"] as Vector2).y - u.end.y)
+	var n := _menu.get_child_count()
+	var btn_h := UITheme.target(78)
+	for b: Control in _menu.get_children():
+		b.custom_minimum_size.y = btn_h
+		btn_h = maxf(btn_h, b.get_combined_minimum_size().y)
+	var buttons := n * btn_h + maxf(0, n - 1) * 14.0
+	var logo_h := minf(u.size.y - buttons - 18.0 - 2 * 16.0, LOGO_SIZE.y)
+	# a short screen with large text: the logo gives way first, then the buttons' extra height (never below 7 mm)
+	_logo.visible = logo_h >= 150.0
+	_gap.visible = _logo.visible
+	if _logo.visible:
+		_logo.custom_minimum_size = Vector2(logo_h * LOGO_SIZE.x / LOGO_SIZE.y, logo_h)
+	elif buttons > u.size.y:
+		var fit_h := maxf((u.size.y - maxf(0, n - 1) * 14.0) / maxf(1, n), UITheme.px_for_mm(7.0))
+		for b: Control in _menu.get_children():
+			b.custom_minimum_size.y = fit_h
+	_ver.offset_right = -(safe.z + 30.0)
+	_ver.offset_bottom = -(safe.w + 14.0)
+	_ver.offset_left = _ver.offset_right
+	_ver.offset_top = _ver.offset_bottom
+
+
 func _build_menu() -> void:
 	for c in _menu.get_children():
+		_menu.remove_child(c)
 		c.queue_free()
 	var saved := GameState.saved_chapter()
 	if saved != "":
@@ -95,6 +154,7 @@ func _build_menu() -> void:
 	_add("ui.settings", _show_settings)
 	if not OS.has_feature("mobile") and not OS.has_feature("web"):
 		_add("ui.quit", func() -> void: get_tree().quit())
+	_layout()
 
 
 func _add(key: String, cb: Callable) -> void:
@@ -140,28 +200,28 @@ func _open_panel() -> void:
 func _show_settings() -> void:
 	_open_panel()
 	var sp := SettingsPanel.new()
-	_panel_host.add_child(sp)
+	UITheme.safe_center(_panel_host).add_child(sp)
 	sp.closed.connect(_clear_panel)
 
 
 func _show_chapters() -> void:
 	_open_panel()
-	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(1200, 0)
-	_panel_host.add_child(p)
-	var v := VBoxContainer.new()
+	var d := UITheme.dialog(_panel_host, 1200, "ui.chapters", 50)
+	var v: VBoxContainer = d["body"]
 	v.add_theme_constant_override("separation", 14)
-	p.add_child(v)
-	v.add_child(UITheme.title("ui.chapters", 50))
 	for ch: Dictionary in Chapters.LIST:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 18)
 		var num := UITheme.label(tr("chapter.label") % int(ch["number"]), 24, UITheme.MUTED)
-		num.custom_minimum_size = Vector2(170, 0)
+		num.custom_minimum_size = Vector2(round(170 * UITheme.wscale()), 0)
 		num.autowrap_mode = TextServer.AUTOWRAP_OFF
+		num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		num.size_flags_vertical = Control.SIZE_FILL
 		row.add_child(num)
 		var name := UITheme.label(ch["title"], 30)
 		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name.size_flags_vertical = Control.SIZE_FILL
 		row.add_child(name)
 		var state_key := "ui.coming_soon"
 		var can := Premium.can_play(ch["id"])
@@ -183,25 +243,17 @@ func _show_chapters() -> void:
 	v.add_child(unlock)
 	var close := UITheme.button("ui.close", 260)
 	close.pressed.connect(_clear_panel)
-	var c := CenterContainer.new()
-	c.add_child(close)
-	v.add_child(c)
+	(d["footer"] as Control).add_child(close)
 
 
 func _confirm(key: String, yes: Callable) -> void:
 	_open_panel()
-	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(900, 0)
-	_panel_host.add_child(p)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 24)
-	p.add_child(v)
+	var d := UITheme.dialog(_panel_host, 900)
 	var l := UITheme.label(key, 30)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(l)
-	var h := HBoxContainer.new()
-	h.alignment = BoxContainer.ALIGNMENT_CENTER
-	h.add_theme_constant_override("separation", 20)
+	(d["body"] as Control).add_child(l)
+	var h: HFlowContainer = d["footer"]
+	h.add_theme_constant_override("h_separation", 20)
 	var y := UITheme.button("ui.yes", 240)
 	y.pressed.connect(func() -> void:
 		_clear_panel()
@@ -210,4 +262,3 @@ func _confirm(key: String, yes: Callable) -> void:
 	n.pressed.connect(_clear_panel)
 	h.add_child(y)
 	h.add_child(n)
-	v.add_child(h)

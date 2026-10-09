@@ -9,7 +9,7 @@ const DEFAULTS := {
 	"music_volume": 0.7,
 	"sfx_volume": 0.9,
 	"ambience_volume": 0.8,
-	"text_scale": 1.0,
+	"text_scale": 1.0, # the player's multiplier on top of the automatic, screen-based size (UITheme.auto_scale)
 	"haptics": true,
 	"reduce_motion": false,
 	"invert_look": false,
@@ -21,6 +21,9 @@ const TEXT_SCALES: Array[float] = [0.9, 1.0, 1.15, 1.3]
 
 var values: Dictionary = DEFAULTS.duplicate()
 var path := PATH
+## Screen emulation for QA renders (never saved): {"size": Vector2i, "dpi": float, "safe": Rect2i} in device px.
+## UITheme reads it instead of DisplayServer, so a desktop run can lay the UI out exactly as on a phone.
+var emulate: Dictionary = {}
 
 
 func _ready() -> void:
