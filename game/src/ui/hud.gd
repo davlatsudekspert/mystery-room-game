@@ -3,7 +3,7 @@ extends CanvasLayer
 ## captions/messages, pause, intro, finale choice and chapter-complete screen.
 
 var room: Node3D
-var logic: Lab7Logic
+var logic: RoomLogic
 var icons: ItemIcons
 
 var _root: Control
@@ -494,7 +494,7 @@ func show_inspect(id: String) -> void:
 		var aabb := ItemIcons._aabb(model)
 		model.position = -aabb.get_center()
 		radius = maxf(0.02, aabb.size.length() * 0.5)
-		if id == "crystal_lens" and logic.state["emblem_recorded"]:
+		if logic.item_glows(id):
 			var gl := OmniLight3D.new()
 			gl.light_color = Color("cff6ff")
 			gl.light_energy = 2.0
@@ -525,9 +525,7 @@ func show_inspect(id: String) -> void:
 	var t := UITheme.title(tr(ItemDB.name_key(id)), 52)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	info.add_child(t)
-	var desc_key := ItemDB.desc_key(id)
-	if id == "crystal_lens" and logic.state["emblem_recorded"]:
-		desc_key = "item.crystal_lens.desc_recorded"
+	var desc_key := logic.item_desc_key(id)
 	var d := UITheme.label(desc_key, 28)
 	info.add_child(d)
 	var row := HBoxContainer.new()
@@ -570,6 +568,9 @@ const NB_PAGES := 8
 
 
 func _show_notebook(page: int) -> void:
+	var l7 := logic as Lab7Logic # Leyla's notebook exists in Chapter 1 only
+	if l7 == null:
+		return
 	var o := _open_overlay(0.82)
 	var paper := _paper_panel(o)
 	var v := paper.get_meta("vbox") as VBoxContainer
@@ -598,14 +599,14 @@ func _show_notebook(page: int) -> void:
 			tr_.modulate = Color("9cffd8")
 			glyphs.add_child(tr_)
 		cipher.add_child(glyphs)
-		cipher.visible = logic.state["uv_page"]
-		if not logic.state["uv_page"] and logic.has_uv():
+		cipher.visible = l7.state["uv_page"]
+		if not l7.state["uv_page"] and l7.has_uv():
 			var uvb := IconButton.make("uv", 110)
 			var c := CenterContainer.new()
 			c.add_child(uvb)
 			v.add_child(c)
 			uvb.pressed.connect(func() -> void:
-				logic.uv_reveal("notebook_page")
+				l7.uv_reveal("notebook_page")
 				var tint := ColorRect.new()
 				tint.color = Color(0.45, 0.25, 1.0, 0.0)
 				tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -617,7 +618,7 @@ func _show_notebook(page: int) -> void:
 				cipher.modulate.a = 0.0
 				tw.parallel().tween_property(cipher, "modulate:a", 1.0, 1.2)
 				uvb.visible = false)
-		elif logic.state["uv_page"]:
+		elif l7.state["uv_page"]:
 			var tint := ColorRect.new()
 			tint.color = Color(0.45, 0.25, 1.0, 0.18)
 			tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -811,14 +812,15 @@ func _wait_tap_or(o: Control, seconds: float) -> void:
 func show_choice() -> void:
 	var o := _open_overlay(0.45)
 	o.set_meta("locked", true)
-	var v := _center_panel(o, Vector2(1000, 0))
-	var t := UITheme.label("ui.choice_prompt", 32)
+	var options: Array = logic.choice_options()
+	var v := _center_panel(o, Vector2(maxf(1000.0, 420.0 * options.size() + 120.0), 0))
+	var t := UITheme.label(logic.choice_prompt_key(), 32)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
 	var h := HBoxContainer.new()
 	h.alignment = BoxContainer.ALIGNMENT_CENTER
 	h.add_theme_constant_override("separation", 24)
-	for opt in [["take_lens", "ui.take_lens"], ["leave_lens", "ui.leave_lens"]]:
+	for opt: Array in options:
 		var b := UITheme.button(opt[1], 380)
 		b.pressed.connect(func() -> void:
 			_close_overlay()
@@ -837,14 +839,8 @@ func show_chapter_complete() -> void:
 	var v := _center_panel(o, Vector2(1200, 0))
 	v.add_child(UITheme.label("ui.chapter_complete", 28, UITheme.MUTED))
 	v.get_child(0).set("horizontal_alignment", HORIZONTAL_ALIGNMENT_CENTER)
-	v.add_child(UITheme.title("chapter.ch1.title", 60))
-	var s := logic.state
-	var lines: Array[String] = [tr("outro.listening")]
-	lines.append(tr("epi.take") if s["choice"] == "take_lens" else tr("epi.leave"))
-	if (s["shards"] as Array).size() == Lab7Logic.SHARDS.size():
-		lines.append(tr("epi.shards"))
-	lines.append(tr("epi.postmark"))
-	for line in lines:
+	v.add_child(UITheme.title("chapter.%s.title" % GameState.chapter_id, 60))
+	for line in logic.epilogue_keys():
 		var l := UITheme.label(line, 26)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(l)
@@ -853,8 +849,13 @@ func show_chapter_complete() -> void:
 	stats.add_theme_constant_override("separation", 36)
 	var mins := int(GameState.play_time) / 60
 	var secs := int(GameState.play_time) % 60
-	for pair in [["ui.time", "%d:%02d" % [mins, secs]], ["ui.puzzles", "%d / %d" % [logic.solved_count(), Lab7Logic.PUZZLE_IDS.size()]],
-			["ui.hints_used", str(GameState.hints_used)], ["ui.shards", "%d / 5" % (s["shards"] as Array).size()]]:
+	var pairs: Array = [["ui.time", "%d:%02d" % [mins, secs]],
+		["ui.puzzles", "%d / %d" % [logic.solved_count(), logic.puzzle_ids().size()]],
+		["ui.hints_used", str(GameState.hints_used)]]
+	var col_info: Array = logic.collectibles()
+	if int(col_info[1]) > 0:
+		pairs.append([col_info[2], "%d / %d" % [int(col_info[0]), int(col_info[1])]])
+	for pair: Array in pairs:
 		var col := VBoxContainer.new()
 		col.custom_minimum_size = Vector2(230, 0) # labels wrap; without a width they collapse to one letter per line
 		var a := UITheme.label(pair[0], 22, UITheme.MUTED)
@@ -866,12 +867,25 @@ func show_chapter_complete() -> void:
 		col.add_child(b)
 		stats.add_child(col)
 	v.add_child(stats)
-	var next := UITheme.label("epi.next", 30, UITheme.BRASS_HI)
-	next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(next)
-	var soon := UITheme.label("ui.to_be_continued", 24, UITheme.MUTED)
-	soon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(soon)
+	var next_id := Chapters.next_of(GameState.chapter_id)
+	if next_id != "":
+		var next := UITheme.label("%s — %s" % [tr("chapter.label") % int(Chapters.get_chapter(next_id)["number"]), tr("chapter.%s.title" % next_id)], 30, UITheme.BRASS_HI)
+		next.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(next)
+		if Premium.can_play(next_id):
+			var go := UITheme.button("ui.play", 420)
+			go.pressed.connect(func() -> void:
+				AudioManager.stop_all_ambience()
+				if GameState.start_new(next_id):
+					SceneManager.goto(Chapters.get_chapter(next_id)["scene"]))
+			var cg := CenterContainer.new()
+			cg.add_child(go)
+			v.add_child(cg)
+		else:
+			var soon := UITheme.label("ui.to_be_continued" if not Chapters.get_chapter(next_id).get("released", false) else "ui.unlock_desc", 24, UITheme.MUTED)
+			soon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			v.add_child(soon)
 	var menu := UITheme.button("ui.main_menu", 420)
 	menu.pressed.connect(func() -> void:
 		AudioManager.stop_all_ambience()

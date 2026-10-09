@@ -72,6 +72,68 @@ func combine(a: String, b: String) -> Array[String]:
 	return _end()
 
 
+## ---------------------------------------------------------------- chapter hooks (HUD / GameState)
+## Override: ordered puzzle ids for the progress stat.
+func puzzle_ids() -> Array[String]:
+	return []
+
+
+## Override: how many of puzzle_ids() are solved.
+func solved_count() -> int:
+	return 0
+
+
+## Override: the hint goal id for the current state ("" = none). Text keys: hint.<goal>.<1..3>.
+func hint_goal() -> String:
+	return ""
+
+
+## Override: finale options as [[option_id, label_key], ...]; choose_ending(option_id) applies one.
+func choice_options() -> Array:
+	return []
+
+
+func choose_ending(_option: String) -> Array[String]:
+	_begin()
+	_emit("nothing_happens")
+	return _end()
+
+
+## Override: the finale question shown above the options.
+func choice_prompt_key() -> String:
+	return "ui.choice_prompt"
+
+
+## Override: optional collectibles as [found, total, label_key] (total 0 = none in this chapter).
+func collectibles() -> Array:
+	return [0, 0, ""]
+
+
+## Override: chapter-complete text lines (translation keys), in order.
+func epilogue_keys() -> Array[String]:
+	return []
+
+
+## Override: values stored in profile.choices when the chapter is completed.
+func profile_choices() -> Dictionary:
+	return {}
+
+
+## Override: apply earlier chapters' choices (profile.choices) to a NEW game of this chapter.
+func setup_from_profile(_choices: Dictionary) -> void:
+	pass
+
+
+## Override: per-state item description (e.g. a crystal that now holds an image).
+func item_desc_key(id: String) -> String:
+	return "item.%s.desc" % id
+
+
+## Override: true if the item glows in the inspect view (a recorded crystal).
+func item_glows(_id: String) -> bool:
+	return false
+
+
 ## Override: extra events after a successful combination (still inside the action).
 func _on_combined(_result: String) -> void:
 	pass

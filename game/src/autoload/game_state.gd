@@ -6,6 +6,7 @@ signal chapter_started(chapter_id: String)
 signal hint_shown(goal: String, level: int)
 
 const AUTOSAVE_DELAY := 0.75
+const COLLECT_ACHIEVEMENT := {"ch1": "light_remembers", "ch2": "echoes_of_the_archive"}
 
 var chapter_id := ""
 var logic: RoomLogic
@@ -44,6 +45,7 @@ func start_new(id: String) -> bool:
 	var l := Chapters.new_logic(id)
 	if l == null:
 		return false
+	l.setup_from_profile(profile.get("choices", {}))
 	_attach(id, l)
 	play_time = 0.0
 	hints_used = 0
@@ -103,14 +105,14 @@ func _on_chapter_complete() -> void:
 	if not completed.has(chapter_id):
 		completed.append(chapter_id)
 	profile["completed"] = completed
-	if chapter_id == "ch1" and logic is Lab7Logic:
-		var s: Dictionary = (logic as Lab7Logic).state
-		profile["choices"]["ch1_lens"] = s["choice"]
-		profile["choices"]["ch1_shards"] = (s["shards"] as Array).size()
-		if (s["shards"] as Array).size() == Lab7Logic.SHARDS.size():
-			unlock_achievement("light_remembers")
-		if hints_used == 0:
-			unlock_achievement("no_hints_ch1")
+	var choices: Dictionary = profile.get("choices", {})
+	choices.merge(logic.profile_choices(), true)
+	profile["choices"] = choices
+	var c: Array = logic.collectibles()
+	if int(c[1]) > 0 and int(c[0]) >= int(c[1]):
+		unlock_achievement(COLLECT_ACHIEVEMENT.get(chapter_id, "collect_" + chapter_id))
+	if hints_used == 0:
+		unlock_achievement("no_hints_" + chapter_id)
 	profile["hints_used"] = int(profile.get("hints_used", 0)) + hints_used
 	SaveSystem.save_profile(profile)
 
@@ -130,9 +132,11 @@ func is_chapter_completed(id: String) -> bool:
 # ------------------------------------------------------------------ hints
 ## Returns {"goal", "level" (1..3), "key"}; repeated requests for the same goal escalate the level.
 func next_hint() -> Dictionary:
-	if not logic is Lab7Logic:
+	if logic == null:
 		return {}
-	var goal := Lab7Hints.current_goal(logic)
+	var goal := logic.hint_goal()
+	if goal == "":
+		return {}
 	if goal != _hint_goal:
 		_hint_goal = goal
 		_hint_level = 0

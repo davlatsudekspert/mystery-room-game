@@ -633,6 +633,44 @@ const PUZZLE_IDS: Array[String] = ["drawer", "gearbox", "lamp", "safe", "compart
 	"radio", "books", "shadow", "record", "projector", "mirrors"]
 
 
+func puzzle_ids() -> Array[String]:
+	return PUZZLE_IDS
+
+
+func hint_goal() -> String:
+	return Lab7Hints.current_goal(self)
+
+
+func choice_options() -> Array:
+	return [["take_lens", "ui.take_lens"], ["leave_lens", "ui.leave_lens"]]
+
+
+func collectibles() -> Array:
+	return [(state["shards"] as Array).size(), SHARDS.size(), "ui.shards"]
+
+
+func epilogue_keys() -> Array[String]:
+	var out: Array[String] = ["outro.listening", "epi.take" if state["choice"] == "take_lens" else "epi.leave"]
+	if (state["shards"] as Array).size() == SHARDS.size():
+		out.append("epi.shards")
+	out.append("epi.postmark")
+	return out
+
+
+func profile_choices() -> Dictionary:
+	return {"ch1_lens": state["choice"], "ch1_shards": (state["shards"] as Array).size()}
+
+
+func item_desc_key(id: String) -> String:
+	if id == "crystal_lens" and state["emblem_recorded"]:
+		return "item.crystal_lens.desc_recorded"
+	return super(id)
+
+
+func item_glows(id: String) -> bool:
+	return id == "crystal_lens" and state["emblem_recorded"]
+
+
 func solved_count() -> int:
 	var n := 0
 	var flags := {

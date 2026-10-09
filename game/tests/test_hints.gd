@@ -34,8 +34,11 @@ func test_every_goal_has_three_translated_levels() -> void:
 		var row := csv.get_csv_line()
 		if row.size() >= 4:
 			keys[row[0]] = row
-	for g in Lab7Hints.GOALS:
-		for k in Lab7Hints.keys_for(g):
+	var goals: Array[String] = []
+	goals.append_array(Lab7Hints.GOALS)
+	goals.append_array(ArchiveHints.GOALS)
+	for g in goals:
+		for k in ["hint.%s.1" % g, "hint.%s.2" % g, "hint.%s.3" % g]:
 			check(keys.has(k), "missing hint key " + k)
 			if keys.has(k):
 				for col in [1, 2, 3]:

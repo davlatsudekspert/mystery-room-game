@@ -106,7 +106,6 @@ epi.take,"You pocket the crystal lens. It is warm — and somewhere far below, s
 epi.leave,"You leave the lens to her. As the door closes behind you, the desk lamp flickers once, like a goodbye.","Вы оставляете линзу ей. Когда дверь закрывается за вами, настольная лампа мигает — словно прощаясь.",Linzani unga qoldirasiz. Eshik ortingizdan yopilganda stol chirogʻi bir bor miltillaydi — xuddi xayrlashgandek.
 epi.shards,Five shards — five fragments of a single night. The Array knows you now.,Пять осколков — пять фрагментов одной ночи. Теперь Решётка знает вас.,Beshta boʻlak — bitta tunning besh parchasi. Endi Panjara sizni taniydi.
 epi.postmark,On the train home you look at the parcel again. The postmark reads: 14 XI 1979.,В поезде вы снова смотрите на посылку. На штемпеле: 14 XI 1979.,Uyga qaytayotgan poyezdda posilkaga yana qaraysiz. Pochta muhrida: 14 XI 1979.
-epi.next,Chapter 2 — The Missing Scientist,Глава 2 — Пропавший учёный,2-bob — Gʻoyib boʻlgan olim
 item.notebook.name,Leyla's notebook,Блокнот Лейлы,Leylaning daftari
 item.notebook.desc,A lab journal in Leyla Rahimova's handwriting. One page looks oddly blank.,"Лабораторный журнал, исписанный рукой Лейлы Рахимовой. Одна страница странно пуста.",Leyla Rahimovaning qoʻli bilan yozilgan laboratoriya jurnali. Bir sahifasi gʻalati darajada boʻm-boʻsh.
 item.uv_lamp_empty.name,UV lamp (empty),УФ-лампа (пустая),UB chiroq (boʻsh)
@@ -221,6 +220,136 @@ cap.static,[Radio static],[Радиопомехи],[Radio shovqini]
 cap.hum,[The projector hums],[Проектор гудит],[Proyektor gʻuvillaydi]
 cap.sparks,[Sparks crackle],[Треск искр],[Uchqunlar chirsillaydi]
 cap.door,[The heavy door creaks open],[Тяжёлая дверь со скрипом открывается],[Ogʻir eshik gʻiyqillab ochildi]
+item.leyla_badge.name,Leyla's lab badge,Пропуск Лейлы,Leylaning laboratoriya nishoni
+item.leyla_badge.desc,Laboratory 7 · Staff no. 0417 · Dr. L. Rahimova. It came in the parcel.,Лаборатория 7 · Табельный № 0417 · Д-р Л. Рахимова. Он был в посылке.,7-laboratoriya · Xodim № 0417 · Dr. L. Rahimova. U posilkada kelgan.
+item.index_card.name,Index card 0417,Карточка 0417,0417-kartochka
+item.index_card.desc,Leyla's personnel card. Eight positions along the top edge; some are notched.,"Личная карточка Лейлы. Восемь позиций по верхнему краю, часть из них с вырезами.","Leylaning shaxsiy kartochkasi. Yuqori chetida sakkizta joy bor, baʼzilari kesilgan."
+item.blank_card.name,Blank request card,Чистый бланк запроса,Boʻsh soʻrov kartasi
+item.blank_card.desc,A request card for the closed stacks. It must be punched first.,Бланк запроса в закрытое хранение. Сначала его нужно пробить.,Yopiq fondga soʻrov kartasi. Avval uni teshish kerak.
+item.request_card.name,Punched request card,Пробитый бланк запроса,Teshilgan soʻrov kartasi
+item.request_card.desc,Ready to travel by tube.,Готов к отправке по трубе.,Quvur orqali joʻnatishga tayyor.
+item.personnel_file.name,Leyla's personnel file,Личное дело Лейлы,Leylaning shaxsiy ishi
+item.personnel_file.desc,A thin folder. A letter from 1998 is clipped inside.,Тонкая папка. Внутри приколото письмо 1998 года.,Yupqa papka. Ichida 1998-yilgi maktub qistirilgan.
+item.locker_key.name,Locker key,Ключ от шкафчика,Shkafcha kaliti
+item.locker_key.desc,A small key on a brass tag: 9.,Маленький ключ на латунной бирке: 9.,Jez yorliqli kichik kalit: 9.
+item.pocket_receiver.name,Pocket receiver,Карманный приёмник,Choʻntak qabul qilgichi
+item.pocket_receiver.desc,Leyla's direction-finding receiver. Its needle climbs near whatever it listens for.,"Пеленгационный приёмник Лейлы. Стрелка поднимается рядом с тем, что он слышит.",Leylaning yoʻnalish topuvchi qabul qilgichi. U eshitadigan narsa yaqinida mili koʻtariladi.
+item.tape_1996.name,Reel · 1996,Катушка · 1996,Gʻaltak · 1996
+item.tape_1996.desc,A wire-recorder reel. The label reads 1996 · 4.75.,Катушка проволочного магнитофона. На этикетке: 1996 · 4.75.,Simli magnitofon gʻaltagi. Yorligʻida: 1996 · 4.75.
+item.tape_1997.name,Reel · 1997,Катушка · 1997,Gʻaltak · 1997
+item.tape_1997.desc,A wire-recorder reel. The label reads 1997 · 4.75.,Катушка проволочного магнитофона. На этикетке: 1997 · 4.75.,Simli magnitofon gʻaltagi. Yorligʻida: 1997 · 4.75.
+item.tape_1998.name,Reel · 1998,Катушка · 1998,Gʻaltak · 1998
+item.tape_1998.desc,A wire-recorder reel. The label reads 1998 · 4.75.,Катушка проволочного магнитофона. На этикетке: 1998 · 4.75.,Simli magnitofon gʻaltagi. Yorligʻida: 1998 · 4.75.
+item.film_reel.name,Film reel,Бобина с плёнкой,Kinolenta bobinasi
+item.film_reel.desc,"Strand's 1979 film, spliced back together.","Фильм Странда 1979 года, снова склеенный.","Strandning 1979-yilgi filmi, qayta yelimlangan."
+item.crystal_blank_1.name,Blank Lumen crystal,Чистый кристалл Люмена,Boʻsh Lumen billuri
+item.crystal_blank_1.desc,A clear crystal. It remembers the first sharp image that falls on it.,"Прозрачный кристалл. Он запоминает первое чёткое изображение, которое на него упадёт.",Tiniq billur. Ustiga tushgan birinchi aniq tasvirni eslab qoladi.
+item.crystal_blank_2.name,Blank Lumen crystal,Чистый кристалл Люмена,Boʻsh Lumen billuri
+item.crystal_blank_2.desc,A clear crystal. It remembers the first sharp image that falls on it.,"Прозрачный кристалл. Он запоминает первое чёткое изображение, которое на него упадёт.",Tiniq billur. Ustiga tushgan birinchi aniq tasvirni eslab qoladi.
+item.crystal_sign.name,Crystal: Leyla's sign,Кристалл: знак Лейлы,Billur: Leyla belgisi
+item.crystal_sign.desc,It keeps Leyla's sign: a crescent with three dots.,В нём хранится знак Лейлы: полумесяц с тремя точками.,Unda Leyla belgisi saqlangan: uch nuqtali yarim oy.
+item.crystal_mark.name,Crystal: Strand's mark,Кристалл: знак Странда,Billur: Strand belgisi
+item.crystal_mark.desc,It keeps the Institute's mark: a ring and a meridian.,В нём хранится знак института: кольцо и меридиан.,Unda institut belgisi saqlangan: halqa va meridian.
+item.emblem_slide.name,Emblem slide,Слайд с эмблемой,Emblemali slayd
+item.emblem_slide.desc,A glass lantern slide with the Institute's mark.,Стеклянный диапозитив со знаком института.,Institut belgisi tushirilgan shisha diapozitiv.
+item.strand_key.name,Strand's key,Ключ Странда,Strandning kaliti
+item.strand_key.desc,Heavy brass with a star. It opens the Array Hall.,Тяжёлая латунь со звездой. Он открывает зал Решётки.,Yulduzli ogʻir jez kalit. U Panjara zalini ochadi.
+item.leyla_key.name,Leyla's key,Ключ Лейлы,Leylaning kaliti
+item.leyla_key.desc,Plain steel with a crescent. It opens the crystal vaults.,Простая сталь с полумесяцем. Он открывает кристальные хранилища.,Yarim oy tushirilgan oddiy poʻlat kalit. U billur omborlarini ochadi.
+obj2.hall,Records Archive B,Архив документов «Б»,«B» hujjatlar arxivi
+obj2.catalogue,Card catalogue — staff 0000–0999,Картотека — сотрудники 0000–0999,Kartoteka — xodimlar 0000–0999
+obj2.compressor,Tube compressor,Компрессор пневмопочты,Pnevmatik pochta kompressori
+obj2.station,Pneumatic tube station,Станция пневмопочты,Pnevmatik pochta stansiyasi
+obj2.chart,Routing chart,Схема маршрутов,Yoʻnalishlar sxemasi
+obj2.desk,Archivist's desk,Стол архивариуса,Arxivchi stoli
+obj2.punch,Card punch,Перфоратор карт,Karta teshgich
+obj2.deck,Tape deck,Магнитофон,Magnitofon
+obj2.lockers,Staff lockers,Шкафчики сотрудников,Xodimlar shkafchalari
+obj2.stacks,The stacks,Стеллажи,Javonlar
+obj2.grille,Ventilation grille,Вентиляционная решётка,Shamollatish panjarasi
+obj2.ledger,A row of ledgers,Ряд гроссбухов,Daftarlar qatori
+obj2.reading,Reading table,Читальный стол,Mutolaa stoli
+obj2.hatch,A hatch in the floor,Люк в полу,Poldagi lyuk
+obj2.booth_door,Projection booth — dial lock,Кинобудка — дисковый замок,Kinobudka — diskli qulf
+obj2.booth,Projection booth,Кинобудка,Kinobudka
+obj2.splicer,Film splicer,Склеечный пресс,Kinolenta yelimlagichi
+obj2.projector,Film projector,Кинопроектор,Kinoproyektor
+obj2.slides,Slide cabinet,Шкаф для слайдов,Slaydlar javoni
+obj2.slide_projector,Slide projector,Диапроектор,Diaproyektor
+obj2.screen,Projection screen,Проекционный экран,Proyeksiya ekrani
+obj2.vault,Archive vault — dual light lock,Хранилище архива — двойной световой замок,Arxiv seyfxonasi — qoʻsh yorugʻlik qulfi
+obj2.vault_open,Archive vault,Хранилище архива,Arxiv seyfxonasi
+obj2.shutter,Fire shutter — jammed,Противопожарная штора — заклинило,Yongʻinga qarshi toʻsiq — tiqilib qolgan
+msg.c2_shutter,The fire shutter crashes down behind you.,Позади с грохотом падает противопожарная штора.,Ortingizda yongʻinga qarshi toʻsiq gursillab tushdi.
+msg.c2_card_other,Card %s: a stranger's file. You put it back.,Карточка %s: чужое дело. Вы кладёте её обратно.,%s-kartochka: begona odamning ishi. Uni joyiga qaytardingiz.
+msg.c2_card_leyla,"Card 0417: Rahimova, Leyla. Laboratory 7.",Карточка 0417: Рахимова Лейла. Лаборатория 7.,0417-kartochka: Rahimova Leyla. 7-laboratoriya.
+msg.c2_pressure_ok,The compressor wheezes to life. The station lamp turns green.,Компрессор оживает с хрипом. Лампа станции загорается зелёным.,Kompressor xirillab ishga tushdi. Stansiya chirogʻi yashil yondi.
+msg.c2_valves_locked,The valves hold the pressure now.,Вентили теперь держат давление.,Endi ventillar bosimni ushlab turibdi.
+msg.c2_punch_empty,The punch is empty. It needs a blank card.,Перфоратор пуст. Нужен чистый бланк.,Teshgich boʻsh. Unga boʻsh karta kerak.
+msg.c2_card_punched,Clack. The card is punched.,Щёлк. Карта пробита.,Chiq. Karta teshildi.
+msg.c2_card_returned,You slip the card back into the tray.,Вы возвращаете бланк в лоток.,Kartani laganga qaytardingiz.
+msg.c2_no_pressure,The tubes are dead: no pressure.,Трубы мертвы: нет давления.,Quvurlar jim: bosim yoʻq.
+msg.c2_tube_empty,The canister is empty.,Капсула пуста.,Kapsula boʻsh.
+msg.c2_canister_loaded,The card goes into the canister.,Карта отправляется в капсулу.,Karta kapsulaga solindi.
+msg.c2_notfound,The canister returns with a red slip: FILE NOT FOUND.,Капсула возвращается с красной запиской: ДЕЛО НЕ НАЙДЕНО.,Kapsula qizil qogʻoz bilan qaytdi: ISH TOPILMADI.
+msg.c2_nodest,The canister thumps back. No one answered there.,Капсула с глухим стуком возвращается. Там никто не ответил.,Kapsula gup etib qaytdi. U yerda hech kim javob bermadi.
+msg.c2_file,"The canister thumps back, heavier now.",Капсула возвращается — теперь тяжелее.,Kapsula qaytdi — endi ogʻirroq.
+msg.c2_locker_locked,Locked.,Заперто.,Qulflangan.
+msg.c2_locker_open,Locker 9 opens. Leyla's receiver hangs on a hook.,Шкафчик 9 открыт. На крючке висит приёмник Лейлы.,9-shkafcha ochildi. Ilgakda Leylaning qabul qilgichi osilib turibdi.
+msg.c2_grille,The grille swings open on two loose screws.,Решётка открывается: два винта едва держатся.,Panjara ochildi: ikki vinti boʻshab qolgan ekan.
+msg.c2_ledger,The ledger is hollow.,Гроссбух полый внутри.,Daftarning ichi kovak ekan.
+msg.c2_hatch,The hatch lifts with a groan.,Люк со стоном поднимается.,Lyuk gʻijirlab koʻtarildi.
+msg.c2_garbled,A shrill chatter: the speed is wrong.,Визгливая трескотня: скорость не та.,Chiyillagan shovqin: tezlik notoʻgʻri.
+msg.c2_deck_empty,There is no reel on the deck.,На магнитофоне нет катушки.,Magnitofonda gʻaltak yoʻq.
+msg.c2_dial_wrong,The dial whirs back. Nothing.,Диск с жужжанием возвращается. Ничего.,Disk gʻuvillab qaytdi. Hech narsa.
+msg.c2_booth_open,The booth door unlatches.,Дверь кинобудки отщёлкивается.,Kinobudka eshigi ochildi.
+msg.c2_reel_repaired,The splices hold. The reel is whole again.,Склейки держат. Бобина снова цела.,Yelimlar ushladi. Bobina yana butun.
+msg.c2_projector_off,The projector lamp goes dark.,Лампа проектора гаснет.,Proyektor chirogʻi oʻchdi.
+msg.c2_blurred,The picture is blurred.,Изображение размыто.,Tasvir xira.
+msg.c2_recorded_sign,The crystal flares. It keeps her sign now.,Кристалл вспыхивает. Теперь в нём её знак.,Billur chaqnadi. Endi unda uning belgisi saqlanadi.
+msg.c2_recorded_mark,The crystal flares. It keeps Strand's mark now.,Кристалл вспыхивает. Теперь в нём знак Странда.,Billur chaqnadi. Endi unda Strand belgisi saqlanadi.
+msg.c2_lens_refused,The lens already remembers Strand's mark.,Линза уже помнит знак Странда.,Linza Strand belgisini allaqachon eslab qolgan.
+msg.c2_socket_full,Something is already in the socket.,В гнезде уже что-то есть.,Uyachada allaqachon nimadir bor.
+msg.c2_port_blank,A blank crystal shows nothing.,Чистый кристалл ничего не показывает.,Boʻsh billur hech narsa koʻrsatmaydi.
+msg.c2_vault_unlocked,"The images lock into the engraving. Bolts slide back, one after another.",Изображения совпадают с гравировкой. Засовы отходят один за другим.,Tasvirlar oʻyma bilan mos tushdi. Zulfinlar birin-ketin ochildi.
+msg.c2_wheel_locked,The wheel won't move: the bolts are still in.,Штурвал не двигается: засовы ещё закрыты.,Gʻildirak qimirlamaydi: zulfinlar hali yopiq.
+msg.c2_slide_drawer,Glass slides in velvet slots.,Стеклянные слайды в бархатных гнёздах.,Baxmal uyachalardagi shisha slaydlar.
+msg.c2_echo_released,The echo turns to the light and is gone.,Эхо поворачивается к свету и исчезает.,Aks-sado yorugʻlikka yuzlandi va gʻoyib boʻldi.
+msg.c2_echo_count,Kept echoes released: %d / 3,Освобождено эхо: %d / 3,Ozod qilingan aks-sadolar: %d / 3
+msg.c2_receiver,Signal: %s,Сигнал: %s,Signal: %s
+cap2.compressor,[The compressor coughs and hums],[Компрессор кашляет и гудит],[Kompressor yoʻtalib gʻuvillaydi]
+cap2.whoosh,[A canister whooshes through the tubes],[По трубам со свистом летит капсула],[Quvurlardan kapsula shuvillab oʻtdi]
+cap2.static,[Receiver static],[Помехи в приёмнике],[Qabul qilgich shovqini]
+cap2.clicks,[Clicks: %s],[Щелчки: %s],[Chiqillashlar: %s]
+cap2.projector,[The projector rattles],[Стрекочет проектор],[Proyektor shiqirlaydi]
+cap2.bolts,[Bolts clank free],[Лязг освобождённых засовов],[Zulfinlar shaqillab ochildi]
+cap2.leyla_echo,"For a moment Leyla is there, in 1979. She touches a drawer of the slide cabinet and fades.",На миг здесь Лейла — 1979 год. Она касается ящика со слайдами и тает.,Bir lahza Leyla shu yerda — 1979-yil. U slaydlar javonining tortmasiga tegadi va yoʻqoladi.
+cap2.lens_hum,The crystal lens hums: something kept is near.,Кристаллическая линза гудит: рядом что-то хранимое.,Billur linza gʻuvillaydi: yaqinda saqlab qolingan nimadir bor.
+intro2.1,"Beyond Laboratory 7, a corridor leads to Records Archive B.",За Лабораторией 7 коридор ведёт в архив документов «Б».,7-laboratoriya ortidagi yoʻlak «B» hujjatlar arxiviga olib boradi.
+intro2.2,"Somewhere in here, Leyla left the rest of her trail.",Где-то здесь Лейла оставила продолжение своего следа.,Leyla izining davomini shu yerda bir joyda qoldirgan.
+doc2.file,"To whoever opens my file:\nI came back in 1996. The Institute is sealed, but the archive still breathes — the tubes, the lamps, the vault.\nI hid my voice where my receiver can hear it. Locker 9 keeps the receiver.\n— L.R.","Тому, кто откроет моё дело:\nЯ вернулась в 1996-м. Институт запечатан, но архив ещё дышит — трубы, лампы, хранилище.\nЯ спрятала свой голос там, где его слышит мой приёмник. Приёмник — в шкафчике 9.\n— Л.Р.","Ishimni ochgan kishiga:\n1996-yilda qaytib keldim. Institut muhrlangan, ammo arxiv hali nafas olyapti — quvurlar, chiroqlar, seyfxona.\nOvozimni qabul qilgichim eshita oladigan joyga yashirdim. Qabul qilgich 9-shkafchada.\n— L.R."
+doc2.tape_1996,1996. Day one. The Array still hums beneath the floor. I will record what I find and hide each reel where only my receiver can hear it.,"1996. День первый. Решётка всё ещё гудит под полом. Я буду записывать всё, что найду, и прятать каждую катушку там, где её слышит только мой приёмник.",1996. Birinchi kun. Panjara hali ham pol ostida gʻuvillaydi. Topganlarimni yozib boraman va har bir gʻaltakni faqat qabul qilgichim eshitadigan joyga yashiraman.
+doc2.tape_1997,1997. The static speaks names. Forty-one names. Strand did not lose them. He kept them.,1997. Помехи шепчут имена. Сорок одно имя. Странд их не потерял. Он их сохранил.,1997. Shovqin ismlarni aytadi. Qirq bitta ism. Strand ularni yoʻqotmadi. U ularni saqlab qoldi.
+doc2.tape_1998,"1998. My sign is sealed into the vault beside Strand's mark. My sign is on his old film. The booth answers to my reels, in the order I made them. If I do not come back, the way down is inside.","1998. Мой знак запечатан в хранилище рядом со знаком Странда. Мой знак — на его старом фильме. Кинобудка отвечает моим катушкам — в том порядке, в каком я их записала. Если я не вернусь, путь вниз — внутри.","1998. Belgim seyfxonaga Strand belgisi yoniga muhrlangan. Belgim uning eski filmida bor. Kinobudka gʻaltaklarimga ularni yozgan tartibimda javob beradi. Agar qaytmasam, pastga yoʻl ichkarida."
+film.1,"Meridian Institute, 1979. The Array Hall.","Институт «Меридиан», 1979. Зал Решётки.","«Meridian» instituti, 1979. Panjara zali."
+film.2,Professor Strand demonstrates light memory.,Профессор Странд демонстрирует световую память.,Professor Strand yorugʻlik xotirasini namoyish etmoqda.
+film.3,Forty-one of us. The whole staff.,Сорок один человек. Весь персонал.,Qirq bir kishimiz. Butun xodimlar.
+film.4,Dr. Rahimova draws her sign on the light glass.,Д-р Рахимова рисует свой знак на световом стекле.,Dr. Rahimova yorugʻlik oynasiga oʻz belgisini chizmoqda.
+film.secret,"13 November 1979. Strand, alone: ""If the Array keeps them, I will be with them. Forgive me, Leyla.""","13 ноября 1979. Странд, один: «Если Решётка сохранит их, я буду с ними. Прости меня, Лейла».","1979-yil 13-noyabr. Strand, yolgʻiz: «Agar Panjara ularni saqlab qolsa, men ular bilan boʻlaman. Meni kechir, Leyla»."
+cap2.vault_reel,"The Array Hall. Forty-one silhouettes in the light. And a forty-second at the edge of the frame: Leyla, 1998.","Зал Решётки. Сорок один силуэт в свете. И сорок второй на краю кадра: Лейла, 1998.","Panjara zali. Yorugʻlikda qirq bitta siluet. Kadr chetida esa qirq ikkinchisi: Leyla, 1998."
+echo2.catalogue,An archivist files a card that no one will ever read.,"Архивистка ставит на место карточку, которую уже никто не прочтёт.",Arxivchi ayol hech kim oʻqimaydigan kartochkani joyiga qoʻyadi.
+echo2.stacks,Two scientists argue in silence over a blueprint.,Двое учёных беззвучно спорят над чертежом.,Ikki olim chizma ustida jimgina bahslashmoqda.
+echo2.booth,"Strand threads a reel, smiling at someone you cannot see.","Странд заправляет плёнку и улыбается кому-то, кого вы не видите.","Strand lentani oʻrnatib, siz koʻrmaydigan kimgadir jilmayadi."
+ui.choice_keys_prompt,Two keys rest on the velvet. Lifting one will lock the other.,"На бархате лежат два ключа. Если поднять один, другой запрётся.","Baxmalda ikki kalit yotibdi. Birini olsangiz, ikkinchisi qulflanadi."
+ui.take_strand_key,Strand's key,Ключ Странда,Strandning kaliti
+ui.take_leyla_key,Leyla's key,Ключ Лейлы,Leylaning kaliti
+ui.echoes,Kept echoes,Сохранённое эхо,Saqlangan aks-sadolar
+epi2.42nd,She went in after them.,Она ушла за ними.,U ularning ortidan ketgan.
+epi2.strand_key,"You take Strand's key. Somewhere below, the Array Hall waits.",Вы берёте ключ Странда. Где-то внизу ждёт зал Решётки.,Strandning kalitini oldingiz. Pastda qayerdadir Panjara zali kutmoqda.
+epi2.leyla_key,You take Leyla's key. Her way down leads through the crystal vaults.,Вы берёте ключ Лейлы. Её путь вниз ведёт через кристальные хранилища.,Leylaning kalitini oldingiz. Uning pastga yoʻli billur omborlari orqali oʻtadi.
+epi2.echoes,Three kept echoes walk free tonight.,Этой ночью три сохранённых эха обрели свободу.,Bu tun uchta saqlangan aks-sado ozod boʻldi.
+epi2.recorder,"Somewhere below, a recorder clicks on.",Где-то внизу щёлкает и включается магнитофон.,Pastda qayerdadir magnitofon chiq etib yoqildi.
+achv.echoes_of_the_archive,Echoes of the Archive,Эхо архива,Arxiv aks-sadolari
 hint.notebook.1,Someone left a notebook behind.,Кто-то оставил блокнот.,Kimdir daftar qoldirib ketgan.
 hint.notebook.2,Look at the desk under the window.,Посмотрите на стол под окном.,Deraza ostidagi stolga qarang.
 hint.notebook.3,"Tap the desk, then take Leyla's notebook.",Нажмите на стол и возьмите блокнот Лейлы.,Stolga bosing va Leylaning daftarini oling.
@@ -299,3 +428,66 @@ hint.mirrors.3,First stand: send the beam toward the window wall. Second stand: 
 hint.finale.1,The way is open.,Путь открыт.,Yoʻl ochiq.
 hint.finale.2,Leyla's light is fading.,Свет Лейлы угасает.,Leylaning nuri soʻnmoqda.
 hint.finale.3,Make your choice.,Сделайте выбор.,Tanlov qiling.
+hint.c2_catalogue.1,Leyla's badge carries a number.,На пропуске Лейлы есть номер.,Leylaning nishonida raqam bor.
+hint.c2_catalogue.2,The catalogue drawers are numbered by the first two digits.,Ящики картотеки пронумерованы по первым двум цифрам.,Kartoteka tortmalari dastlabki ikki raqam boʻyicha raqamlangan.
+hint.c2_catalogue.3,"Drawer 04, divider 1–, card 17.","Ящик 04, разделитель 1–, карточка 17.","04-tortma, 1– ajratgich, 17-kartochka."
+hint.c2_compressor.1,The tube station is dead: there is no pressure.,Станция пневмопочты не работает: нет давления.,Pnevmatik pochta ishlamayapti: bosim yoʻq.
+hint.c2_compressor.2,The plate shows which valve feeds which gauge. Both needles need their green marks.,"Табличка показывает, какой вентиль питает какой манометр. Обе стрелки должны встать на зелёные метки.",Lavhada qaysi ventil qaysi manometrga ulangani koʻrsatilgan. Ikkala mil ham yashil belgiga kelishi kerak.
+hint.c2_compressor.3,"Valves: A 1, B 2, C 2.","Вентили: A 1, B 2, C 2.","Ventillar: A 1, B 2, C 2."
+hint.c2_punch.1,The stacks only answer punched requests.,Хранилище отвечает только на пробитые запросы.,Fond faqat teshilgan soʻrovlarga javob beradi.
+hint.c2_punch.2,Take a blank card from the station tray and copy the index card's notches with the punch.,Возьмите чистый бланк из лотка станции и перенесите вырезы с карточки на перфоратор.,Stansiya laganidan boʻsh karta oling va kartochkadagi kesiklarni teshgichda takrorlang.
+hint.c2_punch.3,"Keys 1, 3, 4 and 7 down (1 0 1 1 0 0 1 0), then pull the lever.","Клавиши 1, 3, 4 и 7 вниз (1 0 1 1 0 0 1 0), затем рычаг.","1, 3, 4 va 7-tugmalarni bosing (1 0 1 1 0 0 1 0), soʻng dastakni torting."
+hint.c2_dispatch.1,Requests travel by tube.,Запросы путешествуют по трубам.,Soʻrovlar quvur orqali yuboriladi.
+hint.c2_dispatch.2,The chart on the wall shows where request cards go.,"Схема на стене показывает, куда отправлять бланки.",Devordagi sxema soʻrov kartalari qayerga ketishini koʻrsatadi.
+hint.c2_dispatch.3,"Card in the canister, dial on the book, pull the lever.","Карту в капсулу, диск на книгу, потяните рычаг.","Kartani kapsulaga soling, diskni kitobga qoʻying, dastakni torting."
+hint.c2_take_file.1,The canister came back.,Капсула вернулась.,Kapsula qaytib keldi.
+hint.c2_take_file.2,Open the receive tray of the tube station.,Откройте приёмный лоток станции.,Stansiyaning qabul laganini oching.
+hint.c2_take_file.3,Take Leyla's file and the key from the canister.,Возьмите из капсулы дело Лейлы и ключ.,Kapsuladan Leylaning ishini va kalitni oling.
+hint.c2_locker.1,Leyla's letter names a locker.,В письме Лейлы назван шкафчик.,Leyla maktubida shkafcha tilga olingan.
+hint.c2_locker.2,Her file held a small key with a tag.,В её деле был маленький ключ с биркой.,Uning ishida yorliqli kichik kalit bor edi.
+hint.c2_locker.3,Use the locker key on locker 9.,Используйте ключ на шкафчике 9.,Kalitni 9-shkafchada ishlating.
+hint.c2_take_receiver.1,Locker 9 is open.,Шкафчик 9 открыт.,9-shkafcha ochiq.
+hint.c2_take_receiver.2,Something hangs on its hook.,На крючке что-то висит.,Ilgakda nimadir osilib turibdi.
+hint.c2_take_receiver.3,Take the pocket receiver.,Возьмите карманный приёмник.,Choʻntak qabul qilgichini oling.
+hint.c2_hunt.1,Leyla hid her voice where her receiver can hear it.,"Лейла спрятала свой голос там, где его слышит приёмник.",Leyla ovozini qabul qilgich eshitadigan joyga yashirgan.
+hint.c2_hunt.2,Select the receiver and watch its needle as you look around.,"Выберите приёмник и следите за стрелкой, осматриваясь.",Qabul qilgichni tanlang va atrofga qaraganda milini kuzating.
+hint.c2_hunt.3,"Vent grille on the west wall, hollow ledger in the stacks, floor hatch near the reading table.","Решётка на западной стене, полый гроссбух на стеллаже, люк у читального стола.","Gʻarbiy devordagi panjara, javondagi kovak daftar, mutolaa stoli yonidagi lyuk."
+hint.c2_tape.1,The reels need a player.,Катушкам нужен магнитофон.,Gʻaltaklarga magnitofon kerak.
+hint.c2_tape.2,The archivist's deck plays them. Match the speed written on the reels.,"Их проигрывает магнитофон архивариуса. Выставьте скорость, указанную на катушках.",Ularni arxivchining magnitofoni qoʻyadi. Gʻaltakda yozilgan tezlikni tanlang.
+hint.c2_tape.3,"Speed 4.75, a reel on the deck, press Play. Do it for all three.","Скорость 4.75, катушку на магнитофон, нажмите «Пуск». Для всех трёх.","Tezlik 4.75, gʻaltakni magnitofonga qoʻying, «Play»ni bosing. Uchalasi uchun."
+hint.c2_booth.1,The booth door has a dial.,На двери кинобудки есть диск.,Kinobudka eshigida disk bor.
+hint.c2_booth.2,"""The booth answers to my reels, in the order I made them."" Count each reel's clicks.","«Кинобудка отвечает моим катушкам — в том порядке, в каком я их записала». Сосчитайте щелчки.",«Kinobudka gʻaltaklarimga ularni yozgan tartibimda javob beradi». Chiqillashlarni sanang.
+hint.c2_booth.3,"Dial 2, 8, 5.","Наберите 2, 8, 5.","2, 8, 5 ni tering."
+hint.c2_splice.1,The film is in pieces.,Плёнка разорвана на кусочки.,Lenta boʻlaklarga boʻlingan.
+hint.c2_splice.2,The can's lid shows the day running from dawn to noon. Shadows shorten.,На крышке коробки день идёт от рассвета к полудню. Тени укорачиваются.,Quti qopqogʻida kun tongdan tushgacha davom etadi. Soyalar qisqaradi.
+hint.c2_splice.3,Order the frames from the longest shadow to the shortest.,Расположите кадры от самой длинной тени к самой короткой.,Kadrlarni eng uzun soyadan eng qisqasigacha joylang.
+hint.c2_take_reel.1,The reel is whole again.,Бобина снова цела.,Bobina yana butun.
+hint.c2_take_reel.2,It is still on the splicer.,Она ещё на склеечном прессе.,U hali yelimlagichda.
+hint.c2_take_reel.3,Take the film reel.,Возьмите бобину.,Bobinani oling.
+hint.c2_project.1,Strand's film wants a projector.,Фильму Странда нужен проектор.,Strandning filmiga proyektor kerak.
+hint.c2_project.2,Thread the reel and pull the run lever.,Заправьте плёнку и потяните рычаг пуска.,Lentani oʻrnating va ishga tushirish dastagini torting.
+hint.c2_project.3,"Use the reel on the projector, then pull the lever.","Используйте бобину на проекторе, затем рычаг.","Bobinani proyektorda ishlating, soʻng dastakni torting."
+hint.c2_take_crystal.1,The booth keeps something for the light.,В кинобудке есть кое-что для света.,Kinobudkada yorugʻlik uchun nimadir bor.
+hint.c2_take_crystal.2,A velvet case lies on the shelf.,На полке лежит бархатный футляр.,Tokchada baxmal quti yotibdi.
+hint.c2_take_crystal.3,Take a blank crystal from the lens case.,Возьмите чистый кристалл из футляра.,Qutidan boʻsh billur oling.
+hint.c2_focus.1,The picture on the screen is blurred.,Изображение на экране размыто.,Ekrandagi tasvir xira.
+hint.c2_focus.2,Turn the projector's focus ring.,Поверните кольцо фокуса проектора.,Proyektorning fokus halqasini buring.
+hint.c2_focus.3,Focus to the middle mark (5).,Фокус на среднюю метку (5).,Fokusni oʻrta belgiga (5) qoʻying.
+hint.c2_record_sign.1,"""The crystal remembers what falls on it.""","«Кристалл помнит то, что на него падает».",«Billur ustiga tushgan narsani eslab qoladi».
+hint.c2_record_sign.2,"The screen frame has a socket for a crystal. Show only her sign, sharp.","На раме экрана есть гнездо для кристалла. Покажите только её знак, чётко.",Ekran romida billur uchun uyacha bor. Faqat uning belgisini aniq koʻrsating.
+hint.c2_record_sign.3,Hold the last frame in focus and seat a blank crystal in the screen socket.,Остановитесь на последнем кадре в фокусе и вставьте чистый кристалл в гнездо экрана.,Oxirgi kadrni aniq holda toʻxtating va boʻsh billurni ekran uyachasiga qoʻying.
+hint.c2_mark.1,Leyla's echo pointed somewhere.,Эхо Лейлы на что-то указало.,Leylaning aks-sadosi nimanidir koʻrsatdi.
+hint.c2_mark.2,"The slide cabinet, the drawer with the star. Use the slide projector with the film projector off.","Шкаф для слайдов, ящик со звездой. Диапроектор — при выключенном кинопроекторе.","Slaydlar javoni, yulduzli tortma. Kinoproyektor oʻchiq holda diaproyektordan foydalaning."
+hint.c2_mark.3,"Emblem slide in the slide projector, meridian upright, film lamp off, blank crystal in the socket.","Слайд в диапроектор, меридиан вертикально, лампа кинопроектора выключена, чистый кристалл в гнездо.","Slaydni diaproyektorga, meridianni tik, kinoproyektor chirogʻini oʻchiring, boʻsh billurni uyachaga."
+hint.c2_ports.1,The vault door has two lenses.,На двери хранилища две линзы.,Seyfxona eshigida ikkita linza bor.
+hint.c2_ports.2,"The plates show which mark goes where: the star on the left, the crescent on the right.","Таблички показывают, где какой знак: звезда слева, полумесяц справа.","Lavhalar qaysi belgi qayerga ekanini koʻrsatadi: yulduz chapda, yarim oy oʻngda."
+hint.c2_ports.3,"Strand's mark crystal in the left port, Leyla's sign crystal in the right.","Кристалл со знаком Странда — в левый порт, со знаком Лейлы — в правый.","Strand belgili billur chap portga, Leyla belgili billur oʻng portga."
+hint.c2_align.1,Match the faint engraving on the glass.,Совместите изображения с бледной гравировкой на стекле.,Tasvirlarni shishadagi xira oʻyma bilan moslang.
+hint.c2_align.2,"The mark stands upright. The sign lies on its side inside the ring, smaller.",Знак стоит вертикально. Полумесяц лежит на боку внутри кольца и меньше.,Belgi tik turadi. Yarim oy halqa ichida yonboshlab yotadi va kichikroq.
+hint.c2_align.3,"Left collar upright, right collar 2 steps, zoom 3.","Левое кольцо вертикально, правое на 2 шага, масштаб 3.","Chap halqa tik, oʻng halqa 2 qadam, kattalik 3."
+hint.c2_wheel.1,The bolts are free.,Засовы свободны.,Zulfinlar boʻshadi.
+hint.c2_wheel.2,Turn the vault wheel.,Поверните штурвал хранилища.,Seyfxona gʻildiragini buring.
+hint.c2_wheel.3,Tap the wheel three times.,Нажмите на штурвал три раза.,Gʻildirakka uch marta bosing.
+hint.c2_finale.1,Two keys. You may take only one.,Два ключа. Взять можно только один.,Ikki kalit. Faqat bittasini olish mumkin.
+hint.c2_finale.2,Strand's key opens the Array Hall. Leyla's opens the crystal vaults.,"Ключ Странда открывает зал Решётки, ключ Лейлы — кристальные хранилища.","Strandning kaliti Panjara zalini, Leylaniki billur omborlarini ochadi."
+hint.c2_finale.3,Choose.,Выбирайте.,Tanlang.

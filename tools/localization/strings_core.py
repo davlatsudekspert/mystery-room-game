@@ -119,5 +119,4 @@ S = [
 ("epi.leave", "You leave the lens to her. As the door closes behind you, the desk lamp flickers once, like a goodbye.", "Вы оставляете линзу ей. Когда дверь закрывается за вами, настольная лампа мигает — словно прощаясь.", "Linzani unga qoldirasiz. Eshik ortingizdan yopilganda stol chirogʻi bir bor miltillaydi — xuddi xayrlashgandek."),
 ("epi.shards", "Five shards — five fragments of a single night. The Array knows you now.", "Пять осколков — пять фрагментов одной ночи. Теперь Решётка знает вас.", "Beshta boʻlak — bitta tunning besh parchasi. Endi Panjara sizni taniydi."),
 ("epi.postmark", "On the train home you look at the parcel again. The postmark reads: 14 XI 1979.", "В поезде вы снова смотрите на посылку. На штемпеле: 14 XI 1979.", "Uyga qaytayotgan poyezdda posilkaga yana qaraysiz. Pochta muhrida: 14 XI 1979."),
-("epi.next", "Chapter 2 — The Missing Scientist", "Глава 2 — Пропавший учёный", "2-bob — Gʻoyib boʻlgan olim"),
 ]
