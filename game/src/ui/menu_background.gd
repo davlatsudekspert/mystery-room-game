@@ -16,7 +16,7 @@ const FOV_H := 36.0 # horizontal (KEEP_WIDTH): the box keeps its share of the wi
 const AZIMUTH := 32.0 # camera bearing, degrees right of the box front
 const ELEVATION := 24.0
 const GEAR_DEG_S := 3.0 # wheel speed, degrees per second
-const LAMP_ENERGY := 1.3
+const LAMP_ENERGY := 1.0
 const BRASS_METALLIC := 0.35 # no reflection probe here: half-metallic brass shows its gold under the lamp
 
 var _cam: Camera3D
@@ -67,9 +67,9 @@ func _ready() -> void:
 	_lamp = OmniLight3D.new()
 	_lamp.light_color = Color("ffb46b")
 	_lamp.light_energy = LAMP_ENERGY
-	_lamp.omni_range = 1.05 # a tight pool: the box is the brightest thing in the room
+	_lamp.omni_range = 1.1 # a tight pool: the box top is the brightest thing in the room
 	_lamp.omni_attenuation = 2.0 # inverse square: the pool of light falls off fast around the box
-	_lamp.position = BOX_POS + Vector3(-0.26, 0.4, 0.3)
+	_lamp.position = BOX_POS + Vector3(-0.1, 0.5, 0.18) # above the box, a little toward the camera and the menu
 	_lamp.shadow_enabled = not safe
 	add_child(_lamp)
 	var moon := DirectionalLight3D.new() # cool rim from behind (no shadow)
