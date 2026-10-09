@@ -18,6 +18,7 @@ Doʻkondagi nomi (30 belgi max) .. Mystery Room: Lost Institute
    (Toʻliq nomi 37 belgi, ikkala doʻkonda chegara 30 belgi. Shuning uchun
     doʻkon nomi qisqartirilgan. Oʻyin ichida toʻliq nom qoladi.)
 Versiya ......................... 0.1.0
+Maxfiylik siyosati URL ........... https://sites.google.com/view/mysteryroom-privacy  (eʼlon qilingan 2026-10-09)
 Kategoriya ...................... Oʻyin → Puzzle (Головоломки)
 Yuklash kaliti SHA-256 barmoq izi:
 E5:D8:42:A6:B8:0E:D2:50:FD:DD:EE:CA:92:64:ED:D7:A6:8B:E1:59:70:A3:AD:8C:06:A7:EC:9C:E8:37:D1:3E

@@ -3,6 +3,7 @@
 **Identifiers (unique to MYSTERY ROOM):**
 - Android package / iOS bundle id: `com.mysteryroom.forgotteninstitute`
 - Never reuse NFCSTORE ids, keys or workflows.
+- Privacy policy (public, Google Sites): https://sites.google.com/view/mysteryroom-privacy. It is used for Google Play and App Store Connect. Apple also requires a link to it inside the app; see NEXT_STEPS.
 
 ## Current state
 - GitHub Actions works again (2026-10-08 19:24 UTC). `tests.yml` and the `android.yml` debug build pass on GitHub-hosted runners. Earlier runs had ended after about 3 s with no runner while the account billing block was being lifted.

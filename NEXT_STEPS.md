@@ -5,6 +5,7 @@
 3. **Release signing**:
    - Android: the upload key is created. The owner adds the 3 `ANDROID_*` secrets. Then run `android.yml` with release, upload the first AAB by hand to Play internal testing, and automate later uploads with a service account.
    - iOS: the API key needs the Admin role, because cloud-managed distribution certificates require it.
-4. **Performance pass**: primitives ~175–183k, target 150k. Use mesh LODs on the heaviest props and simpler colliders where taps never happen.
-5. **Lighting and polish pass**: the darkroom red mood, beam glow, finale timing. Add a short tutorial nudge if testers stall at the first drawer.
-6. **Chapter 2** ("The Missing Scientist"): build on `docs/CHAPTER2_DESIGN.md` and the existing data hooks (`choices.ch1_lens`, `ch1_shards`).
+4. **Privacy policy inside the app**: add a "Privacy policy" link to Settings that opens https://sites.google.com/view/mysteryroom-privacy with `OS.shell_open`. Apple requires the link inside the app as well as in App Store Connect.
+5. **Performance pass**: primitives ~175–183k, target 150k. Use mesh LODs on the heaviest props and simpler colliders where taps never happen.
+6. **Lighting and polish pass**: the darkroom red mood, beam glow, finale timing. Add a short tutorial nudge if testers stall at the first drawer.
+7. **Chapter 2** ("The Missing Scientist"): build on `docs/CHAPTER2_DESIGN.md` and the existing data hooks (`choices.ch1_lens`, `ch1_shards`).
