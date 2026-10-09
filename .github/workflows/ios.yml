@@ -247,6 +247,8 @@ jobs:
           [ "$(I ITSAppUsesNonExemptEncryption)" = "false" ] || { echo "::error::ITSAppUsesNonExemptEncryption is not false"; exit 1; }
           case "$(I DTSDKName)" in iphoneos26*|iphoneos2[7-9]*) ;; *) echo "::error::not built with the iOS 26+ SDK"; exit 1 ;; esac
           test -f "$APP/PrivacyInfo.xcprivacy" && echo "PrivacyInfo.xcprivacy: present"
+          # the App Store's "Languages" row is read from the bundle's .lproj folders (expected: en ru uz)
+          echo "localizations: $(cd "$APP" && ls -d ./*.lproj | sed 's|^\./||; s|\.lproj$||' | tr '\n' ' ')"
           test -f "$APP/MysteryRoom.pck" && echo "game data: $(du -h "$APP/MysteryRoom.pck" | cut -f1)"
 
       - name: Remove the API key file

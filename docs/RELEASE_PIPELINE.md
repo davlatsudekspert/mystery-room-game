@@ -18,7 +18,8 @@ All workflows are **manual** (`workflow_dispatch`). Actions minutes in a private
 | `tests.yml` | ubuntu | Headless test suite (`tools/run_tests.sh`) |
 | `android.yml` (debug) | ubuntu | Tests, then a debug APK signed with a throw-away debug key, uploaded as an artifact |
 | `android.yml` (release) | ubuntu | Tests, then a Gradle **AAB** signed with the upload key from secrets. Optionally uploaded to **Google Play → Internal testing** as a draft |
-| `ios.yml` | macOS 15 | Godot iOS export, Xcode archive with cloud signing, then an IPA, optionally uploaded to **TestFlight**. It stops at the first step if the secrets are missing |
+| `ios-check.yml` | ubuntu | Read-only App Store Connect check (GET requests only): the MYSTERY ROOM app record, bundle id, localizations, builds and key-role probes |
+| `ios.yml` | ubuntu, then macOS 15 | ubuntu: read-only App Store Connect gate, tests, Godot export of the Xcode project and its static checks. macOS (only if those pass): Xcode 26, unsigned archive, IPA signed at export with cloud signing. Optional **TestFlight** upload (off by default); `beta_unlock` input for tester builds |
 
 ## What the owner must provide (GitHub → Settings → Secrets and variables → Actions)
 
@@ -43,22 +44,34 @@ Prerequisites:
 4. The first AAB is uploaded manually once. After that, the API can upload.
 
 ### Apple App Store / TestFlight (Xcode cloud signing: no Mac or .p12 needed)
+Full details, record facts and the owner checklist: [`docs/release/IOS_TESTFLIGHT.md`](release/IOS_TESTFLIGHT.md).
+
 | Secret | How to get it |
 |---|---|
 | `IOS_TEAM_ID` | developer.apple.com → Membership → Team ID |
 | `ASC_KEY_ID`, `ASC_ISSUER_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → "+". The role must be **Admin** (cloud-managed distribution certificates require it) |
-| `ASC_KEY_P8_BASE64` | Base64 of the downloaded `AuthKey_XXXX.p8`, from `base64 -i AuthKey_XXXX.p8` |
+| `ASC_KEY_P8_BASE64` | The `.p8` key, base64-encoded (`base64 -i AuthKey_XXXX.p8`). The stored secret is the key body without its BEGIN/END lines; `tools/ios/asc_check.py` accepts that and the other common forms |
 
-One-time setup in App Store Connect:
-1. Register the bundle id `com.mysteryroom.forgotteninstitute` under developer.apple.com → Identifiers.
-2. Create the app record (Apps → "+").
+App Store Connect (checked read-only on 2026-10-09):
+- The app record "Mystery Room: Lost Institute" (app id `6820786933`, SKU `MYSTERYROOM-FI-001`, `en-US`) exists.
+- It uses the registered bundle id `com.mysteryroom.forgotteninstitute`, the same as the repo.
+- No builds yet.
 
-The workflow then:
-1. exports the Godot Xcode project. This step is verified on Linux: scheme `MysteryRoom`, bundle id and team set, automatic signing, iOS 15.
-2. archives it with `-allowProvisioningUpdates` and the API key, so Xcode manages certificates and profiles.
-   - The archive is development-signed (`CODE_SIGN_IDENTITY="Apple Development"`).
-   - Godot's Release config asks for "Apple Distribution" with automatic signing, which Xcode rejects as conflicting.
-3. re-signs the archive in `-exportArchive` with the cloud-managed distribution certificate and uploads it to TestFlight (`destination=upload`).
+`ios.yml` (manual; `upload_to_testflight` defaults to **false**):
+1. **ubuntu** runs `asc_check.py --gate`.
+   - It fails unless the bundle id is registered and used by the app record, so automatic signing never registers a new App ID.
+   - Build number = max(highest App Store Connect build + 1, run number).
+   - Then it runs the tests, the Godot export of the Xcode project and `tools/ios/verify_xcode_project.py`:
+     - bundle id, version, team, automatic signing;
+     - `ITSAppUsesNonExemptEncryption=false`, full screen, landscape;
+     - purpose strings, privacy manifest;
+     - icons without alpha;
+     - `beta_unlock` present or absent as requested.
+2. **macOS 15** selects Xcode 26 (the iOS 26 SDK has been required since 2026-04-28) and archives **unsigned**.
+3. `-exportArchive` (`app-store-connect`, automatic signing, `-allowProvisioningUpdates` with the API key) signs with the cloud-managed Apple Distribution certificate.
+   - No development certificate or registered device is needed.
+   - The IPA is verified; with `upload_to_testflight=true` it is uploaded instead.
+4. `beta_unlock` (default **true** for TestFlight builds) adds the custom feature `beta_unlock` to the iOS preset on the runner only. **An App Store release build must use `beta_unlock=false`.**
 
 ## Status (verified in the dev container)
 - ✅ Debug APK builds locally:
@@ -67,7 +80,11 @@ The workflow then:
   - **123 MB** after the mobile texture policy (`tools/build/texture_imports.py`)
 - ⏳ Release AAB via Gradle: configured, not yet run, because it needs the Gradle download and the owner's upload key.
 - 🔶 iOS:
-  - The Xcode project export is verified on Linux.
-  - The owner added `IOS_TEAM_ID` and the `ASC_*` secrets on 2026-10-08.
-  - Archive, signing and upload need macOS, so they are unverified. The workflow **has not run yet**: it needs the App Store Connect app record and working Actions runners.
+  - The App Store Connect record and bundle id match, verified on an ubuntu runner (read-only).
+  - The Xcode project export and its static checks pass on Linux and on an ubuntu runner.
+  - Archive and cloud signing on a macOS runner are verified (run 37920931317, upload off):
+    - signed App Store IPA, 150 MB, build 1;
+    - Xcode 26.3 with the iOS 26.2 SDK;
+    - App Store profile; `codesign --verify` OK.
+  - TestFlight upload: **not done**. It waits for the owner's approval.
 - ❌ No physical-device testing yet. FPS, load time and memory on real phones are **not measured**. Container figures come from a software renderer.
