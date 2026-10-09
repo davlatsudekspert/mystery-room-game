@@ -51,8 +51,8 @@ def brass_set():
     class S:
         pass
     s = S()
-    s.aged = G.mat_brass("LG_BrassAged", hi="E0B870", lo="8A6631", rough=0.24, rough_var=0.14, crevice=0.8)
-    s.pol = G.mat_brass("LG_BrassPol", hi="F2D290", lo="B88F4A", rough=0.12, rough_var=0.07, crevice=0.6, bump=0.12)
+    s.aged = G.mat_brass("LG_BrassAged", hi="E6C47E", lo="8F6E38", rough=0.24, rough_var=0.14, crevice=0.8)
+    s.pol = G.mat_brass("LG_BrassPol", hi="F4D898", lo="BC9550", rough=0.12, rough_var=0.07, crevice=0.6, bump=0.12)
     s.satin = G.mat_brass("LG_BrassSatin", hi="D2AA66", lo="8F6B36", rough=0.3, rough_var=0.08, crevice=0.5,
                           bump=0.05, aniso=0.8, radial=True)
     s.eng = G.mat_engrave()
@@ -119,10 +119,10 @@ def crystal_unit(prefix, s, z_seat, R, mats, glow=1.0, lights=True, front_energy
     """Glowing Lumen crystal seated at z_seat (girdle bottom) with an emissive bed under it and two
     cyan point lights (front: lights the bezel; back: haloes the backdrop). Returns (objs, lights)."""
     gem = rose_gem(prefix + "_gem", R * s, z_seat * s, (z_seat + 0.015) * s, 0.072 * s, 0.032 * s,
-                   n=12, mat=G.mat_crystal("LG_Crystal", glow_strength=16.0 * glow / max(s, 1e-3)))
+                   n=12, mat=G.mat_crystal("LG_Crystal", tint="9EE9FF", glow="1EC0FF", glow_strength=9.0 * glow / max(s, 1e-3)))
     gem.visible_shadow = False
     bed = G.lathe(prefix + "_bed", [(0.0, (z_seat - 0.034) * s), (R * 1.02 * s, (z_seat - 0.034) * s)],
-                  segments=64, mat=G.mat_glow_disc("LG_GlowBed", strength=4.5 * glow, radius=R * s))
+                  segments=64, mat=G.mat_glow_disc("LG_GlowBed", strength=3.2 * glow, radius=R * s))
     bed.visible_shadow = False
     objs = [gem, bed]
     lts = []
@@ -154,7 +154,8 @@ def needle_outline():
     return G.fillet(pts, 0.0, segs=5, closed=True, radii=rr)
 
 
-def emblem(s=1.0, glow=1.0, detail=True, lights=True, prefix="em", front_energy=3.0, back_energy=20.0):
+def emblem(s=1.0, glow=1.0, detail=True, lights=True, prefix="em", front_energy=1.2, back_energy=14.0,
+           inner_ring=False):
     """The Institute mark in brass, radius 0.505*s, facing +Z, back plane at z = -0.05*s.
     Returns dict(subject=[objs], cut=[objs for mono holdout], lights=[...])."""
     m = brass_set()
@@ -181,10 +182,11 @@ def emblem(s=1.0, glow=1.0, detail=True, lights=True, prefix="em", front_energy=
         line = G.inlay(prefix + "_scale", [scaled(G.circle(0.4228, 256), s), scaled(G.circle(0.4208, 256), s)],
                        0.0462 * s, m.eng)
         parts += [ticks, line]
-    # ---- inner ring
-    ir = G.fillet([(0.313, -0.01), (0.313, 0.03), (0.287, 0.03), (0.287, -0.01)], 0, 4,
+    # ---- inner ring (optional: busier, reads as a target at small sizes)
+    ir = None if not inner_ring else G.fillet([(0.313, -0.01), (0.313, 0.03), (0.287, 0.03), (0.287, -0.01)], 0, 4,
                   radii=[0, 0.008, 0.008, 0])
-    parts.append(G.lathe(prefix + "_iring", scaled(ir, s), segments=192, mat=m.aged))
+    if ir:
+        parts.append(G.lathe(prefix + "_iring", scaled(ir, s), segments=192, mat=m.aged))
     # ---- meridian needle with engraved centre line and two screws
     needle = G.solid2d(prefix + "_needle", [scaled(needle_outline(), s)], 0.06 * s, 0.016 * s, bevel_res=4,
                        mat=m.pol, z0=0.045 * s)
@@ -220,17 +222,26 @@ def emblem(s=1.0, glow=1.0, detail=True, lights=True, prefix="em", front_energy=
 
 
 # ======================================================================= scenes
+def studio_world(scale=1.0, cam_color=None):
+    G.world_studio("06090A", 1.0, panels=[
+        ((-0.6, 0.5, 0.65), 0.93, 0.78, "FFD6A2", 2.2 * scale),     # big warm softbox, upper left
+        ((-0.15, 0.35, 0.92), 0.985, 0.955, "FFE8C8", 0.45 * scale),  # overhead strip
+        ((0.85, 0.15, 0.30), 0.975, 0.90, "A6D6EE", 0.7 * scale),    # cool window, right
+        ((0.2, -0.9, 0.35), 0.96, 0.85, "3A3028", 0.5 * scale),      # dim warm bounce, front
+    ], floor="221A12", floor_strength=0.12, cam_color=cam_color)
+
+
 def icon_A(job, draft):
     E = emblem(1.0)
     subj = E["subject"]
     bg = []
-    back = G.plane("A_backdrop", 8, 8, (0, 0, -0.17), mat=G.mat_backdrop("LG_Backdrop", "113130", "0A1B1B"))
+    back = G.plane("A_backdrop", 8, 8, (0, 0, -0.17), mat=G.mat_backdrop("LG_Backdrop", "0F2D31", "091A1D"))
     bg.append(back)
-    G.light("AREA", "A_key", (-1.5, 1.7, 2.1), (0, 0, 0), energy=300, color="FFD6A0", size=1.1)
+    G.light("AREA", "A_key", (-1.5, 1.7, 2.1), (0, 0, 0), energy=340, color="FFD6A0", size=0.9)
     G.light("AREA", "A_rim", (1.5, 1.4, 0.45), (0, 0, 0.05), energy=80, color="FFE6C4", size=0.5)
-    G.light("AREA", "A_fill", (1.4, -1.6, 1.3), (0, 0, 0), energy=14, color="9CC7DD", size=1.6)
-    G.light("AREA", "A_soft", (-0.5, 0.9, 4.2), (0, 0, 0), energy=45, color="FFE9CC", size=2.6, size_y=0.45)
-    G.world("080B0B", 1.0, top="241F18", top_strength=0.35)
+    G.light("AREA", "A_fill", (1.4, -1.6, 1.3), (0, 0, 0), energy=6, color="9CC7DD", size=1.6)
+    G.light("AREA", "A_soft", (-0.5, 0.9, 4.2), (0, 0, 0), energy=25, color="FFE9CC", size=2.6, size_y=0.45)
+    studio_world()
     cam = G.camera((0.30, -0.62, 3.4), (0, 0, 0.03), lens=100, dof_target=(0, 0, 0.1), fstop=2.8)
 
     def after(cam):
@@ -238,9 +249,10 @@ def icon_A(job, draft):
             return []
         dm = G.mat_dust("LG_Dust", "FFE2B8", 0.5)
         lit = lambda u, v: 0.15 + 0.85 * max(0.0, min(1.0, (0.5 - u + v) / 1.2))
-        near = G.dust("A_dust", 24, (-0.95, -0.95, 0.15), (0.95, 0.95, 0.5), 0.002, 0.0045, seed=7, mat=dm,
+        near = G.dust("A_dust", 16, (-0.95, -0.95, 0.15), (0.95, 0.95, 0.5), 0.002, 0.0045, seed=7, mat=dm,
                       weight=lambda p: lit(p.x, p.y))
-        far = G.dust_frustum("A_bokeh", cam, 14, 0.45, 1.3, 0.004, 0.012, seed=11, mat=dm, weight=lit)
+        far = G.dust_frustum("A_bokeh", cam, 6, 0.5, 1.2, 0.003, 0.009, seed=11, mat=G.mat_dust("LG_Bokeh", "FFE2B8", 0.25),
+                             weight=lambda u, v: lit(u, v) * (1.0 if max(abs(u), abs(v)) > 0.3 else 0.0))
         return [near, far]
     return {"subject": subj, "background": bg, "cut": E["cut"], "cam": cam, "after": after, "frac_icon": 0.86}
 
@@ -253,9 +265,9 @@ def wordmark_A(draft):
     lo1, hi1 = G.bounds([t1])
     lo2, hi2 = G.bounds([t2])
     cap = hi1.y                       # cap height (M) ~ 0.63
-    es = 0.80 * cap / 0.505 / 2 * 1.25
+    es = 1.36 * cap / 1.01
     E = emblem(es, glow=1.0, front_energy=4.0, back_energy=0.0)
-    gap = 0.16
+    gap = 0.20
     ex = hi1.x + gap + 0.505 * es
     for o in E["subject"]:
         o.data.transform(Matrix.Translation((ex, cap / 2, 0.05 * es)))
@@ -268,7 +280,7 @@ def wordmark_A(draft):
     sub = G.text_obj("w_sub", "THE FORGOTTEN INSTITUTE", 0.205, font=G.FONT_BOLD, extrude=0.02, bevel=0.0035,
                      spacing=1.42, align="CENTER", mat=letters)
     los, his = G.bounds([sub])
-    sy = lo.y - 0.10 - his.y
+    sy = min(lo.y - 0.07, -0.30) - his.y
     sub.data.transform(Matrix.Translation((cx - (los.x + his.x) / 2, sy, 0)))
     los, his = G.bounds([sub])
     rules = []
@@ -337,7 +349,7 @@ def run_icon(V, job, opt):
     draft = opt["draft"]
     res = {"icon": 1024, "fg": 432, "bg": 432, "mono": 432}[job]
     if draft:
-        res = {"icon": 384, "fg": 216, "bg": 216, "mono": 216}[job]
+        res = {"icon": 512, "fg": 216, "bg": 216, "mono": 216}[job]
     samples = int(opt["samples"] or (96 if job == "icon" else 64))
     if draft:
         samples = 20

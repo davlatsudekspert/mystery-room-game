@@ -242,7 +242,7 @@ def mat_emit(name: str, color: str, strength: float):
     return m
 
 
-def mat_glow_disc(name: str, hot: str = "EFFCFF", cool: str = "16B4EC", strength: float = 12.0,
+def mat_glow_disc(name: str, hot: str = "E4FBFF", cool: str = "0AA6E6", strength: float = 12.0,
                   radius: float = 1.0):
     """Radial emissive gradient (hot centre -> cyan edge) used behind crystals and in keyholes."""
     m, nt = new_mat(name)
@@ -258,9 +258,19 @@ def mat_glow_disc(name: str, hot: str = "EFFCFF", cool: str = "16B4EC", strength
     nt.links.new(sep.outputs[0], comb.inputs[0])
     nt.links.new(sep.outputs[1], comb.inputs[1])
     nt.links.new(comb.outputs[0], ln.inputs[0])
-    t = map_range(nt, ln.outputs["Value"], 0.0, radius * 0.55, 0.0, 1.0, interp="SMOOTHSTEP")
+    t = map_range(nt, ln.outputs["Value"], 0.0, radius * 0.4, 0.0, 1.0, interp="SMOOTHSTEP")
     col = mix_rgb(nt, t, lin(hot), lin(cool))
-    s = map_range(nt, ln.outputs["Value"], 0.0, radius, strength, strength * 0.3, interp="SMOOTHSTEP")
+    # hot core + six soft rays (the facets scatter them into a sparkling mosaic) over a dim cyan bed
+    ang = node(nt, "ShaderNodeMath", operation="ARCTAN2")
+    nt.links.new(sep.outputs[1], ang.inputs[0])
+    nt.links.new(sep.outputs[0], ang.inputs[1])
+    rays = math_node(nt, "COSINE", math_node(nt, "MULTIPLY", ang.outputs[0], 6.0))
+    rays = map_range(nt, rays, 0.2, 1.0, 0.0, 1.0)
+    core = map_range(nt, ln.outputs["Value"], radius * 0.1, radius * 0.45, 1.0, 0.0, interp="SMOOTHSTEP")
+    rad = map_range(nt, ln.outputs["Value"], 0.0, radius, 1.0, 0.2)
+    k = math_node(nt, "ADD", core, math_node(nt, "MULTIPLY", math_node(nt, "MULTIPLY", rays, rad), 0.55))
+    k = math_node(nt, "ADD", k, 0.12)
+    s = math_node(nt, "MULTIPLY", k, strength)
     e = node(nt, "ShaderNodeEmission")
     nt.links.new(col, e.inputs["Color"])
     nt.links.new(s, e.inputs["Strength"])
@@ -467,6 +477,59 @@ def world(color: str = "0B0E0E", strength: float = 1.0, top: str | None = None, 
         st = map_range(nt, sep.outputs[2], 0.2, 0.95, strength, top_strength, interp="SMOOTHSTEP")
         nt.links.new(col, bg.inputs["Color"])
         nt.links.new(st, bg.inputs["Strength"])
+    if cam_color:
+        lp = node(nt, "ShaderNodeLightPath")
+        bg2 = node(nt, "ShaderNodeBackground", {"Color": lin(cam_color), "Strength": 1.0})
+        mx = node(nt, "ShaderNodeMixShader")
+        nt.links.new(lp.outputs["Is Camera Ray"], mx.inputs[0])
+        nt.links.new(shader, mx.inputs[1])
+        nt.links.new(bg2.outputs[0], mx.inputs[2])
+        shader = mx.outputs[0]
+    nt.links.new(shader, out.inputs["Surface"])
+    bpy.context.scene.world = w
+    return w
+
+
+def world_studio(base: str = "080A0A", base_strength: float = 1.0, panels=(), floor: str | None = None,
+                 floor_strength: float = 0.0, cam_color: str | None = None):
+    """Procedural 'HDRI': dark base + soft panels [(direction, cos_inner, cos_outer, hex, strength)] so curved
+    metal reflects a structured studio (softboxes, a window strip, a dim floor) instead of a flat colour."""
+    w = bpy.data.worlds.new("LG_Studio")
+    try:
+        w.use_nodes = True
+    except Exception:
+        pass
+    nt = w.node_tree
+    out = nt.nodes["World Output"]
+    bg = nt.nodes["Background"]
+    tc = node(nt, "ShaderNodeTexCoord")
+    dirv = tc.outputs["Generated"]
+    col = None
+    acc = None
+    # base colour * strength as an emission colour accumulator
+    basec = node(nt, "ShaderNodeRGB")
+    basec.outputs[0].default_value = tuple(c * base_strength for c in lin(base)[:3]) + (1.0,)
+    acc = basec.outputs[0]
+    if floor:
+        sep = node(nt, "ShaderNodeSeparateXYZ")
+        nt.links.new(dirv, sep.inputs[0])
+        f = map_range(nt, sep.outputs[2], 0.05, -0.35, 0.0, 1.0, interp="SMOOTHSTEP")
+        fc = node(nt, "ShaderNodeRGB")
+        fc.outputs[0].default_value = tuple(c * floor_strength for c in lin(floor)[:3]) + (1.0,)
+        acc = mix_rgb(nt, f, acc, fc.outputs[0])
+    for (d, ci, co, hx, st) in panels:
+        dv = Vector(d).normalized()
+        dot = node(nt, "ShaderNodeVectorMath", operation="DOT_PRODUCT")
+        nt.links.new(dirv, dot.inputs[0])
+        dot.inputs[1].default_value = dv
+        m = map_range(nt, dot.outputs["Value"], co, ci, 0.0, 1.0, interp="SMOOTHSTEP")
+        pc = node(nt, "ShaderNodeRGB")
+        pc.outputs[0].default_value = tuple(c * st for c in lin(hx)[:3]) + (1.0,)
+        add = mix_rgb(nt, m, (0, 0, 0, 1), pc.outputs[0])
+        acc = mix_rgb(nt, 1.0, acc, add, blend="ADD")
+    nt.links.new(acc, bg.inputs["Color"])
+    bg.inputs["Strength"].default_value = 1.0
+    shader = bg.outputs[0]
     if cam_color:
         lp = node(nt, "ShaderNodeLightPath")
         bg2 = node(nt, "ShaderNodeBackground", {"Color": lin(cam_color), "Strength": 1.0})
