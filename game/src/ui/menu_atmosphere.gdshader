@@ -1,6 +1,7 @@
 shader_type canvas_item;
 // Main menu atmosphere over the 3D backdrop (a 2D canvas shader: no 3D shader, cheap on phone GPUs):
-//   - a heavy vignette centred on the hero object, so the scene falls off into darkness;
+//   - a heavy vignette centred on the hero object (and toward the screen edges), so the scene falls off into
+//     darkness;
 //   - a dark gradient behind the menu column on the left, so the menu text reads over any frame;
 //   - a soft warm glow behind the logo.
 // main_menu.gd sets the uniforms from its layout (UV units: 0..1 across the screen).
@@ -12,6 +13,7 @@ uniform float column_dark = 0.8;
 uniform float vignette = 0.96;
 uniform float vignette_inner = 0.16; // radius (in screen heights) that stays clear around the hero
 uniform float vignette_outer = 0.9;
+uniform float edges = 0.55; // plus a classic darkening toward the screen edges and corners
 uniform vec3 shade : source_color = vec3(0.012, 0.014, 0.016);
 uniform vec2 glow_center = vec2(0.2, 0.3);
 uniform vec2 glow_radius = vec2(0.2, 0.25);
@@ -30,6 +32,7 @@ void fragment() {
 	l = column_dark * l;
 	vec2 d = (uv - focus) * canvas / canvas.y;
 	float v = vignette * smoothstep(vignette_inner, vignette_outer, length(d));
+	v = 1.0 - (1.0 - v) * (1.0 - edges * smoothstep(0.3, 0.75, length(uv - vec2(0.5))));
 	float dark = 1.0 - (1.0 - l) * (1.0 - v);
 	vec2 g = (uv - glow_center) / glow_radius;
 	float gl = glow * 0.2 * exp(-dot(g, g) * 1.6);

@@ -394,6 +394,7 @@ def light(name, kind, pos, energy, colour="FFE2C0", radius=0.05, target=None, sp
     lo.visible_transmission = False
     if name.startswith("fill"):            # the game's focus_fill has no specular (no hot spots on glass / enamel)
         lo.data.specular_factor = 0.0
+        lo.visible_glossy = False          # ...and its sphere must not show up mirrored in glass
     return lo
 
 

@@ -16,7 +16,7 @@ var _bg: MenuBackground
 var _atmo: ColorRect # vignette, column gradient and logo glow (canvas shader)
 var _cover: ColorRect # black over the 3D at first, faded out by the entrance
 
-const LOGO_SIZE := Vector2(760, 570)
+const LOGO_SIZE := Vector2(700, 525)
 const MENU_SEP := 6.0
 const VER_GAP := 10.0 # between the version line and the column above it
 const LOGO_GAP := 6.0
@@ -186,7 +186,8 @@ func _layout() -> void:
 	_left.offset_bottom = -(canvas.y - col_bottom)
 	var avail := col_bottom - u.position.y
 	var n := _menu.get_child_count()
-	var btn_h := UITheme.target(78)
+	# rows: a touch target at least, and airy enough for display type on a big screen
+	var btn_h := maxf(UITheme.target(78), roundf(UITheme.size(MenuItem.SIZE_NORMAL) * 1.8))
 	for b: Control in _menu.get_children():
 		b.custom_minimum_size.y = btn_h
 		btn_h = maxf(btn_h, b.get_combined_minimum_size().y)
