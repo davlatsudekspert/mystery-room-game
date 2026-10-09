@@ -513,4 +513,6 @@ func _finish() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveSystem.profile_path))
 	var bad := report.filter(func(l: String) -> bool: return l.begins_with("✗")).size()
 	print("player review: %d problems" % bad)
-	get_tree().quit(0 if bad == 0 else 1)
+	var qa_exit: int = 0 if bad == 0 else 1
+	print("QA_DONE exit=%d" % qa_exit) # tools/qa_run.sh: the run finished even if the process then hangs on exit
+	get_tree().quit(qa_exit)

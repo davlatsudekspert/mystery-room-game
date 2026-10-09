@@ -79,7 +79,7 @@ def build():
 
 def post():
     D.resmooth(bpy.data.objects[NAME], 10.0)
-    D.resmooth(bpy.data.objects["crystal_bezel"], 30.0)
+    D.resmooth(bpy.data.objects["crystal_bezel"], 18.0)          # crisp knurl ridges
     C.uv_rect_all(bpy.data.objects["crystal_face"], -FACE_R, FACE_R, -FACE_R, FACE_R, axis="Y")
 
 

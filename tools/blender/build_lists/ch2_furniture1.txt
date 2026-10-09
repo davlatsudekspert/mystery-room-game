@@ -1,0 +1,6 @@
+# Chapter 2 group B1 (archive furniture): one script per line; build_all.sh runs each with -- --no-render
+catalogue_tray.py
+card_catalogue.py
+stacks_shelving.py
+lockers.py
+routing_chart.py

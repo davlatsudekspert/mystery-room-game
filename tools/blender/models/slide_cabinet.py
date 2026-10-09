@@ -1,19 +1,28 @@
 """slide_cabinet.glb — walnut lantern-slide cabinet in the projection booth (Chapter 2; group B2).
 
-0.60 w x 1.05 h x 0.45 d, wall-mounted: origin on the floor at the centre of the back face, front +Z
-(placed at world (-5.0, 0, 2.8) with yaw 90, so the front faces east into the booth).
+0.46 w x 1.05 h x 0.45 d (contract 0.60 w, see DEVIATION), wall-mounted: origin on the floor on the wall plane,
+front +Z (placed at world (-5.0, 0, 2.8) with yaw 90, so the front faces east into the booth).
 
 Five shallow drawers between y 0.40 and 0.95 (drawer 0 at the top, pitch 0.11), each with a pressed brass
 frame holding a cream enamel plaque with a raised black symbol (0 ring, 1 triangle, 2 four-pointed star,
 3 square, 4 Greek cross) and two brass cup pulls. Inside each drawer: a felt-lined tray with walnut
-dividers, 3 rows x 5 compartments of lantern slides in card mounts lying flat (static, part of the drawer).
+dividers, 3 rows x 4 compartments of lantern slides in card mounts lying flat (static, part of the drawer).
 Below the drawers a two-door cupboard, a moulded plinth and a cove cornice.
+
+DEVIATION (layout): 0.46 wide instead of 0.60, and the body is centred at local x = +0.135 (world z 2.665)
+instead of on the origin. With the contract placement (-5.0, 0, 2.8) yaw 90, a centred 0.60 cabinet spans
+world z 2.50..3.10 and its open drawers (out to world x -4.27) would run into the film-splicer bench
+(x >= -4.50, z >= 2.896: top, apron, front leg); moving it north alone hits room A's fire bucket on the booth
+north wall (x -4.74..-4.46, y 0.80..1.24, z 2.12..2.39). Now the carcass spans world z 2.409..2.921 (top
+overhang included; the bench is lower and further east, so only the drawers matter) and the open drawers
+z 2.456..2.874: 2.2 cm clear of the bench, 1.6 cm clear of the bucket. The origin stays at the contract
+placement point on the wall plane (y = 0). Four slide columns per drawer instead of five.
 
 Parts:
   IA_slide_drawer_<i>  i = 0..4, pivot at the drawer-front face centre (z = 0.45), identity at rest; the
                        code slides it along local +Z by 0.28. The whole drawer is one mesh (front, plaque,
                        pulls, tray, slides) so the echo highlight can light it.
-  slide_mark_mount     child of IA_slide_drawer_2: front-row centre compartment, identity rotation;
+  slide_mark_mount     child of IA_slide_drawer_2: front row, compartment left of centre, identity rotation;
                        glass_slide.glb lies flat there face up (image top toward -Z = the drawer back).
   carcass              static (sides, top, plinth, rails, dust boards, cupboard doors).
 
@@ -37,17 +46,22 @@ NAME = "slide_cabinet"
 ARGS = M.main_guard()
 BUDGET = 5000
 
-W2 = 0.30
+W2 = 0.23                     # half width (0.46 wide; contract 0.60, see DEVIATION)
 DEPTH = 0.45
 FRONT = DEPTH                 # drawer-front / carcass front plane
-SIDE_IN = 0.282               # inner face of the sides
+SIDE_IN = 0.212               # inner face of the sides
+DF = SIDE_IN - 0.003          # drawer-front half width
+TS = SIDE_IN - 0.010          # tray side centre |x|
+TI = TS - 0.005               # tray inner face |x|
 PITCH = 0.11
 TOP_RAIL = 0.95               # rail above drawer 0
-FELT = 0.016                  # felt top above the drawer bottom edge
+FELT = 0.062                  # felt top above the drawer bottom edge (raised tray: the front row stays visible)
 ROW_Z = [0.376, 0.281, 0.186]
-COL_X = [-0.2, -0.1, 0.0, 0.1, 0.2]
+COL_X = [-0.1425, -0.0475, 0.0475, 0.1425]
+MARK_COL = 1                  # drawer 2, front row: the compartment left of centre holds the mark slide
 TRAVEL = 0.28
-SLIDE_BOTTOM = 0.0026         # glass_slide.glb: lowest point below its origin (measured from the item GLB)
+SLIDE_BOTTOM = 0.0014         # glass_slide.glb: lowest point below its origin (measured in the QA import)
+OFFSET_X = 0.135              # cabinet centre on local +X (world north): clears the bench and the fire bucket
 
 parts = {}
 
@@ -118,29 +132,29 @@ def build_drawer(i):
     yb, yt = drawer_y(i)
     yc = (yb + yt) / 2
     d = []
-    d.append(F.gbox(f"dr_front_{i}", (-0.279, yb, FRONT - 0.018), (0.279, yt, FRONT), mat="M_Wood_Walnut", bevel=0.004))
+    d.append(F.gbox(f"dr_front_{i}", (-DF, yb, FRONT - 0.018), (DF, yt, FRONT), mat="M_Wood_Walnut", bevel=0.004))
     # tray: sides, back, bottom, felt, dividers
     fy = yb + FELT
     for sx in (-1, 1):
-        d.append(F.gbox(f"dr_side_{i}_{sx}", (sx * 0.272 - 0.005, yb + 0.006, 0.035), (sx * 0.272 + 0.005, yb + 0.074,
+        d.append(F.gbox(f"dr_side_{i}_{sx}", (sx * TS - 0.005, yb + 0.006, 0.035), (sx * TS + 0.005, yb + 0.090,
                                                                                        FRONT - 0.018),
                         mat="M_Wood_Panel", bevel=0.0))
-    d.append(F.gbox(f"dr_back_{i}", (-0.267, yb + 0.006, 0.035), (0.267, yb + 0.066, 0.045), mat="M_Wood_Panel",
+    d.append(F.gbox(f"dr_back_{i}", (-TI, yb + 0.006, 0.035), (TI, yb + 0.085, 0.045), mat="M_Wood_Panel",
                     bevel=0.0))
-    d.append(F.gbox(f"dr_bottom_{i}", (-0.267, yb + 0.006, 0.045), (0.267, fy - 0.002, FRONT - 0.018),
+    d.append(F.gbox(f"dr_bottom_{i}", (-TI, yb + 0.006, 0.045), (TI, fy - 0.002, FRONT - 0.018),
                     mat="M_Wood_Panel", bevel=0.0))
-    d.append(F.gbox(f"dr_felt_{i}", (-0.267, fy - 0.002, 0.045), (0.267, fy, FRONT - 0.018), mat="M_Felt", bevel=0.0))
-    for x in (-0.15, -0.05, 0.05, 0.15):
+    d.append(F.gbox(f"dr_felt_{i}", (-TI, fy - 0.002, 0.045), (TI, fy, FRONT - 0.018), mat="M_Felt", bevel=0.0))
+    for x in (-0.095, 0.0, 0.095):
         d.append(F.gbox(f"dr_div_{i}_{x:+.2f}", (x - 0.002, fy, 0.138), (x + 0.002, fy + 0.017, FRONT - 0.018),
                         mat="M_Wood_Walnut", bevel=0.0))
     for z in (0.3285, 0.2335, 0.1385):
-        d.append(F.gbox(f"dr_cross_{i}_{z:.3f}", (-0.267, fy, z - 0.002), (0.267, fy + 0.0155, z + 0.002),
+        d.append(F.gbox(f"dr_cross_{i}_{z:.3f}", (-TI, fy, z - 0.002), (TI, fy + 0.0155, z + 0.002),
                         mat="M_Wood_Walnut", bevel=0.0))
     # slides (card mount + dark glass window, lying flat); a few gaps, a little jitter
     rnd = __import__("random").Random(31 + i)
     for r, z in enumerate(ROW_Z):
         for c, x in enumerate(COL_X):
-            if i == 2 and r == 0 and c == 2:
+            if i == 2 and r == 0 and c == MARK_COL:
                 continue                       # the mark slide is spawned here by the code
             if rnd.random() < 0.10:
                 continue
@@ -157,10 +171,10 @@ def build_drawer(i):
             d += [card, win]
     d += plaque(i, yc)
     for sx in (-1, 1):
-        d += cup_pull(f"pull_{i}_{sx}", sx * 0.172, yc)
+        d += cup_pull(f"pull_{i}_{sx}", sx * 0.140, yc)
     o = F.part(f"IA_slide_drawer_{i}", d, pivot=(0.0, yc, FRONT))
     if i == 2:
-        parts["mark_mount"] = F.mount("slide_mark_mount", (0.0, fy + SLIDE_BOTTOM, ROW_Z[0]), par=o)
+        parts["mark_mount"] = F.mount("slide_mark_mount", (COL_X[MARK_COL], fy + SLIDE_BOTTOM, ROW_Z[0]), par=o)
     return o
 
 
@@ -168,7 +182,8 @@ def build_drawer(i):
 def build_carcass():
     c = []
     # plinth (recessed kick) and a base moulding
-    c.append(F.gbox("plinth", (-0.288, 0.0, 0.012), (0.288, 0.072, DEPTH - 0.012), mat="M_Wood_Walnut", bevel=0.003))
+    c.append(F.gbox("plinth", (-W2 + 0.012, 0.0, 0.012), (W2 - 0.012, 0.072, DEPTH - 0.012), mat="M_Wood_Walnut",
+                    bevel=0.003))
     base_prof = [(0.0, 0.070), (0.0, 0.104), (-0.006, 0.104), (-0.010, 0.098), (-0.010, 0.086), (-0.014, 0.078),
                  (-0.014, 0.070)]
     path = [G(-W2, 0, 0.0), G(-W2, 0, DEPTH), G(W2, 0, DEPTH), G(W2, 0, 0.0)]
@@ -199,7 +214,7 @@ def build_carcass():
                         bevel=0.0))
     # cupboard: two flush doors with raised fields, turned knobs, an escutcheon
     for j, sx in enumerate((-1, 1)):
-        x0, x1 = (0.0015, 0.279) if sx > 0 else (-0.279, -0.0015)
+        x0, x1 = (0.0015, DF) if sx > 0 else (-DF, -0.0015)
         c.append(F.gbox(f"door_{j}", (x0, 0.108, FRONT - 0.018), (x1, 0.39, FRONT), mat="M_Wood_Walnut", bevel=0.003))
         c.append(F.gbox(f"door_field_{j}", (x0 + 0.032, 0.140, FRONT - 0.002), (x1 - 0.032, 0.358, FRONT + 0.004),
                         mat="M_Wood_Walnut", bevel=0.006))
@@ -219,6 +234,11 @@ def build():
     F.ensure_materials()
     build_carcass()
     parts["drawers"] = [build_drawer(i) for i in range(5)]
+    # shift the whole cabinet north (local +X): the static carcass in its mesh, the drawers by their pivots
+    parts["carcass"].data.transform(__import__("mathutils").Matrix.Translation(G(OFFSET_X, 0, 0)))
+    for d in parts["drawers"]:
+        d.location = d.location + G(OFFSET_X, 0, 0)
+    M.refresh()
     F.finalize_all()
     return F.report(NAME)
 
@@ -248,21 +268,24 @@ def qa():
     if F.want("view", ARGS):
         F.shoot(NAME + "_2", (-3.85, 1.3, 2.8), (-4.8, 0.7, 2.8), vfov=48, world=0.10)
     if F.want("hero", ARGS):
-        F.shoot(NAME, (-3.75, 1.35, 2.15), (-4.85, 0.62, 2.85), vfov=50, world=0.12)
+        F.shoot(NAME, (-3.65, 1.42, 2.25), (-4.85, 0.62, 2.70), vfov=50, world=0.12)
     # drawer 2 open with the emblem slide
     dr = parts["drawers"][2]
     dr.location = dr.location + (dr.matrix_basis.to_3x3() @ G(0, 0, TRAVEL))
     M.refresh()
     h = F.item_or_proxy("glass_slide", parts["mark_mount"])
+    F.qa_item_decals()
     M.refresh()
     if h is not None:
         lo = min((o.matrix_world @ Vector(c)).z for o in bpy.context.scene.objects if o.type == "MESH"
                  and o.name.startswith("qa_") and "slide" in o.name for c in o.bound_box)
-        print(f"[slide_cabinet] glass_slide lowest z (world) = {lo:.4f}")
+        print(f"[slide_cabinet] glass_slide lowest z (world) = {lo:.4f}, felt top = {drawer_y(2)[0] + FELT:.4f}")
     if F.want("open", ARGS):
         F.shoot(NAME + "_3", (-3.85, 1.3, 2.8), (-4.8, 0.7, 2.8), vfov=48, world=0.10)
+    if F.want("suggest", ARGS):     # suggested slides camera, centred on the (offset) cabinet
+        F.shoot(NAME + "_4", (-3.80, 1.32, 2.70), (-4.62, 0.64, 2.68), vfov=48, world=0.10)
     if F.want("close", ARGS):
-        F.shoot(NAME + "_4", (-4.05, 1.12, 2.95), (-4.32, 0.70, 2.8), vfov=40, world=0.10)
+        F.shoot(NAME + "_5", (-4.00, 1.10, 2.80), (-4.33, 0.66, 2.70), vfov=40, world=0.10)
 
 
 main()

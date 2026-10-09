@@ -208,7 +208,7 @@ def hall_trims():
         add("trim", A.sweep(f"baseboard_{i}", A.profile_baseboard(h=BASE_H, t=0.022), path, mat=WAL))
     dado_breaks = [
         ((-0.755, Z0), (-0.345, Z0)), ((2.145, Z1), (2.555, Z1)), ((X1, 1.995), (X1, 2.405)), ((X0, -2.905), (X0, -2.495)),
-        ((-3.92, Z0), (-1.08, Z0)),          # projection screen
+        ((-4.20, Z0), (-0.80, Z0)),          # projection screen (frame, pilasters, drapes)
         ((0.28, Z0), (2.72, Z0)),            # vault frame
         ((X1, -1.87), (X1, -0.93)),          # tube station
         ((X1, -0.66), (X1, -0.04)),          # routing chart

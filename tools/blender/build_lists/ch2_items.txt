@@ -1,0 +1,13 @@
+# Chapter 2 inventory items (group D2, lib_ch2_items.py). QA-only: models/items_lineup_ch2.py (not built here).
+leyla_badge.py
+index_card.py
+request_card.py
+file_folder.py
+locker_key.py
+pocket_receiver.py
+tape_reel.py
+film_reel.py
+lumen_crystal.py
+glass_slide.py
+key_strand.py
+key_leyla.py

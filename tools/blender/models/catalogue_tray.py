@@ -6,7 +6,7 @@ toward the player, X runs across the drawer.
 
 Parts (all direct children of the root, origin = pivot, identity rotation at rest):
   * IA_divider_<g>, g = 0..9: pressboard guide cards (M_Cardboard) 0.13 w x 0.10 h x 1.8 mm, standing across
-    the drawer at z = -0.17 + g * 0.33 / 9 (back -> front). Each carries a 0.035 x 0.022 tab at
+    the drawer at z = 0.16 - (9 - g) * 0.0335 (back -> front; -0.1415 .. +0.16). Each carries a 0.035 x 0.022 tab at
     x = -0.045 / 0 / +0.045 (g % 3) with a cream insert and the 3D text "g–". Pivot = bottom centre; the code
     tilts the picked guide +20 deg about local +X (top toward the player).
   * IA_card_<n>, n = 0..9: plain cream index cards 0.125 x 0.075 x 0.4 mm with a blank 0.021 x 0.0125 tab at
@@ -36,7 +36,9 @@ BUDGET = 5000
 # guides
 DIV_W, DIV_H, DIV_T = 0.13, 0.10, 0.0018
 TAB_W, TAB_H = 0.035, 0.022
-DIV_Z0, DIV_Z1 = -0.17, 0.16
+DIV_PITCH = 0.0335                  # contract 0.0367; see docs (20 deg tilt touches the next guide)
+DIV_Z1 = 0.16
+DIV_Z0 = DIV_Z1 - 9 * DIV_PITCH        # -0.1415
 DIV_TAB_X = (-0.045, 0.0, 0.045)
 # cards
 CARD_W, CARD_H, CARD_T = 0.125, 0.075, 0.0004
@@ -44,7 +46,7 @@ CTAB_W, CTAB_H = 0.021, 0.0125
 CARD_TAB_X = (-0.05, -0.025, 0.0, 0.025, 0.05)
 CARD_REST_Z0, CARD_PITCH = DIV_Z0 - 0.0045, 0.0026
 # drawer interior (card_catalogue.py): the front's inner face and the back board, in tray coordinates
-FRONT_IN, BACK_IN = 0.182, -0.260
+FRONT_IN, BACK_IN = 0.1895, -0.2525
 ROD_Y, ROD_R = 0.010, 0.0025
 PACK_H = (0.0455, 0.0490)
 

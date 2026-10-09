@@ -4,12 +4,16 @@
 Original procedural artwork (PIL + numpy only, no third-party images). Outputs:
     game/assets/textures/decals/ch2/*.png|jpg     decals, glyphs, film frames (table: docs/models/ch2_decals.md)
     game/assets/textures/linoleum/{albedo.jpg, normal.png, orm.jpg}   M_Linoleum (seamless, 0.6 m repeat)
-    qa/decals_ch2_contact_sheet.jpg               labelled QA sheet of everything above
+    qa/decals_ch2_contact_sheet.jpg               labelled QA sheet of everything above (EN)
+    qa/decals_ch2_lang_sheet.jpg                  the localized decals as EN | RU | UZ
 
 Puzzle data MUST match game/src/rooms/archive/archive_logic.gd and docs/CHAPTER2_DESIGN.md.
 
-    python3 tools/textures/make_decals_ch2.py                       # everything + contact sheet
-    python3 tools/textures/make_decals_ch2.py --only badge,index_card
+Decals with readable words are written in EN (<name>.<ext>), RU (<name>_ru.<ext>) and UZ (<name>_uz.<ext>);
+see LOCALIZED and TXT. qa/decals_ch2_lang_sheet.jpg shows them side by side.
+
+    python3 tools/textures/make_decals_ch2.py                       # everything + both QA sheets
+    python3 tools/textures/make_decals_ch2.py --only badge,index_card --langs ru,uz --no-sheet
     python3 tools/textures/make_decals_ch2.py --sheet-only
 """
 from __future__ import annotations
@@ -60,6 +64,99 @@ def card_pos_x(k: int) -> float:
     return (k - 0.5) * CARD_W / 8
 
 
+# ---- languages ---------------------------------------------------------------------------------
+# Every decal with readable words is written as <name>.<ext> (EN) plus <name>_ru.<ext> and <name>_uz.<ext>.
+# Terminology follows game/localization/strings.csv (Archive «Б» / «B» arxivi, пневмопочта, Табельный №, Л.Р.).
+# UZ is Latin with the modifier letter ʻ (U+02BB) in oʻ / gʻ. Puzzle data (0417, notches, 4.75, symbols, the
+# B-3 shelf code that matches the 3D shelf label) is identical in every language.
+LANGS = ("en", "ru", "uz")
+TXT = {
+    # shared
+    "inst": ("MERIDIAN INSTITUTE", "ИНСТИТУТ «МЕРИДИАН»", "«MERIDIAN» INSTITUTI"),
+    "inst_sp": ("MERIDIAN  INSTITUTE", "ИНСТИТУТ  «МЕРИДИАН»", "«MERIDIAN»  INSTITUTI"),
+    "inst_line": ("Meridian Institute, 1977", "Институт «Меридиан», 1977", "«Meridian» instituti, 1977"),
+    "archive_b": ("ARCHIVE B", "АРХИВ «Б»", "«B» ARXIVI"),
+    "archive_b_sp": ("ARCHIVE  B", "АРХИВ  «Б»", "«B»  ARXIVI"),
+    "stamp_inst": ("MERIDIAN · INSTITUTE ·", "ИНСТИТУТ «МЕРИДИАН» ·", "«MERIDIAN» INSTITUTI ·"),
+    "staff_no": ("STAFF  No.", "ТАБЕЛЬНЫЙ  №", "XODIM  №"),
+    "staff_no1": ("STAFF No.", "ТАБЕЛЬНЫЙ №", "XODIM №"),
+    "surname": ("SURNAME", "ФАМИЛИЯ", "FAMILIYA"),
+    # badge
+    "badge_sub": ("STAFF PASS  ·  SECTION B", "ПРОПУСК  ·  СЕКТОР «Б»", "RUXSATNOMA  ·  «B» SEKTOR"),
+    "badge_name": ("RAHIMOVA  L.", "РАХИМОВА  Л.", "RAHIMOVA  L."),
+    "dept": ("Dept. of Light Physics", "Отдел физики света", "Yorugʻlik fizikasi boʻlimi"),
+    "badge_role": ("Researcher  ·  Laboratory 7", "Научный сотрудник  ·  Лаборатория 7", "Ilmiy xodim  ·  7-laboratoriya"),
+    "issued": ("ISSUED", "ВЫДАН", "BERILGAN"),
+    "signature": ("SIGNATURE", "ПОДПИСЬ", "IMZO"),
+    "sig_leyla": ("L. Rahimova", "Л. Рахимова", "L. Rahimova"),
+    "stamp_personnel": ("· PERSONNEL ·", "· ОТДЕЛ КАДРОВ ·", "· KADRLAR BOʻLIMI ·"),
+    # index card
+    "ic_header": ("MERIDIAN INSTITUTE · ARCHIVE B · PERSONNEL INDEX", "ИНСТИТУТ «МЕРИДИАН» · АРХИВ «Б» · КАРТОТЕКА КАДРОВ",
+                  "«MERIDIAN» INSTITUTI · «B» ARXIVI · KADRLAR KARTOTEKASI"),
+    "ic_name": ("RAHIMOVA, Leyla", "Рахимова, Лейла", "Rahimova, Leyla"),
+    "ic_role": ("researcher, Dept. of Light Physics", "науч. сотр., Отдел физики света",
+                "ilmiy xodim, Yorugʻlik fizikasi boʻlimi"),
+    "ic_lab": ("Laboratory 7 · since 1974", "Лаборатория 7 · с 1974 г.", "7-laboratoriya · 1974-yildan"),
+    "ic_file": ("personnel file: Stacks B-3", "личное дело: стеллаж B-3", "shaxsiy ish: B-3 javoni"),
+    "ic_note": ("req. via tube", "запрос пневмопочтой", "pnevmopochta orqali"),
+    # request card
+    "rc_header": ("REQUEST  —  ARCHIVE  B", "ЗАПРОС  —  АРХИВ  «Б»", "SOʻROV  —  «B»  ARXIVI"),
+    "rc_item": ("ITEM / FILE", "ДЕЛО / ЕД. ХР.", "ISH / HUJJAT"),
+    "rc_date": ("DATE", "ДАТА", "SANA"),
+    "rc_sign": ("SIGN.", "ПОДП.", "IMZO"),
+    "rc_instr": ("Punch the code positions. Send by pneumatic post.", "Пробейте позиции шифра. Отправьте пневмопочтой.",
+                 "Shifr oʻrinlarini teshing. Pnevmatik pochta bilan yuboring."),
+    "rc_form": ("Form A-12", "Форма А-12", "A-12 shakl"),
+    # routing chart
+    "chart_1": ("PNEUMATIC", "ПНЕВМО-", "PNEVMATIK"),
+    "chart_2": ("POST", "ПОЧТА", "POCHTA"),
+    # file cover
+    "fc_sub": ("PERSONNEL RECORDS  ·  ARCHIVE B", "ЛИЧНЫЕ ДЕЛА  ·  АРХИВ «Б»", "SHAXSIY ISHLAR  ·  «B» ARXIVI"),
+    "fc_title": ("PERSONNEL", "ЛИЧНОЕ ДЕЛО", "SHAXSIY ISH"),
+    "fc_f_name": ("SURNAME, INITIAL", "ФАМИЛИЯ, ИНИЦИАЛ", "FAMILIYA, ISMI"),
+    "fc_f_dept": ("DEPARTMENT", "ОТДЕЛ", "BOʻLIM"),
+    "fc_f_file": ("FILE", "ШИФР", "SHIFR"),
+    "fc_dept": ("Light Physics", "Физики света", "Yorugʻlik fizikasi"),
+    "fc_stamp": ("RESTRICTED", "СЕКРЕТНО", "MAXFIY"),
+    "fc_stamp2": ("ARCHIVE B · 1979", "АРХИВ «Б» · 1979", "«B» ARXIVI · 1979"),
+    "fc_note": ("left XI.1979", "уволена XI.1979", "ketgan XI.1979"),
+    # tape labels
+    "tl_top": ("MAGNETIC  TAPE", "МАГНИТНАЯ  ЛЕНТА", "MAGNIT  LENTA"),
+    "tl_date": ("DATE / NAME", "ДАТА / ИМЯ", "SANA / ISM"),
+    "tl_speed": ("SPEED", "СКОРОСТЬ", "TEZLIK"),
+    "tl_unit": ("cm/s", "см/с", "sm/s"),
+    "tl_init": ("L.R.", "Л.Р.", "L.R."),
+    # archive rules
+    "ar_rules": ("RULES", "ПРАВИЛА", "QOIDALARI"),
+    "ar_order": ("By order of the Director", "По приказу директора", "Direktor buyrugʻi bilan"),
+    "ar_sig": ("E. Strand", "Э. Странд", "E. Strand"),
+}
+RULES_TXT = {
+    "en": ["Admission by staff pass only.", "Files are requested by pneumatic post.", "No smoking. No open flame.",
+           "Film and lantern slides: in the booth only.", "Return every file to its box.",
+           "The vault is sealed by order of the Director.", "Leave the lamps as you found them."],
+    "ru": ["Вход только по пропускам.", "Дела заказываются пневмопочтой.", "Не курить. Открытый огонь запрещён.",
+           "Плёнки и диапозитивы — только в аппаратной.", "Возвращайте каждое дело в свою коробку.",
+           "Хранилище опечатано по приказу директора.", "Оставляйте лампы так, как нашли."],
+    "uz": ["Kirish faqat ruxsatnoma bilan.", "Hujjatlar pnevmatik pochta orqali soʻraladi.",
+           "Chekish va ochiq olov taqiqlanadi.", "Plyonka va slaydlar — faqat apparatxonada.",
+           "Har bir ishni oʻz qutisiga qaytaring.", "Seyfxona direktor buyrugʻi bilan muhrlangan.",
+           "Chiroqlarni qanday boʻlsa, shunday qoldiring."],
+}
+
+
+def t(key: str, lang: str) -> str:
+    return TXT[key][LANGS.index(lang)]
+
+
+def lname(name: str, lang: str) -> str:
+    """badge.png -> badge.png (en) / badge_ru.png / badge_uz.png"""
+    if lang == "en":
+        return name
+    base, ext = name.rsplit(".", 1)
+    return f"{base}_{lang}.{ext}"
+
+
 # ---- fonts ------------------------------------------------------------------------------------
 FONTS = os.path.join(ROOT, "game", "assets", "fonts")
 SYS = "/usr/share/fonts"
@@ -86,6 +183,7 @@ F_SANS_N = _first(f"{URW}/NimbusSansNarrow-Bold.otf", f"{SYS}/truetype/dejavu/De
 F_SANS = _first(f"{URW}/NimbusSans-Regular.otf", f"{SYS}/truetype/dejavu/DejaVuSans.ttf")
 F_SANS_B = _first(f"{URW}/NimbusSans-Bold.otf", f"{SYS}/truetype/dejavu/DejaVuSans-Bold.ttf")
 F_GOTHIC = _first(f"{URW}/URWGothic-Demi.otf", F_SANS_B)
+F_CHALK = _first(f"{SYS}/truetype/dejavu/DejaVuSerif.ttf", f"{SYS}/truetype/dejavu/DejaVuSans.ttf")   # has Greek
 
 _font_cache: dict = {}
 
@@ -102,6 +200,107 @@ def font(path: str, size: float, weight: int | None = None) -> ImageFont.FreeTyp
                 pass
         _font_cache[key] = f
     return f
+
+
+# ---- glyph coverage and per-glyph fallback (Cyrillic, Uzbek ʻ U+02BB) ----------------------------
+# Every string goes through _runs(): a character the primary font lacks is drawn from a covering font of
+# the same design family (GNU FreeFont is derived from the URW Nimbus fonts). A character no font covers
+# raises, so no image can ship with a missing-glyph box. GLYPH_FALLBACKS records what was substituted.
+_cmap_cache: dict = {}
+GLYPH_FALLBACKS: set = set()
+FF = f"{SYS}/truetype/freefont"
+LIB = f"{SYS}/truetype/liberation"
+DJ = f"{SYS}/truetype/dejavu"
+
+
+def covers(path: str, ch: str) -> bool:
+    if ch in " \n":
+        return True
+    cm = _cmap_cache.get(path, False)
+    if cm is False:
+        try:
+            from fontTools.ttLib import TTFont
+            cm = set(TTFont(path, fontNumber=0, lazy=True).getBestCmap().keys())
+        except Exception:      # fontTools missing: trust the font
+            cm = None
+        _cmap_cache[path] = cm
+    return cm is None or ord(ch) in cm
+
+
+def fallback_for(path: str) -> str:
+    n = os.path.basename(path)
+    bold = "Bold" in n or "Demi" in n
+    if "Mono" in n:
+        # FreeMono draws ʻ as an acute-like tick; Liberation Mono has a proper turned comma
+        chain = [f"{LIB}/LiberationMono-{'Bold' if bold else 'Regular'}.ttf", f"{DJ}/DejaVuSansMono{'-Bold' if bold else ''}.ttf",
+                 f"{FF}/FreeMono{'Bold' if bold else ''}.ttf"]
+    elif "Roman" in n or "Serif" in n or "Cormorant" in n:
+        chain = [f"{FF}/FreeSerif{'Bold' if bold else ''}.ttf", f"{LIB}/LiberationSerif-{'Bold' if bold else 'Regular'}.ttf",
+                 f"{DJ}/DejaVuSerif{'-Bold' if bold else ''}.ttf"]
+    elif "Gothic" in n:
+        chain = [f"{SYS}/opentype/inter/Inter-Bold.otf", f"{DJ}/DejaVuSans-Bold.ttf"]
+    else:   # Nimbus Sans / Narrow and anything else
+        chain = [f"{FF}/FreeSans{'Bold' if bold else ''}.ttf", f"{LIB}/LiberationSans-{'Bold' if bold else 'Regular'}.ttf",
+                 f"{DJ}/DejaVuSans{'-Bold' if bold else ''}.ttf"]
+    for c in chain:
+        if os.path.exists(c):
+            return c
+    return f"{DJ}/DejaVuSans.ttf"
+
+
+def _runs(txt: str, path: str):
+    """Split txt into [substring, font path] runs, swapping in a fallback font for uncovered glyphs."""
+    out = []
+    fb = None
+    for ch in txt:
+        p = path
+        if not covers(path, ch):
+            fb = fb or fallback_for(path)
+            if not covers(fb, ch):
+                raise ValueError(f"no font covers {ch!r} (U+{ord(ch):04X}) for {os.path.basename(path)}")
+            p = fb
+            GLYPH_FALLBACKS.add((os.path.basename(path), f"U+{ord(ch):04X}", os.path.basename(fb)))
+        if out and out[-1][1] == p:
+            out[-1][0] += ch
+        else:
+            out.append([ch, p])
+    return out
+
+
+def text_width(txt: str, path: str, size: float, spacing: float = 0.0, weight=None) -> float:
+    w = 0.0
+    for sub, p in _runs(txt, path):
+        f = font(p, size, weight if p == path else None)
+        w += sum(f.getlength(c) for c in sub) + spacing * len(sub) if spacing else f.getlength(sub)
+    return w - (spacing if spacing else 0.0)
+
+
+def fit(txt: str, path: str, size: float, max_w: float, spacing: float = 0.0, weight=None, min_scale=0.5):
+    """Largest size <= `size` (and the matching spacing) at which txt fits in max_w pixels."""
+    sc = 1.0
+    while sc > min_scale and text_width(txt, path, size * sc, spacing * sc, weight) > max_w:
+        sc -= 0.02
+    return size * sc, spacing * sc
+
+
+def draw_text(d: ImageDraw.ImageDraw, x, y, txt, path, size, fill, anchor="la", weight=None, spacing=0.0):
+    """ImageDraw text with per-glyph fallback, PIL-style anchor (h in l/m/r, v in a/t/m/s/b/d) and optional
+    letter spacing (pixels)."""
+    runs = _runs(txt, path)
+    total = text_width(txt, path, size, spacing, weight)
+    h, v = anchor[0], anchor[1]
+    cx = x - (total / 2 if h == "m" else total if h == "r" else 0.0)
+    f0 = font(path, size, weight)
+    base = y if v == "s" else y + (f0.getbbox("H", anchor="l" + v)[1] - f0.getbbox("H", anchor="ls")[1])
+    for sub, p in runs:
+        f = font(p, size, weight if p == path else None)
+        if spacing:
+            for c in sub:
+                d.text((cx, base), c, font=f, fill=fill, anchor="ls")
+                cx += f.getlength(c) + spacing
+        else:
+            d.text((cx, base), sub, font=f, fill=fill, anchor="ls")
+            cx += f.getlength(sub)
 
 
 # ---- numeric helpers ---------------------------------------------------------------------------
@@ -273,21 +472,12 @@ class Pen:
         self.d.arc([(cx - ro) * s, (cy - ro) * s, (cx + ro) * s, (cy + ro) * s], a0, a1, fill=v,
                    width=max(1, int(round(width * s))))
 
-    def text(self, x, y, txt, path, size, anchor="mm", v: int = 255, weight=None, spacing: float = 0):
-        f = font(path, size * self.ss, weight)
-        if not spacing:
-            self.d.text((x * self.ss, y * self.ss), txt, font=f, fill=v, anchor=anchor)
-            return
-        total = sum(f.getlength(c) for c in txt) + spacing * self.ss * (len(txt) - 1)
-        if anchor[0] == "m":
-            cx = x * self.ss - total / 2
-        elif anchor[0] == "r":
-            cx = x * self.ss - total
-        else:
-            cx = x * self.ss
-        for c in txt:
-            self.d.text((cx, y * self.ss), c, font=f, fill=v, anchor="l" + anchor[1])
-            cx += f.getlength(c) + spacing * self.ss
+    def text(self, x, y, txt, path, size, anchor="mm", v: int = 255, weight=None, spacing: float = 0,
+             max_w: float = 0):
+        """Text with glyph fallback; max_w > 0 shrinks size (and spacing) so the run fits that width."""
+        if max_w:
+            size, spacing = fit(txt, path, size, max_w, spacing, weight)
+        draw_text(self.d, x * self.ss, y * self.ss, txt, path, size * self.ss, v, anchor, weight, spacing * self.ss)
 
     def paste_rotated(self, mask_img: Image.Image, cx, cy, angle_deg):
         """Max-composite an 'L' image (drawn at ss scale) rotated CCW by angle about its centre at (cx, cy)."""
@@ -304,31 +494,32 @@ class Pen:
 
 def text_mask(txt, path, size, ss=4, weight=None, pad=8, spacing: float = 0) -> Image.Image:
     """Tight 'L' image of a text run at ss scale (for rotated / jittered placement)."""
-    f = font(path, size * ss, weight)
-    l, t, r, b = f.getbbox(txt)
-    extra = int(spacing * ss * max(0, len(txt) - 1))
-    im = Image.new("L", (int(r - l) + extra + 2 * pad * ss, int(b - t) + 2 * pad * ss), 0)
-    d = ImageDraw.Draw(im)
-    if not spacing:
-        d.text((pad * ss - l, pad * ss - t), txt, font=f, fill=255)
-    else:
-        x = pad * ss - l
-        for c in txt:
-            d.text((x, pad * ss - t), c, font=f, fill=255)
-            x += f.getlength(c) + spacing * ss
-    return im
+    px = size * ss
+    wdt = text_width(txt, path, px, spacing * ss, weight)
+    im = Image.new("L", (int(wdt + 2 * px) + 2 * pad * ss, int(2.2 * px) + 2 * pad * ss), 0)
+    draw_text(ImageDraw.Draw(im), px + pad * ss, int(1.4 * px) + pad * ss, txt, path, px, 255, "ls", weight, spacing * ss)
+    bb = im.getbbox()
+    if bb is None:
+        return Image.new("L", (2 * pad * ss, 2 * pad * ss), 0)
+    p = pad * ss
+    return im.crop((bb[0] - p, bb[1] - p, bb[2] + p, bb[3] + p))
 
 
 def rot_text(pen: Pen, x, y, txt, path, size, angle=0.0, weight=None, spacing=0.0):
     pen.paste_rotated(text_mask(txt, path, size, pen.ss, weight, spacing=spacing), x, y, angle)
 
 
-def arc_text(pen: Pen, cx, cy, r, txt, path, size, a_mid=-90.0, spacing=1.0, weight=None, inward=False):
+def arc_text(pen: Pen, cx, cy, r, txt, path, size, a_mid=-90.0, spacing=1.0, weight=None, inward=False,
+             max_deg: float = 0.0):
     """Text set along a circle of radius r (baseline), centred at angle a_mid (deg, 0 = +x, +90 = down).
-    Letters stand on the outside of the circle (top reading clockwise), or inside when inward."""
-    f = font(path, size, weight)
-    widths = [f.getlength(c) * spacing for c in txt]
+    Letters stand on the outside of the circle (top reading clockwise), or inside when inward.
+    max_deg > 0 shrinks the font so the run spans at most that angle."""
+    widths = [text_width(c, path, size, 0.0, weight) * spacing for c in txt]
     total = sum(widths)
+    if max_deg and math.degrees(total / r) > max_deg:
+        size *= math.radians(max_deg) * r / total
+        widths = [text_width(c, path, size, 0.0, weight) * spacing for c in txt]
+        total = sum(widths)
     a = math.radians(a_mid) - (total / r) / 2 * (-1 if inward else 1)
     for c, wdt in zip(txt, widths):
         step = wdt / r
@@ -340,12 +531,16 @@ def arc_text(pen: Pen, cx, cy, r, txt, path, size, a_mid=-90.0, spacing=1.0, wei
         a += step * (-1 if inward else 1)
 
 
-def typed(pen: Pen, x, y, txt, size, rng, path=None, jitter=0.7, fade=(0.72, 1.0), anchor="ls"):
-    """Typewriter text: per-character jitter and uneven ink. (x, y) = baseline start."""
+def typed(pen: Pen, x, y, txt, size, rng, path=None, jitter=0.7, fade=(0.72, 1.0), anchor="ls", max_w: float = 0):
+    """Typewriter text: per-character jitter and uneven ink. (x, y) = baseline start.
+    max_w > 0 shrinks the type so the line fits that width."""
     path = path or F_TYPE
-    f = font(path, size * pen.ss)
+    if max_w:
+        adv1 = font(path, 100).getlength("M") / 100.0
+        size = min(size, max_w / max(1e-6, adv1 * len(txt)))
+    f0 = font(path, size * pen.ss)
     s = pen.ss
-    adv = f.getlength("M")
+    adv = f0.getlength("M")
     if anchor[0] == "m":
         x -= adv * len(txt) / s / 2
     elif anchor[0] == "r":
@@ -353,6 +548,7 @@ def typed(pen: Pen, x, y, txt, size, rng, path=None, jitter=0.7, fade=(0.72, 1.0
     cx = x * s
     for c in txt:
         if c != " ":
+            f = font(_runs(c, path)[0][1], size * pen.ss)
             v = int(255 * rng.uniform(*fade))
             dx, dy = rng.normal(0, jitter * 0.6) * s, rng.normal(0, jitter * 0.5) * s
             pen.d.text((cx + dx, y * s + dy), c, font=f, fill=v, anchor="ls")
@@ -747,7 +943,7 @@ def brass_disc_rgb(S: int, seed: int, base="#5B4A2E", r_frac=0.5) -> np.ndarray:
 # =================================================================================================
 # Routing chart (600 x 840, enamel sign)
 # =================================================================================================
-def routing_chart():
+def routing_chart(lang: str = "en"):
     W, H = 600, 840
     r = np.random.default_rng(510)
     n = noise(H, W, 90, 4, 511)
@@ -764,8 +960,8 @@ def routing_chart():
     hm = hb.arr()
     rgb = paint(rgb, hm, "#1F3550")
     ht = Pen(W, H, 4)
-    ht.text(W / 2 + 34, 76, "PNEUMATIC", F_GOTHIC, 54, spacing=3)
-    ht.text(W / 2 + 34, 124, "POST", F_GOTHIC, 54, spacing=14)
+    ht.text(W / 2 + 34, 76, t("chart_1", lang), F_GOTHIC, 54, spacing=3, max_w=410)
+    ht.text(W / 2 + 34, 124, t("chart_2", lang), F_GOTHIC, 54, spacing=14, max_w=410)
     # canister icon in the header
     cx, cy = 92, 89
     ht.rect(cx - 17, cy - 44, cx + 17, cy + 44, radius=15)
@@ -828,7 +1024,7 @@ def routing_chart():
         hl.circle(rx - 2, ry - 2, 3)
         rgb = paint(rgb, hl.arr(), "#E8E2D4", 0.8)
     pn = Pen(W, H, 4)
-    pn.text(W / 2, H - 40, "ARCHIVE  B", F_SANS_B, 18, spacing=3)
+    pn.text(W / 2, H - 40, t("archive_b_sp", lang), F_SANS_B, 18, spacing=3, max_w=300)
     rgb = paint(rgb, pn.arr(), "#1F3550", 0.75)
     # wear: enamel chips (dark iron showing) near the edges, grime, fine crazing
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -850,7 +1046,7 @@ def routing_chart():
             pts.append((x, y))
         craze.line(pts, 0.6, caps=False)
     rgb = multiply(rgb, craze.arr(), "#9A8E78", 0.35)
-    save(to_img(rgb), "routing_chart.png")
+    save(to_img(rgb), lname("routing_chart.png", lang))
 
 
 def roundel(rgb: np.ndarray, cx: float, cy: float, R: float, kind: str, seed: int) -> np.ndarray:
@@ -1063,9 +1259,8 @@ def portrait(w: int, h: int, seed: int = 41, up: int = 2) -> np.ndarray:
 # =================================================================================================
 # Badge (860 x 540, RGBA: rounded corners)
 # =================================================================================================
-def badge():
+def badge(lang: str = "en"):
     W, H = 860, 540
-    r = np.random.default_rng(700)
     rgb = paper(W, H, base=(232, 224, 204), seed=701, stains=1, vignette=0.12, fibres=0.6)
     # guilloche security print (pale green rosette lines)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -1086,8 +1281,8 @@ def badge():
     rgb = paint(rgb, stripe.arr(), "#B08D57")
     hdr = Pen(W, H, 4)
     draw_mark(hdr, 70, 56, 92, ticks=True, ring_w=0.05, line_w=0.05)
-    hdr.text(128, 50, "MERIDIAN  INSTITUTE", F_SERIF_B, 50, anchor="lm", spacing=2.5)
-    hdr.text(130, 92, "STAFF PASS  ·  SECTION B", F_SANS_B, 21, anchor="lm", spacing=3)
+    hdr.text(128, 50, t("inst_sp", lang), F_SERIF_B, 50, anchor="lm", spacing=2.5, max_w=W - 128 - 24)
+    hdr.text(130, 92, t("badge_sub", lang), F_SANS_B, 21, anchor="lm", spacing=3, max_w=W - 130 - 24)
     rgb = paint(rgb, hdr.arr(), "#EDE3C8")
     # photo
     px0, py0, pw, ph = 40, 146, 230, 292
@@ -1098,15 +1293,15 @@ def badge():
     pf.rect(px0 - 1, py0 - 1, px0 + pw + 1, py0 + ph + 1, outline=2)
     rgb = paint(rgb, pf.arr(), "#3A3328", 0.8)
     # text block
-    t = Pen(W, H, 4)
-    t.text(304, 178, "RAHIMOVA  L.", F_SANS_B, 52, anchor="ls")
-    t.text(306, 220, "Dept. of Light Physics", F_SANS, 31, anchor="ls")
-    t.text(306, 256, "Researcher  ·  Laboratory 7", F_SANS, 24, anchor="ls")
-    rgb = paint(rgb, ink(t.arr(), 702, 0.12), "#1C1E22")
+    tx = Pen(W, H, 4)
+    tx.text(304, 178, t("badge_name", lang), F_SANS_B, 52, anchor="ls", max_w=W - 304 - 24)
+    tx.text(306, 220, t("dept", lang), F_SANS, 31, anchor="ls", max_w=W - 306 - 24)
+    tx.text(306, 256, t("badge_role", lang), F_SANS, 24, anchor="ls", max_w=W - 306 - 24)
+    rgb = paint(rgb, ink(tx.arr(), 702, 0.12), "#1C1E22")
     lab = Pen(W, H, 4)
-    lab.text(306, 302, "STAFF  No.", F_SANS_B, 20, anchor="ls", spacing=2)
-    lab.text(306, 452, "ISSUED", F_SANS_B, 18, anchor="ls", spacing=2)
-    lab.text(560, 498, "SIGNATURE", F_SANS_B, 16, anchor="ls", spacing=2)
+    lab.text(306, 302, t("staff_no", lang), F_SANS_B, 20, anchor="ls", spacing=2, max_w=240)
+    lab.text(306, 452, t("issued", lang), F_SANS_B, 18, anchor="ls", spacing=2, max_w=230)
+    lab.text(560, 498, t("signature", lang), F_SANS_B, 16, anchor="ls", spacing=2, max_w=240)
     lab.rect(560, 472, 800, 473.5)
     rgb = paint(rgb, lab.arr(), "#4A5A50")
     num = Pen(W, H, 4)
@@ -1117,7 +1312,7 @@ def badge():
     yr.text(306, 492, "1976", F_TYPE_B, 34, anchor="ls")
     rgb = paint(rgb, yr.arr(), "#1C1E22")
     sig = Pen(W, H, 4)
-    rot_text(sig, 676, 452, "L. Rahimova", F_HAND, 48, angle=4, weight=520)
+    rot_text(sig, 676, 452, t("sig_leyla", lang), F_HAND, 48, angle=4, weight=520)
     rgb = paint(rgb, ink(sig.arr(), 704, 0.25), "#22306A", 0.9)
     # access-level diagonal stripe (red) in the lower right corner
     ds = Pen(W, H, 4)
@@ -1128,8 +1323,9 @@ def badge():
     sx, sy, sr = 248, 404, 62
     st.ring(sx, sy, sr, 4)
     st.ring(sx, sy, sr - 18, 2.5)
-    arc_text(st, sx, sy, sr - 15, "MERIDIAN · INSTITUTE ·", F_SANS_B, 13, a_mid=-90, spacing=1.05)
-    arc_text(st, sx, sy, sr - 15, "· PERSONNEL ·", F_SANS_B, 13, a_mid=90, spacing=1.05, inward=True)
+    arc_text(st, sx, sy, sr - 15, t("stamp_inst", lang), F_SANS_B, 13, a_mid=-90, spacing=1.05, max_deg=200)
+    arc_text(st, sx, sy, sr - 15, t("stamp_personnel", lang), F_SANS_B, 13, a_mid=90, spacing=1.05, inward=True,
+             max_deg=130)
     draw_mark(st, sx, sy, 58, ticks=False, ring_w=0.06, line_w=0.06)
     sm = st.arr() * stamp_mask(W, H, 705, 0.3)
     rgb = paint(rgb, sm, "#4B3C8C", 0.72)
@@ -1139,7 +1335,7 @@ def badge():
     rgb = multiply(rgb, edge_wear(W, H, 706, 18, 0.12), "#8A7A50")
     cm = Pen(W, H, 4)
     cm.rect(0, 0, W - 0.5, H - 0.5, radius=32)
-    save(to_img(rgb, cm.arr()), "badge.png")
+    save(to_img(rgb, cm.arr()), lname("badge.png", lang))
 
 
 # =================================================================================================
@@ -1166,7 +1362,7 @@ def punch_positions(pen: Pen, numbers: bool = True, ring_w: float = 3.0):
             pen.text(x, HOLE_V_PX + HOLE_R_PX + 26, str(k), F_SANS_B, 30)
 
 
-def index_card():
+def index_card(lang: str = "en"):
     W, H = CARD_W, CARD_H
     rng = np.random.default_rng(800)
     rgb = paper(W, H, base=(246, 240, 222), seed=801, stains=1, vignette=0.12, fibres=0.8)
@@ -1185,23 +1381,25 @@ def index_card():
     punch_positions(pp)
     rgb = paint(rgb, ink(pp.arr(), 802, 0.15), "#3A3F4A", 0.9)
     hd = Pen(W, H, 4)
-    hd.text(40, 244, "MERIDIAN INSTITUTE · ARCHIVE B · PERSONNEL INDEX", F_SANS_B, 22, anchor="ls", spacing=1.5)
+    hd.text(40, 244, t("ic_header", lang), F_SANS_B, 22, anchor="ls", spacing=1.5, max_w=W - 80)
     rgb = paint(rgb, hd.arr(), "#8A3A30", 0.85)
     # typed entries
     tp = Pen(W, H, 4)
     typed(tp, 860, 300, "№ " + BADGE_NO, 56, rng, path=F_TYPE_B)
     typed(tp, 40, 312, "0417", 34, rng)
-    typed(tp, 272, 372, "RAHIMOVA, Leyla", 50, rng, path=F_TYPE_B)
-    typed(tp, 272, 434, "researcher, Dept. of Light Physics", 38, rng)
-    typed(tp, 272, 496, "Laboratory 7 · since 1974", 38, rng)
-    typed(tp, 272, 558, "personnel file: Stacks B-3", 38, rng)
+    typed(tp, 272, 372, t("ic_name", lang), 50, rng, path=F_TYPE_B, max_w=W - 272 - 40)
+    typed(tp, 272, 434, t("ic_role", lang), 38, rng, max_w=W - 272 - 40)
+    typed(tp, 272, 496, t("ic_lab", lang), 38, rng, max_w=W - 272 - 40)
+    typed(tp, 272, 558, t("ic_file", lang), 38, rng, max_w=W - 272 - 40)
     typed(tp, 40, 434, "R-12", 34, rng)
     rgb = paint(rgb, ink(tp.arr(), 803, 0.3, 1.6), "#1E1F26", 0.92)
     # pencil note
     pc = Pen(W, H, 4)
-    rot_text(pc, 1000, 636, "req. via tube", F_HAND, 58, angle=6, weight=560)
-    pc.line([(770, 664), (812, 656), (846, 660)], 3.0)
-    pc.line([(826, 674), (846, 660), (828, 644)], 3.0)
+    note = t("ic_note", lang)
+    nsize, _ = fit(note, F_HAND, 58, 370, weight=560)
+    rot_text(pc, 1022, 636, note, F_HAND, nsize, angle=6, weight=560)
+    pc.line([(736, 664), (778, 656), (812, 660)], 3.0)
+    pc.line([(792, 674), (812, 660), (794, 644)], 3.0)
     rgb = paint(rgb, ink(pc.arr(), 804, 0.5, 1.4), "#5A5A60", 0.85)
     # catalogue rod hole (bottom centre) -- dark so it reads as a hole even without alpha
     hole = Pen(W, H, 4)
@@ -1215,10 +1413,10 @@ def index_card():
     rgb = paint(rgb, np.clip(blur(cut, 2.0) - cut, 0, 1), "#7A6848", 0.55)   # cut edges darken slightly
     alpha = np.clip(alpha - hm, 0, 1)
     rgb = paint(rgb, 1 - alpha, "#2A2620")
-    save(to_img(rgb, alpha), "index_card.png")
+    save(to_img(rgb, alpha), lname("index_card.png", lang))
 
 
-def request_card():
+def request_card(lang: str = "en"):
     W, H = CARD_W, CARD_H
     rgb = paper(W, H, base=(220, 200, 156), seed=820, stains=1, vignette=0.12, fibres=0.9)
     pp = Pen(W, H, 4)
@@ -1229,19 +1427,20 @@ def request_card():
     hm = hd.arr()
     rgb = paint(rgb, hm, "#9A3B2E", 0.92)
     ht = Pen(W, H, 4)
-    ht.text(W / 2, 228, "REQUEST  —  ARCHIVE  B", F_GOTHIC, 46, spacing=4)
+    ht.text(W / 2, 228, t("rc_header", lang), F_GOTHIC, 46, spacing=4, max_w=W - 140)
     rgb = paint(rgb, ht.arr(), "#E9DAB8")
     f = Pen(W, H, 4)
-    fields = [("STAFF  No.", 344), ("SURNAME", 418), ("ITEM / FILE", 492), ("DATE", 566)]
-    for label, y in fields:
-        f.text(52, y, label, F_SANS_B, 26, anchor="ls", spacing=1.5)
-        for x in range(290, W - 300 if label == "DATE" else W - 50, 14):
+    fields = [(t("staff_no", lang), 344), (t("surname", lang), 418), (t("rc_item", lang), 492),
+              (t("rc_date", lang), 566)]
+    for i, (label, y) in enumerate(fields):
+        f.text(52, y, label, F_SANS_B, 26, anchor="ls", spacing=1.5, max_w=220)
+        for x in range(290, W - 300 if i == 3 else W - 50, 14):
             f.rect(x, y + 2, x + 7, y + 4)
-    f.text(W - 280, 566, "SIGN.", F_SANS_B, 26, anchor="ls", spacing=1.5)
+    f.text(W - 280, 566, t("rc_sign", lang), F_SANS_B, 26, anchor="ls", spacing=1.5, max_w=78)
     for x in range(W - 190, W - 50, 14):
         f.rect(x, 568, x + 7, 570)
-    f.text(52, 660, "Punch the code positions. Send by pneumatic post.", F_SANS, 22, anchor="ls")
-    f.text(W - 52, 700, "Form A-12", F_SANS, 20, anchor="rs")
+    f.text(52, 660, t("rc_instr", lang), F_SANS, 22, anchor="ls", max_w=W - 52 - 230)
+    f.text(W - 52, 700, t("rc_form", lang), F_SANS, 20, anchor="rs")
     rgb = paint(rgb, ink(f.arr(), 822, 0.15), "#4A3424", 0.85)
     # small canister pictogram in the corner
     cp = Pen(W, H, 4)
@@ -1255,16 +1454,16 @@ def request_card():
     rgb = paint(rgb, cp.arr(), "#9A3B2E", 0.8)
     rgb = multiply(rgb, edge_wear(W, H, 823, 22, 0.12), "#8C7650")
     alpha = card_outline_alpha(clip_tl=REQ_CLIP_PX)
-    save(to_img(rgb, alpha), "request_card.png")
+    save(to_img(rgb, alpha), lname("request_card.png", lang))
 
 
 # =================================================================================================
 # File cover (1200 x 1600 manila folder)
 # =================================================================================================
-def file_cover():
+def file_cover(lang: str = "en"):
     W, H = 1200, 1600
     rng = np.random.default_rng(900)
-    rgb = paper(W, H, base=(206, 176, 118), seed=901, stains=3, vignette=0.28, fibres=1.3)
+    rgb = paper(W, H, base=(216, 192, 142), seed=901, stains=1, vignette=0.28, fibres=1.3)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     # creases (vertical score lines near the spine edge) and a soft diagonal bend
     for x0 in (36, 58):
@@ -1275,14 +1474,14 @@ def file_cover():
     # printed header
     pr = Pen(W, H, 4)
     draw_mark(pr, 170, 170, 150, ticks=True)
-    pr.text(270, 150, "MERIDIAN INSTITUTE", F_SERIF_B, 72, anchor="ls", spacing=2)
-    pr.text(274, 205, "PERSONNEL RECORDS  ·  ARCHIVE B", F_SANS_B, 30, anchor="ls", spacing=4)
+    pr.text(270, 150, t("inst", lang), F_SERIF_B, 72, anchor="ls", spacing=2, max_w=W - 270 - 90)
+    pr.text(274, 205, t("fc_sub", lang), F_SANS_B, 30, anchor="ls", spacing=4, max_w=W - 274 - 90)
     pr.rect(90, 270, W - 90, 276)
     pr.rect(90, 284, W - 90, 286)
     rgb = paint(rgb, ink(pr.arr(), 902, 0.25), "#3A2E22", 0.88)
     # big title
     tt = Pen(W, H, 4)
-    tt.text(W / 2, 400, "PERSONNEL", F_GOTHIC, 118, spacing=12)
+    tt.text(W / 2, 400, t("fc_title", lang), F_GOTHIC, 118, spacing=12, max_w=W - 200)
     rgb = paint(rgb, ink(tt.arr(), 903, 0.3), "#2E241A", 0.9)
     # pasted label with typed entries
     lb = Pen(W, H, 4)
@@ -1295,14 +1494,14 @@ def file_cover():
     fr.rect(172, 502, W - 172, 838, radius=6, outline=3)
     for y in (612, 712):
         fr.rect(190, y, W - 190, y + 1.5)
-    fr.text(194, 540, "SURNAME, INITIAL", F_SANS_B, 20, anchor="ls", spacing=2)
-    fr.text(194, 642, "DEPARTMENT", F_SANS_B, 20, anchor="ls", spacing=2)
-    fr.text(194, 742, "STAFF No.", F_SANS_B, 20, anchor="ls", spacing=2)
-    fr.text(700, 742, "FILE", F_SANS_B, 20, anchor="ls", spacing=2)
+    fr.text(194, 540, t("fc_f_name", lang), F_SANS_B, 20, anchor="ls", spacing=2, max_w=480)
+    fr.text(194, 642, t("fc_f_dept", lang), F_SANS_B, 20, anchor="ls", spacing=2, max_w=480)
+    fr.text(194, 742, t("staff_no1", lang), F_SANS_B, 20, anchor="ls", spacing=2, max_w=480)
+    fr.text(700, 742, t("fc_f_file", lang), F_SANS_B, 20, anchor="ls", spacing=2, max_w=300)
     rgb = paint(rgb, fr.arr() * lm, "#5A4A3A", 0.8)
     tp = Pen(W, H, 4)
-    typed(tp, 200, 600, "RAHIMOVA  L.", 76, rng, path=F_TYPE_B)
-    typed(tp, 200, 696, "Light Physics", 56, rng)
+    typed(tp, 200, 600, t("badge_name", lang), 76, rng, path=F_TYPE_B, max_w=W - 200 - 200)
+    typed(tp, 200, 696, t("fc_dept", lang), 56, rng, max_w=W - 200 - 200)
     typed(tp, 200, 812, "№ " + BADGE_NO, 76, rng, path=F_TYPE_B)
     typed(tp, 700, 812, "B-3", 64, rng, path=F_TYPE_B)
     rgb = paint(rgb, ink(tp.arr(), 905, 0.3, 1.6), "#1C1C22", 0.92)
@@ -1312,14 +1511,16 @@ def file_cover():
     sd = ImageDraw.Draw(sm_img)
     sd.rounded_rectangle([8, 8, 760 * 4 - 8, 230 * 4 - 8], radius=40, outline=255, width=36)
     sd.rounded_rectangle([60, 60, 760 * 4 - 60, 230 * 4 - 60], radius=24, outline=255, width=12)
-    sd.text((380 * 4, 92 * 4), "RESTRICTED", font=font(F_GOTHIC, 96 * 4), fill=255, anchor="mm")
-    sd.text((380 * 4, 172 * 4), "ARCHIVE B · 1979", font=font(F_SANS_B, 46 * 4), fill=255, anchor="mm")
+    s1, sp1 = fit(t("fc_stamp", lang), F_GOTHIC, 96 * 4, 640 * 4)
+    draw_text(sd, 380 * 4, 92 * 4, t("fc_stamp", lang), F_GOTHIC, s1, 255, "mm")
+    s2, sp2 = fit(t("fc_stamp2", lang), F_SANS_B, 46 * 4, 640 * 4)
+    draw_text(sd, 380 * 4, 172 * 4, t("fc_stamp2", lang), F_SANS_B, s2, 255, "mm")
     st.paste_rotated(sm_img, 640, 1080, 9)
     sm = st.arr() * stamp_mask(W, H, 906, 0.55)
     rgb = paint(rgb, sm, "#B0302A", 0.78)
     # handwritten pencil note + filing number
     hw = Pen(W, H, 4)
-    rot_text(hw, 300, 1290, "to vault? — E.S.", F_HAND, 64, angle=-3, weight=560)
+    rot_text(hw, 300, 1290, t("fc_note", lang), F_HAND, 64, angle=-3, weight=560)
     rot_text(hw, W - 200, 1520, "B-3 / 0417", F_HAND, 52, angle=2, weight=520)
     rgb = paint(rgb, ink(hw.arr(), 907, 0.45, 1.4), "#4A4A50", 0.8)
     # coffee ring
@@ -1331,7 +1532,7 @@ def file_cover():
     rgb = multiply(rgb, np.clip(ringm * 0.55 + inside + drip * 0.4, 0, 1), "#6A3E1A")
     # wear: edge darkening, corner rub
     rgb = multiply(rgb, edge_wear(W, H, 910, 70, 0.30), "#7A5A30")
-    save(to_img(rgb), "file_cover.png")
+    save(to_img(rgb), lname("file_cover.png", lang))
 
 
 # =================================================================================================
@@ -1340,10 +1541,9 @@ def file_cover():
 TAPE_INK = {1996: "#24357A", 1997: "#1E1E24", 1998: "#3A2E7A"}
 
 
-def tape_label(year: int):
+def tape_label(year: int, lang: str = "en"):
     S = 512
     c = S / 2
-    rng = np.random.default_rng(year)
     yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
     rr = np.hypot(xx - c + 0.5, yy - c + 0.5)
     rgb = paper(S, S, base=(234, 226, 204), seed=year + 7, stains=1 if year != 1996 else 2, vignette=0.0,
@@ -1352,8 +1552,8 @@ def tape_label(year: int):
     band = smooth(206, 208, rr) * (1 - smooth(246, 248, rr))
     rgb = paint(rgb, band, "#C2562E", 0.92)
     bt = Pen(S, S, 4)
-    arc_text(bt, c, c, 219, "MAGNETIC  TAPE", F_SANS_B, 22, a_mid=-90, spacing=1.15)
-    arc_text(bt, c, c, 235, "ARCHIVE  B", F_SANS_B, 22, a_mid=90, spacing=1.2, inward=True)
+    arc_text(bt, c, c, 219, t("tl_top", lang), F_SANS_B, 22, a_mid=-90, spacing=1.15, max_deg=110)
+    arc_text(bt, c, c, 235, t("archive_b_sp", lang), F_SANS_B, 22, a_mid=90, spacing=1.2, inward=True, max_deg=90)
     for a in (-160, -20, 20, 160):
         ra = math.radians(a)
         bt.circle(c + 227 * math.cos(ra), c + 227 * math.sin(ra), 4)
@@ -1362,15 +1562,15 @@ def tape_label(year: int):
     pf = Pen(S, S, 4)
     pf.ring(c, c, 62, 2.5)
     pf.rect(118, 160, 394, 162)
-    pf.text(150, 92, "DATE / NAME", F_SANS_B, 15, anchor="ls", spacing=1.5)
+    pf.text(150, 92, t("tl_date", lang), F_SANS_B, 15, anchor="ls", spacing=1.5, max_w=200)
     pf.rect(112, 396, 318, 398)
-    pf.text(118, 270, "SPEED", F_SANS_B, 15, anchor="ls", spacing=1.5)
-    pf.text(326, 392, "cm/s", F_SANS_B, 30, anchor="ls")
+    pf.text(184, 270, t("tl_speed", lang), F_SANS_B, 15, anchor="rs", spacing=1.5, max_w=118)   # clear of the hub ring
+    pf.text(326, 392, t("tl_unit", lang), F_SANS_B, 30, anchor="ls", max_w=70)
     rgb = paint(rgb, ink(pf.arr(), year + 1, 0.15), "#8A3A24", 0.85)
     # Leyla's handwriting
     hw = Pen(S, S, 4)
     tilt = {1996: -4, 1997: -2, 1998: -6}[year]
-    rot_text(hw, 258, 134, f"L.R. {year}", F_HAND, 66, angle=tilt * 0.5, weight=640)
+    rot_text(hw, 258, 134, f"{t('tl_init', lang)} {year}", F_HAND, 66, angle=tilt * 0.5, weight=640)
     rot_text(hw, 214, 352, TAPE_SPEED, F_HAND, 140, angle=tilt, weight=700)
     hw.line([(128, 412), (306, 405)], 4.0)   # underline the speed
     rgb = paint(rgb, ink(hw.arr(), year + 2, 0.25, 1.4), TAPE_INK[year], 0.95)
@@ -1389,7 +1589,7 @@ def tape_label(year: int):
     alpha = al.arr()
     edge = np.clip(blur(1 - alpha, 1.5) - (1 - alpha), 0, 1)
     rgb = paint(rgb, edge, "#7A6448", 0.6)
-    save(to_img(rgb, alpha), f"tape_label_{year}.png")
+    save(to_img(rgb, alpha), lname(f"tape_label_{year}.png", lang))
 
 
 # =================================================================================================
@@ -1402,12 +1602,20 @@ def slide_mark():
     # clear glass with faint green edge tint and specks
     rgb = solid(S, S, "#DDE6E2")
     alpha = np.full((S, S), 0.10, np.float32)
-    # black paper mask with a round opening, under the tape
+    # cream paper mask with a round opening (under the tape), with a printed rule and the maker's notes
     mk = Pen(S, S, 4)
     mk.rect(0, 0, S, S)
-    mk.circle(c, c, 212, 0)
+    mk.circle(c, c, 214, 0)
     mm = mk.arr()
-    rgb = paint(rgb, mm, "#17191A")
+    mask_rgb = paper(S, S, base=(230, 220, 196), seed=955, stains=0, vignette=0.0, fibres=0.8)
+    rgb = rgb * (1 - mm[..., None]) + mask_rgb * mm[..., None]
+    rgb = paint(rgb, np.clip(blur(1 - mm, 1.5) - (1 - mm), 0, 1) * mm, "#6A5A40", 0.6)   # cut edge of the opening
+    pr = Pen(S, S, 4)
+    pr.ring(c, c, 222, 1.6)
+    rgb = paint(rgb, pr.arr() * mm, "#5A4A36", 0.7)
+    hw = Pen(S, S, 4)
+    rot_text(hw, S - 108, S - 50, "E.S. 1971", F_HAND, 30, angle=0, weight=520)
+    rgb = paint(rgb, ink(hw.arr(), 956, 0.3) * mm, "#2A2A40", 0.8)
     alpha = np.maximum(alpha, mm * 0.97)
     # the mark: black emulsion, slightly soft, with tiny emulsion pinholes
     m = mark_mask(400)
@@ -1622,10 +1830,16 @@ def film_strip(k: int):
             if -hw < hx < w + hw:
                 holes.rect(hx - hw / 2, hy - hh / 2, hx + hw / 2, hy + hh / 2, radius=5)
     hm = holes.arr()
-    ep = Pen(w, h, 4)
+    ep = Pen(w, h, 4)                      # latent edge marks: key-code bars and a triangle (no words)
+    bars = [6, 2, 2, 6, 2, 6, 6, 2, 2, 2, 6]
     for ex in (w / 2 - STRIP_PITCH, w / 2 + STRIP_PITCH):
-        ep.text(ex, h - 6, "SAFETY  FILM", F_SANS_B, 12, anchor="ms", spacing=1.2)
-        ep.poly([(ex + 72, h - 16), (ex + 82, h - 11), (ex + 72, h - 6)])
+        bx_ = ex - 52
+        for bw in bars:
+            ep.rect(bx_, h - 15, bx_ + bw, h - 7)
+            bx_ += bw + 3
+        ep.poly([(ex + 62, h - 16), (ex + 72, h - 11), (ex + 62, h - 6)])
+        for k in range(3):
+            ep.circle(ex + 82 + 7 * k, h - 11, 1.8)
     lum = lum + ep.arr() * 0.45
     rgb = film_finish(lum, 330 + k, grain_amt=0.04, scratches=3, dust=16, vignette=0.0, gate=False,
                       tint=(1.0, 0.94, 0.82), hair=False, contrast=1.25, dust_big=0.0)
@@ -1871,7 +2085,7 @@ def linoleum():
 FW, FH = 1200, 800
 
 
-def _limb(d: ImageDraw.ImageDraw, pts, widths, k: float):
+def _limb(d: ImageDraw.ImageDraw, pts, widths):
     """Tapered limb through points with per-point widths (in canvas px), round joints."""
     for (x0, y0), (x1, y1), w0, w1 in zip(pts[:-1], pts[1:], widths[:-1], widths[1:]):
         dx, dy = x1 - x0, y1 - y0
@@ -1881,7 +2095,6 @@ def _limb(d: ImageDraw.ImageDraw, pts, widths, k: float):
                    (x1 - nx * w1 / 2, y1 - ny * w1 / 2), (x0 - nx * w0 / 2, y0 - ny * w0 / 2)], fill=255)
     for (x, y), w in zip(pts, widths):
         d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=255)
-    del k
 
 
 def person_mask(h: float, sex: str = "m", outfit: str = "coat", hair: str = "short", arms: str = "down",
@@ -1904,9 +2117,10 @@ def person_mask(h: float, sex: str = "m", outfit: str = "coat", hair: str = "sho
     S = (0.84 if f else 0.98) * width * (1.07 if outfit == "longcoat" else 1.0)
     # head (egg) and neck
     pts = []
+    hs = 0.92
     for t in np.linspace(0, 2 * math.pi, 48, endpoint=False):
-        sx = math.sin(t) * (0.37 if f else 0.39) * (1 - 0.22 * max(0.0, -math.cos(t)) ** 1.5)
-        pts.append(P(sx, 0.52 - 0.52 * math.cos(t)))
+        sx = math.sin(t) * (0.37 if f else 0.39) * hs * (1 - 0.22 * max(0.0, -math.cos(t)) ** 1.5)
+        pts.append(P(sx, 0.08 + 0.48 * hs - 0.52 * hs * math.cos(t)))
     d.polygon(pts, fill=255)
     poly([(-0.15, 0.85), (0.15, 0.85), (0.19, 1.22), (-0.19, 1.22)])
     # torso
@@ -1917,22 +2131,24 @@ def person_mask(h: float, sex: str = "m", outfit: str = "coat", hair: str = "sho
     # legs
     for sg in (-1, 1):
         if f:
-            leg = [(sg * 0.30, 3.75), (sg * 0.24, 5.35), (sg * 0.22, 6.35), (sg * 0.21, 7.12)]
-            lwid = [0.46, 0.30, 0.26, 0.15]
+            leg = [(sg * 0.30, 3.75), (sg * 0.24, 5.35), (sg * 0.23, 6.25), (sg * 0.21, 7.12)]
+            lwid = [0.50, 0.34, 0.31, 0.17]
         elif outfit == "suit":
             leg = [(sg * 0.36, 3.8), (sg * 0.33, 5.3), (sg * 0.32, 7.12)]
             lwid = [0.52, 0.42, 0.36]
         else:
             leg = [(sg * 0.36, 3.8), (sg * 0.31, 5.3), (sg * 0.30, 6.3), (sg * 0.29, 7.12)]
             lwid = [0.52, 0.38, 0.34, 0.22]
-        _limb(d, [P(*q) for q in leg], [w * u for w in lwid], u)
+        _limb(d, [P(*q) for q in leg], [w * u for w in lwid])
         sx_, sy_ = P(sg * (0.33 if not f else 0.24), 7.26)
         rx, ry = (0.25 if not f else 0.17) * u, 0.11 * u
         d.ellipse([sx_ - rx + sg * 0.05 * u, sy_ - ry, sx_ + rx + sg * 0.05 * u, sy_ + ry], fill=255)
     # clothes
     if outfit == "coat":
-        poly([(-S * 0.99, 1.44), (-S * 0.95, 2.6), (-S * 0.98, 4.0), (-S * 1.04, 5.12), (-0.05, 5.12), (0.0, 4.75),
-              (0.05, 5.12), (S * 1.04, 5.12), (S * 0.98, 4.0), (S * 0.95, 2.6), (S * 0.99, 1.44), (0.0, 1.2)])
+        wst = 0.80 if f else 0.95
+        poly([(-S * 0.99, 1.44), (-S * 0.95, 2.2), (-S * wst, 2.95), (-S * 0.98, 4.0), (-S * 1.04, 5.12), (-0.05, 5.12),
+              (0.0, 4.75), (0.05, 5.12), (S * 1.04, 5.12), (S * 0.98, 4.0), (S * wst, 2.95), (S * 0.95, 2.2),
+              (S * 0.99, 1.44), (0.0, 1.2)])
     elif outfit == "longcoat":
         poly([(-S * 1.0, 1.42), (-S * 0.97, 2.6), (-S * 1.0, 4.2), (-S * 1.10, 6.05), (-0.04, 6.05), (0.0, 5.6),
               (0.04, 6.05), (S * 1.10, 6.05), (S * 1.0, 4.2), (S * 0.97, 2.6), (S * 1.0, 1.42), (0.0, 1.15)])
@@ -1950,6 +2166,8 @@ def person_mask(h: float, sex: str = "m", outfit: str = "coat", hair: str = "sho
         mode = arms
         if arms == "reach":
             mode = "reach" if sg == -1 else "down"
+        elif arms == "reach_r":
+            mode = "reach" if sg == 1 else "down"
         elif arms == "up_r":
             mode = "up" if sg == 1 else "down"
         elif arms == "up_l":
@@ -1976,13 +2194,13 @@ def person_mask(h: float, sex: str = "m", outfit: str = "coat", hair: str = "sho
             d2 = min(dist, upper + fore + 0.1 - 1e-3)
             a = math.acos(float(np.clip((upper ** 2 + d2 ** 2 - (fore + 0.1) ** 2) / (2 * upper * d2), -1, 1)))
             base = math.atan2(dy, dx)
-            ang = base + a if dx < 0 else base - a
+            ang = base - a if dx < 0 else base + a          # elbow below the shoulder-hand line
             el = (sh[0] + upper * math.cos(ang), sh[1] + upper * math.sin(ang))
             hand = (sh[0] + d2 * dx / dist, sh[1] + d2 * dy / dist)
             wr = (hand[0] - 0.16 * dx / dist, hand[1] - 0.16 * dy / dist)
             fx, fy = hand[0] + 0.24 * dx / dist, hand[1] + 0.24 * dy / dist
-            _limb(d, [P(*hand), P(fx, fy)], [0.10 * u, 0.06 * u], u)
-        _limb(d, [P(*sh), P(*el), P(*wr)], [0.42 * sleeve * u, 0.34 * sleeve * u, 0.27 * sleeve * u], u)
+            _limb(d, [P(*hand), P(fx, fy)], [0.10 * u, 0.06 * u])
+        _limb(d, [P(*sh), P(*el), P(*wr)], [0.42 * sleeve * u, 0.34 * sleeve * u, 0.27 * sleeve * u])
         if hand is not None:
             hx, hy = P(*hand)
             d.ellipse([hx - 0.14 * u, hy - 0.17 * u, hx + 0.14 * u, hy + 0.17 * u], fill=255)
@@ -1991,8 +2209,9 @@ def person_mask(h: float, sex: str = "m", outfit: str = "coat", hair: str = "sho
         poly([(-0.42, 0.62), (-0.44, 0.30), (-0.30, 0.02), (0.0, -0.06), (0.30, 0.02), (0.44, 0.30), (0.42, 0.62),
               (0.36, 0.40), (-0.36, 0.40)])
     elif hair == "bob":
-        poly([(-0.47, 0.98), (-0.52, 0.62), (-0.50, 0.24), (-0.36, -0.02), (0.0, -0.09), (0.36, -0.02), (0.50, 0.24),
-              (0.52, 0.62), (0.47, 0.98), (0.32, 0.92), (0.30, 0.50), (-0.30, 0.50), (-0.32, 0.92)])
+        poly([(-0.36, 0.96), (-0.47, 0.84), (-0.50, 0.52), (-0.47, 0.20), (-0.34, -0.01), (0.0, -0.07), (0.34, -0.01),
+              (0.47, 0.20), (0.50, 0.52), (0.47, 0.84), (0.36, 0.96), (0.28, 0.80), (0.28, 0.46), (-0.28, 0.46),
+              (-0.28, 0.80)])
     elif hair == "bun":
         poly([(-0.41, 0.55), (-0.43, 0.25), (-0.30, 0.0), (0.0, -0.06), (0.30, 0.0), (0.43, 0.25), (0.41, 0.55),
               (0.0, 0.35)])
@@ -2035,7 +2254,7 @@ def figure_row(lum: np.ndarray, figs: list, rim: float = 0.5, rim_w: float = 2.0
     gx = np.roll(b, -1, 1) - np.roll(b, 1, 1)
     gy = np.roll(b, -1, 0) - np.roll(b, 1, 0)
     if rim_dir is None:
-        wgt = 0.35 + np.clip(gy * 8, 0, 1)
+        wgt = 0.10 + 0.9 * np.clip(gy * 10, 0, 1)
     else:
         gl = np.hypot(gx, gy) + 1e-6
         # outward normal = -grad; light from rim_dir (unit vector pointing from the figure toward the light)
@@ -2080,6 +2299,8 @@ def ring_machine(W: int, H: int, cx: float, cy: float, R: float, tilt: float = 0
     inside = smooth(t_in + e, t_in - 3 * e, q)
     emit = inside * (0.16 + 0.42 * np.exp(-(q / 0.38) ** 2) + 0.16 * swirl * (0.5 + unstable)
                      + 0.25 * smooth(0.45, t_in, q))
+    ripple = 0.5 + 0.5 * np.sin(q * 52.0 - n1 * 5.0)
+    emit = emit + inside * 0.07 * ripple * smooth(0.05, 0.3, q)                  # standing light waves
     emit = emit + 1.1 * np.exp(-((q - t_in) / 0.016) ** 2)                      # inner rim
     emit = emit + 1.8 * np.exp(-(q / 0.08) ** 2)                                 # core
     lamps = np.zeros((H, W), np.float32)
@@ -2221,7 +2442,7 @@ def _rand_staff(rng, n, x0, dx, feet, h, jitter=6.0):
         hair = rng.choice(["bob", "bun", "long"], p=[0.45, 0.4, 0.15]) if f else "short"
         figs.append(dict(x=x0 + i * dx + rng.normal(0, jitter), feet=feet + rng.normal(0, 2),
                          h=h * rng.uniform(0.93, 1.05) * (0.95 if f else 1.0), sex="f" if f else "m", outfit=outfit,
-                         hair=hair, width=rng.uniform(0.94, 1.08), lb=rng.uniform(0.025, 0.06), lh=0.05))
+                         hair=hair, width=rng.uniform(0.94, 1.08), lb=rng.uniform(0.012, 0.03), lh=0.05))
     return figs
 
 
@@ -2246,9 +2467,10 @@ def staff_photo_lum(extra: bool, seed: int = 1700):
     dm = da.arr()
     lum = lum * (1 - dm) + dm * (0.10 + 0.10 * np.exp(-np.abs(xx - cx) / 300))
     occl = band.copy()
-    rows = [_rand_staff(rng, 14, 600 - 6.5 * 66, 66, 552, 232),
-            _rand_staff(rng, 14, 600 - 6.5 * 71 + 8, 71, 604, 260),
-            _rand_staff(rng, 13, 600 - 6.0 * 81, 81, 672, 294)]
+    mid = 578          # the group stands a little left of centre; the right edge stays open
+    rows = [_rand_staff(rng, 14, mid - 6.5 * 66, 66, 552, 232),
+            _rand_staff(rng, 14, mid - 6.5 * 71 + 8, 71, 604, 260),
+            _rand_staff(rng, 13, mid - 6.0 * 81, 81, 672, 294)]
     assert sum(len(r) for r in rows) == STAFF_COUNT
     for i, row in enumerate(rows):
         lum, c = figure_row(lum, row, rim=0.55 - 0.08 * i, rim_w=1.6 + 0.3 * i)
@@ -2261,14 +2483,14 @@ def staff_photo_lum(extra: bool, seed: int = 1700):
     shm = blur(sh.arr(), 4) * (yy > 672)
     lum = lum * (1 - 0.6 * shm)
     if extra:
-        leyla = [dict(x=1138, feet=700, h=312, sex="f", outfit="longcoat", hair="long", arms="pockets",
+        leyla = [dict(x=1146, feet=702, h=314, sex="f", outfit="longcoat", hair="long", arms="pockets",
                       lb=0.05, lh=0.06)]
         _, hm = figure_row(np.zeros_like(lum), leyla, rim=0.0)
         lum = lum + 0.22 * np.clip(blur(hm, 14) - hm, 0, 1)        # she stands in the light
         lum, c = figure_row(lum, leyla, rim=0.75, rim_w=1.8)
         occl = np.maximum(occl, c)
         sh2 = Pen(W, H, 2)
-        sh2.poly([(1120, 700), (1156, 700), (1220, H), (1150, H)])
+        sh2.poly([(1128, 702), (1164, 702), (1228, H), (1158, H)])
         lum = lum * (1 - 0.55 * blur(sh2.arr(), 4) * (yy > 700))
     src = emit * (1 - occl) * smooth(0.25, 1.0, emit)
     lum = lum + 0.45 * zoom_rays(src, cx, cy, length=0.5, steps=36)
@@ -2304,8 +2526,8 @@ def film_frame_1():
     fr.rect(80, 450, 1120, 466)
     lum = lum * (1 - fr.arr()) + fr.arr() * 0.09
     ch = Pen(W, H, 4)
-    ch.text(170, 140, "E = hν", F_HAND, 54, anchor="lm", weight=450)
-    ch.text(830, 130, "λ  →  ψ(t)", F_HAND, 46, anchor="lm", weight=450)
+    ch.text(170, 140, "E = hν", F_CHALK, 50, anchor="lm")
+    ch.text(830, 130, "λ → ψ(t)", F_CHALK, 44, anchor="lm")
     ch.text(820, 220, "LUX MEMINIT", F_HAND, 44, anchor="lm", weight=450)
     for k in range(3):
         ch.ring(250, 300, 40 + 26 * k, 2.5)
@@ -2326,10 +2548,13 @@ def film_frame_1():
     pm = pd.arr()
     lum = lum * (1 - pm) + pm * (0.05 + 0.18 * np.clip(1 - np.abs(xx - dx - 5) / 12, 0, 1))
     d = np.hypot(xx - dx, yy - dy)
-    ringm = smooth(84, 82, d) * smooth(68, 70, d)
-    core = smooth(70, 66, d)
-    lum = lum * (1 - ringm) + ringm * (0.12 + 0.25 * np.clip(-(yy - dy) / 80, 0, 1))
-    disc = core * (0.9 + 1.2 * np.exp(-(d / 30) ** 2) + 0.2 * noise(H, W, 14, 2, 1602))
+    ringm = smooth(86, 84, d) * smooth(66, 68, d)
+    core = smooth(67, 64, d)
+    lum = lum * (1 - ringm) + ringm * (0.05 + 0.12 * np.clip(1 - np.abs(d - 69) / 3, 0, 1)
+                                       + 0.06 * np.clip(-(yy - dy) / 80, 0, 1))
+    facets = 0.5 + 0.5 * np.cos(np.arctan2(yy - dy, xx - dx) * 6)
+    disc = core * (0.42 + 0.95 * np.exp(-(d / 26) ** 2) + 0.10 * facets * (d / 66) + 0.08 * np.sin(d / 5.0)
+                   + 0.08 * noise(H, W, 14, 2, 1602))
     lum = lum * (1 - core) + disc
     # light falling on the board and the room
     spill = np.exp(-d / 260.0)
@@ -2339,7 +2564,7 @@ def film_frame_1():
     light = 1.0 + 3.0 * np.clip((sx - xx) / 140.0, 0, 1) ** 1.5
     fig = [dict(x=sx, feet=sfeet, h=sh, sex="m", outfit="coat", hair="short", arms="reach", reach=(dx + 92, dy + 6),
                 width=1.04, lb=0.05, lh=0.06)]
-    lum, sc = figure_row(lum, fig, rim=0.65, rim_w=2.2, light=light)
+    lum, sc = figure_row(lum, fig, rim=0.9, rim_w=2.6, light=light, rim_dir=(-0.95, -0.3))
     # audience heads in the foreground, out of focus
     aud = [dict(x=x, feet=1420 + rng.normal(0, 30), h=900 * rng.uniform(0.92, 1.05), sex=sx_, outfit="suit",
                 hair=hr, lb=0.015, lh=0.02) for x, sx_, hr in ((150, "m", "short"), (420, "f", "bun"),
@@ -2349,8 +2574,8 @@ def film_frame_1():
     ac = blur(ac, 7)
     lum = lum * (1 - ac) + ac * 0.015
     src = disc * (1 - np.maximum(sc, ac))
-    lum = lum + 0.45 * zoom_rays(src, dx, dy, length=0.6, steps=36)
-    rgb = film_finish(lum, 1610, grain_amt=0.035, scratches=6, dust=55, vignette=0.55, halation=0.35, contrast=1.2,
+    lum = lum + 0.30 * zoom_rays(src, dx, dy, length=0.6, steps=36)
+    rgb = film_finish(lum, 1610, grain_amt=0.035, scratches=6, dust=55, vignette=0.55, halation=0.22, contrast=1.2,
                       flicker=0.05, weave=(1, -1))
     save(to_img(rgb), "film_frame_1.jpg")
 
@@ -2362,11 +2587,13 @@ def film_frame_3():
     lum = np.full((H, W), 0.025, np.float32)
     lum = np.where(yy > 700, 0.04, lum)
     # the light glass: a frosted pane in a frame, glowing from within
-    gx0, gy0, gx1, gy1 = 150, 70, 840, 640
+    gx0, gy0, gx1, gy1 = 350, 70, 1090, 640
+    gcx, gcy = (gx0 + gx1) / 2, 330
     gp = Pen(W, H, 4)
     gp.rect(gx0, gy0, gx1, gy1, radius=6)
     gm = gp.arr()
-    glow = 0.42 + 0.18 * np.exp(-(((xx - 470) / 380) ** 2 + ((yy - 330) / 300) ** 2)) + 0.05 * noise(H, W, 60, 3, 1801)
+    glow = 0.40 + 0.20 * np.exp(-(((xx - gcx - 40) / 380) ** 2 + ((yy - gcy) / 300) ** 2)) + \
+        0.05 * noise(H, W, 60, 3, 1801)
     lum = lum * (1 - gm) + gm * glow
     fr = Pen(W, H, 4)
     fr.rect(gx0 - 14, gy0 - 14, gx1 + 14, gy1 + 14, radius=8, outline=14)
@@ -2374,10 +2601,13 @@ def film_frame_3():
     fr.rect(gx1 - 158, gy1 + 14, gx1 - 140, 712)
     fr.rect(gx0 + 90, 705, gx0 + 210, 715)
     fr.rect(gx1 - 210, 705, gx1 - 90, 715)
+    for xs_ in np.linspace(gx0 + 20, gx1 - 20, 12):                 # rivets on the frame
+        fr.circle(xs_, gy0 - 7, 2.2, 0)
+        fr.circle(xs_, gy1 + 7, 2.2, 0)
     fm = fr.arr()
     lum = lum * (1 - fm) + fm * 0.06
     # the half-drawn sign: luminous strokes on the glass
-    size, scx, scy, prog = 340, 470, 330, 0.55
+    size, scx, scy, prog = 340, 755, 318, 0.47
     sm = sign_mask(size, progress=prog)
     sg = np.zeros((H, W), np.float32)
     x0, y0 = scx - size // 2, scy - size // 2
@@ -2386,13 +2616,11 @@ def film_frame_3():
     tx, ty = scx + tipx * size, scy + tipy * size
     tip = np.exp(-((xx - tx) ** 2 + (yy - ty) ** 2) / 14.0 ** 2)
     lum = lum + 1.4 * sg + 0.35 * blur(sg, 6) + 1.2 * tip
-    # floor reflection of the pane
-    refl = np.flipud(lum[2 * 700 - H:700, :]) if False else None
-    del refl
-    lum = lum + 0.10 * np.exp(-((xx - 495) / 300) ** 2) * np.exp(-np.clip(yy - 715, 0, None) / 50) * (yy > 715)
-    # Leyla, in front of the glass, reaching to the end of the stroke
-    fig = [dict(x=700, feet=780, h=650, sex="f", outfit="coat", hair="bob", arms="reach", reach=(tx + 6, ty + 4),
-                lb=0.03, lh=0.035, width=0.98)]
+    # light spilling onto the floor under the pane
+    lum = lum + 0.10 * np.exp(-((xx - gcx) / 320) ** 2) * np.exp(-np.clip(yy - 715, 0, None) / 50) * (yy > 715)
+    # Leyla, in front of the glass, reaching across to the end of the stroke
+    fig = [dict(x=436, feet=792, h=700, sex="f", outfit="coat", hair="bob", arms="reach_r", reach=(tx - 6, ty + 4),
+                lb=0.03, lh=0.035, width=0.96)]
     lum, c = figure_row(lum, fig, rim=0.45, rim_w=2.4)
     src = (sg * 1.4 + tip) * (1 - c)
     lum = lum + 0.30 * zoom_rays(src, tx, ty, length=0.35, steps=28)
@@ -2408,14 +2636,14 @@ def film_frame_4():
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     cx, cy = 600, 250
     lum = np.full((H, W), 0.03, np.float32)
-    emit, band, s_lum = ring_machine(W, H, cx, cy, 300, tilt=0.12, seed=1901)
+    emit, band, s_lum = ring_machine(W, H, cx, cy, 300, tilt=0.12, seed=1901, power=0.7)
     inside = ring_machine.inside
     lum = lum * (1 - 0.85 * inside)
     lum = lum * (1 - band) + band * s_lum
     lum = lum + (emit + ring_machine.lamps) * (1 - band)
-    lum = lum + 0.18 * np.exp(-np.hypot(xx - cx, yy - cy) / 380.0)
+    lum = lum + 0.10 * np.exp(-np.hypot(xx - cx, yy - cy) / 380.0)
     occl = band.copy()
-    specs = [(22, 520, 140, 0.0), (15, 610, 240, 0.0), (10, 790, 420, 0.0), (6, 1090, 720, 0.0)]
+    specs = [(22, 520, 140, 0.0), (15, 610, 240, 0.0), (10, 780, 400, 0.0), (6, 1030, 640, 0.0)]
     for n, feet, hgt, _ in specs:
         row = []
         dxs = W / (n - 1)
@@ -2427,10 +2655,10 @@ def film_frame_4():
                             outfit="coat" if rng.random() < 0.7 else ("skirt" if f else "suit"),
                             hair=rng.choice(["bob", "bun", "long"]) if f else "short", arms=mode,
                             arm_angles=(rng.uniform(5, 40), rng.uniform(5, 40)), lb=0.02, lh=0.025))
-        lum, c = figure_row(lum, row, rim=0.55, rim_w=1.2 + hgt / 300)
+        lum, c = figure_row(lum, row, rim=0.55 - 0.25 * min(1.0, hgt / 640), rim_w=1.2 + hgt / 300)
         occl = np.maximum(occl, c)
     src = (emit + 0.3 * np.exp(-np.hypot(xx - cx, yy - cy) / 200)) * (1 - occl)
-    lum = lum + 0.9 * zoom_rays(src, cx, cy, length=0.7, steps=44)
+    lum = lum + 0.65 * zoom_rays(src, cx, cy, length=0.7, steps=44)
     rgb = film_finish(lum * 0.9, 1910, grain_amt=0.035, scratches=6, dust=55, vignette=0.55, halation=0.35,
                       contrast=1.22, flicker=0.05, weave=(0, 1))
     save(to_img(rgb), "film_frame_4.jpg")
@@ -2495,11 +2723,229 @@ def film_secret():
     save(to_img(rgb), "film_secret.jpg")
 
 
+# =================================================================================================
+# Archive rules notice (700 x 1000) and archive-box label atlas (1024 x 1024, 4 x 8 strips)
+# =================================================================================================
+def _wrap(txt: str, path: str, size: float, width: float):
+    words, lines, cur = txt.split(), [], ""
+    for w in words:
+        cand = (cur + " " + w).strip()
+        if text_width(cand, path, size) <= width or not cur:
+            cur = cand
+        else:
+            lines.append(cur)
+            cur = w
+    lines.append(cur)
+    return lines
+
+
+def archive_rules(lang: str = "en"):
+    W, H = 700, 1000
+    rgb = paper(W, H, base=(226, 214, 186), seed=1100, stains=2, vignette=0.30, fibres=1.0)
+    pr = Pen(W, H, 4)
+    pr.rect(34, 34, W - 34, H - 34, outline=3)
+    pr.rect(44, 44, W - 44, H - 44, outline=1.2)
+    draw_mark(pr, W / 2, 104, 84)
+    pr.text(W / 2, 176, t("inst_sp", lang), F_SANS_B, 19, spacing=4, max_w=W - 160)
+    pr.text(W / 2, 236, t("archive_b", lang), F_SERIF_B, 64, spacing=3, max_w=W - 160)
+    pr.text(W / 2, 290, t("ar_rules", lang), F_SERIF_B, 40, spacing=14, max_w=W - 200)
+    pr.rect(120, 322, W - 120, 324.5)
+    pr.rect(120, 330, W - 120, 331)
+    # the rules: shrink type until the last baseline clears the stamp and signature block (y < 760)
+    rules = RULES_TXT[lang]
+    for size in np.arange(26, 18.9, -0.5):
+        lh, gap = size * 1.31, size * 0.85
+        wrapped = [_wrap(r, F_ROMAN, size, W - 240) for r in rules]
+        bottom = 392 + sum(lh * len(w) + gap for w in wrapped) - gap - lh
+        if bottom < 760:
+            break
+    y = 392
+    for i, lines in enumerate(wrapped, 1):
+        pr.text(92, y, f"{i}.", F_ROMAN_B, size + 1, anchor="ls")
+        for j, line in enumerate(lines):
+            pr.text(132, y + j * lh, line, F_ROMAN, size, anchor="ls")
+        y += lh * len(lines) + gap
+    pr.text(W - 90, H - 150, t("ar_order", lang), F_ROMAN, 22, anchor="rs", max_w=W - 330)
+    pr.text(W - 90, H - 120, t("inst_line", lang), F_ROMAN, 22, anchor="rs", max_w=W - 330)
+    rgb = paint(rgb, ink(pr.arr(), 1101, 0.22), "#2A2118", 0.9)
+    st = Pen(W, H, 4)
+    sx, sy = 170, H - 150
+    st.ring(sx, sy, 62, 4)
+    st.ring(sx, sy, 46, 2)
+    arc_text(st, sx, sy, 49, t("stamp_inst", lang), F_SANS_B, 13, a_mid=-90, spacing=1.05, max_deg=200)
+    arc_text(st, sx, sy, 49, "· " + t("archive_b", lang) + " ·", F_SANS_B, 13, a_mid=90, spacing=1.1, inward=True,
+             max_deg=130)
+    draw_mark(st, sx, sy, 56, ticks=False, ring_w=0.06, line_w=0.06)
+    rgb = paint(rgb, st.arr() * stamp_mask(W, H, 1102, 0.4), "#4B3C8C", 0.6)
+    sig = Pen(W, H, 4)
+    rot_text(sig, W - 200, H - 88, t("ar_sig", lang), F_HAND, 44, angle=3, weight=520)
+    rgb = paint(rgb, ink(sig.arr(), 1103, 0.3), "#1E2340", 0.85)
+    # water stain creeping up from the bottom edge, foxing
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    tide = H - 120 - 60 * noise(1, W, 120, 3, 1104)[0][None, :]
+    stain = smooth(tide - 4, tide + 30, yy) * 0.10 + np.exp(-((yy - tide) / 3.0) ** 2) * 0.22
+    rgb = multiply(rgb, stain, "#7A5A30")
+    fox = smooth(0.82, 0.92, noise(H, W, 8, 2, 1105)) * 0.3
+    rgb = multiply(rgb, fox, "#9A6A3A")
+    save(to_img(rgb), lname("archive_rules.jpg", lang))
+
+
+def box_labels():
+    S, CW, CHh = 1024, 256, 128
+    rng = np.random.default_rng(1200)
+    rgb = np.zeros((S, S, 3), np.float32)
+    bases = [(232, 222, 196), (222, 204, 160), (238, 232, 214), (214, 200, 168)]
+    stripes = [None, None, "#A8322A", "#2F4F7A", None, "#3E6B48", None]
+    for r in range(8):
+        for c in range(4):
+            k = r * 4 + c
+            x0, y0 = c * CW, r * CHh
+            base = bases[int(rng.integers(len(bases)))]
+            cell = paper(CW, CHh, base=base, seed=1210 + k, stains=0, vignette=0.18, fibres=0.8)
+            pen = Pen(CW, CHh, 4)
+            pen.rect(8, 8, CW - 8, CHh - 8, outline=2)
+            stc = stripes[int(rng.integers(len(stripes)))]
+            sp = Pen(CW, CHh, 4)
+            if stc:
+                sp.rect(10, 10, 26, CHh - 10)
+            year = int(rng.integers(1962, 1980))
+            box = int(rng.integers(1, 240))
+            rng_code = rng.choice(["B-3", "B-3", "B-3", "B-2", "B-4", "B-1"])
+            lo = int(rng.integers(0, 98)) * 10 + 1000 * int(rng.integers(0, 2))
+            span = f"№ {lo:04d}–{lo + int(rng.integers(2, 6)) * 10 - 1:04d}"   # file-number range, no words
+            tp = Pen(CW, CHh, 4)
+            xt = 38 if stc else 22
+            typed(tp, xt, 58, f"{rng_code} / {year} / {box:03d}", 20 if stc else 21, rng, path=F_TYPE_B, jitter=0.4)
+            typed(tp, xt, 94, span, 19, rng, jitter=0.4)
+            cell = paint(cell, ink(pen.arr(), 1220 + k, 0.2), "#5A4A3A", 0.7)
+            if stc:
+                cell = paint(cell, ink(sp.arr(), 1230 + k, 0.2), stc, 0.85)
+            cell = paint(cell, ink(tp.arr(), 1240 + k, 0.3, 1.6), "#1E1F26", 0.9)
+            if rng.random() < 0.3:          # handwritten addition
+                hw = Pen(CW, CHh, 4)
+                rot_text(hw, CW - 52, 92, rng.choice(["II", "1979", "?", "L.R.", "x"]), F_HAND, 26,
+                         angle=float(rng.uniform(-8, 8)), weight=520)
+                cell = paint(cell, ink(hw.arr(), 1250 + k, 0.3), "#3A3A60", 0.8)
+            age = rng.uniform(0.0, 0.25)
+            cell = multiply(cell, np.full((CHh, CW), age, np.float32), "#8A6A40")
+            cell = multiply(cell, edge_wear(CW, CHh, 1260 + k, 14, 0.25), "#6A5030")
+            rgb[y0:y0 + CHh, x0:x0 + CW] = cell
+    save(to_img(rgb), "box_labels.jpg")
+
+
+# =================================================================================================
+# QA contact sheet
+# =================================================================================================
+SHEET_ITEMS = ["glyph_mark.png", "glyph_sign.png", "vault_engraving.png", "dest_symbols.png", "routing_chart.png",
+               "badge.png", "index_card.png", "request_card.png", "film_strip_0.png", "film_strip_1.png",
+               "film_strip_2.png", "film_strip_3.png", "reel_can_lid.png", "tape_label_1996.png",
+               "tape_label_1997.png", "tape_label_1998.png", "slide_mark.png", "file_cover.png", "archive_rules.jpg",
+               "box_labels.jpg", "film_frame_0.jpg", "film_frame_1.jpg", "film_frame_2.jpg", "film_frame_3.jpg",
+               "film_frame_4.jpg", "film_frame_5.jpg", "film_secret.jpg", "vault_reel.jpg",
+               "../../linoleum/albedo.jpg", "../../linoleum/normal.png", "../../linoleum/orm.jpg"]
+
+
+def contact_sheet():
+    SW, TH, PAD, LAB = 2400, 300, 18, 50
+    tiles = []
+    for name in SHEET_ITEMS:
+        path = os.path.normpath(os.path.join(OUT, name))
+        if not os.path.exists(path):
+            continue
+        im = Image.open(path).convert("RGBA")
+        th = TH if im.width / im.height < 2.5 else TH * 0.75
+        tw = int(im.width * th / im.height)
+        if tw > SW - 2 * PAD:
+            tw = SW - 2 * PAD
+            th = im.height * tw / im.width
+        im = im.resize((tw, int(th)), Image.LANCZOS)
+        bg = Image.new("RGBA", im.size, (46, 52, 54, 255))
+        chk = Pen(im.width, im.height, 1)
+        for yy in range(0, im.height, 16):
+            for xx in range(0, im.width, 16):
+                if (xx // 16 + yy // 16) % 2:
+                    chk.d.rectangle([xx, yy, xx + 15, yy + 15], fill=255)
+        bg = Image.composite(Image.new("RGBA", im.size, (58, 64, 66, 255)), bg, chk.im)
+        bg.alpha_composite(im)
+        label = name.replace("../../", "").replace("linoleum/", "linoleum ")
+        src = Image.open(path)
+        tiles.append((bg.convert("RGB"), f"{label}\n{src.width}x{src.height} {src.mode}"))
+    rows, cur, wsum = [], [], PAD
+    for t in tiles:
+        if wsum + t[0].width + PAD > SW and cur:
+            rows.append(cur)
+            cur, wsum = [], PAD
+        cur.append(t)
+        wsum += t[0].width + PAD
+    rows.append(cur)
+    height = PAD + sum(max(t[0].height for t in r) + LAB + PAD for r in rows) + 60
+    sheet = Image.new("RGB", (SW, height), (28, 30, 32))
+    d = ImageDraw.Draw(sheet)
+    f = font(F_SANS, 18)
+    d.text((PAD, 14), "MYSTERY ROOM - Chapter 2 decals, glyphs, film frames, linoleum (tools/textures/make_decals_ch2.py)",
+           font=font(F_SANS_B, 24), fill=(230, 222, 200))
+    y = 60
+    for r in rows:
+        x = PAD
+        rh = max(t[0].height for t in r)
+        for im, lab in r:
+            sheet.paste(im, (x, y))
+            d.multiline_text((x, y + im.height + 4), lab, font=f, fill=(200, 196, 186), spacing=6)
+            x += im.width + PAD
+        y += rh + LAB + PAD
+    os.makedirs(QA, exist_ok=True)
+    path = os.path.join(QA, "decals_ch2_contact_sheet.jpg")
+    sheet.save(path, quality=88)
+    print("  wrote", os.path.relpath(path, ROOT), sheet.size)
+
+
+# ---- language sheet ----------------------------------------------------------------------------------
+LOCALIZED = {   # generator name -> EN output file (RU / UZ variants: lname(file, lang))
+    "routing_chart": "routing_chart.png", "badge": "badge.png", "index_card": "index_card.png",
+    "request_card": "request_card.png", "file_cover": "file_cover.png", "archive_rules": "archive_rules.jpg",
+    "tape_label_1996": "tape_label_1996.png", "tape_label_1997": "tape_label_1997.png",
+    "tape_label_1998": "tape_label_1998.png",
+}
+
+
+def lang_sheet():
+    """qa/decals_ch2_lang_sheet.jpg: every localized decal as EN | RU | UZ."""
+    CW, CH, PAD, LAB = 780, 430, 16, 30
+    rows = [n for n in LOCALIZED.values() if os.path.exists(os.path.join(OUT, n))]
+    sheet = Image.new("RGB", (3 * CW + 4 * PAD, 70 + len(rows) * (CH + LAB + PAD)), (28, 30, 32))
+    d = ImageDraw.Draw(sheet)
+    d.text((PAD, 18), "Chapter 2 localized decals: EN | RU | UZ (tools/textures/make_decals_ch2.py)",
+           font=font(F_SANS_B, 26), fill=(230, 222, 200))
+    y = 70
+    for name in rows:
+        for i, lang in enumerate(LANGS):
+            path = os.path.join(OUT, lname(name, lang))
+            x = PAD + i * (CW + PAD)
+            if not os.path.exists(path):
+                continue
+            im = Image.open(path).convert("RGBA")
+            sc = min(CW / im.width, CH / im.height)
+            im = im.resize((int(im.width * sc), int(im.height * sc)), Image.LANCZOS)
+            bg = Image.new("RGBA", im.size, (52, 58, 60, 255))
+            bg.alpha_composite(im)
+            sheet.paste(bg.convert("RGB"), (x + (CW - im.width) // 2, y))
+            d.text((x, y + CH + 4), lname(name, lang), font=font(F_SANS, 20), fill=(200, 196, 186))
+        y += CH + LAB + PAD
+    path = os.path.join(QA, "decals_ch2_lang_sheet.jpg")
+    sheet.save(path, quality=88)
+    print("  wrote", os.path.relpath(path, ROOT), sheet.size)
+
+
 GENERATORS: dict = {}
 
 
-def register(name, fn):
-    GENERATORS[name] = fn
+def register(name, fn, localized=False):
+    """fn(langs) for localized decals (one file per language), fn() otherwise."""
+    GENERATORS[name] = (fn, localized)
+
+
+def _per_lang(fn, *a):
+    return lambda langs: [fn(*a, lang) for lang in langs]
 
 
 register("glyph_mark", glyph_mark)
@@ -2508,15 +2954,15 @@ register("vault_engraving", vault_engraving)
 for _k in range(4):
     register(f"film_strip_{_k}", (lambda k: (lambda: film_strip(k)))(_k))
 register("reel_can_lid", reel_can_lid)
-register("index_card", index_card)
-register("request_card", request_card)
-register("badge", badge)
-register("routing_chart", routing_chart)
+register("index_card", _per_lang(index_card), True)
+register("request_card", _per_lang(request_card), True)
+register("badge", _per_lang(badge), True)
+register("routing_chart", _per_lang(routing_chart), True)
 register("dest_symbols", dest_symbols)
 for _y in TAPE_YEARS:
-    register(f"tape_label_{_y}", (lambda y: (lambda: tape_label(y)))(_y))
+    register(f"tape_label_{_y}", _per_lang(tape_label, _y), True)
 register("slide_mark", slide_mark)
-register("file_cover", file_cover)
+register("file_cover", _per_lang(file_cover), True)
 register("linoleum", linoleum)
 register("film_frame_0", film_frame_0)
 register("film_frame_1", film_frame_1)
@@ -2526,22 +2972,38 @@ register("film_frame_4", film_frame_4)
 register("film_frame_5", film_frame_5)
 register("film_secret", film_secret)
 register("vault_reel", vault_reel)
+register("archive_rules", _per_lang(archive_rules), True)
+register("box_labels", box_labels)
 
 
 # ================================================================================================= main
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--only", help="comma-separated generator names")
+    ap.add_argument("--langs", default=",".join(LANGS), help="languages for decals with words (default en,ru,uz)")
+    ap.add_argument("--sheet-only", action="store_true", help="only rebuild the QA sheets")
+    ap.add_argument("--no-sheet", action="store_true", help="skip the QA sheets")
     args = ap.parse_args()
-    names = list(GENERATORS)
+    langs = [x for x in args.langs.split(",") if x]
+    bad = [x for x in langs if x not in LANGS]
+    if bad:
+        ap.error(f"unknown language(s) {bad}; known: {LANGS}")
+    names = [] if args.sheet_only else list(GENERATORS)
     if args.only:
         names = [n for n in args.only.split(",") if n]
         bad = [n for n in names if n not in GENERATORS]
         if bad:
             ap.error(f"unknown: {bad}; known: {list(GENERATORS)}")
     for n in names:
-        print(f"[{n}]")
-        GENERATORS[n]()
+        fn, localized = GENERATORS[n]
+        print(f"[{n}]" + (f" {','.join(langs)}" if localized else ""))
+        fn(langs) if localized else fn()
+    if GLYPH_FALLBACKS:
+        print("glyph fallbacks:", ", ".join(f"{a} {c} -> {b}" for a, c, b in sorted(GLYPH_FALLBACKS)))
+    if not args.no_sheet and (args.sheet_only or not args.only):
+        print("[contact_sheet]")
+        contact_sheet()
+        lang_sheet()
     return 0
 
 

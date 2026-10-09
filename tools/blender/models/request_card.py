@@ -20,6 +20,7 @@ import lib_mech as L  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 
 NAME = "request_card"
+C.LIGHTS = C.SOFT
 W, H, T = C.CARD_W, C.CARD_H, 0.0003
 CORNER = 0.0015
 CLIP = 0.0045            # clipped top-left corner (orientation corner)

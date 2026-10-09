@@ -14,8 +14,8 @@ Parts:
   * IA_cat_drawer_<i>: one object per drawer, pivot = front-face centre, identity at rest; the code slides it
     +0.30 along local +Z. Interior 0.144 w x 0.442 d. The back-top edge of the front is chamfered so the
     contents stay visible from the code's cat_drawer camera.
-  * cat_tray_mount_<i>: child empty of each drawer at the interior floor (x centre), z = 0.280 model
-    (0.039 forward of the geometric interior centre 0.241; see docs/models/ch2_furniture1.md).
+  * cat_tray_mount_<i>: child empty of each drawer at the interior floor (x centre), z = 0.2725 model
+    (0.0315 forward of the geometric interior centre 0.241; see docs/models/ch2_furniture1.md).
   * static: carcass (sides, back, top, ledge), carcass_row_<r> (face-frame slice + dust board + runners of row r),
     stand.
 
@@ -53,7 +53,7 @@ FRONT_Z0, FRONT_Z1 = 0.462, 0.484   # drawer front (pivot plane z = 0.484)
 BOX_HW, BOX_T = 0.080, 0.008
 BACK_Z0, BACK_Z1 = 0.012, 0.020     # drawer back board
 FLOOR_UP = 0.006                    # interior floor above the opening bottom
-MOUNT_Z = 0.280                     # tray origin (divider 9 sits 44.5 mm behind the front face)
+MOUNT_Z = 0.2725                    # tray origin (divider 9 sits 51.5 mm behind the front face)
 ROD_Y = 0.010                       # tray rod height above the floor (catalogue_tray.py)
 TRAVEL = 0.30                       # ArchiveVisuals.CAT_DRAWER_TRAVEL
 
@@ -149,21 +149,21 @@ def build_drawer(i):
 
 
 # ---------------------------------------------------------------- carcass
-def face_frame_slice(name, y0, y1, holes):
-    """Face-frame slab (z FF..D) between y0 and y1 with rectangular holes [(x0, x1, ya, yb)]."""
-    loops = [[(-HW + 0.02, y0), (HW - 0.02, y0), (HW - 0.02, y1), (-HW + 0.02, y1)]]
-    for (x0, x1, ya, yb) in holes:
-        loops.append([(x0, ya), (x1, ya), (x1, yb), (x0, yb)])
-    return F.gpoly(name, loops, D - FF, (0.0, 0.0, FF), (1, 0, 0), (0, 1, 0), mat=WOOD, bevel=0.0015)
-
-
 def build_row(r):
+    """Face-frame members of row r (stiles beside the openings, the rail above them; row 4 also the bottom rail),
+    the dust board under the row, drawer runners and the column partition. Boxes only (no 2D fills)."""
     yb, yt = row_y(r)
     parts = []
-    y0 = yb - RAIL / 2 if r < 4 else Y0 + 0.02
-    y1 = yt + RAIL / 2 if r > 0 else TOP_OPEN
-    holes = [(xc - OPEN_HW, xc + OPEN_HW, yb, yt) for xc in COL_X]
-    parts.append(face_frame_slice(f"ff_row{r}", y0, y1, holes))
+    ytop = yt + RAIL if r > 0 else TOP_OPEN
+    for (x0, x1) in ((-HW + 0.02, COL_X[0] - OPEN_HW), (COL_X[0] + OPEN_HW, COL_X[1] - OPEN_HW),
+                     (COL_X[1] + OPEN_HW, HW - 0.02)):
+        parts.append(gbox(f"ff_stile{r}_{x0:.3f}", (x0, yb, FF), (x1, ytop, D), WOOD, 0.0012))
+    if r > 0:
+        parts.append(gbox(f"ff_rail{r}", (-HW + 0.02, yt, FF), (HW - 0.02, ytop, D), WOOD, 0.0012))
+    else:
+        pass
+    if r == 4:
+        parts.append(gbox("ff_rail_bottom", (-HW + 0.02, Y0 + 0.02, FF), (HW - 0.02, yb, D), WOOD, 0.0015))
     # dust board under the row (the rail's depth), runners, column partition slice
     if r < 4:
         parts.append(gbox(f"dust{r}", (-HW + 0.02, yb - RAIL, 0.006), (HW - 0.02, yb, FF), WOOD_IN, 0.0))
@@ -293,23 +293,28 @@ def cat_drawer_cam(i, travel=TRAVEL):
     return cam, tgt
 
 
-def qa_tray(objs, g=1, open_i=4, shown=False):
-    """Pose the imported tray like ArchiveVisuals._apply_catalogue (divider g picked)."""
+def qa_tray(g=1, open_i=4, shown=False):
+    """Pose the imported tray like ArchiveVisuals._apply_catalogue (divider g picked, Label3D numbers as text)."""
+    for o in [o for o in bpy.context.scene.objects if o.name.startswith("qa_lbl")]:
+        bpy.data.objects.remove(o, do_unlink=True)
     tray = {o.name[3:]: o for o in bpy.context.scene.objects if o.name.startswith("qa_IA_")}
     div = tray.get(f"IA_divider_{g}")
     if div is None:
         return
-    F.pose_rot(div, "x", 20.0)
+    if div.get("qa_tilted") is None:
+        F.pose_rot(div, "x", 20.0)
+        div["qa_tilted"] = 1
     M.refresh()
-    dz = div.matrix_basis.translation.y * -1.0          # Blender -y = Godot z (tray holder is at identity)
+    dz = -div.matrix_basis.translation.y          # Blender -y = Godot z (the tray holder is at identity)
     tab_x = (-0.05, -0.025, 0.0, 0.025, 0.05)
     for n in range(10):
         c = tray[f"IA_card_{n}"]
         lift = 0.014 + (0.02 if n >= 5 else 0.0)
-        if shown and n == 7:
+        leyla = shown and n == 7
+        if leyla:
             lift = 0.07
         F.pose_to(c, (0.0, lift, dz - 0.006 - n * 0.0026))
-        txt = f"{g}{n}" if not (shown and n == 7) else f"{open_i:02d}{g}{n}"
+        txt = f"{g}{n}" if not leyla else f"{open_i:02d}{g}{n}"
         lbl = gtext(f"qa_lbl{n}", txt, 0.0106, (tab_x[n % 5], 0.081, 0.0008), font=F.FONT_SANS_B, mat="qa_label_ink")
         lbl.parent = c
         lbl.matrix_parent_inverse = F.Matrix.Identity(4)
@@ -332,10 +337,12 @@ def main():
     mount4 = bpy.data.objects["cat_tray_mount_4"]
     F.qa_place(POS, YAW)
     F.qa_room()
-    F.qa_neighbours([("library_ladder", (-4.62, 0, 0.35), 90.0), ("vent_grille", (-5.0, 2.55, 0.9), 90.0),
-                     ("echo_archivist", (-4.05, 0, -1.05), -90.0)])
+    # echo_archivist is left out: echoes show only while a crystal is held, and at (-4.05, 0, -1.05) it stands
+    # between the cat_drawer camera and the left-column drawers (reported to the lead)
+    F.qa_neighbours([("library_ladder", (-4.62, 0, 0.35), 90.0), ("vent_grille", (-5.0, 2.55, 0.9), 90.0)])
     F.qa_room_lights(150.0)
     F.qa_light("fill", "AREA", (-3.0, 1.9, -0.6), 60.0, "FFE6CC", radius=1.2, target=(-4.8, 1.0, -1.2))
+    F.qa_light("amb", "AREA", (-3.4, 1.7, -1.6), 18.0, "D8E0FF", radius=1.5, target=(-4.8, 1.0, -1.1))
     if F.want("hero", args):
         F.shoot(NAME, (-3.35, 1.55, -0.15), (-4.75, 1.0, -1.25), vfov=46)
     if F.want("view", args):
@@ -343,14 +350,18 @@ def main():
     # open drawer 4 with the tray, divider 1 picked, cards fanned (code poses), code camera
     F.pose_slide(drawers[4], (0.0, 0.0, TRAVEL))
     F.item_or_proxy("catalogue_tray", mount4)
+    cam, tgt = cat_drawer_cam(4)
     if F.want("drawer", args):
-        qa_tray(None, g=1, open_i=4)
-        cam, tgt = cat_drawer_cam(4)
+        qa_tray(g=1, open_i=4)
         F.shoot(NAME + "_3", cam, tgt, vfov=44)
-    if F.want("drawer36", args):
+    if F.want("shown", args):
+        qa_tray(g=1, open_i=4, shown=True)
+        F.shoot(NAME + "_4", cam, tgt, vfov=44)
+    if F.want("shown36", args):
+        qa_tray(g=1, open_i=4, shown=True)
         F.pose_slide(drawers[4], (0.0, 0.0, 0.06))
         cam, tgt = cat_drawer_cam(4, 0.36)
-        F.shoot(NAME + "_4", cam, tgt, vfov=44)
+        F.shoot(NAME + "_5", cam, tgt, vfov=44)
 
 
 main()

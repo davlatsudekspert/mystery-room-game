@@ -333,6 +333,7 @@ def booth_context():
 def renders(body, head, info_r):
     objs = [body, head]
     fr = L.g2b                                       # model-local Godot -> Blender (export orientation)
+    L.ONLY = set(ARGS[ARGS.index("--only") + 1].split(",")) if "--only" in ARGS else None
     tip = Vector(L.build_to_godot(info_r["tips"][0]))
     wr_r = Vector(L.build_to_godot(WRIST[1]))
     wr_l = Vector(L.build_to_godot(WRIST[-1]))
@@ -350,6 +351,11 @@ def renders(body, head, info_r):
     L.clay(NAME + "_7", tuple(Vector(fr(*hc_r)) + Vector(fr(0.42, 0.10, 0.10))), fr(*hc_r), lens=60, res=(640, 640))
     L.clay(NAME + "_8", tuple(Vector(fr(*hc_l)) + Vector(fr(0.40, 0.05, 0.22))), fr(*hc_l), lens=60, res=(640, 640))
     L.clay(NAME + "_11", tuple(Vector(fr(*hc_r)) + Vector(fr(-0.05, 0.12, 0.45))), fr(*hc_r), lens=60, res=(640, 640))
+    # face: from where she looks (down toward the drawer), slightly to the side
+    pr = math.radians(HEAD_PITCH)
+    look = Vector(L.build_to_godot(L.rz(HEAD_YAW - 12.0, (0.0, math.cos(pr * 0.8), math.sin(pr * 0.8)))))
+    hcen = Vector(L.build_to_godot(PIVOT + NECK_D * 0.10 + L.rz(HEAD_YAW, (0, 0.035, -0.01))))
+    L.clay(NAME + "_12", tuple(Vector(fr(*hcen)) + Vector(fr(*(look * 0.55)))), fr(*hcen), lens=65, res=(640, 640))
     # in context: the game's booth view, and a side view that shows the gesture (suggested walk camera)
     L.context_render(NAME + "_9", objs, body, PLACE, YAW, booth_context, (-1.55, 1.6, 2.6), (-4.6, 1.1, 2.9),
                      lens_fov_deg=62)

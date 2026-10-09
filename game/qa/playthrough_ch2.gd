@@ -466,4 +466,6 @@ func _finish() -> void:
 	f.store_string("\n".join(report) + "\n")
 	SaveSystem.delete_game()
 	var ok: bool = logic.state["complete"] and not report.any(func(l: String) -> bool: return l.begins_with("✗"))
-	get_tree().quit(0 if ok and taps_fallback == 0 else 1)
+	var qa_exit: int = 0 if ok and taps_fallback == 0 else 1
+	print("QA_DONE exit=%d" % qa_exit) # tools/qa_run.sh: the run finished even if the process then hangs on exit
+	get_tree().quit(qa_exit)

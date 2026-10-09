@@ -86,9 +86,10 @@ def build():
     parts.append(hub)
     # film pack: amber annulus with winding steps on both sides
     w = HW - 0.0004
-    pack = L.lathe2("film_pack", [(HUB_R, -w), (0.052, -w + 0.00012), (PACK_R, -w + 0.0001),
-                                  (PACK_R, w - 0.0001), (0.050, w + 0.00010), (HUB_R, w)],
-                    segments=48, mat="M_Film", cap_bottom=False, cap_top=False)
+    pack = L.lathe2("film_pack", [(HUB_R, -w), (0.038, -w + 0.00010), (0.052, -w - 0.00006), (0.063, -w + 0.00012),
+                                  (PACK_R, -w + 0.0001), (PACK_R, w - 0.0001), (0.061, w + 0.00012), (0.048, w - 0.00006),
+                                  (0.036, w + 0.00010), (HUB_R, w)],
+                    segments=40, mat="M_Film", cap_bottom=False, cap_top=False)
     parts.append(pack)
     # splicing tape holding the film's end (a short band on the pack's rim)
     tape = L.lathe2("end_tape", [(PACK_R + 0.00008, -w + 0.0012), (PACK_R + 0.00008, w - 0.0012)], segments=90,

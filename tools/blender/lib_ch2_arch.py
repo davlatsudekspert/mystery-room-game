@@ -425,8 +425,9 @@ def model_glb(name: str) -> str:
     return os.path.join(M.MODELS_DIR, name + ".glb")
 
 
-def qa_import(path: str, pos=(0, 0, 0), yaw_deg: float = 0.0, prefix: str = "QA_imp_"):
-    """Import a GLB under a holder empty placed at the Godot position/yaw (QA only)."""
+def qa_import(path: str, pos=(0, 0, 0), yaw_deg: float = 0.0, prefix: str = "qa_imp_"):
+    """Import a GLB under a holder empty placed at the Godot position/yaw (QA only). The lowercase prefix
+    matters: mrlib.render_preview deletes every object whose name starts with "QA" after a render."""
     if not os.path.exists(path):
         return None
     before = set(bpy.data.objects)
@@ -445,14 +446,14 @@ def qa_import(path: str, pos=(0, 0, 0), yaw_deg: float = 0.0, prefix: str = "QA_
 
 
 def qa_find(prefix_name: str):
-    """Object imported by qa_import (QA_imp_<name>, possibly with a .001 suffix)."""
+    """Object imported by qa_import (qa_imp_<name>, possibly with a .001 suffix)."""
     for o in bpy.data.objects:
-        if o.name == "QA_imp_" + prefix_name or o.name.startswith("QA_imp_" + prefix_name + "."):
+        if o.name == "qa_imp_" + prefix_name or o.name.startswith("qa_imp_" + prefix_name + "."):
             return o
     return None
 
 
-def qa_place(objs, pos, yaw_deg: float, name="QA_place"):
+def qa_place(objs, pos, yaw_deg: float, name="qa_place"):
     """Parent the built model roots to a holder at the Godot placement (QA only, after export)."""
     root = bpy.data.objects.new(name, None)
     bpy.context.scene.collection.objects.link(root)

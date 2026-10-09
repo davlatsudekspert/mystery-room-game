@@ -71,6 +71,11 @@ def ensure_materials() -> None:
     for name in ("M_Concrete", "M_Velvet", "M_Screen", "M_Linen", "M_Cardboard", "M_Film", "M_Paint_Green",
                  "M_Linoleum", "M_Steel_Cream"):
         M.material(name)
+    # M_Concrete.tres uses the stone texture set: mirror that in the QA preview
+    con = bpy.data.materials.get("M_Concrete")
+    if con is not None and not any(n.type == "TEX_IMAGE" for n in con.node_tree.nodes):
+        M._attach_pbr(con.node_tree, con.node_tree.nodes.get("Principled BSDF"),
+                      os.path.join(ROOT, "game", "assets", "textures", "stone"))
     decal_material("M_Decal_Photos", os.path.join(DECALS, "photo_0.jpg"))
     decal_material("M_Decal_BoxLabels", os.path.join(DECALS_CH2, "box_labels.jpg"))
 

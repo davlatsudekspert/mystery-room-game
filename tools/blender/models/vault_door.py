@@ -50,7 +50,8 @@ SEG = 48                        # big lathes (sagitta 2 mm at r 0.95; smooth-sha
 PIVOT = (-1.05, CY, 0.22)       # hinge axis (door origin)
 HINGE_Y = (0.85, 1.85)          # hinge assemblies
 FACE = 0.16                     # door front face
-BOLT_R, BOLT_Z, BOLT_TRAVEL = 0.86, 0.215, 0.08
+BOLT_R, BOLT_Z, BOLT_TRAVEL = 0.86, 0.223, 0.08
+BOLT_SR, BOLT_HR = 0.05, 0.061       # bolt shaft / head radius
 HANDLE = (0.0, 0.98)
 DISC = (0.0, 1.62)
 DISC_R = 0.222
@@ -115,7 +116,7 @@ def check_swing() -> bool:
     # the keepers and the raised lining: material at x >= 0.955 for z in [0.10, 0.29]
     bore.append((0.955, 0.10, 0.29))
     pts = [(r, z) for (r, z) in DOOR_PROFILE if r > 0.5]
-    pts += [(BOLT_R + 0.12 - BOLT_TRAVEL, BOLT_Z - 0.042), (BOLT_R + 0.12 - BOLT_TRAVEL, BOLT_Z + 0.042)]
+    pts += [(BOLT_R + 0.12 - BOLT_TRAVEL, BOLT_Z - BOLT_SR), (BOLT_R + 0.12 - BOLT_TRAVEL, BOLT_Z + BOLT_SR)]
     worst = 1e9
     for (r, z) in pts:
         dx, dz = r + 1.05, z - PIVOT[2]
@@ -138,29 +139,25 @@ def check_swing() -> bool:
 def build_frame():
     parts = []
     # cast concrete plate with a steel angle border
-    conc = V.plate("conc", [L.rounded_rect(2.36, 2.36, 0.02, 3, cy=CY), L.circle(1.0, 48, cy=CY)], 0.10,
-                   mat="M_Concrete", bevel=0.008, bevel_res=1)
-    parts.append(conc)
+    hole = L.circle(1.08, 16, phase=math.pi / 16, cy=CY)     # hidden under the lining ring (r 1.12)
+    conc = V.plate("conc", [L.rounded_rect(2.34, 2.34, 0.02, 3, cy=CY), hole], 0.07,
+                   mat="M_Concrete", bevel=0.006, bevel_res=1)
+    field = V.plate("conc2", [L.rounded_rect(2.18, 2.18, 0.05, 4, cy=CY), hole], 0.032,
+                    z0=0.068, mat="M_Concrete", bevel=0.012, bevel_res=1)
+    parts += [conc, field]
     border = [V.gbox("bord", (-1.2, 0.15, 0.0), (1.2, 0.18, 0.104), STEEL, 0.004),
               V.gbox("bord", (-1.2, 2.52, 0.0), (1.2, 2.55, 0.104), STEEL, 0.004),
               V.gbox("bord", (-1.2, 0.18, 0.0), (-1.17, 2.52, 0.104), STEEL, 0.004),
               V.gbox("bord", (1.17, 0.18, 0.0), (1.2, 2.52, 0.104), STEEL, 0.004)]
     parts += border
-    for t in (0.2, 0.5, 0.8):                  # rivets on the angle border
-        x = -1.08 + 2.16 * t
-        for y in (0.165, 2.535):
-            parts.append(V.rivet("brv", 0.008, (x, y, 0.104), segs=6))
-        y = 0.40 + 1.90 * t
-        for x2 in (-1.185, 1.185):
-            parts.append(V.rivet("brv", 0.008, (x2, y, 0.104), segs=6))
     # stepped steel lining + tunnel sleeve (one lathe)
-    bands = [STEEL, STEEL, STEEL, CHROME, STEEL, CHROME, STEEL, CHROME, STEEL]
+    bands = [PAINT, PAINT, PAINT, CHROME, STEEL, CHROME, STEEL, CHROME, STEEL]
     lin = V.glathe("lining", BORE_PROFILE, (0, CY, 0), (0, 0, 1), SEG, STEEL, band_mats=bands,
                    cap_bottom=False, cap_top=False, smooth=40.0)
     parts.append(lin)
     # rivets on the lining ring between the keepers
     for k in range(8):
-        for j in (1, 3):
+        for j in (2,):
             a = k * 45 + 11.25 * j
             x, y = polar(1.045, a)
             parts.append(V.rivet("lrv", 0.011, (x, y, 0.127), segs=6))
@@ -181,12 +178,15 @@ def build_frame():
 def keeper(k):
     """A cast steel keeper on the lining at angle k·45°: the locked bolt end sits in its socket."""
     u0, u1, hw = 0.956, 1.08, 0.072
-    poly = [(-hw, 0.127), (hw, 0.127), (hw * 0.86, 0.29), (-hw * 0.86, 0.29)]
-    body = radial_prism("keeper", poly, u0, u1, STEEL, bevel=0.006)
-    hole = L.flat_shape("hole", [L.circle(0.0475, 12)], mat=INK)
+    poly = [(-hw, 0.127), (hw, 0.127), (hw * 0.9, 0.27), (hw * 0.62, 0.30), (-hw * 0.62, 0.30), (-hw * 0.9, 0.27)]
+    body = radial_prism("keeper", poly, u0, u1, PAINT, bevel=0.006)
+    bush = L.lathe2("bush", [(0.067, 0.0), (0.066, 0.004), (0.058, 0.007), (0.0565, 0.0)], segments=12, mat=BRASS,
+                    cap_bottom=False, cap_top=False)
+    bush.data.transform(Matrix.Translation((u0, 0, BOLT_Z)) @ V.axis_rot((-1, 0, 0)))
+    hole = L.flat_shape("hole", [L.circle(0.057, 12)], mat=INK)
     hole.data.transform(Matrix.Translation((u0 - 0.0008, 0, BOLT_Z)) @ V.axis_rot((-1, 0, 0)))
-    bolts = [V.hexbolt("kbolt", 0.012, (u0 + 0.075, 0.0, 0.29), h=0.01, washer=False)]
-    objs = [body, hole] + bolts
+    bolts = [V.rivet("kbolt", 0.013, (u0 + 0.075, 0.0, 0.30), mat=STEEL)]
+    objs = [body, bush, hole] + bolts
     for o in objs:
         o.data.transform(Matrix.Translation((0, CY, 0)) @ Matrix.Rotation(math.radians(k * 45), 4, "Z"))
         V.A.hint(o, 40.0)
@@ -206,8 +206,7 @@ def hinge_static(yh):
         out.append(V.gbox("hbracket", (x - 0.062, y0, 0.10), (x + 0.062, y1, z), STEEL, 0.008))
         base = V.gbox("hbase", (x - 0.095, y0 - 0.02, 0.10), (x + 0.085, y1 + 0.02, 0.114), STEEL, 0.004)
         out.append(base)
-        for sx in (-1, 1):
-            out.append(V.rivet("hbb", 0.009, (x + sx * 0.076 - 0.005, (y0 + y1) / 2, 0.114), segs=6))
+        out.append(V.rivet("hbb", 0.009, (x - 0.081, (y0 + y1) / 2, 0.114), segs=6))
     return out
 
 
@@ -232,16 +231,16 @@ def makers_plate():
 
 
 def medallion():
-    cx, cy, z = -0.93, 2.43, 0.10
-    out = [V.glathe("medal", [(0.068, 0.0), (0.068, 0.006), (0.062, 0.011), (0.0, 0.012)], (cx, cy, z), (0, 0, 1),
+    cx, cy, z = -0.90, 2.40, 0.10
+    out = [V.glathe("medal", [(0.088, 0.0), (0.088, 0.007), (0.08, 0.013), (0.0, 0.0145)], (cx, cy, z), (0, 0, 1),
                     32, BRASS, smooth=50.0)]
-    zt = z + 0.0122
-    out.append(V.flat("mring", L.circle_line(0.036, 0.006, 32), zt, (cx, cy), INK))
-    out.append(V.flat("mmer", [L.rounded_rect(0.0055, 0.098, 0.001, 1)], zt + 0.0001, (cx, cy), INK))
+    zt = z + 0.0147
+    out.append(V.flat("mring", L.circle_line(0.046, 0.0075, 32), zt, (cx, cy), INK))
+    out.append(V.flat("mmer", [L.rounded_rect(0.007, 0.124, 0.001, 1)], zt + 0.0001, (cx, cy), INK))
     for i in range(8):
         a = math.radians(i * 45 + 22.5)
-        t = V.flat("mtick", [L.rounded_rect(0.004, 0.011, 0.0005, 1)], zt, (cx + 0.051 * math.cos(a),
-                   cy + 0.051 * math.sin(a)), INK, rot_z=a - math.pi / 2)
+        t = V.flat("mtick", [L.rounded_rect(0.005, 0.014, 0.0005, 1)], zt, (cx + 0.066 * math.cos(a),
+                   cy + 0.066 * math.sin(a)), INK, rot_z=a - math.pi / 2)
         out.append(t)
     return out
 
@@ -254,14 +253,16 @@ def build_door():
     body = V.glathe("door_body", DOOR_PROFILE, (0, CY, 0), (0, 0, 1), SEG, STEEL, band_mats=bands, smooth=40.0)
     parts.append(body)
     # bolt grooves, guide rails, guide straps, rivets between the bolts
+    parts.append(V.flat("dring", L.circle_line(0.912, 0.006, SEG), FACE + 0.0002, (0, CY), CHROME))
+    top = BOLT_Z + BOLT_SR
     for k in range(8):
-        groove = V.flat("groove", [[(0.655, -0.06), (0.926, -0.06), (0.926, 0.06), (0.655, 0.06)]], FACE + 0.0003,
+        groove = V.flat("groove", [[(0.655, -0.07), (0.926, -0.07), (0.926, 0.07), (0.655, 0.07)]], FACE + 0.0003,
                         (0, 0), INK)
-        rails = [V.gbox("rail", (0.66, s * 0.035 - 0.0045, FACE), (0.92, s * 0.035 + 0.0045, BOLT_Z - 0.042),
+        rails = [V.gbox("rail", (0.66, s * 0.04 - 0.005, FACE), (0.92, s * 0.04 + 0.005, BOLT_Z - BOLT_SR + 0.0005),
                         CHROME, 0.0) for s in (-1, 1)]
-        strap = radial_prism("strap", [(-0.066, FACE), (-0.049, FACE), (-0.049, 0.259), (0.049, 0.259),
-                                       (0.049, FACE), (0.066, FACE), (0.066, 0.264), (0.058, 0.272),
-                                       (-0.058, 0.272), (-0.066, 0.264)], 0.80, 0.846, STEEL)
+        strap = radial_prism("strap", [(-0.072, FACE), (-0.058, FACE), (-0.058, top + 0.001), (0.058, top + 0.001),
+                                       (0.058, FACE), (0.072, FACE), (0.072, top + 0.006), (0.063, top + 0.012),
+                                       (-0.063, top + 0.012), (-0.072, top + 0.006)], 0.805, 0.835, CHROME)
         grp = [groove] + rails + [strap]
         for o in grp:
             o.data.transform(Matrix.Translation((0, CY, 0)) @ Matrix.Rotation(math.radians(k * 45), 4, "Z"))
@@ -375,19 +376,19 @@ def door_back():
 def build_handle():
     x, y = HANDLE
     zs = FACE + 0.088                      # wheel plane
-    parts = [V.glathe("hub", [(0.05, FACE + 0.021), (0.036, FACE + 0.04), (0.036, zs - 0.012), (0.056, zs - 0.004),
-                              (0.056, zs + 0.016), (0.042, zs + 0.032), (0.0, zs + 0.037)], (x, y, 0), (0, 0, 1), 20,
+    parts = [V.glathe("hub", [(0.056, FACE + 0.021), (0.042, FACE + 0.04), (0.042, zs - 0.016), (0.066, zs - 0.006),
+                              (0.066, zs + 0.018), (0.05, zs + 0.036), (0.0, zs + 0.042)], (x, y, 0), (0, 0, 1), 20,
                       BRASS_P, smooth=45.0, cap_bottom=False)]
     R = 0.20
     for i in range(6):
         a = math.radians(90 + i * 60)
         d = (math.cos(a), math.sin(a), 0)
-        sp = V.glathe("spoke", [(0.0135, 0.04), (0.0115, 0.232)], (x, y, zs), d, 8, BRASS,
+        sp = V.glathe("spoke", [(0.0175, 0.04), (0.0145, 0.226)], (x, y, zs), d, 8, BRASS,
                       cap_bottom=False, cap_top=False, smooth=60.0)
-        knob = V.glathe("knob", [(0.0115, 0.0), (0.019, 0.006), (0.024, 0.018), (0.019, 0.03), (0.0, 0.0355)],
-                        (x + 0.2245 * d[0], y + 0.2245 * d[1], zs), d, 8, BRASS_P, smooth=70.0, cap_bottom=False)
+        knob = V.glathe("knob", [(0.0145, 0.0), (0.022, 0.005), (0.0275, 0.016), (0.0225, 0.028), (0.0, 0.034)],
+                        (x + 0.218 * d[0], y + 0.218 * d[1], zs), d, 8, BRASS_P, smooth=70.0, cap_bottom=False)
         parts += [sp, knob]
-    rim = M.torus("rim", R, 0.0165, major_seg=36, minor_seg=6, mat=BRASS)
+    rim = M.torus("rim", R, 0.021, major_seg=36, minor_seg=6, mat=BRASS)
     rim.location = (x, y, zs)
     M.apply_transform(rim)
     V.A.hint(rim, 70.0)
@@ -397,8 +398,9 @@ def build_handle():
 
 def build_bolts():
     out = []
-    prof = [(0.0, -0.12), (0.051, -0.12), (0.054, -0.117), (0.054, -0.093), (0.042, -0.09), (0.042, 0.096),
-            (0.03, 0.115), (0.0, 0.12)]
+    sr, hr = BOLT_SR, BOLT_HR
+    prof = [(0.0, -0.12), (hr - 0.004, -0.12), (hr, -0.116), (hr, -0.092), (sr, -0.088), (sr, 0.094),
+            (sr * 0.72, 0.114), (0.0, 0.12)]
     for k in range(8):
         a = math.radians(k * 45)
         c = (BOLT_R * math.cos(a), CY + BOLT_R * math.sin(a), BOLT_Z)
@@ -444,7 +446,7 @@ def build_port(side):
                       smooth=45.0)
     # fixed index: an enamel stripe on the barrel top and a triangle on the lip
     stripe = V.gbox("idx", (x - 0.0035, y + 0.0772, 0.2535), (x + 0.0035, y + 0.0792, 0.2705), CREAM, 0.0)
-    tri = V.flat("idx_tri", [[(-0.0055, 0.0595), (0.0055, 0.0595), (0.0, 0.0685)]], 0.2812, (x, y), CREAM)
+    tri = V.flat("idx_tri", [[(-0.0065, 0.0588), (0.0065, 0.0588), (0.0, 0.0688)]], 0.2812, (x, y), CREAM)
     port = V.part(f"IA_port_{side}", [barrel, stripe, tri], pivot=(x, y, FACE))
     mount = V.empty(f"port_{side}_mount", (x, y, MOUNT_Z))
     # light pipe (glass rod only: the code makes the whole mesh glow)
@@ -479,28 +481,28 @@ def build_collars():
     x, y = -PORT_X, PORT_Y
     prof = [(0.078, 0.188), (0.127, 0.188), (0.132, 0.193, "k"), (0.132, 0.243, "k"), (0.127, 0.248),
             (0.078, 0.248)]
-    c = V.glathe("collar", prof, (x, y, 0), (0, 0, 1), 40, BRASS, knurl=0.0028, cap_bottom=False, cap_top=False,
-                 smooth=30.0)
+    c = V.glathe("collar", prof, (x, y, 0), (0, 0, 1), 40, "M_Bakelite", knurl=0.0028, cap_bottom=False,
+                 cap_top=False, smooth=30.0, band_mats=[BRASS_P, None, None, BRASS_P, None])
     out.append(V.part("IA_collar_left", [c] + ticks8(x, y, 0.2483, 0.098, 0.123, 0.09, "ctick"),
                       pivot=(x, y, 0.218)))
     # right: rotation collar + the narrower zoom ring in front of it
     x = PORT_X
     prof = [(0.078, 0.188), (0.130, 0.188), (0.135, 0.193, "k"), (0.135, 0.217, "k"), (0.130, 0.222),
             (0.078, 0.222)]
-    c = V.glathe("collar", prof, (x, y, 0), (0, 0, 1), 40, BRASS, knurl=0.0028, cap_bottom=False, cap_top=False,
-                 smooth=30.0)
+    c = V.glathe("collar", prof, (x, y, 0), (0, 0, 1), 40, "M_Bakelite", knurl=0.0028, cap_bottom=False,
+                 cap_top=False, smooth=30.0, band_mats=[BRASS_P, None, None, BRASS_P, None])
     out.append(V.part("IA_collar_right", [c] + ticks8(x, y, 0.2223, 0.109, 0.130, 0.104, "ctick"),
                       pivot=(x, y, 0.205)))
     prof = [(0.078, 0.226), (0.101, 0.226), (0.106, 0.231, "k"), (0.106, 0.247, "k"), (0.101, 0.252),
             (0.078, 0.252)]
-    zr = V.glathe("zoom", prof, (x, y, 0), (0, 0, 1), 36, BRASS_P, knurl=0.0022, cap_bottom=False, cap_top=False,
-                  smooth=30.0)
+    zr = V.glathe("zoom", prof, (x, y, 0), (0, 0, 1), 36, "M_Bakelite", knurl=0.0022, cap_bottom=False,
+                  cap_top=False, smooth=30.0, band_mats=[BRASS_P, None, None, BRASS_P, None])
     digits = []
     for n in range(5):
         a = math.radians(90 + 40 * n)
-        d = V.text("zdig", str(n), 0.0135, (0.0, 0.0), 0.0, font=V.FONT_COND_B, mat=INK)
+        d = V.text("zdig", str(n), 0.0155, (0.0, 0.0), 0.0, font=V.FONT_COND_B, mat=CREAM)
         d.data.transform(Matrix.Rotation(a - math.pi / 2, 4, "Z"))
-        d.data.transform(Matrix.Translation((x + 0.0905 * math.cos(a), y + 0.0905 * math.sin(a), 0.2523)))
+        d.data.transform(Matrix.Translation((x + 0.0895 * math.cos(a), y + 0.0895 * math.sin(a), 0.2523)))
         digits.append(d)
     out.append(V.part("IA_zoom_right", [zr] + digits, pivot=(x, y, 0.239)))
     return out
@@ -723,8 +725,8 @@ def qa(parts, args):
         disc_state("qa_disc2", 0, 2, 3, on=False, unlocked=True)
         pose(parts, wheel=2, bolts_in=True)
         lights_room()
-        V.qa_fill((2.9, 1.5, -2.4), 8.0)
-        V.shoot(NAME + "_5", (2.85, 1.45, -2.35), (1.85, 1.15, -3.4), vfov=44)
+        V.qa_fill((2.9, 1.5, -1.9), 8.0)
+        V.shoot(NAME + "_5", (2.95, 1.55, -1.85), (1.65, 1.25, -3.45), vfov=50)
     # 6 OPEN (-95°) from the in-game 'vault' view, interior visible
     if want("6"):
         disc_state("qa_disc3", 0, 2, 3, on=False, unlocked=True)

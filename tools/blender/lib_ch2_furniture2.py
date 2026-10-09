@@ -739,3 +739,28 @@ def spiral(cx, cz, y, r0, r1, turns, n, phase=0.0):
         r = r0 + (r1 - r0) * t
         pts.append((cx + r * math.cos(a), y, cz + r * math.sin(a)))
     return pts
+
+
+def qa_item_decals() -> None:
+    """QA only: imported item GLBs carry no images (export_image_format NONE); give their M_Decal_* materials
+    the ch2 decal image named after the slot (M_Decal_SlideMark -> slide_mark.png), alpha wired in."""
+    import re
+    for mat in bpy.data.materials:
+        base = mat.name.split(".")[0]
+        if not base.startswith("M_Decal_") or not mat.use_nodes:
+            continue
+        nt = mat.node_tree
+        if any(n.type == "TEX_IMAGE" and n.image for n in nt.nodes):
+            continue
+        stem = re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", base[len("M_Decal_"):]).lower()
+        path = decal_path(stem + ".png") or decal_path(stem + ".jpg")
+        b = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+        if path is None or b is None:
+            continue
+        tex = nt.nodes.new("ShaderNodeTexImage")
+        tex.image = bpy.data.images.load(path, check_existing=True)
+        nt.links.new(tex.outputs["Color"], b.inputs["Base Color"])
+        nt.links.new(tex.outputs["Alpha"], b.inputs["Alpha"])
+        if hasattr(mat, "surface_render_method"):
+            mat.surface_render_method = "DITHERED"
+        print(f"[b2-qa] decal image {os.path.basename(path)} -> {mat.name}")

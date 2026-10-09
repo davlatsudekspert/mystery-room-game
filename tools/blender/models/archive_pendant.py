@@ -132,7 +132,7 @@ def main():
     if "--no-render" in args:
         return
     C.qa_begin()
-    ceil = M.box("QA_ceiling", (1.4, 1.4, 0.02), loc=(0, 0, 0.01), mat="M_Ceiling", bevel=0)
+    ceil = M.box("qa_ceiling", (1.4, 1.4, 0.02), loc=(0, 0, 0.01), mat="M_Ceiling", bevel=0)
     _ = ceil
     # hero: 3/4 from below, studio light (bulb on)
     M.render_preview(f"{C.QA_SUB}/{NAME}", (0.62, -0.78, -1.05), (0, 0, -0.62), lens=50, res=(800, 800), samples=32,

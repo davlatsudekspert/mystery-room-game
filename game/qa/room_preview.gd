@@ -83,6 +83,7 @@ func _ready() -> void:
 		var p: String = out_dir + "/" + str(s[0]) + suffix + ".png"
 		img.save_png(p)
 		print("SAVED ", p)
+	print("QA_DONE exit=0") # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit()
 
 

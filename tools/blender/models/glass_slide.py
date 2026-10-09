@@ -18,6 +18,7 @@ import lib_mech as L  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 
 NAME = "glass_slide"
+C.LIGHTS = C.SOFT
 S = 0.082             # slide size
 TG = 0.0026           # glass sandwich thickness
 TAPE = 0.0028         # tape width over each face

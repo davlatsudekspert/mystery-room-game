@@ -19,6 +19,7 @@ import lib_mech as L  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 
 NAME = "index_card"
+C.LIGHTS = C.SOFT
 W, H, T = C.CARD_W, C.CARD_H, 0.0003
 NOTCHED = tuple(k + 1 for k, bit in enumerate(C.PUNCH_CODE) if bit)     # (1, 3, 4, 7)
 NOTCH_FLAT = 0.0006

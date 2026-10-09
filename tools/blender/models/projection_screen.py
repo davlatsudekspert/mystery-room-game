@@ -36,7 +36,7 @@ MX, MT, MB = 1.26, 2.76, 1.06                      # masking outer edge: x +-MX,
 FW = 0.078                                         # frame width
 PX = MX + FW                                       # pilaster inner edge
 DRAPE_IN = PX + 0.08                               # drape inner edge (outside the pilasters)
-RB_X = DRAPE_IN + 0.18                             # roller box half width (covers the drapes)
+RB_X = DRAPE_IN + 0.25                             # roller box half width (covers the drapes)
 SOCK = (0.0, 0.92, 0.12)
 WAL = "M_Wood_Walnut"
 BRASS = "M_Brass_Aged"
@@ -71,9 +71,9 @@ def drape(name, side):
     """Velvet drape hanging from under the pelmet, gathered by a tie-back at y 1.25, flaring to the floor.
     side = -1 (left, seen from the front) or +1 (right)."""
     rings = []
-    levels = [(2.84, 0.17, 0.020), (2.55, 0.15, 0.018), (2.1, 0.11, 0.014), (1.6, 0.06, 0.010), (1.25, 0.035, 0.006),
-              (1.0, 0.06, 0.010), (0.6, 0.10, 0.015), (0.25, 0.13, 0.018), (0.02, 0.14, 0.019)]
-    folds = 5
+    levels = [(2.84, 0.24, 0.022), (2.45, 0.21, 0.020), (1.95, 0.14, 0.015), (1.25, 0.05, 0.007),
+              (0.95, 0.09, 0.012), (0.55, 0.15, 0.018), (0.22, 0.19, 0.021), (0.02, 0.20, 0.022)]
+    folds = 4
     nu = folds * 4
     for (y, w, amp) in levels:
         # the drape hugs the frame side: inner edge at the frame outer edge, outer edge further out
@@ -86,8 +86,7 @@ def drape(name, side):
             z = 0.075 + amp * math.sin(t * folds * 2 * math.pi) + 0.012
             ring.append(G(x, y, z))
         # back side (flat, against the wall) to close the shell
-        for i in range(nu, -1, -1):
-            t = i / nu
+        for t in (1.0, 0.0):
             x = x_c + side * (t - 0.5) * w
             ring.append(G(x, y, 0.035))
         rings.append(ring)
@@ -141,7 +140,7 @@ def build():
                          mat=WAL))
     parts.append(gbox("roller_top", (-rb_x - 0.028, 3.04, 0.0), (rb_x + 0.028, 3.07, 0.193), WAL, bevel=0.006))
     for s in (-1, 1):
-        parts.append(C.gcyl(f"roller_cap{s}", 0.055, 0.012, (s * rb_x, 2.94, 0.085), axis="x" if s > 0 else "-x", verts=20,
+        parts.append(C.gcyl(f"roller_cap{s}", 0.055, 0.012, (s * rb_x, 2.94, 0.085), axis="x" if s > 0 else "-x", verts=16,
                             mat=BRASS, bevel=0.003))
         parts.append(C.gcyl(f"roller_knob{s}", 0.018, 0.02, (s * (rb_x + 0.012), 2.94, 0.085), axis="x" if s > 0 else "-x",
                             verts=12, mat=BRASS, bevel=0.003))
@@ -155,7 +154,7 @@ def build():
     # tied-back velvet drapes + brass tie-back hooks and cords
     for s in (-1, 1):
         parts.append(drape(f"drape{s}", s))
-        hx = s * (DRAPE_IN + 0.0175)
+        hx = s * (DRAPE_IN + 0.025)
         parts.append(C.gtube(f"tieback{s}", [(hx - 0.04, 1.25, 0.09), (hx, 1.235, 0.12), (hx + 0.04, 1.25, 0.09)], 0.006, sides=6,
                              mat="M_Brass_Polished", fillet=0.02))
         parts.append(C.gcyl(f"tie_tassel{s}", 0.012, 0.05, (hx, 1.235, 0.12), axis="-y", verts=8, mat="M_Brass_Polished",
@@ -165,33 +164,62 @@ def build():
     parts.append(gbox("bracket_plate", (-0.04, MB - FW - 0.004, 0.012), (0.04, MB - FW, 0.07), BRASS, bevel=0.0015))
     for xx in (-0.028, 0.028):
         parts.append(C.screw("bracket_screw", 0.004, (xx, MB - FW - 0.004, 0.045), (0, -1, 0), BRASS, 0))
-    arm = C.gtube("bracket_arm", [(0.0, MB - FW - 0.004, 0.045), (0.0, 0.952, 0.05), (0.0, sy, sz - 0.044)], 0.006, sides=8,
-                  mat=BRASS, fillet=0.02)
+    arm = C.gtube("bracket_arm", [(0.0, MB - FW - 0.004, 0.040), (0.0, 0.958, 0.044), (0.0, 0.94, 0.056), (0.0, sy + 0.016, sz - 0.052)],
+                  0.0065, sides=8, mat=BRASS, fillet=0.012)
     parts.append(arm)
+    parts.append(C.hint_torus("bracket_collar", G(sx, sy, sz - 0.052), 0.0175, 0.004, major_seg=16, minor_seg=5, mat=BRASS))
+    parts.append(M.sphere("bracket_ball", 0.0095, loc=G(0.0, MB - FW - 0.010, 0.040), segments=10, rings=6, mat=BRASS))
     A.presmooth(parts)
     body = M.join(parts, "screen_frame")
     # screen surface
     surf = C.gquad("screen_surface", (0.0, SY, SZ), (1, 0, 0), (0, 1, 0), SW, SH, "M_Screen")
     M.set_origin(surf, G(0.0, SY, SZ))
-    # socket cup (lathe along +z) with three claws
-    cup = C.glathe("sock_cup", [(0.0, -0.046), (0.016, -0.046), (0.030, -0.044), (0.042, -0.034), (0.045, -0.022),
-                                (0.045, -0.004), (0.0475, 0.0), (0.044, 0.003), (0.038, 0.0), (0.036, -0.012), (0.026, -0.016),
-                                (0.0, -0.016)], SOCK, axis="z", segments=24, mat=BRASS)
+    # socket cup (lathe along +z, h = 0 at the mouth): back boss, fluted body, flat scaled lip, crystal seat
+    prof = [(0.0, -0.058), (0.014, -0.058), (0.022, -0.050), (0.034, -0.046), (0.0435, -0.033),
+            (0.0455, -0.027), (0.0455, -0.011), (0.0445, -0.008), (0.0476, -0.004),
+            (0.0470, 0.0), (0.0385, 0.0), (0.0360, -0.004), (0.0355, -0.011), (0.0, -0.014)]
+    cup = M.lathe("sock_cup", prof, segments=24, mat=BRASS)
+    for v in cup.data.vertices:          # flutes on the body band
+        if -0.0275 < v.co.z < -0.0105:
+            a = math.atan2(v.co.y, v.co.x)
+            f = 1.0 - 0.028 * (0.5 + 0.5 * math.cos(12 * a))
+            v.co.x *= f
+            v.co.y *= f
+    cup.data.transform(Matrix.Rotation(math.radians(90), 4, "X"))   # local +Z -> Blender -Y (= Godot +z)
+    cup.data.transform(Matrix.Translation(G(*SOCK)))
+    A.hint(cup, 55)
+    # scale ticks on the flat lip (12, every 30 deg; double at 12 o'clock)
+    bm = bmesh.new()
+    for i in range(12):
+        a = math.radians(90 + 30 * i)
+        d = Vector((math.cos(a), math.sin(a)))
+        nrm = Vector((-d.y, d.x))
+        hw = 0.0009 if i else 0.0016
+        r0, r1 = 0.0395, 0.0458
+        vs = [bm.verts.new(G(sx + p.x, sy + p.y, sz + 0.0004)) for p in
+              (d * r0 - nrm * hw, d * r1 - nrm * hw, d * r1 + nrm * hw, d * r0 + nrm * hw)]
+        bm.faces.new(vs)
+    ticks = A.obj_from_bm("sock_ticks", bm, "M_Lacquer_Black")
+    for pl in ticks.data.polygons:
+        if pl.normal.dot(GV((0, 0, 1))) < 0:
+            pl.flip()
     claws = []
-    for k, ang in enumerate((90, 210, 330)):
+    for k, ang in enumerate((30, 150, 270)):       # clear of the crystal's grip tab at 12 o'clock
         a = math.radians(ang)
         d = Vector((math.cos(a), math.sin(a)))
         pts = []
         for j in range(5):
             t = j / 4
-            r = 0.044 - 0.016 * t
-            z = 0.0 + 0.009 * math.sin(t * math.pi * 0.6)
+            r = 0.0425 - 0.0145 * t
+            z = 0.0095 * math.sin(t * math.pi * 0.62)
             pts.append((sx + d.x * r, sy + d.y * r, sz + z))
-        claws.append(C.gtube(f"sock_claw{k}", pts, 0.0032, sides=6, mat="M_Brass_Polished"))
-    A.presmooth([cup] + claws)
-    sock = M.join([cup] + claws, "IA_screen_socket")
+        claws.append(C.gtube(f"sock_claw{k}", pts, 0.0034, sides=6, mat="M_Brass_Polished"))
+        tip = M.sphere(f"sock_claw_tip{k}", 0.0037, loc=GV(pts[-1]), segments=6, rings=4, mat="M_Brass_Polished")
+        claws.append(A.hint(tip, 80))
+    A.presmooth([cup, ticks] + claws)
+    sock = M.join([cup, ticks] + claws, "IA_screen_socket")
     M.set_origin(sock, G(*SOCK))
-    ring = C.hint_torus("socket_ring", G(*SOCK), 0.049, 0.0028)
+    ring = C.hint_torus("socket_ring", G(*SOCK), 0.0492, 0.0026, major_seg=28, minor_seg=5)
     M.set_origin(ring, G(*SOCK))
     mnt = C.mount("socket_mount", SOCK)
     A.finalize_uv([body, sock, ring])
@@ -231,7 +259,7 @@ def main():
     if os.path.exists(crystal):
         held = C.qa_import(crystal, (-2.5, SOCK[1], -3.5 + SOCK[2]), 0.0)
     else:
-        held = M.cylinder("QA_crystal", 0.028, 0.006, loc=G(-2.5, SOCK[1], -3.5 + SOCK[2]), rot=(math.pi / 2, 0, 0), verts=24,
+        held = M.cylinder("qa_crystal", 0.028, 0.006, loc=G(-2.5, SOCK[1], -3.5 + SOCK[2]), rot=(math.pi / 2, 0, 0), verts=24,
                           mat="M_Crystal", bevel=0.001)
     if C.want("socket", sel):
         C.qa_room_lights()

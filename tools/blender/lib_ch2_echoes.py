@@ -163,9 +163,10 @@ def lower_leg(prefix: str, knee, ankle, calf=0.056, shin=0.040, knee_r=0.046, an
                         seg=16, rings=10)]
 
 
-def trouser_leg(prefix: str, top, ankle, r_top=0.070, r_knee=0.060, r_hem=0.058, fwd=(0, 1, 0)):
-    """Straight 1970s trouser leg from inside the coat to just above the shoe (slight flare)."""
-    a, b = vec(top), vec(ankle) + Vector((0, 0, 0.035))
+def trouser_leg(prefix: str, top, ankle, r_top=0.070, r_knee=0.060, r_hem=0.058, fwd=(0, 1, 0), hem_z=0.075):
+    """Straight 1970s trouser leg from inside the coat down over the top of the shoe (slight flare)."""
+    a = vec(top)
+    b = Vector((ankle[0], ankle[1], hem_z))
     return [E.limb(prefix, a, b, [(r_top, r_top * 0.95), (r_knee, r_knee * 0.92), (r_knee * 0.95, r_knee * 0.9),
                                   (r_hem, r_hem * 0.95)], ts=[0, 0.4, 0.75, 1.0], side=(1, 0, 0), seg=20, cap1=0.25)]
 
@@ -297,6 +298,7 @@ def hand_shell(parts, name: str, tris: int, voxel: float = 0.0012, smooth_iters:
     """Hands are remeshed on their own, finer grid so the fingers stay separate (the body grid of ~3.4 mm
     fuses fingers into a mitten), then decimated and later boolean-unioned into the body."""
     obj = E.union_remesh(parts, name, voxel)
+    drop_small_islands(obj)
     E.taubin(obj, smooth_iters)
     E.fill_concave(obj, 4, lam=0.35)
     E.taubin(obj, 2)
@@ -462,7 +464,7 @@ def spectacles(prefix: str, s: float = 1.06, lens_r=(0.021, 0.0165), rim=0.0021,
     parts = []
     for sx in (1, -1):
         c = Vector((sx * 0.0335 * s, y_front * s, eye_z * s))
-        pts, n = [], 18
+        pts, n = [], 16
         for i in range(n):
             a = 2 * math.pi * i / n
             # slightly rectangular (superellipse) lens outline, wrapped a little around the face
@@ -471,26 +473,25 @@ def spectacles(prefix: str, s: float = 1.06, lens_r=(0.021, 0.0165), rim=0.0021,
             pz = math.copysign(abs(sa) ** 0.8, sa) * lens_r[1] * s
             py = -0.0035 * s * (sx * px / (lens_r[0] * s) + 1) ** 2 * 0.25
             pts.append(c + Vector((px, py, pz)))
-        parts.append(_ring_tube(f"{prefix}_rim{sx}", pts, rim * s))
+        parts.append(_ring_tube(f"{prefix}_rim{sx}", pts, rim * s, seg=5))
         # temple arm: from the outer rim edge back to above the ear
         t0 = c + Vector((sx * lens_r[0] * s * 0.98, -0.004 * s, lens_r[1] * s * 0.45))
         t1 = Vector((sx * 0.069 * s, 0.07 * s, ear_z * s + 0.004 * s))
         t2 = Vector((sx * 0.075 * s, ear_y * s, ear_z * s))
         parts.append(E.loft(f"{prefix}_temple{sx}", [t0, t1, t2], [(rim * 0.85 * s, rim * 1.1 * s)] * 3,
-                            side=(0, 0, 1), seg=8, sub=3, cap0=0.5, cap1=0.5))
+                            side=(0, 0, 1), seg=6, sub=2, cap0=0.5, cap1=0.5))
     # bridge over the nose (keyhole arch)
     b0 = Vector((0.0335 * s - lens_r[0] * s * 0.95, y_front * s, eye_z * s + 0.004 * s))
     parts.append(E.loft(prefix + "_bridge", [b0, Vector((0, (y_front + 0.002) * s, eye_z * s + 0.009 * s)),
                                              Vector((-b0.x, b0.y, b0.z))],
-                        [(rim * s, rim * s)] * 3, side=(0, 1, 0), seg=8, sub=4, cap0=0.4, cap1=0.4))
+                        [(rim * s, rim * s)] * 3, side=(0, 1, 0), seg=6, sub=3, cap0=0.4, cap1=0.4))
     return parts
 
 
-def _ring_tube(name: str, pts, r: float):
+def _ring_tube(name: str, pts, r: float, seg: int = 6):
     """Closed torus-like tube through a closed loop of points."""
     n = len(pts)
     bm = bmesh.new()
-    seg = 6
     rings = []
     for i in range(n):
         p0, p1, p2 = pts[i - 1], pts[i], pts[(i + 1) % n]
@@ -562,10 +563,39 @@ def build_head(P, pivot, nd, yaw, pitch, roll, hair_fn, tris: int, extras_fn=Non
 
 
 # ------------------------------------------------------------------ body finishing
+def drop_small_islands(obj, min_verts: int = 200) -> int:
+    """Delete loose islands (voxel specks) smaller than min_verts. Returns the number removed."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    seen, kill = set(), []
+    for v in bm.verts:
+        if v in seen:
+            continue
+        stack, isl = [v], [v]
+        seen.add(v)
+        while stack:
+            x = stack.pop()
+            for e in x.link_edges:
+                o = e.other_vert(x)
+                if o not in seen:
+                    seen.add(o)
+                    stack.append(o)
+                    isl.append(o)
+        if len(isl) < min_verts:
+            kill.append(isl)
+    for isl in kill:
+        bmesh.ops.delete(bm, geom=isl, context="VERTS")
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.data.update()
+    return len(kill)
+
+
 def finish_body(parts, voxel: float, tris: int, hand_centres, hand_sigma: float = 0.06,
                 folds_fn=None, post_fn=None, vg_factor: float = 0.002, name: str = "body_tmp"):
     """union -> smooth -> fillets -> folds -> optional displacement -> decimate -> clean."""
     body = E.union_remesh(parts, name, voxel)
+    drop_small_islands(body)
     hands_w = gauss_w(hand_centres, hand_sigma)
 
     def not_hands(co):
@@ -663,6 +693,16 @@ def verify_glb(path: str, required, pivots: dict, budget: int) -> bool:
 
 
 # ------------------------------------------------------------------ QA rendering
+ONLY = None          # optional set of render suffixes ("1" = the hero shot, "2".."n") for quick dev iterations
+
+
+def _skip(name: str) -> bool:
+    if ONLY is None:
+        return False
+    suf = name.rsplit("_", 1)[-1] if name.rsplit("_", 1)[-1].isdigit() else "1"
+    return suf not in ONLY
+
+
 def qa_setup() -> None:
     mrlib.QA_DIR = QA_DIR
     os.makedirs(QA_DIR, exist_ok=True)
@@ -673,6 +713,8 @@ def qa_setup() -> None:
 
 def clay(name: str, cam, target, lens=45.0, res=(480, 640), samples=24):
     """Lit clay render (same rim/fill set-up as the Chapter 1 echo renders)."""
+    if _skip(name):
+        return None
     qa_setup()
     return E.echo_render(name, cam, target, lens=lens, res=res, samples=samples)
 
@@ -760,6 +802,8 @@ def _restore(objs, saved):
 
 def ghost(name: str, objs, cam, target, lens=45.0, res=(480, 640), samples=24):
     """Render with the in-game echo look (game_ghost_material) on a near-black background."""
+    if _skip(name):
+        return None
     qa_setup()
     saved = _with_material(objs, game_ghost_material())
     path = mrlib.render_preview(name, cam, target, lens=lens, res=res, samples=samples, world_strength=0.02,
@@ -813,6 +857,8 @@ def context_render(name: str, figure_objs, body, pos, yaw, build_ctx, cam_godot,
 
     cam/target are Godot world points; `lens_fov_deg` = the game camera's vertical FOV.
     """
+    if _skip(name):
+        return None
     qa_setup()
     place(body, pos, yaw)
     build_ctx()

@@ -21,6 +21,7 @@ import lib_devices as D  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 
 NAME = "tape_reel"
+C.LIGHTS = C.SOFT
 R = 0.0635            # flange radius (5 inch reel)
 FT = 0.0012           # flange thickness
 GAP = 0.0070          # between the flanges (6.35 mm tape + play)

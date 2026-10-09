@@ -20,6 +20,7 @@ import lib_mech as L  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 
 NAME = "leyla_badge"
+C.LIGHTS = C.SOFT
 CW, CH, CT = 0.086, 0.054, 0.00076        # printed card
 CR = 0.0032
 LAM_SIDE, LAM_TOP = 0.002, 0.010

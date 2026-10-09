@@ -8,10 +8,15 @@ Godot = Blender (x, z, -y).
   ensure_materials()        preview colours for every slot used here (incl. the new Chapter 2 slots)
   place(objs, pos, yaw)     parent model roots to a placement empty (Godot world pos + yaw), QA only
   qa_room(...)              room_archive.glb if it exists, else a proxy shell of the booth + hall
+  qa_lights(...)            booth bulb, hall pendants, cool fill (QA lights are hidden from camera rays)
   qa_item(...)              item GLB (film_reel / glass_slide) at a mount empty, else a proxy
+  qa_glass_tweak()          Cycles glass, also for the material copies imported GLBs bring (M_Glass.001)
+  qa_emit(obj, colour)      QA-only emissive copy of an object's materials (lamp on)
   render(...)               Cycles QA render from a Godot camera (vertical FOV like Camera3D)
-  verify_glb(...)           read the exported GLB JSON back: names, pivots, identity rest, tris
-  beam_clearance(...)       how far a projector beam stays inside the booth window opening
+  verify_glb(...)           read the exported GLB JSON back: names, parents, pivots, identity rest, tris
+  beam_clearance(...)       how far a projector beam (lens -> whole screen) stays inside the booth window
+  side_plate / front_plate  orient 2D-drawn plates onto side (+-X) or front (-Y) faces
+  blender_rot_about_godot   Euler for a QA pose about a Godot axis
 """
 from __future__ import annotations
 
@@ -244,8 +249,7 @@ def qa_room(screen: bool = True, booth: bool = True):
         _qa_box("floor", (-5.2, -0.05, -3.7), (5.2, 0.0, 3.7), "M_Linoleum")
         _qa_box("ceiling", (-5.2, 3.6, -3.7), (5.2, 3.7, 3.7), "M_Ceiling")
         _wall_with_holes("wall_n", -5.0, 5.0, -3.7, -3.5, 0.0, 3.6, [], "M_Paint_Green", "M_Plaster_Wall", 1.4)
-        _wall_with_holes("wall_w", -5.2, -5.0, -3.5, 3.5, 0.0, 3.6, [], "M_Paint_Green", "M_Plaster_Wall", 1.4) \
-            if False else _qa_box("wall_w", (-5.2, 0.0, -3.5), (-5.0, 3.6, 3.5), "M_Plaster_Wall")
+        _qa_box("wall_w", (-5.2, 0.0, -3.5), (-5.0, 3.6, 3.5), "M_Plaster_Wall")
         _qa_box("wall_e", (5.0, 0.0, -3.5), (5.2, 3.6, 3.5), "M_Plaster_Wall")
         _qa_box("wall_s", (-5.0, 0.0, 3.5), (5.0, 3.6, 3.7), "M_Plaster_Wall")
         _qa_box("dado_n", (-5.0, 1.38, -3.5), (5.0, 1.44, -3.47), "M_Wood_Walnut")
@@ -256,8 +260,6 @@ def qa_room(screen: bool = True, booth: bool = True):
             _qa_box("booth_e_hi", (-1.1, 1.2, 2.1), (-1.0, 2.8, 3.5), "M_Paint_Green")
             _qa_box("booth_ceiling", (-5.0, 2.8, 2.0), (-1.0, 2.9, 3.5), "M_Plaster_Wall")
             _qa_box("booth_parapet", (-5.0, 2.9, 2.0), (-1.0, 3.05, 2.06), "M_Wood_Walnut")
-            # booth interior: plaster lining on the inside faces
-            _qa_box("booth_in_n", (-5.0, 0.0, 2.1), (-1.1, 2.8, 2.102), "M_Plaster_Wall") if False else None
             # window: brass frame + glass in the opening
             fr = []
             for (a, b) in (((-3.4, 1.65), (-2.1, 1.69)), ((-3.4, 2.21), (-2.1, 2.25)),
@@ -266,17 +268,15 @@ def qa_room(screen: bool = True, booth: bool = True):
             _qa_box("win_glass", (-3.36, 1.69, 2.048), (-2.14, 2.21, 2.052), "M_Glass")
             # shelf on the south wall, bench, bulb
             _qa_box("shelf", (-4.6, 1.42, 3.24), (-3.3, 1.45, 3.5), "M_Wood_Walnut")
-            bulb = M.sphere("QA_room_booth_bulb", 0.03, loc=tuple(G(-3.0, 2.65, 2.85)), segments=12, rings=6,
+            M.sphere("QA_room_booth_bulb", 0.03, loc=tuple(G(-3.0, 2.65, 2.85)), segments=12, rings=6,
                             mat="M_Emissive_Warm")
-            cord = M.cylinder("QA_room_bulb_cord", 0.004, 0.12, loc=tuple(G(-3.0, 2.74, 2.85)), verts=6,
+            M.cylinder("QA_room_bulb_cord", 0.004, 0.12, loc=tuple(G(-3.0, 2.74, 2.85)), verts=6,
                               mat="M_Rubber", bevel=0.0)
         if screen:
             frame = _qa_box("screen_frame", (-3.82, 0.98, -3.5), (-1.18, 2.82, -3.45), "M_Wood_Walnut")
             border = _qa_box("screen_border", (-3.76, 1.04, -3.45), (-1.24, 2.76, -3.44), "M_Lacquer_Black")
             _qa_mat("M_Screen", "E9E6DF", 0.95)
             _qa_box("screen", (-3.7, 1.1, -3.44), (-1.3, 2.7, -3.43), "M_Screen")
-    if screen and used is False:
-        pass
     return used
 
 
@@ -287,6 +287,15 @@ def qa_lights(booth_bulb: float = 60.0, hall: float = 120.0, fill: float = 40.0)
         A.qa_light(f"pendant{k}", "POINT", tuple(G(*p)), hall, "FFC58A", size=0.12)
     A.qa_light("fill", "AREA", tuple(G(1.0, 2.6, 0.0)), fill * 4, "9FB6D8", size=3.0,
                target=tuple(G(-2.5, 1.2, 2.0)))
+    hide_qa_lights()
+
+
+def hide_qa_lights() -> None:
+    """QA lights stand in for fixtures that are not in the scene: keep them out of camera rays (no floating
+    light spheres seen through the booth window); they still light and reflect."""
+    for o in bpy.context.scene.objects:
+        if o.type == "LIGHT" and o.name.startswith("QA"):
+            o.visible_camera = False
 
 
 # ---------------------------------------------------------------- QA render (Godot camera)
@@ -296,6 +305,7 @@ def render(name: str, cam_g, target_g, fov_v: float = 50.0, res=(960, 540), samp
     keep_height). Lights: whatever QA_* lights the caller added (no studio rig)."""
     out_dir = os.path.join(M.QA_DIR, QA_SUB)
     os.makedirs(out_dir, exist_ok=True)
+    hide_qa_lights()
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
@@ -342,11 +352,24 @@ def clear_qa():
 
 
 def qa_glass_tweak() -> None:
+    """Cycles glass for the QA renders, also for the copies an imported GLB brings ("M_Glass.001")."""
     D.qa_tweak()
-    for n in ("M_Glass_Amber",):
-        mat = bpy.data.materials.get(n)
-        if mat is not None and mat.use_nodes:
-            b = mat.node_tree.nodes.get("Principled BSDF")
+    for mat in bpy.data.materials:
+        base = mat.name.split(".")[0]
+        if not mat.use_nodes or mat.name == base and base != "M_Glass_Amber":
+            continue
+        b = mat.node_tree.nodes.get("Principled BSDF")
+        if b is None:
+            continue
+        if base in ("M_Glass", "M_Crystal"):
+            b.inputs["Alpha"].default_value = 1.0
+            b.inputs["Transmission Weight"].default_value = 1.0
+            b.inputs["IOR"].default_value = 1.47
+            b.inputs["Roughness"].default_value = 0.02
+            b.inputs["Base Color"].default_value = M.hex_rgba("F0F8F4")
+            if hasattr(mat, "surface_render_method"):
+                mat.surface_render_method = "DITHERED"
+        elif base == "M_Glass_Amber":
             b.inputs["Transmission Weight"].default_value = 0.8
 
 

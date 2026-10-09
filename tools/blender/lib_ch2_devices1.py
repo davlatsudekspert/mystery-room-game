@@ -53,8 +53,9 @@ CH2_SLOTS = {
     "M_Tape": ("4A2C1A", 0.35, 0.0, 1.0),
     "M_Lacquer_Black": ("141211", 0.32, 0.0, 1.0),
     "M_Felt": ("3A3A3A", 1.0, 0.0, 1.0),
-    "M_Glass_Dark": ("0C0F10", 0.06, 0.0, 0.85),
+    "M_Glass_Dark": ("0C0F10", 0.06, 0.0, 1.0),        # opaque glossy black in Godot
 }
+ALPHA_DECALS = ("M_Decal_DestSymbols",)
 DECAL_IMAGES = {
     "M_Decal_DestSymbols": "dest_symbols.png",
     "M_Decal_RequestCard": "request_card.png",
@@ -77,7 +78,14 @@ def ensure_materials() -> None:
     for slot in DECAL_IMAGES:
         if bpy.data.materials.get(slot) is None:
             img = decal_image(slot)
-            M.material(slot, image=img)
+            mat = M.material(slot, image=img)
+            if img and slot in ALPHA_DECALS:      # alpha scissor in Godot: cut the preview too
+                nt = mat.node_tree
+                tex = next(n for n in nt.nodes if n.type == "TEX_IMAGE")
+                bsdf = nt.nodes.get("Principled BSDF")
+                nt.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
+                if hasattr(mat, "surface_render_method"):
+                    mat.surface_render_method = "DITHERED"
             print(f"{TAG} decal {slot}: {'image ' + img if img else 'MISSING image (preview colour)'}")
 
 
@@ -174,6 +182,15 @@ def parent(child, par) -> None:
     child.parent = par
     child.matrix_parent_inverse = Matrix.Identity(4)
     child.matrix_world = mw
+    M.refresh()
+
+
+def rebase(obj, new_world: Matrix) -> None:
+    """Give an object a new world matrix (pivot + orientation) without moving its geometry."""
+    M.refresh()
+    old = obj.matrix_world.copy()
+    obj.data.transform(new_world.inverted() @ old)
+    obj.matrix_world = new_world
     M.refresh()
 
 
@@ -451,10 +468,30 @@ def place(roots, pos_g, yaw_deg: float, name: str = "QA_place"):
     return holder
 
 
+def remap_materials(objs) -> None:
+    """Imported GLB slots come in as 'M_X.001' with flat colours: point them at the preview material
+    'M_X' (textures, decal images) like Godot swaps slots by name."""
+    for o in objs:
+        if o.type != "MESH":
+            continue
+        for slot in o.material_slots:
+            m = slot.material
+            if m is None:
+                continue
+            base = m.name.split(".")[0]
+            if base != m.name or base.startswith("M_"):
+                lib = bpy.data.materials.get(base)
+                if lib is None and base.startswith("M_"):
+                    lib = M.material(base)
+                if lib is not None and lib is not m:
+                    slot.material = lib
+
+
 def import_model(name: str, pos_g, yaw_deg: float = 0.0):
     """Another model's GLB at a Godot world placement (QA only). [] if missing."""
     path = os.path.join(M.MODELS_DIR, name + ".glb")
     out = A.import_glb(path, tuple(GV(pos_g)), yaw_deg, prefix="QA_imp_")
+    remap_materials(out)
     print(f"{TAG} QA: {name}.glb {'imported' if out else 'missing'}")
     return out
 
@@ -465,6 +502,7 @@ def qa_item(item: str, mount_obj, proxy_fn):
     path = os.path.join(M.MODELS_DIR, item + ".glb")
     if os.path.exists(path):
         new = A.import_glb(path, (0, 0, 0), 0.0, prefix="QA_item_")
+        remap_materials(new)
         holder = new[0]
         holder.parent = mount_obj
         holder.matrix_parent_inverse = Matrix.Identity(4)
@@ -534,7 +572,7 @@ def qa_room(east: bool = True, north: bool = True) -> bool:
     """room_archive.glb when group A has built it, else a proxy shell of the east half of the hall."""
     real = os.path.join(M.MODELS_DIR, "room_archive.glb")
     if os.path.exists(real):
-        A.import_glb(real, (0, 0, 0), 0.0, prefix="QA_room_")
+        remap_materials(A.import_glb(real, (0, 0, 0), 0.0, prefix="QA_room_"))
         print(f"{TAG} QA: room_archive.glb imported")
         return True
     print(f"{TAG} QA: room_archive.glb missing -> proxy shell")
@@ -691,13 +729,6 @@ def clear_qa(prefix: str = "QA") -> None:
 def qa_tweak() -> None:
     """QA-only Cycles looks (real glass transmission, emissive strength). Never affects the GLB."""
     D.qa_tweak()
-    for n in ("M_Glass_Dark",):
-        mat = bpy.data.materials.get(n)
-        if mat is not None and mat.use_nodes:
-            b = mat.node_tree.nodes.get("Principled BSDF")
-            b.inputs["Alpha"].default_value = 1.0
-            b.inputs["Transmission Weight"].default_value = 0.85
-            b.inputs["Roughness"].default_value = 0.05
 
 
 def pose_rot(obj, axis: str, deg: float) -> None:

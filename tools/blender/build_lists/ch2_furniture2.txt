@@ -1,3 +1,6 @@
 # Chapter 2 group B2 (desk, reading table, booth furniture); build_all.sh runs each with -- --no-render
 film_splicer.py
 slide_cabinet.py
+lens_case.py
+reading_table.py
+archivist_desk.py

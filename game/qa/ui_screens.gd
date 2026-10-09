@@ -88,6 +88,7 @@ func _run() -> void:
 		room.queue_free()
 		await _settle(0.5)
 	SaveSystem.delete_game()
+	print("QA_DONE exit=0") # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit()
 
 

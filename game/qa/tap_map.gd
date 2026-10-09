@@ -78,6 +78,7 @@ func _run() -> void:
 	f.store_string("\n".join(lines) + "\n")
 	print("\n".join(lines))
 	SaveSystem.delete_game()
+	print("QA_DONE exit=0") # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit()
 
 

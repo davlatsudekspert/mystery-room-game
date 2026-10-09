@@ -56,6 +56,7 @@ BZ0, BZ1 = -0.15, 0.17          # body back / front
 LENS_FRONT = 0.3125
 RING_Z0, RING_Z1 = 0.215, 0.258
 RING_C = (RING_Z0 + RING_Z1) / 2
+CONE = ((0.0368, 0.2155), (0.0462, 0.2249))   # digit cone: (r, z) back edge -> front edge
 R_DIGIT_BAND = 0.0421
 LEVER_P = (OPF, 1.885, -0.075)
 LEVER_REST = -20.0
@@ -64,7 +65,7 @@ BTN_FACE = OPF - 0.002 - 0.0066
 REEL_X = -0.075
 FEED_C = (REEL_X, 2.31, 0.07)
 TAKE_C = (REEL_X, 1.655, -0.255)
-LH = ((0.03, 1.76, -0.265), (0.16, 2.17, -0.13))      # lamp house box (back plate behind it)
+LH = ((0.03, 1.76, -0.265), (0.16, 2.14, -0.13))      # lamp house (back plate behind it)
 LH_BACK = -0.275
 WIN_C = (0.03, 1.99, -0.215)
 
@@ -114,7 +115,7 @@ def pedestal():
         parts.append(A.hint(ft, 50.0))
     col = rev("column", [(0.050, 0.140), (0.050, 0.172), (0.040, 0.184), (0.036, 0.196), (0.036, 1.380),
                          (0.046, 1.390), (0.046, 1.440), (0.033, 1.452), (0.030, 1.460), (0.030, 1.575),
-                         (0.042, 1.586), (0.0, 1.590)], AYP, (0, 0, 0), segments=18, mat="M_Steel_Painted",
+                         (0.042, 1.586), (0.0, 1.590)], AYP, (0, 0, 0), segments=16, mat="M_Steel_Painted",
               band_mats=["M_Steel_Painted"] * 4 + ["M_Chrome", "M_Chrome", "M_Chrome"] + ["M_Steel_Painted"] * 4,
               cap_bottom=False)
     parts.append(A.hint(col, 50.0))
@@ -127,7 +128,7 @@ def pedestal():
     # tilt head: trunnion block, platform, tilt knob
     parts.append(gbox("head_block", (-0.032, 1.585, -0.05), (0.062, 1.660, 0.05), "M_Steel_Painted", 0.008, 2))
     parts.append(gbox("platform", (-0.050, 1.655, -0.138), (0.112, 1.702, 0.158), "M_Steel_Painted", 0.008, 2))
-    tk = L.knurled_knob("tilt_knob", 0.014, 0.020, ridges=10, mat="M_Bakelite", simple=True, index_mark=False)
+    tk = L.knurled_knob("tilt_knob", 0.014, 0.020, ridges=8, mat="M_Bakelite", simple=True, index_mark=False)
     D.aim(tk, AXN)
     tk.location = tuple(G(-0.032, 1.622, 0.0))
     parts.append(A.hint(tk, 30.0))
@@ -142,17 +143,17 @@ def body():
     sil = A.ccw(A.dedupe(
         L.arc_pts(0.020, math.radians(180), math.radians(270), 3, cx=BZ0 + 0.020, cy=BY0 + 0.020)
         + L.arc_pts(0.020, math.radians(270), math.radians(360), 3, cx=BZ1 - 0.020, cy=BY0 + 0.020)
-        + L.arc_pts(0.030, math.radians(0), math.radians(60), 3, cx=BZ1 - 0.030, cy=2.005)
-        + L.arc_pts(0.030, math.radians(60), math.radians(90), 2, cx=0.112, cy=BY1 - 0.030)
+        + L.arc_pts(0.020, math.radians(0), math.radians(45), 2, cx=BZ1 - 0.020, cy=1.975)
+        + L.arc_pts(0.030, math.radians(45), math.radians(90), 3, cx=0.095, cy=BY1 - 0.030)
         + L.arc_pts(0.024, math.radians(90), math.radians(180), 3, cx=BZ0 + 0.024, cy=BY1 - 0.024)))
     cast = L.curve_solid("casting", [sil], BX1 - OPF, bevel=0.009, bevel_res=2, mat="M_Steel_Painted")
     op_plate(cast, BX1)
     parts.append(cast)
     # lens mount boss, fixed index collar, front barrel with chrome bezel + glass
-    parts.append(A.hint(rev("lens_boss", [(0.060, 0.164), (0.060, 0.174), (0.054, 0.182), (0.046, 0.188),
-                                          (0.0386, 0.188)], AZP, (0, LY, 0), segments=32, mat="M_Chrome",
+    parts.append(A.hint(rev("lens_boss", [(0.0365, 0.164), (0.060, 0.164), (0.060, 0.174), (0.054, 0.182),
+                                          (0.046, 0.188), (0.0365, 0.188)], AZP, (0, LY, 0), segments=28, mat="M_Chrome",
                             cap_bottom=False, cap_top=False), 40.0))
-    parts.append(A.hint(rev("collar", [(0.0386, 0.188), (0.0386, 0.2135), (0.0372, 0.2148)], AZP, (0, LY, 0),
+    parts.append(A.hint(rev("collar", [(0.0365, 0.188), (0.0365, 0.2140), (0.0358, 0.2148)], AZP, (0, LY, 0),
                             segments=32, mat="M_Lacquer_Black", cap_bottom=False, cap_top=False), 40.0))
     parts.append(A.hint(rev("front_barrel", [(0.0356, 0.2585), (0.0356, 0.2960), (0.0386, 0.2990), (0.0392, 0.3090),
                                              (0.0362, LENS_FRONT), (0.0300, LENS_FRONT), (0.0290, 0.3075)],
@@ -163,39 +164,42 @@ def body():
     glass = rev("lens_glass", [(0.0291, 0.3040), (0.0200, 0.3082), (0.0, 0.3096)], AZP, (0, LY, 0), segments=24,
                 mat="M_Glass", cap_bottom=False)
     parts.append(A.hint(glass, 60.0))
-    # index mark on top of the collar (white wedge pointing at the ring) + engraved line
-    idx = L.flat_shape("index", [[(-0.0026, -0.2050), (0.0026, -0.2050), (0.0, -0.2142)]], mat="M_Enamel_White")
-    idx.location = (0.0, 0.0, LY + 0.0387)
+    # index: a raised chrome tab on top of the collar with a white wedge pointing at the digit ring
+    parts.append(gbox("index_tab", (-0.0035, LY + 0.0355, 0.2035), (0.0035, LY + 0.0420, 0.2140), "M_Chrome", 0.0008, 1))
+    idx = L.flat_shape("index", [[(-0.0024, -0.2045), (0.0024, -0.2045), (0.0, -0.2136)]], mat="M_Enamel_White")
+    idx.location = (0.0, 0.0, LY + 0.04205)
     parts.append(idx)
-    parts.append(L.flat_shape("index_line", [L.rounded_rect(0.0007, 0.014, 0.0002, 1, cy=-0.1975)],
-                              mat="M_Enamel_White", loc=(0.0, 0.0, LY + 0.0387)))
+    # dark threading panel behind the film path (follows the sloped front-top of the casting)
+    tp = L.curve_solid("thread_panel", [A.ccw([(0.030, 1.765), (0.156, 1.765), (0.156, 1.982), (0.105, 2.058),
+                                               (0.030, 2.058)])], 0.0015, bevel=0.0004, mat="M_Lacquer_Black")
+    parts.append(op_plate(tp, OPF))
     # gate: chrome plate, aperture, latch knob, four rivets
-    gate = L.curve_solid("gate", [L.rounded_rect(0.046, 0.084, 0.006, 2)], 0.006, bevel=0.0012, mat="M_Chrome")
+    gate = L.curve_solid("gate", [L.rounded_rect(0.046, 0.076, 0.006, 2)], 0.006, bevel=0.0012, mat="M_Chrome")
     parts.append(op_plate(gate, OPF, LY, 0.128))
     parts.append(op_flat("aperture", [L.rounded_rect(0.012, 0.016, 0.0015, 1)], OPF - 0.0061, LY, 0.128,
                          "M_Lacquer_Black"))
-    for dy in (-0.034, 0.034):
+    for dy in (-0.030, 0.030):
         for dz in (-0.016, 0.016):
             parts.append(L.rivet("gate_rivet", 0.0022, tuple(G(OPF - 0.006, LY + dy, 0.128 + dz)), normal=AXN,
                                  mat="M_Chrome", segs=6))
-    gk = L.knurled_knob("gate_knob", 0.0075, 0.010, ridges=8, mat="M_Chrome", simple=True, index_mark=False)
+    gk = L.knurled_knob("gate_knob", 0.0075, 0.010, ridges=6, mat="M_Chrome", simple=True, index_mark=False)
     D.aim(gk, AXN)
     gk.location = tuple(G(OPF - 0.006, LY + 0.026, 0.128))
     parts.append(A.hint(gk, 30.0))
     # sprockets (toothed drums), loop rollers, framing knob
-    for k, y in enumerate((2.035, 1.800)):
+    for k, (y, sz) in enumerate(((2.025, 0.088), (1.800, 0.095))):
         sp = rev(f"sprocket{k}", [(0.019, 0.0), (0.0196, 0.0012, "k"), (0.0196, 0.0050, "k"), (0.0182, 0.0060),
-                                  (0.0182, 0.0180), (0.0120, 0.0200), (0.0, 0.0204)], AXN, (OPF, y, 0.095),
+                                  (0.0182, 0.0180), (0.0120, 0.0200), (0.0, 0.0204)], AXN, (OPF, y, sz),
                  segments=16, knurl=0.0016, mat="M_Chrome", cap_bottom=False)
         parts.append(A.hint(sp, 30.0))
         shoe = L.curve_solid(f"shoe{k}", [L.arc_pts(0.027, math.radians(-60), math.radians(60), 4)
                                           + L.arc_pts(0.0225, math.radians(60), math.radians(-60), 4)],
                              0.016, bevel=0.0006, mat="M_Steel_Dark")
-        parts.append(op_plate(shoe, OPF - 0.002, y, 0.095))
+        parts.append(op_plate(shoe, OPF - 0.002, y, sz))
     for y in (1.990, 1.845):
         parts.append(A.hint(rev("roller", [(0.0085, 0.0), (0.0085, 0.0170), (0.0050, 0.0185), (0.0, 0.0188)], AXN,
                                 (OPF, y, 0.052), segments=12, mat="M_Chrome", cap_bottom=False), 50.0))
-    fk = L.knurled_knob("framing_knob", 0.0125, 0.016, ridges=12, mat="M_Bakelite", simple=True,
+    fk = L.knurled_knob("framing_knob", 0.0125, 0.016, ridges=9, mat="M_Bakelite", simple=True,
                         cap_mat="M_Chrome", index_mark=False)
     D.aim(fk, AXN)
     fk.location = tuple(G(OPF, 1.918, 0.012))
@@ -265,13 +269,19 @@ def op_disc(name, r, z, mat):
 # ================================================================ lamp house (static) + lamp_glow
 def lamphouse():
     (x0, y0, z0), (x1, y1, z1) = LH
-    parts = [gbox("lh_box", (x0, y0, z0), (x1, y1, z1), "M_Steel_Dark", 0.010, 2)]
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    slots = [1.885 + 0.038 * k for k in range(6)]
-    loops = [L.rounded_rect(x1 - x0, y1 - y0, 0.010, 2)]
+    # side silhouette (drawn x = Godot z, y = Godot y): tight bottom corners, generously rounded top
+    sil = A.ccw(A.dedupe(L.arc_pts(0.012, math.radians(180), math.radians(270), 2, cx=z0 + 0.012, cy=y0 + 0.012)
+                         + L.arc_pts(0.012, math.radians(270), math.radians(360), 2, cx=z1 - 0.012, cy=y0 + 0.012)
+                         + L.arc_pts(0.045, math.radians(0), math.radians(90), 5, cx=z1 - 0.045, cy=y1 - 0.045)
+                         + L.arc_pts(0.045, math.radians(90), math.radians(180), 5, cx=z0 + 0.045, cy=y1 - 0.045)))
+    box = L.curve_solid("lh_box", [sil], x1 - x0, bevel=0.008, bevel_res=2, mat="M_Steel_Dark")
+    parts = [op_plate(box, x1)]
+    cx, cy = (x0 + x1) / 2, 1.96
+    slots = [1.875 + 0.038 * k for k in range(6)]
+    loops = [L.rounded_rect(0.110, 0.250, 0.012, 2)]
     for y in slots:
         loops.append(L.rounded_rect(0.086, 0.010, 0.004, 2, cy=y - cy))
-    bp = L.curve_solid("lh_back", loops, z0 - LH_BACK, bevel=0.0012, mat="M_Steel_Dark")
+    bp = L.curve_solid("lh_back", loops, z0 - LH_BACK, bevel=0.0, mat="M_Steel_Dark")
     # drawn (xc, yc, zc) -> Godot (cx - xc, cy + yc, z0 - zc) (back plate, extruded toward -Z)
     bp.data.transform(Matrix.Translation((cx, -z0, cy)) @ Matrix(((-1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0),
                                                                    (0, 0, 0, 1))))
@@ -295,8 +305,8 @@ def lamphouse():
         parts.append(sl)
     # inspection window bezel on the -X face
     wx, wy, wz = WIN_C
-    parts.append(A.hint(rev("win_bezel", [(0.0235, 0.0), (0.0235, 0.0030), (0.0200, 0.0048), (0.0168, 0.0040),
-                                          (0.0168, 0.0010)], AXN, (wx, wy, wz), segments=20, mat="M_Chrome",
+    parts.append(A.hint(rev("win_bezel", [(0.0235, 0.0), (0.0235, 0.0030), (0.0190, 0.0048), (0.0168, 0.0010)],
+                            AXN, (wx, wy, wz), segments=16, mat="M_Chrome",
                             cap_bottom=False, cap_top=False), 50.0))
     for k in range(4):
         a = math.radians(45 + 90 * k)
@@ -318,27 +328,28 @@ def lamphouse():
 
 # ================================================================ interactive parts
 def focus_ring():
-    k = "k"
-    prof = [(0.0372, RING_Z0), (0.0416, RING_Z0), (R_DIGIT_BAND, RING_Z0 + 0.0010), (R_DIGIT_BAND, 0.2345),
-            (0.0429, 0.2368, k), (0.0429, 0.2558, k), (0.0372, RING_Z1)]
-    ring = rev("focus_body", prof, AZP, (0, LY, 0), segments=40, mat="M_Lacquer_Black", knurl=0.0013,
-               band_mats=["M_Lacquer_Black", "M_Lacquer_Black", "M_Lacquer_Black", "M_Chrome", "M_Chrome", "M_Chrome"],
-               cap_bottom=False, cap_top=False)
-    parts = [A.hint(ring, 25.0)]
-    rr = R_DIGIT_BAND + 0.00012
+    # black scale ring: a 45-degree cone facing up-and-back (toward the operator) carrying the digits
+    (ra, za), (rb, zb) = CONE
+    scale = rev("focus_scale", [(0.0358, RING_Z0), (ra, za), (rb, zb), (rb, zb + 0.0013)], AZP, (0, LY, 0),
+                segments=36, mat="M_Lacquer_Black", cap_bottom=False, cap_top=False)
+    # chrome ribbed grip
+    grip = rev("focus_grip", [(rb, zb + 0.0013), (0.0468, zb + 0.0023, "k"), (0.0468, RING_Z1 - 0.0020, "k"),
+                              (0.0452, RING_Z1), (0.0362, RING_Z1)], AZP, (0, LY, 0), segments=56, knurl=0.0009,
+               mat="M_Chrome", cap_bottom=False, cap_top=False)
+    parts = [A.hint(scale, 30.0), A.hint(grip, 25.0)]
+    s2 = math.sqrt(0.5)
+    rm, zm = (ra + rb) / 2 + 0.0001 * s2, (za + zb) / 2 - 0.0001 * s2
     for d in range(9):
         phi = math.radians(90.0 + 30.0 * d)
-        right = Vector((-math.sin(phi), 0.0, math.cos(phi)))
-        up = Vector((0.0, -1.0, 0.0))
-        nrm = Vector((math.cos(phi), 0.0, math.sin(phi)))
+        c, s = math.cos(phi), math.sin(phi)
+        right = Vector((-s, 0.0, c))                    # CCW tangent seen from the lens front
+        up = Vector((s2 * c, -s2, s2 * s))              # up the cone toward the lens front
+        nrm = Vector((s2 * c, s2, s2 * s))              # outward and back (toward the operator)
         frame = Matrix((right, up, nrm)).transposed().to_4x4()
-        t = L.text_flat(f"fdigit{d}", str(d), 0.0122, font=L.FONT_SANS_B, res=2, mat="M_Enamel_White")
+        t = L.text_flat(f"fdigit{d}", str(d), 0.0124, font=L.FONT_SANS_B, res=2, mat="M_Enamel_White")
         L.recentre_xy(t)
-        t.data.transform(Matrix.Translation(G(rr * math.cos(phi), LY + rr * math.sin(phi), 0.2268)) @ frame)
+        t.data.transform(Matrix.Translation(G(rm * c, LY + rm * s, zm)) @ frame)
         parts.append(t)
-        tick = L.flat_shape(f"ftick{d}", [L.rounded_rect(0.0008, 0.0030, 0.0002, 1)], mat="M_Enamel_White")
-        tick.data.transform(Matrix.Translation(G(rr * math.cos(phi), LY + rr * math.sin(phi), 0.2177)) @ frame)
-        parts.append(tick)
     A.presmooth(parts)
     o = M.join(parts, "IA_focus_ring")
     M.set_origin(o, tuple(G(0.0, LY, RING_C)))
@@ -391,9 +402,6 @@ def reel(name, centre):
         fl = L.curve_solid(name + "_flange", loops, 0.0012, bevel=0.0, mat="M_Chrome")
         C.side_plate(fl, cx + s * 0.0094 + 0.0006, -cz, cy, -1.0)
         parts.append(fl)
-        rim = rev(name + "_rim", [(0.0900, -0.0006), (0.0912, 0.0), (0.0900, 0.0006)], AXN,
-                  (cx + s * 0.0094, cy, cz), segments=36, mat="M_Chrome", cap_bottom=False, cap_top=False)
-        parts.append(A.hint(rim, 60.0))
     parts.append(A.hint(rev(name + "_hub", [(0.0160, -0.0090), (0.0160, 0.0090)], AXN, (cx, cy, cz), segments=16,
                             mat="M_Steel_Dark", cap_bottom=False, cap_top=False), 60.0))
     parts.append(A.hint(rev(name + "_leader", [(0.0230, -0.0079), (0.0230, 0.0079)], AXN, (cx, cy, cz), segments=24,
@@ -480,6 +488,7 @@ def lamp(parts, on):
     spot = A.qa_light("beam_spot", "SPOT", tuple(lens), 140.0, "FFF4E0", size=0.01, target=tuple(G(-2.5, 1.9, -3.43)),
                       spot=math.radians(22.0))
     spot.data.spot_blend = 0.25
+    spot.visible_glossy = False          # no highlight of the QA lamp on the window glass
 
 
 def main():
@@ -506,16 +515,17 @@ def main():
     C.qa_lights(booth_bulb=60.0, hall=60.0, fill=25.0)
     C.import_model("slide_projector", (-2.35, 0.0, 2.45), 180.0)
     C.import_model("booth_door", (-1.55, 0.0, 2.0), 180.0)
+    C.import_model("projection_screen", (-2.5, 0.0, -3.5), 0.0)
     C.qa_item("film_reel", parts["feed_mount"], C.proxy_film_reel)
     C.qa_glass_tweak()
     pose(parts, run=True, focus=5)
     lamp(parts, True)
     if on("1"):    # in-game projector view (contract camera): reel on, RUN, focus 5
         C.render(NAME, (-2.2, 1.75, 3.15), (-2.9, 1.5, 2.6), 50.0, res=(960, 540))
-    if on("2"):    # recommended projector view (higher, aimed at the controls and the lens)
-        C.render(NAME + "_2", (-2.22, 2.12, 3.12), (-2.86, 1.84, 2.52), 50.0, res=(960, 540))
+    if on("2"):    # proposed projector view: frames lens, focus ring, lever, buttons and both reels
+        C.render(NAME + "_2", (-2.0, 2.25, 3.2), (-2.88, 1.95, 2.52), 54.0, res=(960, 540))
     if on("3"):    # focus ring close-up: digit 5 under the index
-        C.render(NAME + "_3", (-2.80, 2.13, 2.60), (-2.90, 1.95, 2.42), 34.0, res=(960, 640))
+        C.render(NAME + "_3", (-2.62, 2.18, 2.72), (-2.90, 1.99, 2.43), 40.0, res=(960, 640))
     if on("4"):    # hero: operator side, three-quarter from behind
         C.render(NAME + "_4", (-1.95, 1.95, 3.38), (-2.88, 1.55, 2.62), 48.0, res=(720, 900))
     if on("5"):    # from the hall through the booth window (lamp on)
@@ -526,7 +536,7 @@ def main():
         for o in bpy.context.scene.objects:
             if o.name.startswith("QA_item_") or o.name.startswith("QA_proxy_") or o.name.startswith("QA_reel"):
                 o.hide_render = True
-        C.render(NAME + "_6", (-2.22, 2.12, 3.12), (-2.86, 1.84, 2.52), 50.0, res=(960, 540))
+        C.render(NAME + "_6", (-2.0, 2.25, 3.2), (-2.88, 1.95, 2.52), 54.0, res=(960, 540))
 
 
 main()

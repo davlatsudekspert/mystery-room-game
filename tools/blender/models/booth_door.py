@@ -234,11 +234,11 @@ def dial_static():
 
     def p(r, y):
         return tuple(c + u * r + Vector((0.0, y, 0.0)))
-    stop = A.tube("finger_stop", [p(0.0668, PLATE_F - 0.0100), p(0.0668, -0.0200), p(0.0505, -0.0206)], 0.0017,
-                  sides=8, fillet=0.0035, fillet_segs=3, mat="M_Chrome")
-    foot = M.box("stop_foot", (0.0075, 0.0030, 0.0060), mat="M_Chrome", bevel=0.0008, segments=1)
+    stop = A.tube("finger_stop", [p(0.0670, PLATE_F - 0.0100), p(0.0670, -0.0205), p(0.0500, -0.0212)], 0.0022,
+                  sides=8, fillet=0.0040, fillet_segs=3, mat="M_Chrome")
+    foot = M.box("stop_foot", (0.0095, 0.0036, 0.0080), mat="M_Chrome", bevel=0.0010, segments=1)
     foot.data.transform(Matrix.Rotation(-a, 4, "Y"))
-    foot.location = p(0.0668, PLATE_F - 0.0118)
+    foot.location = p(0.0670, PLATE_F - 0.0120)
     parts += [stop, A.hint(foot, 30.0)]
     return parts
 

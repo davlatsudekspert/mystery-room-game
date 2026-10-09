@@ -1,0 +1,4 @@
+# Chapter 2 group C2: projection-booth devices (helpers in tools/blender/lib_ch2_devices2.py).
+booth_door.py
+film_projector.py
+slide_projector.py
