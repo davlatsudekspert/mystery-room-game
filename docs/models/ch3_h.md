@@ -31,21 +31,21 @@ on the floor between the feet**.
 
 | File | Object | Tris (budget) | Surfaces | Notes |
 |---|---|---|---|---|
-| `echo_operator.glb` | `pose_idle` | 5,826 (6,000) | 1 | 29,010 in the file (30,000) |
+| `echo_operator.glb` | `pose_idle` | 5,826 (6,000) | 1 | 29,012 in the file (30,000) |
 | | `pose_reach` | 5,768 (6,000) | 1 | |
 | | `pose_pull` | 5,900 (6,000) | 1 | |
-| | `pose_knob` | 5,788 (6,000) | 1 | |
+| | `pose_knob` | 5,790 (6,000) | 1 | |
 | | `pose_done` | 5,728 (6,000) | 1 | |
 | `echo_welder.glb` | `pose_weld` | 8,492 (9,000) | 1 | + empty `torch_tip` |
 | `echo_technicians.glb` | `tech_a` | 7,862 (8,000) | 1 | 15,494 in the file (16,000) |
 | | `tech_b` | 7,632 (8,000) | 1 | |
 | `echo_strand_rail.glb` | `pose_rail` | 8,834 (9,000) | 1 | 17,312 in the file (18,000) |
 | | `pose_offer` | 8,478 (9,000) | 1 | + empty `fork_mount` |
-| `echo_leyla_1998.glb` | `pose_touch_0` | LEYLA_T0 (8,000) | 1 | LEYLA_FILE in the file (40,000) |
-| | `pose_touch_1` | LEYLA_T1 (8,000) | 1 | |
-| | `pose_touch_2` | LEYLA_T2 (8,000) | 1 | |
-| | `pose_kneel` | LEYLA_KN (8,000) | 1 | |
-| | `pose_offer` | LEYLA_OF (8,000) | 1 | + empty `crystal_mount` |
+| `echo_leyla_1998.glb` | `pose_touch_0` | 7,444 (8,000) | 1 | 36,176 in the file (40,000) |
+| | `pose_touch_1` | 7,336 (8,000) | 1 | |
+| | `pose_touch_2` | 7,312 (8,000) | 1 | |
+| | `pose_kneel` | 6,760 (8,000) | 1 | |
+| | `pose_offer` | 7,324 (8,000) | 1 | + empty `crystal_mount` |
 
 One pose (one surface) is drawn at a time per figure, so the drawn budget is the per-pose number.
 
@@ -164,7 +164,7 @@ grey-white, "ghost" = the Chapter 2 approximation of `echo.gdshader` (additive f
   a gaze target (−0.05, 1.45, 0.20); group D can place the dead autoclave's valve and gauge there.
 - **`crystal_mount` sits 0.0569 above Leyla's palm** so the item model (origin at its centre of mass) stands on
   the palm instead of sinking into it. The contract calls the point "in her right palm"; the palm is under it.
-- **Leyla 1998 has five poses** (three touch, kneel, offer), not six; the file is LEYLA_FILE tris against 40,000.
+- **Leyla 1998 has five poses** (three touch, kneel, offer), not six; the file is 36,176 tris against 40,000.
 - **The welder's origin** is on the floor between his kneeling knee and his front foot (he has no "between the
   feet" while kneeling).
 
