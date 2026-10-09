@@ -357,7 +357,8 @@ func run() -> void:
 	# P10 project, focus
 	await view("projector")
 	await use("film_reel")
-	await act("film_projector", "", func() -> bool: return s["reel_on_projector"], func() -> void: L.use_item_on("film_reel", "projector"), "thread reel")
+	# with the reel selected, a tap anywhere on the projector threads it; the lever is the clearest spot in this view
+	await act("film_projector", "IA_run_lever", func() -> bool: return s["reel_on_projector"], func() -> void: L.use_item_on("film_reel", "projector"), "thread reel")
 	await act("film_projector", "IA_run_lever", func() -> bool: return s["projector_on"], func() -> void: L.toggle_projector(), "run lever")
 	await _settle(4.0)
 	await shot("film_frame")

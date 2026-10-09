@@ -256,7 +256,7 @@ func _build_views() -> void:
 	V.call("stacks", Vector3(0.0, 1.5, 2.3), Vector3(0.0, 1.1, 0.7), 56.0)
 	V.call("ledger", Vector3(0.4, 1.3, 1.5), Vector3(0.35, 1.0, 0.65), 40.0)
 	V.call("reading", Vector3(1.9, 1.6, 2.35), Vector3(1.9, 0.8, 1.0), 52.0)
-	V.call("hatch", Vector3(1.5, 1.45, 3.0), Vector3(0.9, 0.0, 2.5), 50.0)
+	V.call("hatch", Vector3(1.7, 1.55, 1.65), Vector3(0.9, 0.0, 2.55), 50.0) # from the north-east: an open locker door stays behind the hatch
 	V.call("lockers", Vector3(0.6, 1.35, 1.5), Vector3(0.6, 0.95, 3.5), 56.0)
 	V.call("locker9", Vector3(0.8, 0.95, 2.45), Vector3(0.8, 0.58, 3.35), 46.0) # centred on locker 9 (x 0.6–1.0)
 	V.call("station", Vector3(3.55, 1.55, -1.4), Vector3(4.95, 1.2, -1.4), 52.0)
