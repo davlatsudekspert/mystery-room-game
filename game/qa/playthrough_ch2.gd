@@ -24,6 +24,8 @@ func _ready() -> void:
 			TranslationServer.set_locale(a.substr(7))
 		if a.begins_with("--lens="):
 			lens_path = a.substr(7)
+		if a.begins_with("--seed="):
+			GameState.variant_seed = int(a.substr(7)) # this game's own answers (docs/VARIANTS.md)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_ch2_save.json"
 	SaveSystem.profile_path = "user://qa_ch2_profile.json"
@@ -225,19 +227,19 @@ func run() -> void:
 	await act("card_catalogue", "IA_card_7", func() -> bool: return s["card_shown"], func() -> void: L.pull_card(7), "card 17")
 	await act("card_catalogue", "IA_card_7", func() -> bool: return L.has_item("index_card"), func() -> void: L.take("index_card"), "take index card")
 	step("P1 catalogue 04 / 1– / 17 → index card", L.has_item("index_card"))
-	# P2 compressor: A 1, B 2, C 2
+	# P2 compressor: this game's valve setting (canonical A 1, B 2, C 2), read off the gauge marks
 	await view("hall")
 	await view("compressor")
 	await shot("compressor_rest")
-	for pair in [[0, 1], [1, 2], [2, 2]]:
-		var i: int = pair[0]
-		for _k in int(pair[1]):
+	var want: Array = L.valve_solution()
+	for i in 3:
+		for _k in int(want[i]):
 			var v0 := int(s["valves"][i])
 			await act("compressor_panel", "IA_valve_" + "abc"[i], func() -> bool: return int(s["valves"][i]) != v0 or s["pressure_ok"],
 				func() -> void: L.turn_valve(i, 1), "valve " + "ABC"[i])
 	await _settle(1.0)
 	await shot("compressor_pressure_ok")
-	step("P2 valves 1-2-2 → pressure", s["pressure_ok"])
+	step("P2 valves %s → pressure" % "-".join(want.map(func(x: Variant) -> String: return str(x))), s["pressure_ok"])
 	# P3 punch the request card
 	await view("hall")
 	await view("station")
@@ -325,13 +327,13 @@ func run() -> void:
 		await _settle(3.0)
 		await shot("deck_" + tape)
 		await _settle(9.0)
-	step("P7 three reels at 4.75 → clicks 2, 8, 5", (s["clicks_heard"] as Array).size() == 3)
+	step("P7 three reels at 4.75 → clicks %s" % ", ".join((s["v_clicks"] as Array).map(func(c: Variant) -> String: return str(int(c)))), (s["clicks_heard"] as Array).size() == 3)
 	# P8 booth dial 2-8-5
 	await view("hall")
 	await view("booth_door")
 	await view("dial")
 	await shot("dial")
-	for ch in ArchiveLogic.BOOTH_CODE:
+	for ch in L.booth_code():
 		var d := int(ch)
 		var n0 := str(s["dial_input"]).length()
 		await act("booth_door", "IA_dial_hole_%d" % d, func() -> bool: return str(s["dial_input"]).length() != n0 or s["booth_open"],
@@ -339,21 +341,21 @@ func run() -> void:
 		await _settle(0.9)
 	await wait_idle()
 	await shot("booth_open")
-	step("P8 dial 285 → booth open", s["booth_open"])
+	step("P8 dial %s → booth open" % L.booth_code(), s["booth_open"])
 	# P9 splice by shadow length
 	await view("booth")
 	await shot("booth_root")
 	await view("splicer")
 	await shot("splicer_loose")
 	for slot in 4:
-		var f: int = ArchiveLogic.SPLICE_ORDER[slot]
+		var f: int = int(L.splice_order()[slot])
 		await act("film_splicer", "IA_frame_%d" % f, func() -> bool: return int(room.get("_held_frame")) == f or int(s["splice"][slot]) == f,
 			func() -> void: room.set("_held_frame", f), "pick strip %d" % f)
 		await act("film_splicer", "IA_slot_%d" % slot, func() -> bool: return int(s["splice"][slot]) == f, func() -> void: L.splice_put(f, slot), "slot %d" % slot)
 	await _settle(0.8)
 	await shot("splicer_done")
 	await act("film_splicer", "Item_splicer_reel", func() -> bool: return L.has_item("film_reel"), func() -> void: L.take("splicer_reel"), "take film reel")
-	step("P9 splice f2 f0 f3 f1 → reel", L.has_item("film_reel"))
+	step("P9 splice %s → reel" % " ".join(L.splice_order().map(func(f: Variant) -> String: return "f%d" % int(f))), L.has_item("film_reel"))
 	# P10 project, focus
 	await view("projector")
 	await use("film_reel")
@@ -367,11 +369,11 @@ func run() -> void:
 	await wait_idle(60.0)
 	await view("projector")
 	for _guard in 12:
-		if not (int(s["focus"]) != ArchiveLogic.FOCUS_SHARP):
+		if not (int(s["focus"]) != L.focus_sharp()):
 			break
 		var f0 := int(s["focus"])
 		await act("film_projector", "IA_focus_ring", func() -> bool: return int(s["focus"]) != f0, func() -> void: L.turn_focus(1), "focus ring")
-	step("P10 film seen, focus 5", s["film_seen"] and L.is_sharp())
+	step("P10 film seen, focus %d" % L.focus_sharp(), s["film_seen"] and L.is_sharp())
 	# crystals from the lens case
 	await view("booth")
 	await view("lens_case")

@@ -41,6 +41,8 @@ func _run() -> void:
 			lens = a.substr(7)
 		elif a.begins_with("--until="):
 			until = a.substr(8)
+		elif a.begins_with("--seed="):
+			GameState.variant_seed = int(a.substr(7))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_tapmap_save.json"
 	SaveSystem.profile_path = "user://qa_tapmap_profile.json"
@@ -83,6 +85,7 @@ func _run() -> void:
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)])
+			get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out_dir, v]) # a clean shot, no marks
 			continue
 		await _map(v)
 	var f := FileAccess.open(out_dir + "/tap_map.txt", FileAccess.WRITE)

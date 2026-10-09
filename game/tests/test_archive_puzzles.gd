@@ -306,3 +306,34 @@ func _reach(l: ArchiveLogic, milestone: String) -> ArchiveLogic:
 	if milestone == "sign":
 		ArchiveSolver._fetch(l, "crystal_sign")
 	return l
+
+
+# ------------------------------------------------------------------ per-game variants (docs/VARIANTS.md)
+func test_variants_are_solvable_and_saved() -> void:
+	var seen_codes := {}
+	for seed in range(1, 61):
+		var l := ArchiveLogic.new()
+		l.apply_seed(seed)
+		check(l.valve_solution().size() == 3, "seed %d: the gauge marks have a valve solution" % seed)
+		check(l.booth_code().length() == 3 and not l.booth_code().contains("0"), "seed %d: three clicks of 1–9" % seed)
+		check(l.focus_sharp() != ArchiveLogic.FOCUS_START, "seed %d: the picture is not sharp at the start" % seed)
+		var shadows: Array = l.state["v_shadows"].duplicate()
+		shadows.sort()
+		check(shadows == [1, 2, 3, 4], "seed %d: each frame has its own shadow length" % seed)
+		seen_codes[l.booth_code()] = true
+		# the same seed gives the same game, and a save keeps it
+		var again := ArchiveLogic.new()
+		again.apply_seed(seed)
+		check(again.booth_code() == l.booth_code() and again.splice_order() == l.splice_order(), "seed %d is reproducible" % seed)
+		var loaded := ArchiveLogic.new()
+		loaded.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
+		check(loaded.booth_code() == l.booth_code() and loaded.focus_sharp() == l.focus_sharp()
+			and loaded.valve_solution() == l.valve_solution(), "seed %d survives save and load" % seed)
+		check(ArchiveSolver.solve(l, "leyla_key" if seed % 2 == 0 else "strand_key"), "seed %d: the solver finishes" % seed)
+	check(seen_codes.size() > 30, "booth codes really vary between games (%d distinct in 60)" % seen_codes.size())
+
+
+func test_valve_target_pool_unique() -> void:
+	var pool := ArchiveLogic.valve_target_pool()
+	check(pool.size() >= 6, "at least 6 gauge-mark pairs (got %d)" % pool.size())
+	check(pool.has([ArchiveLogic.PRESSURE_TARGET, ArchiveLogic.FLOW_TARGET]), "the canonical marks are in the pool")

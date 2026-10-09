@@ -149,7 +149,7 @@ H = {
 "c2_compressor": [
     ("The tube station is dead: there is no pressure.", "Станция пневмопочты не работает: нет давления.", "Pnevmatik pochta ishlamayapti: bosim yoʻq."),
     ("The plate shows which valve feeds which gauge. Both needles need their green marks.", "Табличка показывает, какой вентиль питает какой манометр. Обе стрелки должны встать на зелёные метки.", "Lavhada qaysi ventil qaysi manometrga ulangani koʻrsatilgan. Ikkala mil ham yashil belgiga kelishi kerak."),
-    ("Valves: A 1, B 2, C 2.", "Вентили: A 1, B 2, C 2.", "Ventillar: A 1, B 2, C 2."),
+    ("Valves: A %d, B %d, C %d.", "Вентили: A %d, B %d, C %d.", "Ventillar: A %d, B %d, C %d."),
 ],
 "c2_punch": [
     ("The stacks only answer punched requests.", "Хранилище отвечает только на пробитые запросы.", "Fond faqat teshilgan soʻrovlarga javob beradi."),
@@ -189,7 +189,7 @@ H = {
 "c2_booth": [
     ("The booth door has a dial.", "На двери кинобудки есть диск.", "Kinobudka eshigida disk bor."),
     ("\"The booth answers to my reels, in the order I made them.\" Count each reel's clicks.", "«Кинобудка отвечает моим катушкам — в том порядке, в каком я их записала». Сосчитайте щелчки.", "«Kinobudka gʻaltaklarimga ularni yozgan tartibimda javob beradi». Chiqillashlarni sanang."),
-    ("Dial 2, 8, 5.", "Наберите 2, 8, 5.", "2, 8, 5 ni tering."),
+    ("Dial %d, %d, %d.", "Наберите %d, %d, %d.", "%d, %d, %d ni tering."),
 ],
 "c2_splice": [
     ("The film is in pieces.", "Плёнка разорвана на кусочки.", "Lenta boʻlaklarga boʻlingan."),
@@ -214,7 +214,7 @@ H = {
 "c2_focus": [
     ("The picture on the screen is blurred.", "Изображение на экране размыто.", "Ekrandagi tasvir xira."),
     ("Turn the projector's focus ring.", "Поверните кольцо фокуса проектора.", "Proyektorning fokus halqasini buring."),
-    ("Turn the focus ring to mark 5.", "Поверните кольцо фокуса на метку 5.", "Fokus halqasini 5-belgiga buring."),
+    ("Turn the focus ring to mark %d.", "Поверните кольцо фокуса на метку %d.", "Fokus halqasini %d-belgiga buring."),
 ],
 "c2_record_sign": [
     ("\"The crystal remembers what falls on it.\"", "«Кристалл помнит то, что на него падает».", "«Billur ustiga tushgan narsani eslab qoladi»."),

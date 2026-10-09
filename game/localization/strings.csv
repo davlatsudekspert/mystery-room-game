@@ -550,7 +550,7 @@ hint.c2_catalogue.2,The catalogue drawers are numbered by the first two digits.,
 hint.c2_catalogue.3,"Drawer 04, divider 1–, card 17.","Ящик 04, разделитель 1–, карточка 17.","04-tortma, 1– ajratgich, 17-kartochka."
 hint.c2_compressor.1,The tube station is dead: there is no pressure.,Станция пневмопочты не работает: нет давления.,Pnevmatik pochta ishlamayapti: bosim yoʻq.
 hint.c2_compressor.2,The plate shows which valve feeds which gauge. Both needles need their green marks.,"Табличка показывает, какой вентиль питает какой манометр. Обе стрелки должны встать на зелёные метки.",Lavhada qaysi ventil qaysi manometrga ulangani koʻrsatilgan. Ikkala mil ham yashil belgiga kelishi kerak.
-hint.c2_compressor.3,"Valves: A 1, B 2, C 2.","Вентили: A 1, B 2, C 2.","Ventillar: A 1, B 2, C 2."
+hint.c2_compressor.3,"Valves: A %d, B %d, C %d.","Вентили: A %d, B %d, C %d.","Ventillar: A %d, B %d, C %d."
 hint.c2_punch.1,The stacks only answer punched requests.,Хранилище отвечает только на пробитые запросы.,Fond faqat teshilgan soʻrovlarga javob beradi.
 hint.c2_punch.2,Take a blank card from the station tray and copy the index card's notches with the punch.,Возьмите чистый бланк из лотка станции и перенесите вырезы с карточки на перфоратор.,Stansiya laganidan boʻsh karta oling va kartochkadagi kesiklarni teshgichda takrorlang.
 hint.c2_punch.3,"Keys 1, 3, 4 and 7 down (1 0 1 1 0 0 1 0), then pull the lever.","Клавиши 1, 3, 4 и 7 вниз (1 0 1 1 0 0 1 0), затем рычаг.","1, 3, 4 va 7-tugmalarni bosing (1 0 1 1 0 0 1 0), soʻng dastakni torting."
@@ -574,7 +574,7 @@ hint.c2_tape.2,The archivist's deck plays them. Match the speed written on the r
 hint.c2_tape.3,"Speed 4.75, a reel on the deck, press Play. Do it for all three.","Скорость 4.75, катушку на магнитофон, нажмите «Пуск». Для всех трёх.","Tezlik 4.75, gʻaltakni magnitofonga qoʻying, «Play»ni bosing. Uchalasi uchun."
 hint.c2_booth.1,The booth door has a dial.,На двери кинобудки есть диск.,Kinobudka eshigida disk bor.
 hint.c2_booth.2,"""The booth answers to my reels, in the order I made them."" Count each reel's clicks.","«Кинобудка отвечает моим катушкам — в том порядке, в каком я их записала». Сосчитайте щелчки.",«Kinobudka gʻaltaklarimga ularni yozgan tartibimda javob beradi». Chiqillashlarni sanang.
-hint.c2_booth.3,"Dial 2, 8, 5.","Наберите 2, 8, 5.","2, 8, 5 ni tering."
+hint.c2_booth.3,"Dial %d, %d, %d.","Наберите %d, %d, %d.","%d, %d, %d ni tering."
 hint.c2_splice.1,The film is in pieces.,Плёнка разорвана на кусочки.,Lenta boʻlaklarga boʻlingan.
 hint.c2_splice.2,The can's lid shows the day running from dawn to noon. Shadows shorten.,На крышке коробки день идёт от рассвета к полудню. Тени укорачиваются.,Quti qopqogʻida kun tongdan tushgacha davom etadi. Soyalar qisqaradi.
 hint.c2_splice.3,Order the frames from the longest shadow to the shortest.,Расположите кадры от самой длинной тени к самой короткой.,Kadrlarni eng uzun soyadan eng qisqasigacha joylang.
@@ -589,7 +589,7 @@ hint.c2_take_crystal.2,A velvet case lies on the shelf.,На полке лежи
 hint.c2_take_crystal.3,Take a blank crystal from the lens case.,Возьмите чистый кристалл из футляра.,Qutidan boʻsh billur oling.
 hint.c2_focus.1,The picture on the screen is blurred.,Изображение на экране размыто.,Ekrandagi tasvir xira.
 hint.c2_focus.2,Turn the projector's focus ring.,Поверните кольцо фокуса проектора.,Proyektorning fokus halqasini buring.
-hint.c2_focus.3,Turn the focus ring to mark 5.,Поверните кольцо фокуса на метку 5.,Fokus halqasini 5-belgiga buring.
+hint.c2_focus.3,Turn the focus ring to mark %d.,Поверните кольцо фокуса на метку %d.,Fokus halqasini %d-belgiga buring.
 hint.c2_record_sign.1,"""The crystal remembers what falls on it.""","«Кристалл помнит то, что на него падает».",«Billur ustiga tushgan narsani eslab qoladi».
 hint.c2_record_sign.2,"The screen frame has a socket for a crystal. Show only her sign, sharp.","На раме экрана есть гнездо для кристалла. Покажите только её знак, чётко.",Ekran romida billur uchun uyacha bor. Faqat uning belgisini aniq koʻrsating.
 hint.c2_record_sign.3,Hold the last frame in focus and seat a blank crystal in the screen socket.,Остановитесь на последнем кадре в фокусе и вставьте чистый кристалл в гнездо экрана.,Oxirgi kadrni aniq holda toʻxtating va boʻsh billurni ekran uyachasiga qoʻying.

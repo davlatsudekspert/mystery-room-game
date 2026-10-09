@@ -88,6 +88,58 @@ func _ready() -> void:
 				ModelUtil.use_exact_collider(mi)
 	_compressor_on = logic.state["pressure_ok"]
 	_legible_piping_plate()
+	_dress_splice_frames()
+	_mark_gauges()
+
+
+## Each loose film strip shows the shadow length this game gave its frame (docs/VARIANTS.md): the strip art
+## film_strip_<i> carries length ArchiveLogic.SPLICE_SHADOWS[i], so frame k borrows the art with its own length.
+func _dress_splice_frames() -> void:
+	for k in 4:
+		var strip := part("film_splicer", "IA_frame_%d" % k) as MeshInstance3D
+		if strip == null or strip.mesh == null:
+			continue
+		var art := ArchiveLogic.SPLICE_SHADOWS.find(int(logic.state["v_shadows"][k]))
+		var mat := ModelUtil.load_material("M_Decal_FilmStrip_%d" % art)
+		for i in strip.mesh.get_surface_count():
+			var src := strip.mesh.surface_get_material(i)
+			if src != null and src.resource_name.begins_with("M_Decal_FilmStrip") and mat != null:
+				strip.set_surface_override_material(i, mat)
+
+
+## The green target wedge on each gauge sits at this game's mark (docs/VARIANTS.md). The baked wedge is painted
+## over with the face enamel and a new wedge is drawn at value v (scale angle 225° − 22.5° × v).
+func _mark_gauges() -> void:
+	var cream := ModelUtil.load_material("M_Enamel_Cream")
+	var green := StandardMaterial3D.new() # bright enamel, readable under the gauge glass on a phone
+	green.albedo_color = Color("2fb35a")
+	green.roughness = 0.45
+	green.emission_enabled = true
+	green.emission = Color("1f8a40")
+	green.emission_energy_multiplier = 0.6
+	for g in 2:
+		var gauge := part("compressor_panel", "gauge_p" if g == 0 else "gauge_f") as MeshInstance3D
+		var needle := part("compressor_panel", "needle_p" if g == 0 else "needle_f")
+		if gauge == null or gauge.mesh == null or needle == null:
+			continue
+		for i in gauge.mesh.get_surface_count():
+			var src := gauge.mesh.surface_get_material(i)
+			if src != null and src.resource_name.begins_with("M_Enamel_Green") and cream != null:
+				gauge.set_surface_override_material(i, cream)
+		var wedge := MeshInstance3D.new()
+		var quad := QuadMesh.new()
+		quad.size = Vector2(0.02, 0.032)
+		wedge.mesh = quad
+		wedge.material_override = green
+		wedge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		needle.get_parent().add_child(wedge)
+		# lie on the dial face just behind the needle, near the scale's rim, pointing at value v
+		var v := int(logic.state["v_targets"][g])
+		var ang := deg_to_rad(225.0 - 22.5 * v)
+		var rest_xf: Transform3D = rest.get(needle, needle.transform)
+		var r := 0.072
+		wedge.transform = Transform3D(rest_xf.basis * Basis(Vector3.BACK, ang - PI / 2.0),
+			rest_xf.origin + rest_xf.basis * Vector3(cos(ang) * r, sin(ang) * r, -0.002))
 
 
 ## The compressor's piping diagram is the evidence for P2. Polished brass inlay on black lacquer only shows what
@@ -410,7 +462,7 @@ func _apply_screen() -> void:
 	var slide: bool = s["slide_on"] and s["slide_in"]
 	_screen_mat.set_shader_parameter("slide_on", 1.0 if slide else 0.0)
 	_screen_mat.set_shader_parameter("slide_rot", deg_to_rad(90.0 * int(s["slide_rot"])))
-	var defocus := absf(float(int(s["focus"]) - ArchiveLogic.FOCUS_SHARP)) / 4.0
+	var defocus := absf(float(int(s["focus"]) - logic.focus_sharp())) / 4.0
 	_screen_mat.set_shader_parameter("blur", clampf(defocus, 0.0, 1.0) if not _secret_on else 0.0)
 	_set_beam("film", s["projector_on"], part("film_projector", "lens_origin"))
 	_set_beam("slide", slide, part("slide_projector", "lens_origin"))
@@ -689,7 +741,7 @@ func play_tape(tape: String, clear: bool) -> void:
 			return
 		hud.call("caption", line.strip_edges() + ("" if line.ends_with(".") else "."), per)
 		await get_tree().create_timer(per).timeout
-	var clicks := int(ArchiveLogic.TAPES.get(tape, 0))
+	var clicks := logic.clicks_for(tape)
 	var dots := ""
 	for i in clicks:
 		if not _tape_playing:

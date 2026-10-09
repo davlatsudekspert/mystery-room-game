@@ -408,7 +408,8 @@ func show_hint() -> void:
 		if hint.is_empty():
 			return
 		AudioManager.sfx("hint", -4.0)
-		text.text = tr(hint["key"])
+		var args: Array = hint.get("args", [])
+		text.text = tr(hint["key"]) % args if not args.is_empty() else tr(hint["key"])
 		lvl_label.text = tr("ui.hint_level") % int(hint["level"])
 		more.disabled = int(hint["level"]) >= 3
 	show_next.call()

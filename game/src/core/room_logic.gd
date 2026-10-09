@@ -88,6 +88,17 @@ func hint_goal() -> String:
 	return ""
 
 
+## Override: values to format into the hint text (level 3 names this game's own answer; docs/VARIANTS.md).
+func hint_args(_goal: String, _level: int) -> Array:
+	return []
+
+
+## Override: derive this game's own puzzle answers from a seed (docs/VARIANTS.md). Seed 0 keeps the canonical
+## answers, so tests and saves from before variants behave exactly as before. Called once for a NEW game.
+func apply_seed(_seed: int) -> void:
+	pass
+
+
 ## Override: finale options as [[option_id, label_key], ...]; choose_ending(option_id) applies one.
 func choice_options() -> Array:
 	return []

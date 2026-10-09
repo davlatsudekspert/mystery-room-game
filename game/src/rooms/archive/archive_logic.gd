@@ -91,6 +91,12 @@ func default_state() -> Dictionary:
 		"deck_speed": SPEED_START,
 		"deck_tape": "",
 		"clicks_heard": [], # tape ids heard clearly
+		# this game's own answers (docs/VARIANTS.md); seed 0 = the canonical ones
+		"seed": 0,
+		"v_clicks": [2, 8, 5], # clicks at the end of the 1996, 1997, 1998 reels
+		"v_shadows": SPLICE_SHADOWS.duplicate(), # film frame -> shadow length
+		"v_focus": FOCUS_SHARP,
+		"v_targets": [PRESSURE_TARGET, FLOW_TARGET], # green marks on gauges P and F
 		"dial_input": "",
 		"booth_open": false,
 		"splice": [-1, -1, -1, -1], # frame per slot
@@ -170,6 +176,99 @@ func _no_card_anywhere() -> bool:
 		or state["canister"] != "" or state["file_delivered"])
 
 
+# ================================================================== variants (docs/VARIANTS.md)
+const TAPE_ORDER: Array[String] = ["tape_1996", "tape_1997", "tape_1998"]
+
+
+func apply_seed(seed: int) -> void:
+	state["seed"] = seed
+	if seed == 0:
+		return # the canonical answers from default_state()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var clicks: Array = []
+	for i in 3:
+		clicks.append(rng.randi_range(1, 9))
+	state["v_clicks"] = clicks
+	var shadows: Array = [1, 2, 3, 4]
+	for i in range(3, 0, -1): # Fisher-Yates with our own rng, so a seed always gives the same order
+		var j := rng.randi_range(0, i)
+		var t: Variant = shadows[i]
+		shadows[i] = shadows[j]
+		shadows[j] = t
+	state["v_shadows"] = shadows
+	state["v_focus"] = rng.randi_range(3, FOCUS_STEPS - 2) # never the start mark, never an end stop
+	var pool := valve_target_pool()
+	state["v_targets"] = pool[rng.randi_range(0, pool.size() - 1)]
+
+
+func clicks_for(tape: String) -> int:
+	var i := TAPE_ORDER.find(tape)
+	return int(state["v_clicks"][i]) if i >= 0 else 0
+
+
+func booth_code() -> String:
+	var code := ""
+	for c: Variant in state["v_clicks"]:
+		code += str(int(c))
+	return code
+
+
+## Frames in slot order: the longest shadow (dawn) first.
+func splice_order() -> Array:
+	var order: Array = [0, 1, 2, 3]
+	order.sort_custom(func(a: int, b: int) -> bool: return int(state["v_shadows"][a]) > int(state["v_shadows"][b]))
+	return order
+
+
+func focus_sharp() -> int:
+	return int(state["v_focus"])
+
+
+## The unique valve setting for this game's gauge marks.
+func valve_solution() -> Array:
+	var p := int(state["v_targets"][0])
+	var f := int(state["v_targets"][1])
+	for a in VALVE_POSITIONS:
+		for b in VALVE_POSITIONS:
+			for c in VALVE_POSITIONS:
+				if a + 2 * b == p and 2 * a + c == f:
+					return [a, b, c]
+	return []
+
+
+## Gauge marks (P, F) with exactly one valve solution, at least two valves turned, and not met at the start.
+static func valve_target_pool() -> Array:
+	var out: Array = []
+	for p in 13:
+		for f in 13:
+			var sols: Array = []
+			for a in VALVE_POSITIONS:
+				for b in VALVE_POSITIONS:
+					for c in VALVE_POSITIONS:
+						if a + 2 * b == p and 2 * a + c == f:
+							sols.append([a, b, c])
+			if sols.size() == 1 and (p > 0 or f > 0):
+				var sol: Array = sols[0]
+				var turned := int(sol[0] > 0) + int(sol[1] > 0) + int(sol[2] > 0)
+				if turned >= 2:
+					out.append([p, f])
+	return out
+
+
+func hint_args(goal: String, level: int) -> Array:
+	if level < 3:
+		return []
+	match goal:
+		"c2_compressor":
+			return valve_solution()
+		"c2_booth":
+			return state["v_clicks"].duplicate()
+		"c2_focus":
+			return [focus_sharp()]
+	return []
+
+
 # ================================================================== P1 card catalogue
 func open_cat_drawer(i: int) -> Array[String]:
 	_begin()
@@ -230,7 +329,7 @@ func turn_valve(i: int, delta: int = 1) -> Array[String]:
 	var v: Array = state["valves"]
 	v[i] = posmod(int(v[i]) + delta, VALVE_POSITIONS)
 	_emit("valve:%d:%d" % [i, v[i]])
-	if pressure() == PRESSURE_TARGET and flow() == FLOW_TARGET:
+	if pressure() == int(state["v_targets"][0]) and flow() == int(state["v_targets"][1]):
 		state["pressure_ok"] = true
 		_emit("pressure_ok")
 		_emit("solved:compressor")
@@ -378,7 +477,7 @@ func play_tape() -> Array[String]:
 		_emit("tape_garbled:" + tape)
 		return _end()
 	_emit("tape_clear:" + tape)
-	_emit("clicks:%d" % int(TAPES[tape]))
+	_emit("clicks:%d" % clicks_for(tape))
 	var heard: Array = state["clicks_heard"]
 	if not heard.has(tape):
 		heard.append(tape)
@@ -395,8 +494,8 @@ func dial_digit(d: int) -> Array[String]:
 		return _end()
 	state["dial_input"] = str(state["dial_input"]) + str(d)
 	_emit("dial:%d" % d)
-	if str(state["dial_input"]).length() >= BOOTH_CODE.length():
-		if state["dial_input"] == BOOTH_CODE:
+	if str(state["dial_input"]).length() >= booth_code().length():
+		if state["dial_input"] == booth_code():
 			state["booth_open"] = true
 			_emit("booth_opened")
 			_emit("solved:booth")
@@ -421,7 +520,7 @@ func splice_put(frame: int, slot: int) -> Array[String]:
 	if displaced >= 0 and from >= 0 and from != slot:
 		sp[from] = displaced # swap two placed frames
 	_emit("splice:%d:%d" % [frame, slot])
-	if _arr_eq(sp, SPLICE_ORDER):
+	if _arr_eq(sp, splice_order()):
 		state["reel_repaired"] = true
 		_emit("reel_repaired")
 		_emit("solved:splice")
@@ -489,7 +588,7 @@ func turn_focus(delta: int) -> Array[String]:
 
 
 func is_sharp() -> bool:
-	return int(state["focus"]) == FOCUS_SHARP
+	return int(state["focus"]) == focus_sharp()
 
 
 ## What the big screen shows: "" | "white" | "film:<n>" | "mark" | "mark_tilted" | "mixed".

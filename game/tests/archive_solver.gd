@@ -26,7 +26,7 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 		return
 	# P2 compressor (valves cycle 0..4)
 	if not s["pressure_ok"]:
-		var want := [1, 2, 2]
+		var want := l.valve_solution()
 		for i in 3:
 			var guard := 0
 			while int(s["valves"][i]) != want[i] and not s["pressure_ok"] and guard < 6:
@@ -92,14 +92,14 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 		while str(s["dial_input"]) != "" and guard < 3: # finish a half-dialled number first
 			l.dial_digit(0)
 			guard += 1
-		for ch in ArchiveLogic.BOOTH_CODE:
+		for ch in l.booth_code():
 			l.dial_digit(int(ch))
 		return
 	# P9 splice
 	if not s["reel_repaired"]:
 		for slot in 4:
-			if int(s["splice"][slot]) != ArchiveLogic.SPLICE_ORDER[slot]:
-				l.splice_put(ArchiveLogic.SPLICE_ORDER[slot], slot)
+			if int(s["splice"][slot]) != int(l.splice_order()[slot]):
+				l.splice_put(int(l.splice_order()[slot]), slot)
 		return
 	if l.can_take("splicer_reel"):
 		l.take("splicer_reel")
@@ -123,8 +123,8 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 			l.toggle_projector()
 		while int(s["frame"]) < ArchiveLogic.SIGN_FRAME:
 			l.step_frame(1)
-		while int(s["focus"]) != ArchiveLogic.FOCUS_SHARP:
-			l.turn_focus(1 if int(s["focus"]) < ArchiveLogic.FOCUS_SHARP else -1)
+		while int(s["focus"]) != l.focus_sharp():
+			l.turn_focus(1 if int(s["focus"]) < l.focus_sharp() else -1)
 		if s["socket"] != "" and not str(s["socket"]).begins_with("crystal_blank"):
 			l.take_from_socket()
 		if s["socket"] == "":

@@ -8,6 +8,9 @@ signal hint_shown(goal: String, level: int)
 const AUTOSAVE_DELAY := 0.75
 const COLLECT_ACHIEVEMENT := {"ch1": "light_remembers", "ch2": "echoes_of_the_archive", "ch3": "echoes_of_the_deep"}
 
+## Seed for a new game's puzzle variants: -1 draws a random one (players), 0 keeps the canonical answers
+## (QA scripts and tests that check fixed values), any other value reproduces one variant.
+var variant_seed := 0 # TODO(variants): -1 once every chapter renders its variant evidence
 var chapter_id := ""
 var logic: RoomLogic
 var profile: Dictionary = {}
@@ -46,6 +49,7 @@ func start_new(id: String) -> bool:
 	if l == null:
 		return false
 	l.setup_from_profile(profile.get("choices", {}))
+	l.apply_seed(variant_seed if variant_seed >= 0 else randi_range(1, 2147483646))
 	_attach(id, l)
 	play_time = 0.0
 	hints_used = 0
@@ -143,7 +147,8 @@ func next_hint() -> Dictionary:
 	_hint_level = mini(_hint_level + 1, 3)
 	hints_used += 1
 	hint_shown.emit(goal, _hint_level)
-	return {"goal": goal, "level": _hint_level, "key": "hint.%s.%d" % [goal, _hint_level]}
+	return {"goal": goal, "level": _hint_level, "key": "hint.%s.%d" % [goal, _hint_level],
+		"args": logic.hint_args(goal, _hint_level)}
 
 
 func current_hint_level() -> int:
