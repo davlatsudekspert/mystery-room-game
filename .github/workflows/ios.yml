@@ -221,7 +221,8 @@ jobs:
             > "$RUNNER_TEMP/export.log" 2>&1 \
             || { grep -iE "error|fail|denied|permission" "$RUNNER_TEMP/export.log" | head -40; tail -40 "$RUNNER_TEMP/export.log"; exit 1; }
           tail -8 "$RUNNER_TEMP/export.log"
-          ls -la "$RUNNER_TEMP/export"
+          # destination=upload sends the package to App Store Connect and writes no export folder (run 37941801214)
+          if [ "$DEST" = "export" ]; then ls -la "$RUNNER_TEMP/export"; fi
 
       - name: Verify the signed IPA
         if: ${{ !inputs.upload_to_testflight }}
