@@ -81,6 +81,7 @@ func test_premium_rules() -> void:
 	p.path = "user://test_ent.cfg"
 	p.revoke_all_for_tests()
 	check(not p.REAL_PAYMENTS_ENABLED, "real payments must stay disabled")
+	check(not p.tester_build(), "only exports with the beta_unlock feature open paid chapters for testers")
 	check(p.can_play("ch1"), "chapter 1 is free")
 	check(not p.can_play("ch2"), "chapter 2 not released / not owned")
 	check(not p.can_play("nope"), "unknown chapter")

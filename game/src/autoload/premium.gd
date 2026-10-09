@@ -37,7 +37,14 @@ func can_play(chapter_id: String) -> bool:
 	if ch.is_empty() or not ch.get("released", false):
 		return false
 	var product: String = ch.get("product", "")
-	return product == "" or has_entitlement(product)
+	return product == "" or has_entitlement(product) or tester_build()
+
+
+## Test builds for Google Play internal/closed testing and TestFlight open every released chapter without any
+## purchase: their export adds the custom feature "beta_unlock" (docs/RELEASE_PIPELINE.md). Store releases never
+## carry it, and no payment code runs either way.
+func tester_build() -> bool:
+	return OS.has_feature("beta_unlock")
 
 
 func purchase(product: String) -> void:
