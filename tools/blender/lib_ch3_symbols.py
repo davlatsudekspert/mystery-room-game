@@ -235,7 +235,7 @@ def bounds(kind: str, h: float = 1.0):
     return _bounds_of(shapes(kind, h))
 
 
-def ring_icon(i: int, d: float, line: float = 0.06, bold: float = 0.16, n: int = 40):
+def ring_icon(i: int, d: float, line: float = 0.05, bold: float = 0.19, n: int = 40):
     """The drum lock's ring icon (§3 blast_door): four concentric circles (i = 0 outer ... 3 inner) of outer
     diameter d, circle i drawn bold. Returns shapes (each a ring [outer, hole])."""
     out = []

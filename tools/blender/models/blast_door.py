@@ -62,7 +62,7 @@ def chevrons():
     """Amber / black chevron band on the lintel (pointing up at the centre), 5 mm plates on the frame face."""
     out = []
     y0, y1, xm = 2.56, 2.92, 1.40
-    hgt, w = y1 - y0, 0.11
+    hgt, w = y1 - y0, 0.14
     for side in (-1, 1):
         a, idx = -xm - hgt, 0
         while a < 0.0:
@@ -72,7 +72,7 @@ def chevrons():
             lo, hi = (-xm, 0.0) if side < 0 else (0.0, xm)
             cp = C2.clip_poly_x(poly, lo, hi)
             if len(cp) >= 3 and abs(A.signed_area(cp)) > 1e-5:
-                out.append(K.plate("chev", [A.ccw(cp)], 0.005, z0=FZ, mat=AMBER if idx % 2 == 0 else STEEL, bevel=0.0008))
+                out.append(K.plate("chev", [A.ccw(cp)], 0.005, z0=FZ, mat=AMBER if idx % 2 == 0 else STEEL, bevel=0.0))
             a += w
             idx += 1
     return out
@@ -95,16 +95,9 @@ def drum_box():
     front = K.plate("bx_front", [L.rounded_rect(x1 - x0, y1 - y0, 0.018, 4)] + holes, 0.008, mat=STEEL,
                     bevel=0.002, loc=(cx, cy, zf))
     out.append(front)
-    # dark interior back so the windows read deep
-    out.append(K.gbox("bx_back", (x0 + t, y0 + t, FZ), (x1 - t, y1 - t, FZ + 0.004), STEEL, 0.0))
-    # drum axle bearings (seen through the windows at the drum ends)
-    for i in range(4):
-        for sx in (-1, 1):
-            out.append(K.gcyl("brg", 0.016, 0.0, 0.012, base=(DRUM_X + sx * (DRUM_L / 2 + 0.006), drum_y(i), DRUM_Z),
-                              axis=(sx, 0, 0), segments=10, mat=STEEL))
-    # corner bolts
-    for (bx, by) in ((x0 + 0.03, y0 + 0.03), (x1 - 0.03, y0 + 0.03), (x0 + 0.03, y1 - 0.03), (x1 - 0.03, y1 - 0.03)):
-        out.append(K.hexbolt("bxb", 0.009, (bx, by, BOX_FRONT), h=0.006, washer=False))
+    # corner screws
+    for (bx, by) in ((x0 + 0.025, y0 + 0.025), (x1 - 0.025, y0 + 0.025), (x0 + 0.025, y1 - 0.025), (x1 - 0.025, y1 - 0.025)):
+        out.append(K.rivet("bxb", 0.0075, (bx, by, BOX_FRONT), segs=6))
     return out
 
 
@@ -114,7 +107,7 @@ def brass_static():
     for i in range(4):
         y = drum_y(i)
         out.append(K.plate("bezel", [L.rounded_rect(WIN_W + 0.022, WIN_H + 0.020, 0.012, 4),
-                                     L.rounded_rect(WIN_W, WIN_H, 0.006, 3)], 0.007, mat=BRASS, bevel=0.0015,
+                                     L.rounded_rect(WIN_W, WIN_H, 0.006, 3)], 0.007, mat=BRASS, bevel=0.0,
                            loc=(DRUM_X, y, zf)))
         # reading index: two small brass pointers at the window's mid-height
         for sx in (-1, 1):
@@ -123,37 +116,34 @@ def brass_static():
             out.append(K.plate("idx", [A.ccw([(tip, y), (base, y - 0.004), (base, y + 0.004)])], 0.002, z0=zf + 0.007,
                                mat=BRASS, bevel=0.0))
         # ring icon: four concentric circles, circle i bold (flat brass inlay on a small brass disc)
-        out.append(K.gcyl("icon_disc", ICON_D / 2 + 0.006, zf, zf + 0.003, base=(ICON_X, y, 0), axis=(0, 0, 1),
-                          segments=24, mat=BRASS, chamfer=0.001))
-        out.append(K.flat("icon", [lp for shp in S.ring_icon(i, ICON_D, n=24) for lp in shp], zf + 0.0034,
-                          (ICON_X, y), STEEL))
+        out.append(K.flat("icon", [lp for shp in S.ring_icon(i, ICON_D, n=20) for lp in shp], zf + 0.0006,
+                          (ICON_X, y), BRASS))
     # lamp bezel
     out.append(K.glathe("lampbz", [(0.024, 0.0), (0.024, 0.004), (0.019, 0.008), (0.0145, 0.0075), (0.0145, 0.0)],
-                        (LAMP[0], LAMP[1], zf), (0, 0, 1), 16, BRASS, smooth=50.0))
+                        (LAMP[0], LAMP[1], zf), (0, 0, 1), 12, BRASS, smooth=50.0))
     return out
 
 
 def static_frame():
     parts = []
     w, h, z0, z1 = 1.5, 3.0, 0.0, FZ
-    parts += [K.gbox("fr_l", (-w, 0, z0), (-OPEN_W, h, z1), STEEL, 0.008, 2),
-              K.gbox("fr_r", (OPEN_W, 0, z0), (w, h, z1), STEEL, 0.008, 2),
-              K.gbox("fr_t", (-OPEN_W - 0.01, OPEN_H, z0), (OPEN_W + 0.01, h, z1), STEEL, 0.008, 2)]
+    parts += [K.gbox("fr_l", (-w, 0, z0), (-OPEN_W, h, z1), STEEL, 0.008, 1),
+              K.gbox("fr_r", (OPEN_W, 0, z0), (w, h, z1), STEEL, 0.008, 1),
+              K.gbox("fr_t", (-OPEN_W - 0.01, OPEN_H, z0), (OPEN_W + 0.01, h, z1), STEEL, 0.008, 1)]
     # raised lip around the opening (to z = 0.12)
     lip = 0.085
-    parts += [K.gbox("lip_l", (-OPEN_W - lip, 0, z1 - 0.004), (-OPEN_W, OPEN_H + lip, 0.12), STEEL, 0.006, 2),
-              K.gbox("lip_r", (OPEN_W, 0, z1 - 0.004), (OPEN_W + lip, OPEN_H + lip, 0.12), STEEL, 0.006, 2),
-              K.gbox("lip_t", (-OPEN_W, OPEN_H, z1 - 0.004), (OPEN_W, OPEN_H + lip, 0.12), STEEL, 0.006, 2)]
+    parts += [K.gbox("lip_l", (-OPEN_W - lip, 0, z1 - 0.004), (-OPEN_W, OPEN_H + lip, 0.12), STEEL, 0.006, 1),
+              K.gbox("lip_r", (OPEN_W, 0, z1 - 0.004), (OPEN_W + lip, OPEN_H + lip, 0.12), STEEL, 0.006, 1),
+              K.gbox("lip_t", (-OPEN_W, OPEN_H, z1 - 0.004), (OPEN_W, OPEN_H + lip, 0.12), STEEL, 0.006, 1)]
     # rivets: around the lip and along the outer edge
-    for y in [0.15 + 0.2 * k for k in range(12)]:
-        for sx in (-1, 1):
-            parts.append(K.rivet("rv", 0.011, (sx * (OPEN_W + lip + 0.045), y, z1), segs=6))
-            parts.append(K.rivet("rv", 0.011, (sx * (w - 0.05), y, z1), segs=6))
-    for x in [-1.3 + 0.2 * k for k in range(14)]:
-        parts.append(K.rivet("rv", 0.011, (x, h - 0.05, z1), segs=6))
-        parts.append(K.rivet("rv", 0.011, (x, 2.52, z1), segs=6))
+    for y in [0.20 + 0.30 * k for k in range(8)]:
+        parts.append(K.rivet("rv", 0.011, (OPEN_W + lip + 0.045, y, z1), segs=6))
+        parts.append(K.rivet("rv", 0.011, (w - 0.05, y, z1), segs=6))
+        parts.append(K.rivet("rv", 0.011, (-w + 0.05, y, z1), segs=6))
+    for x in [-1.35 + 0.3 * k for k in range(10)]:
+        parts.append(K.rivet("rv", 0.011, (x, h - 0.04, z1), segs=6))
     for (bx, by) in ((-1.38, 0.12), (1.38, 0.12), (-1.38, 2.86), (1.38, 2.86)):
-        parts.append(K.hexbolt("anc", 0.018, (bx, by, z1), h=0.014))
+        parts.append(K.hexbolt("anc", 0.018, (bx, by, z1), h=0.014, washer=False))
     parts += chevrons()
     parts += drum_box()
     parts += brass_static()
@@ -192,7 +182,7 @@ def tunnel():
         parts.append(K.gbox("lw_back", (x0, 0.0, zb), (x1, OPEN_H, zs0), STEEL, 0.004))
         # slot edge guides (U channel lips)
         for z in (zs0, zs1):
-            parts.append(K.gbox("guide", (x0 - 0.0 if sx > 0 else x0, 0.0, z - 0.012), (x1, OPEN_H, z + 0.012), STEEL, 0.003))
+            parts.append(K.gbox("guide", (x0, 0.0, z - 0.012), (x1, OPEN_H, z + 0.012), STEEL, 0.0))
     # receiving channel behind the closed-side slot
     parts.append(K.gbox("jamb", (-OPEN_W - 0.12, 0.0, JAMB_Z[0] - 0.02), (-OPEN_W - t, OPEN_H + 0.12, JAMB_Z[0]), STEEL, 0.0))
     parts.append(K.gbox("jamb2", (-OPEN_W - 0.12, 0.0, JAMB_Z[1]), (-OPEN_W - t, OPEN_H + 0.12, JAMB_Z[1] + 0.02), STEEL, 0.0))
@@ -204,7 +194,7 @@ def tunnel():
     parts.append(K.gbox("fl_f", (-OPEN_W, -0.03, JAMB_Z[1]), (OPEN_W, 0.012, 0.0), STEEL, 0.003))
     parts.append(K.gbox("fl_b", (-OPEN_W, -0.03, zb), (OPEN_W, 0.012, JAMB_Z[0]), STEEL, 0.003))
     parts.append(K.gbox("fl_ch", (-OPEN_W, -0.05, JAMB_Z[0]), (OPEN_W, -0.04, JAMB_Z[1]), STEEL, 0.0))
-    for z in (-0.40, -0.52, -0.64, -0.76):
+    for z in (-0.45, -0.65):
         parts.append(K.gbox("tread", (-0.62, 0.012, z - 0.012), (0.62, 0.020, z + 0.012), STEEL, 0.003))
     # rib frames inside the tunnel and the hall-side flange (a steel angle on the hall wall face)
     for z in (-0.60,):
@@ -232,13 +222,13 @@ def leaf():
               K.gbox("band", (x0 + b, y1 - b, z1), (x1 - b, y1 - 0.01, z1 + tb), PAINT, 0.004),
               K.gbox("band", (x0 + b, y0 + 0.01, z1), (x1 - b, y0 + b, z1 + tb), PAINT, 0.004),
               K.gbox("band", (x0 + b, 0.62, z1), (x1 - b, 0.70, z1 + tb), PAINT, 0.004)]
-    for y in [0.12 + 0.24 * k for k in range(11)]:
+    for y in [0.20 + 0.33 * k for k in range(7)]:
         for sx in (-1, 1):
             parts.append(K.rivet("lrv", 0.011, (sx * (x1 - b / 2), y, z1 + tb), segs=6, mat=PAINT))
-    for x in [-0.60 + 0.24 * k for k in range(6)]:
+    for x in [-0.45 + 0.30 * k for k in range(4)]:
         parts.append(K.rivet("lrv", 0.011, (x, y1 - b / 2, z1 + tb), segs=6, mat=PAINT))
         parts.append(K.rivet("lrv", 0.011, (x, 0.66, z1 + tb), segs=6, mat=PAINT))
-    mark = S.inlay("mark", "mark_ticks", 1.05, depth=0.016, mat=PAINT, bevel=0.004)
+    mark = S.inlay("mark", "mark_ticks", 1.05, depth=0.016, mat=PAINT, bevel=0.0)
     mark.data.transform(Matrix.Translation((0.0, 1.55, z1)))
     parts.append(mark)
     # hall face (-Z): perimeter band, dog bars in guides, braces, the big handwheel
@@ -248,8 +238,6 @@ def leaf():
     hy = 1.25
     parts += [K.gbox("dog", (-0.03, 0.12, zh - 0.035), (0.03, hy - 0.10, zh - 0.012), PAINT, 0.005),
               K.gbox("dog", (-0.03, hy + 0.10, zh - 0.035), (0.03, y1 - 0.12, zh - 0.012), PAINT, 0.005)]
-    for y in (0.35, 0.80, 1.75, 2.20):
-        parts.append(K.gbox("guide", (-0.06, y - 0.03, zh - 0.045), (0.06, y + 0.03, zh - 0.010), PAINT, 0.004))
     for (ax, ay, bx, by) in ((x0 + b, y0 + b, -0.30, hy - 0.22), (x1 - b, y0 + b, 0.30, hy - 0.22),
                              (x0 + b, y1 - b, -0.30, hy + 0.22), (x1 - b, y1 - b, 0.30, hy + 0.22)):
         d = Vector((bx - ax, by - ay, 0))
@@ -261,8 +249,8 @@ def leaf():
     hub = K.glathe("hub", [(0.0, 0.0), (0.09, 0.0), (0.09, 0.02), (0.06, 0.035), (0.05, 0.10), (0.035, 0.12),
                            (0.0, 0.12)], (0.0, hy, zh), (0, 0, -1), 20, PAINT, smooth=45.0)
     parts.append(hub)
-    rim_r, rim_z = 0.31, zh - 0.10
-    rim = M.torus("rim", rim_r, 0.022, major_seg=32, minor_seg=6, mat=PAINT)
+    rim_r, rim_z = 0.31, zh - 0.09
+    rim = M.torus("rim", rim_r, 0.022, major_seg=24, minor_seg=6, mat=PAINT)
     rim.data.transform(Matrix.Translation((0.0, hy, rim_z)))
     A.hint(rim, 70.0)
     parts.append(rim)
@@ -270,31 +258,26 @@ def leaf():
         a = math.radians(90 + 72 * k)
         p0 = Vector((0.045 * math.cos(a), hy + 0.045 * math.sin(a), zh - 0.085))
         p1 = Vector(((rim_r - 0.01) * math.cos(a), hy + (rim_r - 0.01) * math.sin(a), rim_z))
-        parts.append(K.gcyl("spoke", 0.016, 0.0, (p1 - p0).length, base=tuple(p0), axis=tuple(p1 - p0), segments=8,
+        parts.append(K.gcyl("spoke", 0.016, 0.0, (p1 - p0).length, base=tuple(p0), axis=tuple(p1 - p0), segments=6,
                             mat=PAINT))
-        # grip knob on the rim
-        g = K.glathe("knob", [(0.0, 0.0), (0.016, 0.0), (0.016, 0.05), (0.022, 0.06), (0.018, 0.08), (0.0, 0.085)],
-                     (rim_r * math.cos(a), hy + rim_r * math.sin(a), rim_z), (0, 0, -1), 10, PAINT, smooth=50.0)
-        parts.append(g)
     # hanger trolleys on the top edge (run in the top rail)
     for x in (-0.55, 0.55):
         parts.append(K.gbox("trolley", (x - 0.10, y1, -0.235), (x + 0.10, 2.60, -0.155), PAINT, 0.006))
-        parts.append(K.gcyl("wheel", 0.03, -0.04, 0.04, base=(x, 2.62, -0.195), axis=(0, 0, 1), segments=12, mat=PAINT))
     return K.part("IA_blast_door", parts, pivot=(0.0, 0.0, (z0 + z1) / 2))
 
 
 # ====================================================================== drums, handle, lamp
 def drum(i):
     y = drum_y(i)
-    prof = [(0.008, -DRUM_L / 2 - 0.004), (0.046, -DRUM_L / 2), (0.0495, -DRUM_L / 2 + 0.003, "k"),
-            (0.0500, -0.030, "k"), (0.0488, -0.028), (BAND_R, -0.026), (BAND_R, 0.026), (0.0488, 0.028),
-            (0.0500, 0.030, "k"), (0.0495, DRUM_L / 2 - 0.003, "k"), (0.046, DRUM_L / 2), (0.008, DRUM_L / 2 + 0.004)]
-    body = K.glathe("drum", prof, (DRUM_X, y, DRUM_Z), (1, 0, 0), 24, BRASS, knurl=0.0012, smooth=40.0)
+    prof = [(0.008, -DRUM_L / 2 - 0.004), (0.046, -DRUM_L / 2), (0.0500, -DRUM_L / 2 + 0.004, "k"),
+            (0.0500, -0.029, "k"), (BAND_R, -0.027), (BAND_R, 0.027), (0.0500, 0.029, "k"),
+            (0.0500, DRUM_L / 2 - 0.004, "k"), (0.046, DRUM_L / 2), (0.008, DRUM_L / 2 + 0.004)]
+    body = K.glathe("drum", prof, (DRUM_X, y, DRUM_Z), (1, 0, 0), 18, BRASS, knurl=0.0012, smooth=40.0)
     parts = [body]
     for s, kind in enumerate(S.DRUM_ORDER):
-        sym = S.inlay("sym", kind, 0.030, depth=0.0, mat=STEEL)
+        sym = S.inlay("sym", kind, 0.034, depth=0.0, mat=STEEL)
         sym.data.transform(Matrix.Translation((0, 0, 0.0004)))
-        K.slice_y(sym, 0.005, -0.02, 0.02)
+        K.slice_y(sym, 0.0085, -0.02, 0.02)
         K.wrap_x(sym, BAND_R)
         sym.data.transform(Matrix.Translation((DRUM_X, y, DRUM_Z)) @ Matrix.Rotation(math.radians(60 * s), 4, "X"))
         A.hint(sym, 30.0)
@@ -304,7 +287,7 @@ def drum(i):
 
 def handle():
     x, y, z = HANDLE
-    parts = [K.gcyl("boss", 0.016, -0.022, 0.022, base=(x, y, z), axis=(1, 0, 0), segments=14, mat=BRASS, chamfer=0.002)]
+    parts = [K.gcyl("boss", 0.016, -0.022, 0.022, base=(x, y, z), axis=(1, 0, 0), segments=10, mat=BRASS, chamfer=0.002)]
     parts.append(K.glathe("stem", [(0.0, 0.0), (0.009, 0.0), (0.008, 0.07), (0.0085, 0.078), (0.0, 0.08)],
                           (x, y, z), (0, 1, 0), 12, BRASS, smooth=50.0))
     parts.append(K.glathe("tbar", [(0.0, -0.038), (0.008, -0.038), (0.011, -0.032), (0.011, 0.032), (0.008, 0.038),
@@ -315,7 +298,7 @@ def handle():
 def lamp():
     x, y, z = LAMP
     o = K.glathe("jewel", [(0.0145, -0.004), (0.0145, 0.0), (0.012, 0.005), (0.007, 0.0085), (0.0, 0.0095)],
-                 (x, y, z), (0, 0, 1), 16, AMBER, smooth=80.0)
+                 (x, y, z), (0, 0, 1), 12, AMBER, smooth=80.0)
     return K.part("drum_lamp", [o], pivot=LAMP)
 
 
