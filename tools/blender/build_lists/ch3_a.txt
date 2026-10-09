@@ -1,3 +1,8 @@
 # Chapter 3 group A: shell, lift, doors (lib_ch3_a.py, lib_ch3_symbols.py). docs/models/ch3_a.md
 blast_door.py
 array_below.py
+shell_gallery.py
+freight_lift.py
+shell_lift.py
+shell_choir.py
+shell_nursery.py

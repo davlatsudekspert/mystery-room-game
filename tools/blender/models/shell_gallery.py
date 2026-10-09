@@ -354,8 +354,11 @@ def qa(parts, args):
 
     def lights(cam=None):
         K.clear_lights()
-        K.light("key_gallery", "SPOT", (0.0, 4.4, 2.2), 900.0, "D6E6F2", radius=0.2, target=(0.0, 0.0, -1.4), spot_deg=60)
-        K.light("array_up", "SPOT", (0.0, -6.0, 0.0), 9000.0, "CFF6FF", radius=1.2, target=(0.0, 5.0, 0.0), spot_deg=40)
+        K.light("key_gallery", "SPOT", (0.0, 4.4, 2.2), 900.0, "D6E6F2", radius=0.05, target=(0.0, 0.0, -1.4), spot_deg=60)
+        for k in range(4):                    # the Array's up-light, emulated from the throat (out of the look-down view)
+            a = math.radians(45 + 90 * k)
+            K.light(f"array_up_{k}", "SPOT", (3.0 * math.sin(a), -1.0, -3.0 * math.cos(a)), 1500.0, "CFF6FF", radius=0.05,
+                    target=(0.0, 4.5, 0.0), spot_deg=50)
         sg = K.light("shaft_glow", "AREA", (0.0, -0.4, 0.0), 160.0, "CFF6FF", radius=2.6, target=(0.0, 5.0, 0.0))
         sg.visible_camera = sg.visible_glossy = sg.visible_transmission = False
         for k in (0, 3):

@@ -230,7 +230,7 @@ def qa(parts, args):
     if K.want(args, "1"):        # lobby hero from the west passage
         show_intro(False)
         lights()
-        K.shoot(NAME, (-5.4, 1.65, 4.35), (0.0, 1.2, 6.4), vfov=62)
+        K.shoot(NAME, (-5.2, 1.7, 5.15), (0.0, 1.2, 6.4), vfov=62)
     if K.want(args, "2"):        # lobby from the east, looking west (Choir passage at the far end)
         show_intro(False)
         lights()
@@ -248,7 +248,8 @@ def qa(parts, args):
     if K.want(args, "4"):        # looking up the shaft from the lobby
         show_intro(False)
         lights()
-        K.light("shaft_top", "POINT", (0.0, 10.0, 6.0), 60.0, "FFD7A0", radius=0.1)
+        K.light("shaft_top", "POINT", (0.0, 9.0, 6.0), 400.0, "FFD7A0", radius=0.1)
+        K.light("shaft_mid", "POINT", (0.6, 5.5, 6.6), 150.0, "FFD7A0", radius=0.1)
         K.shoot(NAME + "_4", (2.6, 1.5, 6.2), (0.3, 6.0, 6.0), vfov=62)
 
 
