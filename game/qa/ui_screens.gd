@@ -13,6 +13,7 @@ extends Node
 ##   --text-scale=X         the player's Settings → Text size (0.9 / 1.0 / 1.15 / 1.3)
 ##   --saved                start with a saved game, so the main menu shows Continue
 ##   --mobile               menus as on a phone or tablet (no Quit item): Settings.emulate["mobile"]
+##   --highlight=N          show main menu item N (0 = first) pressed/hovered in the main menu shots
 ##   --window=WxH           render window (default: the emulated screen). Same aspect = same canvas layout. Use one
 ##                          that fits the Xvfb screen (1280x1024) for builds that read DisplayServer's safe area
 ##                          directly: a window larger than the X screen makes it report bogus insets.
@@ -47,6 +48,7 @@ func _run() -> void:
 	var menus_only := false
 	var saved := false
 	var mobile := false
+	var highlight := -1
 	var device := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
@@ -59,6 +61,8 @@ func _run() -> void:
 			saved = true
 		elif a == "--mobile":
 			mobile = true
+		elif a.begins_with("--highlight="):
+			highlight = int(a.substr(12))
 		elif a.begins_with("--device="):
 			device = a.substr(9)
 	if device != "":
@@ -102,6 +106,10 @@ func _run() -> void:
 		var menu: Control = (load("res://src/ui/main_menu.tscn") as PackedScene).instantiate()
 		get_tree().root.add_child(menu)
 		await _settle(1.5)
+		var items: Node = menu.get("_menu")
+		if highlight >= 0 and items != null and highlight < items.get_child_count():
+			items.get_child(highlight).call("_set_hl", 1.0) # MenuItem's hover/press accent, fully in
+			await _settle(0.1)
 		await _shot("%s_main_menu" % lang, menu)
 		var host: Node = menu.get("_panel_host")
 		menu.call("_show_settings")

@@ -253,7 +253,8 @@ static func _mobile() -> bool:
 
 
 func _add(key: String, cb: Callable) -> void:
-	var b := MenuItem.new(key, key == "ui.continue") # Continue is the most prominent item
+	# the first item is the most prominent one: Continue, or New Game when there is nothing to continue
+	var b := MenuItem.new(key, _menu.get_child_count() == 0 and key in ["ui.continue", "ui.new_game"])
 	b.pressed.connect(cb)
 	_menu.add_child(b)
 
