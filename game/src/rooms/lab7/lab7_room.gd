@@ -103,15 +103,19 @@ func _ready() -> void:
 		GameState.start_new("ch1")
 	logic = GameState.logic
 	GameState.in_game = true
+	CrashGuard.detail("environment")
 	_build_environment()
 	_build_models()
+	CrashGuard.detail("lights")
 	_build_lights()
 	_build_views()
 	_hinge_bookcase()
 	_place_lights_from_models()
+	CrashGuard.detail("visuals")
 	visuals = Lab7Visuals.new(self)
 	add_child(visuals)
 	_build_input()
+	CrashGuard.detail("hud")
 	_build_hud()
 	add_child(PerfGuard.new())
 	GameState.events.connect(_on_events)
@@ -125,6 +129,7 @@ func _ready() -> void:
 		AudioManager.ambience("amb_power_hum", true, -8.0)
 	if not capture_mode and logic.state["taken"].is_empty() and logic.inventory.is_empty():
 		hud.call("play_intro")
+	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
 
 
 func _exit_tree() -> void:

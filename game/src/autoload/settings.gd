@@ -16,7 +16,9 @@ const DEFAULTS := {
 	"look_sensitivity": 1.0,
 	"brightness": 1.0, # scene exposure multiplier (dark rooms on dim phone screens)
 	"render_scale": 1.0, # 3D resolution chosen by PerfGuard on phones (not shown in the UI)
-	"safe_graphics": false, # no positional shadows, reflection probes or particles (CrashGuard turns it on after a crash)
+	"safe_graphics": false, # the player's choice: the safest graphics (CrashGuard.MAX_LEVEL)
+	"safe_level": 0, # 0–3, raised by CrashGuard after a crash while a scene loads (not shown in the UI)
+	"safe_epoch": 0, # CrashGuard.EPOCH the level belongs to
 }
 const TEXT_SCALES: Array[float] = [0.9, 1.0, 1.15, 1.3]
 

@@ -603,7 +603,7 @@ func show_inspect(id: String) -> void:
 	var vp := SubViewport.new()
 	vp.own_world_3d = true
 	vp.transparent_bg = true
-	vp.msaa_3d = Viewport.MSAA_4X
+	vp.msaa_3d = Viewport.MSAA_4X if CrashGuard.safe_level() == 0 else Viewport.MSAA_DISABLED
 	svc.add_child(vp)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CLEAR_COLOR

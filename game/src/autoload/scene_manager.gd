@@ -44,7 +44,7 @@ func _ready() -> void:
 	_layer.add_child(_toast)
 	Settings.changed.connect(func(key: String) -> void:
 		if key == "safe_graphics" and bool(Settings.get_value(key)):
-			simplify_graphics(get_tree().current_scene)) # turning it off takes effect when the next scene loads
+			simplify_graphics(get_tree().current_scene, CrashGuard.MAX_LEVEL)) # off: from the next scene on
 
 
 ## Android back button/gesture (with application/config/quit_on_go_back off) and Escape on desktop go to
@@ -90,10 +90,10 @@ func goto(path: String, fade_time: float = 0.45) -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(path)
 	await get_tree().process_frame
-	# loaded and built (its _ready has run); what follows is the GPU drawing its first frames
-	CrashGuard.mark("draw:" + path.get_file().get_basename())
-	if bool(Settings.get_value("safe_graphics")):
-		simplify_graphics(get_tree().current_scene) # before the new scene's first frame is drawn
+	# scenes that are not rooms: loaded and built (rooms mark "draw:" themselves in room_ready, before their
+	# first frame is drawn, which happens before this await returns)
+	if CrashGuard.stage() == stage:
+		CrashGuard.mark("draw:" + path.get_file().get_basename())
 	await get_tree().process_frame
 	scene_changed.emit(path)
 	await _frames_drawn(3)
@@ -109,12 +109,28 @@ func goto(path: String, fade_time: float = 0.45) -> void:
 	_busy = false
 
 
-## Safe graphics (Settings "safe_graphics"): the scene keeps every light and every puzzle effect, but drops the
-## features most likely to fail on a phone's GPU driver: positional light shadows, reflection probes (the
-## ambient light is raised a little instead) and particles.
-func simplify_graphics(scene: Node) -> void:
-	if scene == null:
+## Every room calls this at the end of its _ready. The scene change happens at the end of a frame and that
+## frame is already drawn with the new room, so the safe level must be applied here, before the first draw.
+func room_ready(room: Node) -> void:
+	CrashGuard.mark("draw:" + str(room.scene_file_path.get_file().get_basename()))
+	var level := CrashGuard.safe_level()
+	if level > 0:
+		simplify_graphics(room, level)
+
+
+## Safe graphics (CrashGuard levels): the scene keeps every light and every puzzle effect, and drops the
+## features most likely to fail on a phone's GPU driver, one group per level (see CrashGuard.MAX_LEVEL).
+func simplify_graphics(scene: Node, level: int) -> void:
+	if scene == null or level <= 0:
 		return
+	# 1: no MSAA (the room's own 3D view, and off-screen views such as inventory icons)
+	if scene.is_inside_tree():
+		scene.get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+	for vp in scene.find_children("*", "SubViewport", true, false):
+		(vp as SubViewport).msaa_3d = Viewport.MSAA_DISABLED
+	if level < 2:
+		return
+	# 2: no positional shadows, reflection probes (the ambient light is raised a little instead) or particles
 	for l in scene.find_children("*", "Light3D", true, false):
 		if l is OmniLight3D or l is SpotLight3D:
 			(l as Light3D).shadow_enabled = false
@@ -130,6 +146,17 @@ func simplify_graphics(scene: Node) -> void:
 	for p in scene.find_children("*", "GPUParticles3D", true, false):
 		(p as GPUParticles3D).emitting = false
 		(p as GPUParticles3D).visible = false
+	if level < 3:
+		return
+	# 3: no decals, glow or directional shadows
+	for d in scene.find_children("*", "Decal", true, false):
+		(d as Decal).visible = false
+	for l in scene.find_children("*", "DirectionalLight3D", true, false):
+		(l as Light3D).shadow_enabled = false
+	for we in scene.find_children("*", "WorldEnvironment", true, false):
+		var env := (we as WorldEnvironment).environment
+		if env != null:
+			env.glow_enabled = false
 
 
 ## Waits until `n` frames have been drawn (just `n` frames where nothing is drawn: headless tests).

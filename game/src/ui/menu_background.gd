@@ -30,7 +30,7 @@ static var _menu_mats: Dictionary = {}
 
 
 func _ready() -> void:
-	var safe := bool(Settings.get_value("safe_graphics"))
+	var safe := CrashGuard.safe_level() >= 2 # no shadow, no dust (CrashGuard levels)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color("050607")

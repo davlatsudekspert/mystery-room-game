@@ -120,6 +120,7 @@ func _ready() -> void:
 	AudioManager.ambience("amb_archive", true, -4.0)
 	if not capture_mode and _fresh_start():
 		hud.call("play_intro")
+	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
 
 
 func _exit_tree() -> void:

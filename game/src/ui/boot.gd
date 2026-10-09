@@ -5,9 +5,7 @@ extends Node
 func _ready() -> void:
 	# the previous session died while loading or first drawing a scene: play on with safe graphics (CrashGuard)
 	CrashGuard.read_previous()
-	if CrashGuard.crashed_while_loading() and not bool(Settings.get_value("safe_graphics")):
-		Settings.set_value("safe_graphics", true)
-		CrashGuard.switched_to_safe = true
+	CrashGuard.switched_to_safe = CrashGuard.update_safe_level()
 	CrashGuard.mark("boot")
 	await get_tree().process_frame
 	if Loc.is_first_launch():

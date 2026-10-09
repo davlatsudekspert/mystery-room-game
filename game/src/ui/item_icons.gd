@@ -21,7 +21,7 @@ func _ready() -> void:
 	_vp.transparent_bg = true
 	_vp.own_world_3d = true
 	_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	_vp.msaa_3d = Viewport.MSAA_4X
+	_vp.msaa_3d = Viewport.MSAA_4X if CrashGuard.safe_level() == 0 else Viewport.MSAA_DISABLED
 	add_child(_vp)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CLEAR_COLOR

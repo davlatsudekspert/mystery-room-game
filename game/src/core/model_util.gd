@@ -22,6 +22,7 @@ static func load_material(slot_name: String) -> Material:
 static func spawn(model: String, parent: Node3D, xform: Transform3D = Transform3D.IDENTITY,
 		colliders: String = "parts") -> Node3D:
 	var path := model if model.begins_with("res://") else "res://assets/models/%s.glb" % model
+	CrashGuard.detail(model.get_file()) # a crash while loading a room then names the model in "last stop"
 	if not ResourceLoader.exists(path):
 		push_warning("Model missing: " + path)
 		return null

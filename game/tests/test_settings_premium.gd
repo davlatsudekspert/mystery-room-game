@@ -149,10 +149,45 @@ func test_safe_graphics_simplify_a_scene() -> void:
 	we.environment.ambient_light_energy = 0.4
 	for n: Node in [omni, spot, sun, probe, dust, we]:
 		scene.add_child(n)
-	SceneManager.simplify_graphics(scene)
-	SceneManager.simplify_graphics(scene) # twice: the ambient boost is applied once
-	check(not omni.shadow_enabled and not spot.shadow_enabled, "no positional shadows")
+	var vp := SubViewport.new()
+	vp.msaa_3d = Viewport.MSAA_4X
+	scene.add_child(vp)
+	var decal := Decal.new()
+	scene.add_child(decal)
+	we.environment.glow_enabled = true
+	SceneManager.simplify_graphics(scene, 1)
+	eq(vp.msaa_3d, Viewport.MSAA_DISABLED, "level 1: no MSAA in off-screen views")
+	check(omni.shadow_enabled and probe.visible and dust.visible, "level 1 keeps shadows, probes and particles")
+	SceneManager.simplify_graphics(scene, 2)
+	SceneManager.simplify_graphics(scene, 2) # twice: the ambient boost is applied once
+	check(not omni.shadow_enabled and not spot.shadow_enabled, "level 2: no positional shadows")
 	check(sun.shadow_enabled and omni.visible and spot.visible, "every light stays; the sun keeps its shadow")
 	check(not probe.visible and not dust.visible, "no reflection probe, no particles")
 	eq(snappedf(we.environment.ambient_light_energy, 0.001), 0.6, "ambient raised once to make up for the probe")
+	check(decal.visible and we.environment.glow_enabled, "level 2 keeps decals and glow")
+	SceneManager.simplify_graphics(scene, 3)
+	check(not decal.visible and not we.environment.glow_enabled and not sun.shadow_enabled, "level 3: no decals, glow or sun shadow")
 	scene.free()
+
+
+## Each crash while loading raises the safe level by one at the next launch, up to the maximum; a new epoch
+## (a build that changes what the levels do) starts again from zero.
+func test_safe_level_escalates() -> void:
+	var keep := [Settings.get_value("safe_graphics"), Settings.get_value("safe_level"), Settings.get_value("safe_epoch")]
+	Settings.set_value("safe_epoch", 0)
+	Settings.set_value("safe_graphics", true)
+	Settings.set_value("safe_level", 3)
+	CrashGuard.previous = ""
+	check(not CrashGuard.update_safe_level(), "no crash: no change")
+	eq(CrashGuard.safe_level(), 0, "a new epoch resets the level and the old automatic switch")
+	CrashGuard.previous = "load:lab7 wall_safe"
+	for expect in [1, 2, 3]:
+		check(CrashGuard.update_safe_level(), "a crash while loading raises the level")
+		eq(CrashGuard.safe_level(), expect, "level after %d crashes" % expect)
+	check(not CrashGuard.update_safe_level(), "never above the maximum")
+	CrashGuard.previous = "play:lab7"
+	check(not CrashGuard.update_safe_level(), "a crash during play does not change the graphics")
+	CrashGuard.previous = ""
+	Settings.set_value("safe_graphics", keep[0])
+	Settings.set_value("safe_level", keep[1])
+	Settings.set_value("safe_epoch", keep[2])

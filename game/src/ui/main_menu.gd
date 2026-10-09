@@ -109,8 +109,8 @@ func _version_text() -> String:
 		ver += "  ·  %s %s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_current_rendering_method()]
 		if CrashGuard.previous != "":
 			ver += "  ·  last stop: " + CrashGuard.previous # where the previous session ended without a clean pause
-		if bool(Settings.get_value("safe_graphics")):
-			ver += "  ·  safe"
+		if CrashGuard.safe_level() > 0:
+			ver += "  ·  safe %d" % CrashGuard.safe_level()
 	return ver
 
 
