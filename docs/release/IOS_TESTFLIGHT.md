@@ -7,7 +7,8 @@
   - Avval ubuntu'da arzon tekshiruvlar oʻtadi: App Store Connect tekshiruvi, testlar, Godot eksporti va loyiha tekshiruvi.
   - Keyin macOS'da Xcode 26 bilan imzolangan IPA yigʻiladi.
   - 2026-10-09 da sinab koʻrildi: macOS'da App Store uchun imzolangan IPA muvaffaqiyatli yigʻildi (build 1). U yuklanmadi.
-- **TestFlight'ga yuklash oʻchiq.** Yuklash uchun sizning bir martalik ruxsatingiz kerak. Ruxsat bersangiz, bitta workflow ishga tushiriladi va build yuklanadi. Testerlarni oʻzingiz qoʻshasiz.
+- **2026-10-09: birinchi test build TestFlight'ga yuklandi** (sizning ruxsatingiz bilan). Versiya **0.1.0**, build **2**. Apple uni tekshirib boʻldi: holati **VALID**, yaʼni testga tayyor. Tafsilotlar va keyingi qadamlaringiz pastdagi "TestFlight upload" boʻlimida.
+- Workflow'da yuklash standart holatda **oʻchiq** turadi. Har bir yangi yuklash uchun sizning ruxsatingiz kerak. Testerlarni oʻzingiz qoʻshasiz.
 - Test buildlarda `beta_unlock` yoqilgan: pullik boblar toʻlovsiz ochiladi. App Store'ga chiqariladigan buildda u **oʻchiq** boʻlishi shart.
 - App Store'da oʻzbek tilidagi sahifa (lokalizatsiya) **yoʻq**: Apple roʻyxatida oʻzbek tili mavjud emas. Oʻyinning oʻzi oʻzbekcha toʻliq ishlaydi. Ilova ichida `uz.lproj` bor, shuning uchun App Store sahifasidagi "Tillar" qatorida oʻzbek tili koʻrinishi kutiladi.
 - Sizdan kerak boʻladigan qarorlar: TestFlight'ga yuklashga ruxsat; nom, subtitr, kategoriya, maxfiylik URL, yosh reytingi va App Privacy. Ular pastdagi roʻyxatda.
