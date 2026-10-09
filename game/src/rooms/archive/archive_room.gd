@@ -4,6 +4,9 @@ extends RoomBase
 ## It assembles the room from the models in docs/models/ch2.md, routes taps to ArchiveLogic and lets
 ## ArchiveVisuals render the resulting state. Every visual is derived from logic.state.
 
+## Render layer for meshes the reflection probe must not capture (emissive lamp linings).
+const NO_PROBE_LAYER := 1 << 19
+
 ## model -> [position, yaw degrees (front +Z = 0), hotspot id, collider mode]
 const LAYOUT := {
 	"room_archive": [Vector3.ZERO, 0.0, "", "static"],
@@ -62,7 +65,7 @@ const HOTSPOT_VIEW := {
 	"lockers": "lockers", "station": "station", "chart": "chart", "compressor": "compressor", "desk": "desk",
 	"punch": "punch", "deck": "deck", "vault": "vault", "screen": "screen", "booth_door": "booth_door",
 	"projector": "projector", "splicer": "splicer", "slides": "slides", "slide_projector": "slide_projector",
-	"lens_case": "lens_case", "vault_inside": "vault_inside",
+	"lens_case": "lens_case", "vault_inside": "vault_inside", "aisle": "west",
 }
 const DEEPER := {
 	"catalogue": ["cat_drawer", "cat_section"], "stacks": ["ledger"], "lockers": ["locker9"], "desk": ["punch", "deck"],
@@ -172,6 +175,88 @@ func _build_models() -> void:
 	var dust := DustMotes.create(Vector3(4.5, 1.6, 3.2), 180)
 	dust.position = Vector3(0, 1.7, 0)
 	add_child(dust)
+	_build_aisle_sign()
+
+
+## The card catalogue stands on the west wall, hidden from the hall by the stacks. An enamel sign hangs over the
+## aisle at the corner of the stacks and points the way; tapping it (or the far floor and walls) walks there.
+const AISLE_SIGN_POS := Vector3(-1.05, 2.62, 0.8)
+const WEST_OF_STACKS_X := -1.6 # a tap on the bare room beyond this from the hall walks to the west aisle
+
+
+func _build_aisle_sign() -> void:
+	var sign := Node3D.new()
+	sign.name = "aisle_sign"
+	add_child(sign)
+	# face the hall camera (the plate's front is +Z)
+	sign.look_at_from_position(AISLE_SIGN_POS, Vector3(3.8, AISLE_SIGN_POS.y, 1.8), Vector3.UP, true)
+	sign.scale = Vector3.ONE * 1.25 # readable from the hall on a phone
+	models["aisle_sign"] = sign
+	_roots[sign] = "aisle_sign"
+	sign.set_meta("hotspot", "aisle")
+	var green: Material = load("res://assets/materials/M_Enamel_Green.tres")
+	var cream: Material = load("res://assets/materials/M_Enamel_Cream.tres")
+	var brass: Material = load("res://assets/materials/M_Brass_Aged.tres")
+	var plate := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.82, 0.2, 0.018)
+	plate.mesh = box
+	plate.material_override = green
+	sign.add_child(plate)
+	var rim := MeshInstance3D.new() # a cream border line, as on enamel signs
+	var rim_box := BoxMesh.new()
+	rim_box.size = Vector3(0.79, 0.17, 0.001)
+	rim.mesh = rim_box
+	rim.material_override = cream
+	rim.position = Vector3(0, 0, 0.0095)
+	sign.add_child(rim)
+	var inner := MeshInstance3D.new()
+	var inner_box := BoxMesh.new()
+	inner_box.size = Vector3(0.77, 0.15, 0.001)
+	inner.mesh = inner_box
+	inner.material_override = green
+	inner.position = Vector3(0, 0, 0.0102)
+	sign.add_child(inner)
+	var text := Label3D.new()
+	text.text = "obj2.sign_catalogue"
+	text.font = load(UITheme.FONT_DISPLAY_BOLD)
+	text.font_size = 80
+	text.pixel_size = 0.00075
+	text.modulate = Color("efe6cf")
+	text.outline_size = 0
+	text.position = Vector3(0.045, -0.004, 0.0112)
+	text.double_sided = false
+	sign.add_child(text)
+	# an arrow on the left: round the stacks' south end, into the west aisle
+	var head := MeshInstance3D.new()
+	var prism := PrismMesh.new()
+	prism.size = Vector3(0.06, 0.05, 0.002)
+	head.mesh = prism
+	head.material_override = cream
+	head.rotation = Vector3(0, 0, deg_to_rad(90.0))
+	head.position = Vector3(-0.335, 0, 0.0112)
+	sign.add_child(head)
+	var shaft := MeshInstance3D.new()
+	var shaft_box := BoxMesh.new()
+	shaft_box.size = Vector3(0.045, 0.014, 0.002)
+	shaft.mesh = shaft_box
+	shaft.material_override = cream
+	shaft.position = Vector3(-0.29, 0, 0.0112)
+	sign.add_child(shaft)
+	for side in [-1.0, 1.0]:
+		var chain := MeshInstance3D.new()
+		var rod := CylinderMesh.new()
+		rod.top_radius = 0.004
+		rod.bottom_radius = 0.004
+		rod.height = (3.6 - AISLE_SIGN_POS.y) / 1.25 - 0.1
+		rod.radial_segments = 6
+		chain.mesh = rod
+		chain.material_override = brass
+		chain.position = Vector3(side * 0.34, 0.1 + rod.height / 2.0, 0)
+		sign.add_child(chain)
+	for mi in ModelUtil.find_meshes(sign):
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_tap_area(sign, Vector3(0.9, 0.3, 0.12), "aisle", "IA_aisle_sign")
 
 
 func _prepare_echo(n: Node3D, mat: ShaderMaterial) -> void:
@@ -190,12 +275,27 @@ func _build_lights() -> void:
 		p.omni_attenuation = 1.3
 		var e: Array = EXTRA["pendant_%d" % i]
 		p.position = (e[1] as Vector3) + Vector3(0, -0.85, 0)
-		# One shadowed pendant (over the vault and the stacks) keeps the depth; each extra dual-paraboloid
-		# shadow renders every caster twice more, which phones pay for in every frame.
-		p.shadow_enabled = i == 1
-		p.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
+		p.shadow_enabled = false
+		p.set_meta("base_energy", p.light_energy)
 		add_child(p)
 		lights["pendant_%d" % i] = p
+		if i == 1:
+			# The one shadowed light: the shade throws a downward cone over the vault and the stacks. A spot
+			# shadow is one pass over the casters inside its cone; the omni it replaced rendered a
+			# dual-paraboloid shadow of nearly every caster in the room twice, every frame.
+			p.light_energy = 1.0
+			p.set_meta("base_energy", p.light_energy)
+			var cone := SpotLight3D.new()
+			cone.light_color = p.light_color
+			cone.light_energy = 0.5
+			cone.set_meta("base_energy", cone.light_energy)
+			cone.spot_range = 5.0
+			cone.spot_angle = 58.0
+			cone.spot_angle_attenuation = 0.8
+			cone.shadow_enabled = true
+			add_child(cone)
+			cone.look_at_from_position(p.position, p.position + Vector3(0, -1, 0.001), Vector3.FORWARD)
+			lights["pendant_1_cone"] = cone
 	# Emergency lamps: amber accents low on the walls (two real lights; the rest are emissive glass).
 	for k in 2:
 		var em := OmniLight3D.new()
@@ -249,11 +349,14 @@ func _build_lights() -> void:
 	fill.omni_attenuation = 1.3
 	add_child(fill)
 	lights["focus_fill"] = fill
+	# The interior probe's captured light is also the room's bounce light (most of the walls' brightness). Glowing
+	# lamp linings stay out of it (NO_PROBE_LAYER), or the whole floor brightens.
 	var probe := ReflectionProbe.new()
 	probe.size = Vector3(10, 3.6, 7)
 	probe.position = Vector3(0, 1.8, 0)
 	probe.update_mode = ReflectionProbe.UPDATE_ONCE
 	probe.interior = true
+	probe.cull_mask = ~NO_PROBE_LAYER & 0xFFFFF
 	add_child(probe)
 
 
@@ -339,6 +442,10 @@ func use_target(hs: String, p: String) -> String:
 			return "slide_projector"
 		"screen":
 			return "screen_socket"
+		"booth_door", "aisle":
+			# ways through: with an item in hand the player still walks on
+			if hs == "aisle" or logic.state["booth_open"]:
+				return ""
 		"vault":
 			if p.ends_with("_left") or p == "port_left_mount":
 				return "port_left"
@@ -352,13 +459,24 @@ func _locker_of(p: String) -> int:
 	return int(p.substr(10)) if p.begins_with("IA_locker_") else 0
 
 
-func tap_special(p: String, _r: Dictionary) -> bool:
+func tap_special(p: String, r: Dictionary) -> bool:
 	if p.begins_with("Echo_"):
 		var id := p.substr(5)
 		if not logic.has_method("release_echo"):
 			return false
 		var ev: Array[String] = (logic as ArchiveLogic).release_echo(id)
 		return not ev.has("nothing_happens")
+	# walking: a tap on the bare floor or walls beyond the stacks goes to the west aisle, and back again
+	if str(r.get("hotspot", "")) == "" and cam.is_root():
+		var x: float = (r.get("pos", Vector3.ZERO) as Vector3).x
+		if cam.current() == "hall" and x < WEST_OF_STACKS_X:
+			cam.go("west")
+			AudioManager.ui("ui_tap")
+			return true
+		if cam.current() == "west" and x > 1.2:
+			cam.go("hall")
+			AudioManager.ui("ui_tap")
+			return true
 	return false
 
 
@@ -801,6 +919,7 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("item_pickup")
 			AudioManager.haptic(15)
 			hud.call("message", tr("ui.item_added") % tr(ItemDB.name_key(arg)))
+			visuals.receiver_view(cam.current()) # a reel just taken no longer counts on the receiver
 		"cat_drawer":
 			AudioManager.sfx("drawer_card_slide", -2.0, randf_range(0.95, 1.05))
 			if int(arg) >= 0:
@@ -823,6 +942,12 @@ func _feedback(e: String) -> void:
 			hud.call("message", tr("msg.c2_card_leyla"))
 		"valve":
 			AudioManager.sfx("valve_squeak", -3.0, randf_range(0.9, 1.1))
+			if not l.state["pressure_ok"]:
+				# say what the needles do, so a wrong setting is never silent
+				var t: Array = l.state["v_targets"]
+				hud.call("caption", tr("msg.c2_gauges") % [
+					tr("msg.c2_on_mark" if l.pressure() == int(t[0]) else "msg.c2_off_mark"),
+					tr("msg.c2_on_mark" if l.flow() == int(t[1]) else "msg.c2_off_mark")])
 		"pressure_ok":
 			AudioManager.sfx("compressor_start")
 			hud.call("message", tr("msg.c2_pressure_ok"))
@@ -903,6 +1028,9 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("splicer_click", -2.0, randf_range(0.95, 1.05))
 		"splice_lift":
 			AudioManager.sfx("card_flick", -4.0)
+		"splice_wrong":
+			AudioManager.sfx("splicer_click", -4.0, 0.7)
+			hud.call("message", tr("msg.c2_splice_wrong"))
 		"reel_repaired":
 			AudioManager.sfx("splicer_click", 0.0, 0.8)
 			hud.call("message", tr("msg.c2_reel_repaired"))
@@ -910,6 +1038,8 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("lens_insert", -2.0, 0.8)
 		"projector_on":
 			AudioManager.sfx("film_projector_start")
+		"projector_empty":
+			hud.call("message", tr("msg.c2_projector_empty"))
 		"projector_off":
 			AudioManager.sfx("film_projector_stop")
 			hud.call("message", tr("msg.c2_projector_off"))

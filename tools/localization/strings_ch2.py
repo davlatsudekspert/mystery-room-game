@@ -43,6 +43,7 @@ S = [
 # ---------------------------------------------------------------- places (view captions)
 ("obj2.hall", "Records Archive B", "Архив документов «Б»", "«B» hujjatlar arxivi"),
 ("obj2.catalogue", "Card catalogue — staff 0000–0999", "Картотека — сотрудники 0000–0999", "Kartoteka — xodimlar 0000–0999"),
+("obj2.sign_catalogue", "CARD CATALOGUE", "КАРТОТЕКА", "KARTOTEKA"),
 ("obj2.compressor", "Tube compressor", "Компрессор пневмопочты", "Pnevmatik pochta kompressori"),
 ("obj2.station", "Pneumatic tube station", "Станция пневмопочты", "Pnevmatik pochta stansiyasi"),
 ("obj2.chart", "Routing chart", "Схема маршрутов", "Yoʻnalishlar sxemasi"),
@@ -71,6 +72,9 @@ S = [
 ("msg.c2_card_leyla", "Card 0417: Rahimova, Leyla. Laboratory 7.", "Карточка 0417: Рахимова Лейла. Лаборатория 7.", "0417-kartochka: Rahimova Leyla. 7-laboratoriya."),
 ("msg.c2_pressure_ok", "The compressor wheezes to life. The station lamp turns green.", "Компрессор оживает с хрипом. Лампа станции загорается зелёным.", "Kompressor xirillab ishga tushdi. Stansiya chirogʻi yashil yondi."),
 ("msg.c2_valves_locked", "The valves hold the pressure now.", "Вентили теперь держат давление.", "Endi ventillar bosimni ushlab turibdi."),
+("msg.c2_gauges", "Gauge P: %s.  Gauge F: %s.", "Манометр P: %s.  Манометр F: %s.", "P manometri: %s.  F manometri: %s."),
+("msg.c2_on_mark", "on its green mark", "на зелёной метке", "yashil belgida"),
+("msg.c2_off_mark", "off the mark", "мимо метки", "belgidan tashqarida"),
 ("msg.c2_punch_empty", "The punch is empty. It needs a blank card.", "Перфоратор пуст. Нужен чистый бланк.", "Teshgich boʻsh. Unga boʻsh karta kerak."),
 ("msg.c2_card_punched", "Clack. The card is punched.", "Щёлк. Карта пробита.", "Chiq. Karta teshildi."),
 ("msg.c2_card_returned", "You slip the card back into the tray.", "Вы возвращаете бланк в лоток.", "Kartani laganga qaytardingiz."),
@@ -90,7 +94,9 @@ S = [
 ("msg.c2_dial_wrong", "The dial whirs back. Nothing.", "Диск с жужжанием возвращается. Ничего.", "Disk gʻuvillab qaytdi. Hech narsa."),
 ("msg.c2_booth_open", "The booth door unlatches.", "Дверь кинобудки отщёлкивается.", "Kinobudka eshigi ochildi."),
 ("msg.c2_reel_repaired", "The splices hold. The reel is whole again.", "Склейки держат. Бобина снова цела.", "Yelimlar ushladi. Bobina yana butun."),
+("msg.c2_splice_wrong", "All four strips are in, but the shadows jump from frame to frame. The order is wrong.", "Все четыре полоски вклеены, но тени скачут от кадра к кадру. Порядок неверный.", "Toʻrtala tasma ham yopishtirildi, lekin soyalar kadrdan kadrga sakraydi. Tartib notoʻgʻri."),
 ("msg.c2_projector_off", "The projector lamp goes dark.", "Лампа проектора гаснет.", "Proyektor chirogʻi oʻchdi."),
+("msg.c2_projector_empty", "The lamp throws a blank white square onto the screen. There is no film in the gate.", "Лампа бросает на экран пустой белый квадрат. В проекторе нет плёнки.", "Chiroq ekranga boʻm-boʻsh oq toʻrtburchak tushirdi. Proyektorda plyonka yoʻq."),
 ("msg.c2_blurred", "The picture is blurred.", "Изображение размыто.", "Tasvir xira."),
 ("msg.c2_recorded_sign", "The crystal flares. It keeps her sign now.", "Кристалл вспыхивает. Теперь в нём её знак.", "Billur chaqnadi. Endi unda uning belgisi saqlanadi."),
 ("msg.c2_recorded_mark", "The crystal flares. It keeps Strand's mark now.", "Кристалл вспыхивает. Теперь в нём знак Странда.", "Billur chaqnadi. Endi unda Strand belgisi saqlanadi."),
@@ -142,7 +148,7 @@ S = [
 
 H = {
 "c2_catalogue": [
-    ("Leyla's badge carries a number.", "На пропуске Лейлы есть номер.", "Leylaning nishonida raqam bor."),
+    ("Leyla's badge carries a number. The card catalogue stands on the west wall, past the stacks.", "На пропуске Лейлы есть номер. Картотека стоит у западной стены, за стеллажами.", "Leylaning nishonida raqam bor. Kartoteka gʻarbiy devor yonida, javonlar ortida."),
     ("The catalogue drawers are numbered by the first two digits.", "Ящики картотеки пронумерованы по первым двум цифрам.", "Kartoteka tortmalari dastlabki ikki raqam boʻyicha raqamlangan."),
     ("Drawer 04, divider 1–, card 17.", "Ящик 04, разделитель 1–, карточка 17.", "04-tortma, 1– ajratgich, 17-kartochka."),
 ],

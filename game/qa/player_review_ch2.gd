@@ -114,10 +114,34 @@ func _process(_delta: float) -> void:
 			feed.append({"kind": "title", "text": tr(top.text)})
 
 
+## How visible a HUD label really is: its own alpha times every parent's (messages may fade a plate around them).
+func _seen_alpha(c: Control) -> float:
+	if c == null or not is_instance_valid(c) or not c.is_visible_in_tree():
+		return 0.0
+	var a := 1.0
+	var root: Node = hud.get("_root")
+	var n: Node = c
+	while n != null and n is CanvasItem:
+		a *= (n as CanvasItem).modulate.a
+		if n == root:
+			break
+		n = n.get_parent()
+	return a
+
+
+## The node the HUD fades in and out for this label: the label itself or the plate holding it.
+func _fader(c: Control) -> Control:
+	var root: Node = hud.get("_root")
+	var n: Control = c
+	while n.get_parent() != null and n.get_parent() != root and n.get_parent() is Control:
+		n = n.get_parent() as Control
+	return n
+
+
 func _poll(kind: String, l: Label) -> void:
 	if l == null:
 		return
-	var vis := l.modulate.a > 0.05 and l.text != ""
+	var vis := _seen_alpha(l) > 0.05 and l.text != ""
 	if vis and (not bool(_was_vis[kind]) or l.text != str(_last_txt[kind])):
 		feed.append({"kind": kind, "text": l.text})
 	_was_vis[kind] = vis
@@ -129,7 +153,7 @@ func mark() -> int:
 	for k: String in ["_message", "_caption_line"]:
 		var l := hud.get(k) as Label
 		if l:
-			l.modulate.a = 0.0
+			_fader(l).modulate.a = 0.0
 	_was_vis["message"] = false
 	_was_vis["caption"] = false
 	return feed.size()
@@ -747,18 +771,20 @@ func hud_layout_check(where: String) -> void:
 	var inv := hud.get("_inv_panel") as Control
 	var top := hud.get("_top_caption") as Label
 	var cap := hud.get("_caption_line") as Label
-	if msg and msg.modulate.a > 0.05 and inv and inv.is_visible_in_tree() and msg.get_global_rect().intersects(inv.get_global_rect()):
+	if msg and _seen_alpha(msg) > 0.05 and inv and inv.is_visible_in_tree() and _fader(msg).get_global_rect().intersects(inv.get_global_rect()):
 		check("layout %s: the message «%s» overlaps the inventory bar" % [where, msg.text.substr(0, 40)], false)
 	if top and top.text != "" and top.get_line_count() > 1:
 		note("  ! layout %s: the title «%s» wraps to %d lines" % [where, tr(top.text), top.get_line_count()])
-		if cap and cap.modulate.a > 0.05 and top.get_global_rect().intersects(cap.get_global_rect()):
+		if cap and _seen_alpha(cap) > 0.05 and _fader(top).get_global_rect().intersects(_fader(cap).get_global_rect()):
 			check("layout %s: the wrapped title overlaps the caption line" % where, false)
 
 
-func _layout_walk(n: Node, vr: Rect2, issues: Array[String]) -> void:
+func _layout_walk(n: Node, vr: Rect2, issues: Array[String], alpha: float = 1.0) -> void:
 	if n is CanvasItem and not (n as CanvasItem).is_visible_in_tree():
 		return
-	if (n is Label or n is Button) and (n as Control).modulate.a > 0.05:
+	if n is CanvasItem:
+		alpha *= (n as CanvasItem).modulate.a
+	if (n is Label or n is Button) and alpha > 0.05:
 		var c := n as Control
 		var text := c.atr(str(c.get("text")))
 		if text.strip_edges() != "":
@@ -796,7 +822,7 @@ func _layout_walk(n: Node, vr: Rect2, issues: Array[String]) -> void:
 			if missing != "":
 				issues.append("«%s» uses characters missing from its font: %s" % [short, missing])
 	for ch in n.get_children():
-		_layout_walk(ch, vr, issues)
+		_layout_walk(ch, vr, issues, alpha)
 
 
 func _panel_of(c: Control) -> Control:
@@ -939,26 +965,45 @@ func intro() -> void:
 	await _settle(1.0)
 	await shot("intro_card2")
 	note("  card 2 on screen: «%s» (card 1 stayed %.1f s)" % [_intro_text(o), 1.4 + t])
-	# a first-time player taps to move on
+	# a first-time player taps to move on. On a phone a tap arrives as a touch plus the mouse click Godot emulates
+	# from it (input_devices/pointing/emulate_mouse_from_touch); push the touch first, then the click if needed.
 	var tap_ms := Time.get_ticks_msec()
+	var centre := get_viewport().get_visible_rect().get_center()
+	var lbl_alpha := func() -> float:
+		for c in o.get_children():
+			if c is Label and (c as Label).text == tr("intro2.2"):
+				return (c as Label).modulate.a
+		return 0.0
 	for pressed in [true, false]:
 		var ev := InputEventScreenTouch.new()
-		ev.position = get_viewport().get_visible_rect().get_center()
+		ev.position = centre
 		ev.pressed = pressed
 		get_viewport().push_input(ev, true)
+	await _settle(0.8)
+	var by_touch: bool = float(lbl_alpha.call()) < 0.9
+	if not by_touch:
+		for pressed in [true, false]:
+			var mb := InputEventMouseButton.new()
+			mb.button_index = MOUSE_BUTTON_LEFT
+			mb.position = centre
+			mb.pressed = pressed
+			get_viewport().push_input(mb, true)
+	note("    (the card reacted to the %s)" % ("touch event" if by_touch else "emulated mouse click; the bare touch event did not end it"))
 	var slam_alpha := -1.0
 	var slam_view := ""
 	t = 0.0
 	while t < 12.0:
 		var m := hud.get("_message") as Label
-		if m.modulate.a > 0.05 and m.text == tr("msg.c2_shutter"):
+		if _seen_alpha(m) > 0.05 and m.text == tr("msg.c2_shutter"):
 			slam_alpha = o.color.a if is_instance_valid(o) else 0.0
 			slam_view = view_id()
 			break
 		await get_tree().process_frame
 		t += get_process_delta_time()
 	var dt := (Time.get_ticks_msec() - tap_ms) / 1000.0
+	var back_seen := (hud.get("_back_btn") as Control).visible and bool(hud.get("_busy"))
 	await shot("intro_shutter_slam")
+	check("no Back button while the intro still holds the input (shutter shot)", not back_seen)
 	check("tap to continue ends card 2 early (the slam comes %.1f s after the tap)" % dt, slam_alpha >= 0.0 and dt < 4.0)
 	note("  the shutter slams: message «%s», view «%s», title «%s»; the black intro screen is still %d%% opaque" % [
 		tr("msg.c2_shutter"), slam_view, title(), int(maxf(slam_alpha, 0.0) * 100.0)])
@@ -1065,14 +1110,54 @@ func read_doc(id: String, tag: String, expect_tex: String = "") -> void:
 
 
 # ====================================================================== 2. explore from the hall
-const EXPLORE := [["catalogue", "card_catalogue"], ["compressor", "compressor_panel"], ["tube station", "tube_station"],
+const EXPLORE := [["aisle sign", "aisle_sign"], ["catalogue", "card_catalogue"], ["compressor", "compressor_panel"], ["tube station", "tube_station"],
 	["routing chart", "routing_chart"], ["archivist's desk", "archivist_desk"], ["lockers", "lockers"],
 	["stacks", "stacks_shelving"], ["reading table", "reading_table"], ["floor hatch", "floor_hatch"],
 	["vent grille", "vent_grille"], ["booth door", "booth_door"], ["vault", "vault_door"], ["projection screen", "projection_screen"]]
 
 
+var view_model: Dictionary = {} # view -> the model whose tap from the hall opens it
+var route: Dictionary = {} # model -> a view reachable from the hall from which the model can be tapped
+
+
+## For an object the hall cannot show: from which views a player can reach would it be visible and tappable?
+## (A probe: the camera is placed in each view directly, nothing is tapped.)
+func probe_visibility(id: String) -> void:
+	var found: Array[String] = []
+	var skip := ["hall", "tubes", "film", "vault_mouth", "shutter", "cat_drawer", "cat_section", "vault_inside"]
+	if not view_model.has("west"):
+		skip.append("west") # only QA scripts could go there
+	for v: String in cam().views:
+		if skip.has(v):
+			continue
+		cam().go(v, true)
+		await _settle(0.15)
+		var a := _target_area(id)
+		if float(a["area"]) > 400.0:
+			found.append("%s (%d px²)" % [v, int(a["area"])])
+			if not route.has(id) and view_model.has(v):
+				route[id] = v
+	cam().go("hall", true)
+	await _settle(0.3)
+	note("  probe: %s is visible and tappable from: %s" % [id, ", ".join(found) if not found.is_empty() else "no view at all"])
+	if route.has(id):
+		note("  → a player can reach it through the «%s» view (opened from the hall by tapping %s)" % [route[id], view_model[route[id]]])
+	else:
+		note("  → no view that the hall leads to shows it")
+
+
+## Open an object's view the way a player can: from the hall, or through the view that shows it.
+func open_obj(model_id: String, expect: String) -> bool:
+	if not route.has(model_id):
+		return await open_from("hall", model_id, expect, false)
+	var via: String = route[model_id]
+	await open_from("hall", str(view_model[via]), via)
+	return await nav("tap the %s seen from «%s»" % [model_id, via], model_id, "", expect)
+
+
 func explore() -> void:
 	note("== Explore from the hall: look at each main object and tap it")
+	var failed: Array[String] = []
 	for e: Array in EXPLORE:
 		var label: String = e[0]
 		var id: String = e[1]
@@ -1095,8 +1180,17 @@ func explore() -> void:
 			"; " + heard(since) if heard(since) != "" else ""])
 		if side < 70.0:
 			note("  ! small target from the hall: the %s is about %d px square (screen 1920×1080)" % [label, int(side)])
-		check("tapping the %s from the hall opens its own view «%s» with a title" % [label, expect], ok and title() != "")
+		if ok:
+			check("tapping the %s from the hall opens its own view «%s» with a title" % [label, expect], title() != "")
+			view_model[expect] = id
+		else:
+			note("  ! the %s cannot be tapped from the hall" % label)
+			failed.append(id)
 	await to_hall()
+	for id in failed:
+		await probe_visibility(id)
+		# hidden from the hall is fine when a player can walk to a view that shows it
+		check("a player can reach the %s (from the hall or through a view the hall leads to)" % id, route.has(id))
 
 
 # ====================================================================== 3. wrong attempts before any progress
@@ -1152,7 +1246,8 @@ func p1_catalogue() -> void:
 	var dr := int(_k("CAT_DRAWER", 4))
 	var gr := int(_k("CAT_GROUP", 1))
 	var cd := int(_k("CAT_CARD", 7))
-	await open_from("hall", "card_catalogue", "catalogue")
+	if not await open_obj("card_catalogue", "catalogue"):
+		note("✗ P1 cannot start: no tap a player can make opens the card catalogue (the camera was moved there to go on)")
 	await shot("catalogue")
 	await act("drawer 0%d" % dr, "card_catalogue", "IA_cat_drawer_%d" % dr, func() -> bool: return int(s["cat_drawer"]) == dr,
 		func() -> void: logic.open_cat_drawer(dr))
@@ -1439,7 +1534,10 @@ func p6_hunt() -> void:
 	await shot("grille_open")
 	await act("take reel 1996", "vent_grille", "Item_grille_reel", func() -> bool: return logic.has_item("tape_1996"),
 		func() -> void: logic.take("grille_reel"))
-	note("  meter after taking it: %d/5" % _meter())
+	await _settle(0.6)
+	var left := logic.receiver_strength(view_id())
+	check("the receiver meter drops once the grille reel is taken (shows %d/5, the reels still hidden give %d/5 here)" % [_meter(), left],
+		_meter() == left)
 	await open_from("hall", "stacks_shelving", "stacks")
 	note("  meter at the stacks: %d/5" % _meter())
 	await nav("the hollow ledger", "stacks_shelving", "IA_ledger", "ledger")
@@ -1543,16 +1641,21 @@ func p9_splice() -> void:
 	check("a wrong order leaves the reel torn", not s["reel_repaired"])
 	var order: Array = _ask("splice_order", [2, 0, 3, 1])
 	since = mark()
+	var noted_placed := false
 	for slot in 4:
 		var f := int(order[slot])
 		if int(s["splice"][slot]) == f:
 			continue
+		var at := (s["splice"] as Array).find(f)
+		if at >= 0:
+			# a strip lying in a slot: a tap on it lands on the slot, which lifts it back to the bench
+			if not noted_placed:
+				noted_placed = true
+				note("    a tap aimed at strip %d lying in slot %d hits %s" % [f, at + 1, _hit("film_splicer", "IA_frame_%d" % f, Vector2.ZERO, [])])
+			await act("lift strip %d out of slot %d (tap the slot)" % [f, at + 1], "film_splicer", "IA_slot_%d" % at,
+				func() -> bool: return int(s["splice"][at]) != f, func() -> void: logic.splice_lift(at))
 		await act("pick strip %d" % f, "film_splicer", "IA_frame_%d" % f, func() -> bool: return int(room.get("_held_frame")) == f,
-			func() -> void:
-				var at := (s["splice"] as Array).find(f)
-				if at >= 0:
-					logic.splice_lift(at)
-				room.set("_held_frame", f))
+			func() -> void: room.set("_held_frame", f))
 		await act("strip %d into slot %d" % [f, slot + 1], "film_splicer", "IA_slot_%d" % slot, func() -> bool: return int(s["splice"][slot]) == f,
 			func() -> void: logic.splice_put(f, slot))
 	await _settle(0.8)

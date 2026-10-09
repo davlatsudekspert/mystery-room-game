@@ -555,6 +555,8 @@ func splice_put(frame: int, slot: int) -> Array[String]:
 		state["reel_repaired"] = true
 		_emit("reel_repaired")
 		_emit("solved:splice")
+	elif not sp.has(-1):
+		_emit("splice_wrong") # all four strips are in, in the wrong order
 	return _end()
 
 
@@ -576,6 +578,8 @@ func toggle_projector() -> Array[String]:
 		return _end()
 	state["projector_on"] = not state["projector_on"]
 	_emit("projector_on" if state["projector_on"] else "projector_off")
+	if state["projector_on"] and not state["reel_on_projector"]:
+		_emit("projector_empty")
 	_maybe_start_film()
 	_check_record()
 	return _end()

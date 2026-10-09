@@ -81,6 +81,9 @@ func _run() -> void:
 		cam.go(v, true)
 		await _settle(0.9)
 		if perf_only:
+			# the room's reflection probe captures over several frames, and the software renderer runs at a few
+			# frames per second: wait for it, or the shot shows the room darker than any phone would
+			await _settle(2.5)
 			await RenderingServer.frame_post_draw
 			lines.append("perf[%s]: draw calls %d, primitives %d, objects %d" % [v,
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),

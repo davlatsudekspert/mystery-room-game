@@ -643,6 +643,7 @@ func _apply_lights(animated: bool) -> void:
 	_lamp(part("room_archive", "booth_bulb"), s["booth_open"], Color("ffcf94"))
 	for i in 6:
 		_lamp(part("pendant_%d" % i, "bulb"), true, Color("ffc58a"))
+		_shade_glow(model("pendant_%d" % i))
 	_lamp(part("reading_table", "bulb"), true, Color("ffd29a"))
 	for k in 10:
 		_lamp(part("room_archive", "elamp_glass_%d" % k), true, Color("ff9a3c"))
@@ -868,10 +869,13 @@ func _travel(n: Node3D, curve: Curve3D, seconds: float, ease_in: bool) -> void:
 # ====================================================================== film cinematic
 func dim_for_film(on: bool) -> void:
 	var L: Dictionary = room.get("lights")
-	for i in 6:
-		var p: OmniLight3D = L.get("pendant_%d" % i)
-		if p:
-			room.create_tween().tween_property(p, "light_energy", 0.18 if on else 1.25, 1.6)
+	for key: String in L:
+		var p := L[key] as Light3D
+		if key.begins_with("pendant_") and p:
+			var base: float = p.get_meta("base_energy", 1.25)
+			room.create_tween().tween_property(p, "light_energy", base * 0.15 if on else base, 1.6)
+	for m in _shade_mats:
+		room.create_tween().tween_property(m, "emission_energy_multiplier", SHADE_GLOW * 0.15 if on else SHADE_GLOW, 1.6)
 	var env: Environment = room.get("env")
 	if env:
 		room.create_tween().tween_property(env, "ambient_light_energy", 0.25 if on else 0.5, 1.6)
@@ -1006,6 +1010,30 @@ func _to(n: Node3D, target: Transform3D, animated: bool, dur: float) -> void:
 func _lamp(n: Node3D, on: bool, color: Color) -> void:
 	if n is MeshInstance3D:
 		ModelUtil.set_emission(n as MeshInstance3D, on, color, 3.0)
+
+
+const SHADE_GLOW := 0.55
+var _shade_mats: Array[BaseMaterial3D] = []
+
+
+## A lit pendant's white enamel lining glows softly from its bulb, whichever room lights reach it.
+func _shade_glow(n: Node3D) -> void:
+	if n == null or n.has_meta("shade_glow"):
+		return
+	n.set_meta("shade_glow", true)
+	for mi in ModelUtil.find_meshes(n):
+		for i in mi.mesh.get_surface_count():
+			var m := mi.get_active_material(i) as BaseMaterial3D
+			if m != null and m.resource_path.ends_with("M_Enamel_White.tres"):
+				var u := m.duplicate() as BaseMaterial3D
+				u.emission_enabled = true
+				u.emission = Color("ffc58a")
+				u.emission_energy_multiplier = SHADE_GLOW
+				mi.set_surface_override_material(i, u)
+				_shade_mats.append(u)
+				# kept out of the room's reflection probe: a glowing lining in the captured radiance brightened
+				# the whole floor's ambient light (ArchiveRoom.NO_PROBE_LAYER)
+				mi.layers = ArchiveRoom.NO_PROBE_LAYER
 
 
 func _glow(n: Node3D, on: bool) -> void:
