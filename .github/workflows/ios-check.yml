@@ -1,0 +1,31 @@
+# MYSTERY ROOM — read-only App Store Connect check (ubuntu, ~1 min; manual trigger only).
+# Every API call is a GET (tools/ios/asc_check.py): nothing is created or changed in App Store Connect.
+# It prints only MYSTERY ROOM records (apps named "Mystery Room…" or with a mysteryroom bundle id) and never
+# prints the JWT, the key id, the issuer id or the team id. Results also go to the run's job summary.
+name: iOS App Store Connect check (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  asc-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install PyJWT
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "PyJWT==2.10.1" "cryptography==44.0.2"
+
+      - name: Read-only App Store Connect check
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        run: '"$RUNNER_TEMP/venv/bin/python" tools/ios/asc_check.py --bundle-id com.mysteryroom.forgotteninstitute'
