@@ -415,10 +415,10 @@ def main():
             H.contact_report(f"{o.name} right-hand grip", o, pts[o.name])
     for o in objs:
         # desk front: 0.22 ahead at op_mount_<n>, 0.07 ahead at op_mount_knob (Godot +Z = Blender -Y here)
-        low = [o.matrix_world @ v.co for v in o.data.vertices if (o.matrix_world @ v.co).z < 0.86]
+        low = [o.matrix_world @ v.co for v in o.data.vertices if (o.matrix_world @ v.co).z < 0.82]
         front = max(-p.y for p in low)
         toes = max(-p.y for p in low if p.z < 0.12)
-        print(f"[echo3] {o.name}: below the desk top (y < 0.86) the figure reaches z = {front:+.3f} "
+        print(f"[echo3] {o.name}: below y 0.82 (the desk top is 0.86) the figure reaches z = {front:+.3f} "
               f"(toes {toes:+.3f}); desk front at +0.22 (levers) / +0.07 (knob)")
     path = mrlib.export_glb(NAME)
     H.verify(path, {o.name: POSE_BUDGET for o in objs}, file_budget=FILE_BUDGET)
