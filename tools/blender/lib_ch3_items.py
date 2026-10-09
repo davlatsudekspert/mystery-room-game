@@ -216,6 +216,9 @@ COLLAR_TOP = 0.0065
 
 
 # ---------------------------------------------------------------- pipeline
+POINTS: dict = {}            # QA_pt_<name> empties of the current build (Blender, after recentring)
+
+
 def tidy_mesh_names() -> None:
     """Drop orphan mesh data left by joins and give every mesh its object's name (the GLB mesh names)."""
     for me in [m for m in bpy.data.meshes if m.users == 0]:
@@ -241,6 +244,11 @@ def item_main(name: str, build_fn, shots=(), post=None, required=(), budget: int
     meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     com = D.recentre(roots, com_fn() if com_fn else D.centre_of_mass(meshes))
     print(f"[items3] {name}: centre of mass moved to origin (was {tuple(round(c, 4) for c in com)})")
+    POINTS.clear()
+    M.refresh()
+    for o in [o for o in bpy.context.scene.objects if o.name.startswith("QA_pt_")]:
+        POINTS[o.name[6:]] = o.matrix_world.translation.copy()       # report points, never exported
+        bpy.data.objects.remove(o, do_unlink=True)
     tidy_mesh_names()
     path = D.export(name)
     D.describe(name)
@@ -279,3 +287,109 @@ def report_point(label: str, obj_name: str | None = None, point=None) -> None:
 
 def mat_x(deg: float) -> Matrix:
     return Matrix.Rotation(math.radians(deg), 4, "X")
+
+
+# ---------------------------------------------------------------- Castell isolator keys (key_diamond ... key_square)
+KEY_LEN = 0.085            # bow top -> blade tip
+KEY_BOW_W = 0.034          # every bow is 34 mm across
+KEY_BOW_T = 0.0030         # bow plate thickness
+KEY_SHANK_R = 0.0060       # round shank Ø 12 mm
+KEY_NECK = 0.0040          # neck between the bow and the collar
+KEY_COLLAR = 0.0030
+KEY_HOLE_R = 0.0016        # hanging hole Ø 3.2 mm
+# per bow: (symbol height for a 34 mm width, emboss height, emboss centre dy, hole centre dy from the bow top,
+#           corner radius) -- dy measured in Blender +Y (= toward the bow top)
+KEY_BOWS = {
+    "diamond": (KEY_BOW_W, 0.0140, -0.0020, 0.0070, 0.0026),
+    "triangle": (KEY_BOW_W * math.sqrt(3.0) / 2.0, 0.0110, -0.0031, 0.0085, 0.0026),
+    "circle": (KEY_BOW_W, 0.0150, -0.0025, 0.0055, 0.0),
+    "square": (KEY_BOW_W, 0.0150, -0.0030, 0.0055, 0.0030),
+}
+
+
+def castell_key(kind: str, name: str):
+    """A Castell-style trapped-key interlock key lying flat (hero face up = Blender +Z), the bow toward Blender +Y
+    (Godot -Z), the blade toward Blender -Y (Godot +Z). Bow: a 3 mm brass plate shaped like the symbol (from
+    lib_ch3_symbols, corners rounded), 34 mm across, the same symbol embossed (0.8 mm relief) on its face and a
+    Ø 3.2 mm hanging hole near its top. Then a turned neck and collar, a round brass shank Ø 12 mm with a
+    chamfered tip, and a flat dark-steel bit with two code cuts sticking out toward +X along the shank's end.
+    Returns (root, info): root = the brass key (bow, emboss, shank), child `key_bit` (M_Steel_Dark);
+    info holds Blender points: hole centre, collar face (where a lock face stops it), blade tip."""
+    S = symbols()
+    if S is None:
+        raise RuntimeError("lib_ch3_symbols is not available: pull origin main first")
+    h, he, edy, hdy, cr = KEY_BOWS[kind]
+    outline = S.shapes(kind, h)[0][0]
+    if cr > 0:
+        outline = rounded_poly(outline, cr, 4)
+        w = max(p[0] for p in outline) - min(p[0] for p in outline)
+        outline = scale_loop(outline, KEY_BOW_W / w)        # rounding shrinks it: back to 34 mm across
+    y0, y1 = min(p[1] for p in outline), max(p[1] for p in outline)
+    bow_h = y1 - y0
+    # bow top at Blender y = 0, the blade toward -y
+    outline = [(x, y - y1) for (x, y) in outline]
+    yc = -bow_h / 2
+    if kind == "triangle":
+        yc = -bow_h + bow_h / 3.0                      # incircle centre
+    hole = L.circle(KEY_HOLE_R, 12, cx=0.0, cy=-hdy)
+    bow = plate_xy(name, [outline, hole], KEY_BOW_T, -KEY_BOW_T / 2, "M_Brass_Aged", bevel=0.0006)
+    emb = S.inlay("emboss", kind, he, depth=0.0008, mat="M_Brass_Aged", bevel=0.0003)
+    ecx = 0.0
+    ecy = yc + edy
+    if kind == "triangle":                             # the emboss's incircle centre on the bow's
+        ecy = yc + he / 6.0
+    emb.data.transform(Matrix.Translation((ecx, ecy, KEY_BOW_T / 2 - 0.00005)))
+    # neck, collar and shank along -Y
+    yb = -bow_h                                        # bow bottom
+    tip = -KEY_LEN
+    r = KEY_SHANK_R
+    prof = [(0.0, -0.0030), (0.0040, -0.0030), (0.0045, 0.0), (0.0045, KEY_NECK - 0.0008),
+            (0.0060, KEY_NECK), (0.0072, KEY_NECK + 0.0006), (0.0072, KEY_NECK + KEY_COLLAR - 0.0006),
+            (0.0066, KEY_NECK + KEY_COLLAR), (r, KEY_NECK + KEY_COLLAR + 0.0004),
+            (r, -tip + yb - 0.0018), (r - 0.0014, -tip + yb), (0.0, -tip + yb)]
+    shank = D.revolve("shank", prof, direction=(0, -1, 0), loc=(0, yb, 0), segments=16, mat="M_Brass_Aged",
+                      up_hint=(0, 0, 1))
+    # the flat steel bit: along the last 22 mm of the shank, out to x = 13 mm, two code cuts
+    b0, b1 = tip + 0.0025, tip + 0.0245
+    xo = r + 0.0068
+    pts = [(r - 0.0015, b0), (xo, b0), (xo, b0 + 0.0050), (xo - 0.0030, b0 + 0.0050), (xo - 0.0030, b0 + 0.0085),
+           (xo, b0 + 0.0085), (xo, b0 + 0.0140), (xo - 0.0045, b0 + 0.0140), (xo - 0.0045, b0 + 0.0170),
+           (xo, b0 + 0.0170), (xo, b1 - 0.0015), (xo - 0.0015, b1), (r - 0.0015, b1)]
+    bit = plate_xy("key_bit", [pts], 0.0024, -0.0012, "M_Steel_Dark", bevel=0.0003)
+    root = M.join([bow, emb, shank], name)
+    M.set_parent(bit, root)
+    info = {"hole": Vector((0.0, -hdy, 0.0)), "collar": Vector((0.0, yb - KEY_NECK - KEY_COLLAR, 0.0)),
+            "tip": Vector((0.0, tip, 0.0)), "bow_top": Vector((0.0, 0.0, 0.0)), "bow_h": bow_h}
+    return root, info
+
+
+def key_item(kind: str) -> None:
+    """Build, export and QA one isolator key (key_<kind>.glb)."""
+    name = f"key_{kind}"
+    INFO.clear()
+
+    def build():
+        root, info = castell_key(kind, name)
+        INFO.update(info)
+        # empties only for the report (removed before export)
+        for k in ("hole", "collar", "tip"):
+            M.empty(f"QA_pt_{k}", loc=tuple(info[k]))
+        return [root]
+
+    def post():
+        D.resmooth(bpy.data.objects[name], 32.0)
+
+    def report():
+        for k, p in POINTS.items():
+            g = godot(p)
+            hang = (g[0], round(-g[2], 4), g[1])          # Basis(X, +90 deg): (x, y, z) -> (x, -z, y)
+            print(f"[items3] key {k}: natural pose godot {g}; hanging (mount basis +90 deg about X) {hang}")
+        print(f"[items3] key bow height {INFO['bow_h']:.4f}")
+
+    item_main(name, build, post=post, required=("key_bit",), budget=1200, extra_report=report, shots=[
+        ("", (0.05, -0.12, 0.13), (0.0, 0.0, 0.0), 50),
+        ("_2", C.inspect_cam(0.22), (0.0, -0.002, 0.0), 50),
+    ])
+
+
+INFO: dict = {}
