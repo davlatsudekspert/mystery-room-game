@@ -7,6 +7,7 @@ extends Node
 ## Run: xvfb-run -a godot --path game res://qa/tap_map.tscn -- --chapter=ch2 --views=cat_drawer,splicer --out=<dir>
 ##        [--steps=N] (solver steps first) [--do=open_cat_drawer:4,pick_divider:1] (logic calls with int args)
 ##        [--until=booth_open] (solver steps until that state key is true) [--lens=take|leave]
+##        [--perf] (no tap marks: log draw calls / primitives / objects per view instead)
 ## Writes <view>.png and tap_map.txt (one line per orange or red part).
 
 var out_dir := "/tmp/tap_map"
@@ -70,11 +71,19 @@ func _run() -> void:
 	get_tree().root.add_child(room)
 	await _settle(1.5)
 	var cam: RoomCamera = room.get("cam")
+	var perf_only := OS.get_cmdline_user_args().has("--perf")
 	for v in views:
 		if room.has_method("prepare_view"):
 			room.call("prepare_view", v)
 		cam.go(v, true)
 		await _settle(0.9)
+		if perf_only:
+			await RenderingServer.frame_post_draw
+			lines.append("perf[%s]: draw calls %d, primitives %d, objects %d" % [v,
+				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
+				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
+				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)])
+			continue
 		await _map(v)
 	var f := FileAccess.open(out_dir + "/tap_map.txt", FileAccess.WRITE)
 	f.store_string("\n".join(lines) + "\n")

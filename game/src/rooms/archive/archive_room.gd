@@ -147,6 +147,12 @@ func _build_models() -> void:
 	for id: String in EXTRA:
 		var e: Array = EXTRA[id]
 		spawn(id, e[0], e[1], e[2], e[3], "parts" if e[3] != "" else "none")
+	# The shell's outer walls, ceiling and trim enclose every light, so their shadows are never seen:
+	# skipping them saves the shadow pass a few thousand triangles on every frame.
+	for mi in ModelUtil.find_meshes(models.get("room_archive")):
+		var nm := str(mi.name)
+		if nm.begins_with("wall_") or nm in ["ceiling", "trim", "corridor", "wall_dressing"]:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var echo_mat := ShaderMaterial.new()
 	echo_mat.shader = load("res://src/fx/echo.gdshader")
 	for id: String in ECHO_FIGURES:
@@ -181,7 +187,9 @@ func _build_lights() -> void:
 		p.omni_attenuation = 1.3
 		var e: Array = EXTRA["pendant_%d" % i]
 		p.position = (e[1] as Vector3) + Vector3(0, -0.85, 0)
-		p.shadow_enabled = i == 1 or i == 4
+		# One shadowed pendant (over the vault and the stacks) keeps the depth; each extra dual-paraboloid
+		# shadow renders every caster twice more, which phones pay for in every frame.
+		p.shadow_enabled = i == 1
 		p.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
 		add_child(p)
 		lights["pendant_%d" % i] = p

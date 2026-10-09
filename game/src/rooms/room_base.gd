@@ -10,7 +10,7 @@ extends Node3D
 ## (Chapter 1's Lab7Room predates this class and keeps its own copy of the same code.)
 
 ## Small props don't cast shadows: they are barely visible, and every caster costs a shadow pass on phones.
-const SMALL_CASTER_M := 0.3
+const SMALL_CASTER_M := 0.45
 ## A smaller interactive part wins over a bigger one if it lies at most this far behind the first hit.
 const DEPTH_WINDOW_M := 0.18
 
