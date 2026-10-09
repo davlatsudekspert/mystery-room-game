@@ -2,3 +2,4 @@
 echo_operator.py
 echo_technicians.py
 echo_welder.py
+echo_strand_rail.py
