@@ -106,6 +106,8 @@ func _ready() -> void:
 	add_child(PerfGuard.new())
 	GameState.events.connect(_on_events)
 	visuals.apply_state(false)
+	DecalLoc.apply(self)
+	Loc.language_changed.connect(_on_language_changed)
 	cam.go("hall", true)
 	AudioManager.music("music_archive", 4.0)
 	AudioManager.ambience("amb_archive", true, -4.0)
@@ -115,6 +117,11 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	GameState.in_game = false
+
+
+func _on_language_changed(_code: String) -> void:
+	DecalLoc.refresh()
+	DecalLoc.apply(self)
 
 
 func _fresh_start() -> bool:

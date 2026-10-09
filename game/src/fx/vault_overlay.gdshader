@@ -18,7 +18,8 @@ float sample_img(sampler2D tex, vec2 uv, float rot, float scale) {
 	vec2 p = uv - 0.5;
 	float c = cos(rot);
 	float s = sin(rot);
-	p = vec2(c * p.x - s * p.y, s * p.x + c * p.y) / scale + 0.5;
+	// inverse rotation of the lookup turns the shown image clockwise (UV y points down)
+	p = vec2(c * p.x + s * p.y, -s * p.x + c * p.y) / scale + 0.5;
 	if (p.x < 0.0 || p.y < 0.0 || p.x > 1.0 || p.y > 1.0) {
 		return 0.0;
 	}

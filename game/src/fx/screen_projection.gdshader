@@ -50,7 +50,7 @@ void fragment() {
 		vec2 p = (uv - 0.5) * vec2(ASPECT, 1.0);
 		float c = cos(slide_rot);
 		float s = sin(slide_rot);
-		p = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+		p = vec2(c * p.x + s * p.y, -s * p.x + c * p.y); // shown image turns clockwise
 		vec2 g = p / 0.85 + 0.5;
 		float ink = 0.0;
 		if (g.x > 0.0 && g.y > 0.0 && g.x < 1.0 && g.y < 1.0) {

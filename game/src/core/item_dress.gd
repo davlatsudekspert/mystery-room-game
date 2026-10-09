@@ -29,6 +29,7 @@ static func apply(id: String, node: Node3D, logic: RoomLogic = null) -> void:
 			var h := ModelUtil.find(node, "hole_%d" % i)
 			if h:
 				h.visible = i < pattern.size() and int(pattern[i]) == 1
+	DecalLoc.apply(node) # badge, cards and labels show their words in the current language
 
 
 ## Show a recorded image glowing on a crystal's front face (`crystal_face`, UV 0..1).

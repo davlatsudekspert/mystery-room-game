@@ -765,7 +765,8 @@ func _show_picture(path: String, size: Vector2) -> void:
 	c.offset_bottom = -110
 	o.add_child(c)
 	var t := TextureRect.new()
-	t.texture = load(path) if ResourceLoader.exists(path) else null
+	var lp := DecalLoc.localized_path(path)
+	t.texture = load(lp) if ResourceLoader.exists(lp) else null
 	t.custom_minimum_size = size
 	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

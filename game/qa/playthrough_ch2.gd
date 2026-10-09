@@ -36,14 +36,20 @@ func _ready() -> void:
 	get_tree().root.add_child.call_deferred(room)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	report.append("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
-	report.append("path: Ch1 lens %s, shards 5" % lens_path)
+	_log("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
+	_log("path: Ch1 lens %s, shards 5" % lens_path)
 	await _settle(1.2)
 	await _perf("hall")
 	await run()
 
 
 # ====================================================================== helpers
+## Report line, also printed at once so a long or stuck run shows how far it got.
+func _log(line: String) -> void:
+	report.append(line)
+	print(line)
+
+
 func _settle(seconds: float) -> void:
 	var t := 0.0
 	while t < seconds:
@@ -54,7 +60,7 @@ func _settle(seconds: float) -> void:
 func _perf(label: String) -> void:
 	await _settle(0.5)
 	var rs := RenderingServer
-	report.append("perf[%s]: draw calls %d, primitives %d, objects %d" % [label,
+	_log("perf[%s]: draw calls %d, primitives %d, objects %d" % [label,
 		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
 		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
 		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)])
@@ -68,7 +74,7 @@ func shot(name: String) -> void:
 	shot_n += 1
 	var p := "%s/%02d_%s.png" % [out_dir, shot_n, name]
 	get_viewport().get_texture().get_image().save_png(p)
-	report.append("shot %s" % p.get_file())
+	_log("shot %s" % p.get_file())
 
 
 func cam() -> RoomCamera:
@@ -167,11 +173,11 @@ func act(model: String, part: String, cond: Callable, fallback: Callable, label:
 		var why := _hit(model, part, frac)
 		fallback.call()
 		taps_fallback += 1
-		report.append("  fallback: %s (%s/%s, view %s, hit %s)" % [label if label != "" else part, model, part, cam().current(), why])
+		_log("  fallback: %s (%s/%s, view %s, hit %s)" % [label if label != "" else part, model, part, cam().current(), why])
 
 
 func step(label: String, ok: bool) -> void:
-	report.append(("✓ " if ok else "✗ ") + label)
+	_log(("✓ " if ok else "✗ ") + label)
 
 
 func use(item: String) -> void:
@@ -229,7 +235,9 @@ func run() -> void:
 	await view("station")
 	await use("request_card")
 	await act("tube_station", "IA_send_port", func() -> bool: return s["canister"] != "", func() -> void: L.use_item_on("request_card", "send_port"), "card into canister")
-	while int(s["dest"]) != ArchiveLogic.DEST_STACKS:
+	for _guard in 12:
+		if not (int(s["dest"]) != ArchiveLogic.DEST_STACKS):
+			break
 		var d0 := int(s["dest"])
 		await act("tube_station", "IA_dest_dial", func() -> bool: return int(s["dest"]) != d0, func() -> void: L.step_dest(1), "destination dial")
 	await shot("station_ready")
@@ -283,7 +291,9 @@ func run() -> void:
 	await view("hall")
 	await view("desk")
 	await view("deck")
-	while int(s["deck_speed"]) != ArchiveLogic.SPEED_RIGHT:
+	for _guard in 12:
+		if not (int(s["deck_speed"]) != ArchiveLogic.SPEED_RIGHT):
+			break
 		var sp0 := int(s["deck_speed"])
 		await act("tape_deck", "IA_speed", func() -> bool: return int(s["deck_speed"]) != sp0, func() -> void: L.step_speed(1), "speed knob")
 	for tape: String in ["tape_1996", "tape_1997", "tape_1998"]:
@@ -333,7 +343,9 @@ func run() -> void:
 	await shot("film_sign_blurred")
 	await wait_idle(60.0)
 	await view("projector")
-	while int(s["focus"]) != ArchiveLogic.FOCUS_SHARP:
+	for _guard in 12:
+		if not (int(s["focus"]) != ArchiveLogic.FOCUS_SHARP):
+			break
 		var f0 := int(s["focus"])
 		await act("film_projector", "IA_focus_ring", func() -> bool: return int(s["focus"]) != f0, func() -> void: L.turn_focus(1), "focus ring")
 	step("P10 film seen, focus 5", s["film_seen"] and L.is_sharp())
@@ -372,7 +384,9 @@ func run() -> void:
 		await view("slide_projector")
 		await use("emblem_slide")
 		await act("slide_projector", "IA_slide_gate", func() -> bool: return s["slide_in"], func() -> void: L.use_item_on("emblem_slide", "slide_projector"), "slide into gate")
-		while int(s["slide_rot"]) % 2 != 0:
+		for _guard in 12:
+			if not (int(s["slide_rot"]) % 2 != 0):
+				break
 			var r0 := int(s["slide_rot"])
 			await act("slide_projector", "IA_slide_rot", func() -> bool: return int(s["slide_rot"]) != r0, func() -> void: L.rotate_slide(), "rotate slide")
 		await act("slide_projector", "IA_slide_lamp", func() -> bool: return s["slide_on"], func() -> void: L.toggle_slide_lamp(), "slide lamp")
@@ -405,13 +419,19 @@ func run() -> void:
 	await use("crystal_sign")
 	await act("vault_door", "IA_port_right", func() -> bool: return s["port_right"] == "crystal_sign", func() -> void: L.use_item_on("crystal_sign", "port_right"), "sign crystal right")
 	await shot("vault_ports_filled")
-	while int(s["rot_left"]) % 4 != 0:
+	for _guard in 12:
+		if not (int(s["rot_left"]) % 4 != 0):
+			break
 		var a0 := int(s["rot_left"])
 		await act("vault_door", "IA_collar_left", func() -> bool: return int(s["rot_left"]) != a0, func() -> void: L.turn_collar("rot_left"), "left collar")
-	while int(s["rot_right"]) != ArchiveLogic.ROT_RIGHT_TARGET:
+	for _guard in 12:
+		if not (int(s["rot_right"]) != ArchiveLogic.ROT_RIGHT_TARGET):
+			break
 		var b0 := int(s["rot_right"])
 		await act("vault_door", "IA_collar_right", func() -> bool: return int(s["rot_right"]) != b0, func() -> void: L.turn_collar("rot_right"), "right collar")
-	while int(s["zoom_right"]) != ArchiveLogic.ZOOM_TARGET and not s["vault_unlocked"]:
+	for _guard in 12:
+		if not (int(s["zoom_right"]) != ArchiveLogic.ZOOM_TARGET and not s["vault_unlocked"]):
+			break
 		var z0 := int(s["zoom_right"])
 		await act("vault_door", "IA_zoom_right", func() -> bool: return int(s["zoom_right"]) != z0, func() -> void: L.turn_collar("zoom_right"), "zoom collar")
 	await _settle(1.4)
@@ -441,10 +461,9 @@ func run() -> void:
 
 
 func _finish() -> void:
-	report.append("taps through the 3D scene: %d, logic fallbacks: %d" % [taps_ok, taps_fallback])
+	_log("taps through the 3D scene: %d, logic fallbacks: %d" % [taps_ok, taps_fallback])
 	var f := FileAccess.open(out_dir + "/playthrough_ch2_report.txt", FileAccess.WRITE)
 	f.store_string("\n".join(report) + "\n")
-	print("\n".join(report))
 	SaveSystem.delete_game()
 	var ok: bool = logic.state["complete"] and not report.any(func(l: String) -> bool: return l.begins_with("✗"))
 	get_tree().quit(0 if ok and taps_fallback == 0 else 1)
