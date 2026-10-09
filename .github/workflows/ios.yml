@@ -1,108 +1,209 @@
-# MYSTERY ROOM — iOS build on macOS with Xcode cloud signing + TestFlight upload.
-# Manual trigger only (macOS minutes count 10x against the free private-repo quota).
+# MYSTERY ROOM — iOS build: signed App Store IPA via Xcode cloud signing; optional TestFlight upload.
+# Manual trigger only. macOS minutes count 10x against the free private-repo quota, so the cheap checks run
+# first on ubuntu and the macOS job starts only when they pass:
+#   1. ubuntu: read-only App Store Connect gate (tools/ios/asc_check.py --gate: the bundle id is registered
+#      AND the existing app record uses it, so Xcode's automatic signing can never register a new App ID),
+#      the headless test suite, the Godot iOS export of the Xcode project, and static checks of that project
+#      (tools/ios/verify_xcode_project.py). The Xcode project goes to the macOS job as a 1-day artifact.
+#   2. macOS: Xcode 26 (App Store Connect has required the iOS 26 SDK since 2026-04-28) archives the project
+#      UNSIGNED, then -exportArchive signs it for App Store distribution with the cloud-managed Apple
+#      Distribution certificate (-allowProvisioningUpdates + the API key). No development certificate,
+#      device or .p12 is needed. With upload_to_testflight=false (the default) the IPA is only built and
+#      verified; nothing is sent to App Store Connect. The IPA is not kept (it can only be installed via TestFlight).
 #
-# Owner setup (one time, no Mac needed):
-#   1. App Store Connect → Users and Access → Integrations → App Store Connect API → "+"
-#      Role: Admin (needed for cloud-managed distribution certificates). Download the .p8 once.
-#   2. Repository secrets:
-#        IOS_TEAM_ID         (developer.apple.com → Membership → Team ID)
-#        ASC_KEY_ID          (Key ID of the API key)
-#        ASC_ISSUER_ID       (Issuer ID shown above the keys list)
-#        ASC_KEY_P8_BASE64   (base64 of the downloaded AuthKey_XXXX.p8)
-#   3. App Store Connect → Apps → "+" New App with bundle id com.mysteryroom.forgotteninstitute
-#      (register the bundle id under developer.apple.com → Identifiers first if it is not listed).
+# Secrets (owner, 2026-10-08): IOS_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64 (API key with the
+# Admin role: cloud-managed distribution signing requires it). asc_check.py normalises the .p8 (the secret
+# holds the key body without its BEGIN/END lines) and never prints it. Details: docs/release/IOS_TESTFLIGHT.md
 name: iOS build
 
 on:
   workflow_dispatch:
     inputs:
       upload_to_testflight:
-        description: "Upload the build to TestFlight"
+        description: "Upload the signed build to TestFlight (only after the owner's approval)"
+        type: boolean
+        default: false
+      beta_unlock:
+        description: "Tester build: add the custom feature beta_unlock (paid chapters open, no payment). MUST be false for an App Store release build"
         type: boolean
         default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: false
 
 env:
   GODOT_VERSION: "4.7.2"
   BUNDLE_ID: com.mysteryroom.forgotteninstitute
 
 jobs:
-  build:
-    runs-on: macos-15
-    timeout-minutes: 50
+  xcode-project:
+    name: Checks + Xcode project (ubuntu)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      build_number: ${{ steps.gate.outputs.next_build }}
+      short_version: ${{ steps.version.outputs.short_version }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Check secrets
-        env:
-          TEAM: ${{ secrets.IOS_TEAM_ID }}
-          KEY: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      - name: Install PyJWT
         run: |
-          if [ -z "$TEAM" ] || [ -z "$KEY" ]; then
-            echo "::error::Missing IOS_TEAM_ID / ASC_* secrets — see the header of this workflow."
-            exit 1
-          fi
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "PyJWT==2.10.1" "cryptography==44.0.2"
 
-      - name: Install Godot (macOS) and iOS templates
-        run: |
-          curl -sSL -o /tmp/g.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_macos.universal.zip"
-          unzip -q /tmp/g.zip -d /tmp/godot
-          echo "GODOT=/tmp/godot/Godot.app/Contents/MacOS/Godot" >> $GITHUB_ENV
-          T="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable"
-          mkdir -p "$T"
-          curl -sSL -o /tmp/t.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
-          unzip -q -j /tmp/t.tpz templates/ios.zip templates/version.txt -d "$T"
-
-      - name: App Store Connect API key
+      - name: App Store Connect gate (read-only GET requests)
+        id: gate
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8_BASE64 }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/keys"
-          echo "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8"
-          echo "ASC_KEY_PATH=$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" >> $GITHUB_ENV
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        # next_build = max(highest build already in App Store Connect + 1, this workflow's run number)
+        run: '"$RUNNER_TEMP/venv/bin/python" tools/ios/asc_check.py --gate --bundle-id "$BUNDLE_ID" --min-build "${{ github.run_number }}"'
 
-      - name: Export Xcode project from Godot
+      - name: Cache Godot + iOS template
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-ios-linux
+
+      - name: Install Godot and the iOS template
+        run: |
+          mkdir -p ~/godot
+          if [ ! -x ~/godot/godot ]; then
+            curl -sSL -o /tmp/g.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+            unzip -q /tmp/g.zip -d ~/godot && mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+          fi
+          T=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          if [ ! -f "$T/ios.zip" ]; then
+            mkdir -p "$T"
+            curl -sSL -o /tmp/t.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+            unzip -q -j /tmp/t.tpz templates/ios.zip templates/version.txt -d "$T"
+          fi
+          sudo ln -sf ~/godot/godot /usr/local/bin/godot
+
+      - name: Import project and run tests
+        run: tools/run_tests.sh
+
+      - name: Export the Xcode project (Godot, project only)
+        id: version
         env:
           TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          BUILD_NUMBER: ${{ steps.gate.outputs.next_build }}
+          BETA_UNLOCK: ${{ inputs.beta_unlock }}
+        # These edits change only the runner's checkout of export_presets.cfg; the repo preset stays as committed.
         run: |
+          set -euo pipefail
           cd game
-          sed -i '' "s/^application\/app_store_team_id=.*/application\/app_store_team_id=\"$TEAM_ID\"/" export_presets.cfg
-          sed -i '' "s/^application\/export_project_only=.*/application\/export_project_only=true/" export_presets.cfg
-          sed -i '' "s/^application\/version=.*/application\/version=\"${{ github.run_number }}\"/" export_presets.cfg
-          "$GODOT" --headless --import || true
+          sed -i "s/^application\/app_store_team_id=.*/application\/app_store_team_id=\"$TEAM_ID\"/" export_presets.cfg
+          sed -i "s/^application\/export_project_only=.*/application\/export_project_only=true/" export_presets.cfg
+          sed -i "s/^application\/version=.*/application\/version=\"$BUILD_NUMBER\"/" export_presets.cfg
+          # Tester builds: custom feature beta_unlock in the iOS preset only (Premium.tester_build() opens the paid
+          # chapters; real payments stay disabled). An App Store release build must run with beta_unlock=false.
+          FEATURES=""
+          if [ "$BETA_UNLOCK" = "true" ]; then FEATURES="beta_unlock"; fi
+          awk -v f="$FEATURES" '/^\[preset\.[0-9]+\]$/ {ios=0} /^name="iOS"$/ {ios=1}
+            ios && /^custom_features=/ {print "custom_features=\"" f "\""; next} {print}' export_presets.cfg > "$RUNNER_TEMP/presets.cfg"
+          mv "$RUNNER_TEMP/presets.cfg" export_presets.cfg
+          SHORT=$(grep -m1 '^application/short_version=' export_presets.cfg | cut -d'"' -f2)
+          echo "short_version=$SHORT" >> "$GITHUB_OUTPUT"
+          echo "version $SHORT, build $BUILD_NUMBER, iOS custom_features=\"$FEATURES\""
+          echo "iOS build $SHORT ($BUILD_NUMBER): beta_unlock=$BETA_UNLOCK, upload_to_testflight=${{ inputs.upload_to_testflight }}" >> "$GITHUB_STEP_SUMMARY"
+          N=$(grep -c '^custom_features="beta_unlock"' export_presets.cfg || true)
+          [ "$N" = "$([ -n "$FEATURES" ] && echo 1 || echo 0)" ] || { echo "::error::custom_features edit did not hit exactly the iOS preset"; exit 1; }
           mkdir -p ../build/ios
-          # the .ipa path names the project (build/ios/MysteryRoom.xcodeproj); with export_project_only
-          # Godot writes the Xcode project only (verified on Linux: scheme "MysteryRoom", team + bundle id set)
-          "$GODOT" --headless --export-release "iOS" ../build/ios/MysteryRoom.ipa
+          # the .ipa path names the project; with export_project_only Godot writes build/ios/MysteryRoom.xcodeproj
+          godot --headless --export-release "iOS" ../build/ios/MysteryRoom.ipa > "$RUNNER_TEMP/export.log" 2>&1 \
+            || { grep -E "ERROR|WARNING" "$RUNNER_TEMP/export.log" | tail -40; exit 1; }
+          grep -E "ERROR|WARNING" "$RUNNER_TEMP/export.log" | tail -20 || true
           ls -la ../build/ios
 
-      - name: Archive (automatic cloud signing)
+      - name: Verify the Xcode project (bundle id, version, team, Info.plist, privacy manifest, icons)
         env:
-          TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
         run: |
-          set -o pipefail
-          xcodebuild -project build/ios/MysteryRoom.xcodeproj -scheme MysteryRoom -configuration Release \
-            -destination 'generic/platform=iOS' -archivePath build/ios/MysteryRoom.xcarchive archive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-            CODE_SIGN_IDENTITY="Apple Development" 2>&1 | tail -60
-          # Godot's Release config asks for "Apple Distribution" with Automatic style, which Xcode rejects as
-          # "conflicting provisioning settings"; the archive is development-signed and -exportArchive below
-          # re-signs it with the cloud-managed distribution certificate.
-          test -d build/ios/MysteryRoom.xcarchive
+          python3 tools/ios/verify_xcode_project.py build/ios --bundle-id "$BUNDLE_ID" \
+            --version "${{ steps.version.outputs.short_version }}" --build "${{ steps.gate.outputs.next_build }}" \
+            --custom-features "${{ inputs.beta_unlock && 'beta_unlock' || '' }}"
 
-      - name: Export IPA (and upload to TestFlight)
+      - name: Pack the Xcode project
+        run: tar -cf "$RUNNER_TEMP/ios-xcode-project.tar" -C build ios && ls -la "$RUNNER_TEMP/ios-xcode-project.tar"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-xcode-project
+          path: ${{ runner.temp }}/ios-xcode-project.tar
+          retention-days: 1
+
+  ipa:
+    name: Archive + signed IPA (macOS)
+    needs: xcode-project
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      BUILD_NUMBER: ${{ needs.xcode-project.outputs.build_number }}
+      SHORT_VERSION: ${{ needs.xcode-project.outputs.short_version }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: tools/ios
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-xcode-project
+          path: ${{ runner.temp }}
+
+      - name: Unpack the Xcode project
+        run: mkdir -p build && tar -xf "$RUNNER_TEMP/ios-xcode-project.tar" -C build && ls build/ios
+
+      - name: Select Xcode 26 (iOS 26 SDK)
+        run: |
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -vi beta \
+            | python3 -c 'import re,sys; l=[x.strip() for x in sys.stdin if x.strip()]; print(max(l, key=lambda p: [int(n) for n in re.findall(r"\d+", p)]) if l else "")')
+          [ -n "$XC" ] || { echo "::error::No Xcode 26 on this runner image; App Store Connect requires the iOS 26 SDK"; ls -d /Applications/Xcode*.app; exit 1; }
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+          echo "iphoneos SDK: $(xcrun --sdk iphoneos --show-sdk-version)"
+
+      - name: App Store Connect API key file
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "cryptography==44.0.2"
+          mkdir -p "$RUNNER_TEMP/keys"
+          "$RUNNER_TEMP/venv/bin/python" tools/ios/asc_check.py --write-p8 "$RUNNER_TEMP/keys/AuthKey.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/keys/AuthKey.p8" >> "$GITHUB_ENV"
+
+      - name: Archive (unsigned; signing happens at export)
+        run: |
+          xcodebuild archive -project build/ios/MysteryRoom.xcodeproj -scheme MysteryRoom -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/MysteryRoom.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            > "$RUNNER_TEMP/archive.log" 2>&1 \
+            || { grep -E "error:|warning: .*(sign|profile)" "$RUNNER_TEMP/archive.log" | head -40; tail -60 "$RUNNER_TEMP/archive.log"; exit 1; }
+          tail -5 "$RUNNER_TEMP/archive.log"
+          test -d "$RUNNER_TEMP/MysteryRoom.xcarchive/Products/Applications/MysteryRoom.app"
+
+      - name: Export the IPA with cloud signing (and upload to TestFlight only if asked)
         env:
           TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          UPLOAD: ${{ inputs.upload_to_testflight }}
         run: |
           DEST=export
-          if [ "${{ inputs.upload_to_testflight }}" = "true" ]; then DEST=upload; fi
-          cat > build/ios/ExportOptions.plist <<EOT
+          if [ "$UPLOAD" = "true" ]; then DEST=upload; fi
+          echo "destination=$DEST version=$SHORT_VERSION build=$BUILD_NUMBER"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOT
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
@@ -110,18 +211,44 @@ jobs:
             <key>destination</key><string>${DEST}</string>
             <key>teamID</key><string>${TEAM_ID}</string>
             <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
             <key>uploadSymbols</key><true/>
           </dict></plist>
           EOT
-          set -o pipefail
-          xcodebuild -exportArchive -archivePath build/ios/MysteryRoom.xcarchive -exportPath build/ios/export \
-            -exportOptionsPlist build/ios/ExportOptions.plist -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" 2>&1 | tail -60
-          ls -la build/ios/export || true
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/MysteryRoom.xcarchive" -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            > "$RUNNER_TEMP/export.log" 2>&1 \
+            || { grep -iE "error|fail|denied|permission" "$RUNNER_TEMP/export.log" | head -40; tail -40 "$RUNNER_TEMP/export.log"; exit 1; }
+          tail -8 "$RUNNER_TEMP/export.log"
+          ls -la "$RUNNER_TEMP/export"
 
-      - uses: actions/upload-artifact@v4
+      - name: Verify the signed IPA
+        if: ${{ !inputs.upload_to_testflight }}
+        run: |
+          set -euo pipefail
+          IPA=$(ls "$RUNNER_TEMP"/export/*.ipa | head -n1)
+          echo "IPA: $(basename "$IPA"), $(du -h "$IPA" | cut -f1)"
+          mkdir -p "$RUNNER_TEMP/ipa" && unzip -q "$IPA" -d "$RUNNER_TEMP/ipa"
+          APP="$RUNNER_TEMP/ipa/Payload/MysteryRoom.app"
+          codesign --verify --deep --strict "$APP" && echo "codesign --verify --deep --strict: OK"
+          SIG=$(codesign -dvv "$APP" 2>&1)
+          grep -E "^(Identifier|Format|TeamIdentifier)=" <<<"$SIG" || true
+          grep -E "^Authority=" <<<"$SIG" | sed -E 's/^(Authority=Apple Distribution):.*/\1: (team certificate)/'
+          grep -q "^Authority=Apple Distribution" <<<"$SIG" || { echo "::error::not signed with an Apple Distribution certificate"; exit 1; }
+          security cms -D -i "$APP/embedded.mobileprovision" > "$RUNNER_TEMP/profile.plist"
+          P() { /usr/libexec/PlistBuddy -c "Print :$1" "$RUNNER_TEMP/profile.plist" 2>/dev/null || echo "(absent)"; }
+          echo "profile: $(P Name) | expires $(P ExpirationDate) | get-task-allow $(P Entitlements:get-task-allow) | beta-reports-active $(P Entitlements:beta-reports-active)"
+          [ "$(P ProvisionedDevices)" = "(absent)" ] && echo "profile type: App Store (no device list)" || { echo "::error::profile lists devices (not an App Store profile)"; exit 1; }
+          I() { /usr/libexec/PlistBuddy -c "Print :$1" "$APP/Info.plist" 2>/dev/null || echo "(absent)"; }
+          for k in CFBundleIdentifier CFBundleShortVersionString CFBundleVersion ITSAppUsesNonExemptEncryption MinimumOSVersion DTSDKName DTXcode DTPlatformVersion; do echo "$k=$(I $k)"; done
+          [ "$(I CFBundleIdentifier)" = "$BUNDLE_ID" ] || { echo "::error::wrong bundle id"; exit 1; }
+          [ "$(I CFBundleVersion)" = "$BUILD_NUMBER" ] || { echo "::error::CFBundleVersion is not $BUILD_NUMBER"; exit 1; }
+          [ "$(I ITSAppUsesNonExemptEncryption)" = "false" ] || { echo "::error::ITSAppUsesNonExemptEncryption is not false"; exit 1; }
+          case "$(I DTSDKName)" in iphoneos26*|iphoneos2[7-9]*) ;; *) echo "::error::not built with the iOS 26+ SDK"; exit 1 ;; esac
+          test -f "$APP/PrivacyInfo.xcprivacy" && echo "PrivacyInfo.xcprivacy: present"
+          test -f "$APP/MysteryRoom.pck" && echo "game data: $(du -h "$APP/MysteryRoom.pck" | cut -f1)"
+
+      - name: Remove the API key file
         if: always()
-        with:
-          name: mystery-room-ios
-          path: build/ios/export/
-          retention-days: 7
+        run: rm -rf "$RUNNER_TEMP/keys"
