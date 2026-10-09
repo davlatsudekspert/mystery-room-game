@@ -11,7 +11,44 @@
 - Workflow'da yuklash standart holatda **oʻchiq** turadi. Har bir yangi yuklash uchun sizning ruxsatingiz kerak. Testerlarni oʻzingiz qoʻshasiz.
 - Test buildlarda `beta_unlock` yoqilgan: pullik boblar toʻlovsiz ochiladi. App Store'ga chiqariladigan buildda u **oʻchiq** boʻlishi shart.
 - App Store'da oʻzbek tilidagi sahifa (lokalizatsiya) **yoʻq**: Apple roʻyxatida oʻzbek tili mavjud emas. Oʻyinning oʻzi oʻzbekcha toʻliq ishlaydi. Ilova ichida `uz.lproj` bor, shuning uchun App Store sahifasidagi "Tillar" qatorida oʻzbek tili koʻrinishi kutiladi.
-- Sizdan kerak boʻladigan qarorlar: TestFlight'ga yuklashga ruxsat; nom, subtitr, kategoriya, maxfiylik URL, yosh reytingi va App Privacy. Ular pastdagi roʻyxatda.
+- Sizdan kerak boʻladigan qarorlar: nom, subtitr, kategoriya, maxfiylik URL, yosh reytingi va App Privacy. Ular pastdagi roʻyxatda.
+
+## TestFlight upload (2026-10-09): build 0.1.0 (2) is in TestFlight
+The owner approved one internal TestFlight build on 2026-10-09.
+
+| Item | Result |
+|---|---|
+| Run | `iOS build` [37941801214](https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37941801214) (#2), `main` @ `1a64c69`, inputs `upload_to_testflight=true`, `beta_unlock=true` |
+| Gate | bundle id registered=YES, app record uses it=YES. App Store Connect had 0 builds, so the build number is 2 (`max(0 + 1, run number 2)`) |
+| Tests | `tools/run_tests.sh`: 95 tests, 8226 checks, 0 failures |
+| Xcode project | version 0.1.0, build 2, `custom_features="beta_unlock"`. `verify_xcode_project.py`: "RESULT: all checks passed" |
+| macOS | Xcode 26.3 (17C529), iOS SDK 26.2. `** ARCHIVE SUCCEEDED **` (unsigned) |
+| Upload | `-exportArchive` with `destination=upload` and cloud signing logged `Progress 87%: Upload succeeded.`, then `Uploaded MysteryRoom` and `** EXPORT SUCCEEDED **` at 14:13:13 UTC |
+| App Store Connect | read-only check [37945371549](https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37945371549) at 14:36 UTC: `build 2 uploaded 2026-10-09T07:14:23-07:00 VALID expired=False`. TestFlight version `0.1.0`. No tester groups. Next build number 3 |
+| Signing assets | Team certificate counts are unchanged (DEVELOPMENT 1, DISTRIBUTION 2). The one App Store profile from run 37920931317 was reused (`IOS_APP_STORE ACTIVE`, expires 2027-10-08) |
+| Testable until | about 2027-01-07 (TestFlight builds expire after 90 days) |
+
+The job showed **failure**, but this was a false failure: the upload had already succeeded.
+- After the upload, the step ran `ls -la "$RUNNER_TEMP/export"`. With `destination=upload`, xcodebuild writes no export folder, so `ls` exited 1.
+- Fixed in `ios.yml` (commit `0bf16db`): the listing now runs only for `destination=export`. The xcodebuild exit code still decides success.
+- The fix has **not been run yet**. No second build was started, because it would upload a needless build 3.
+- "Verify the signed IPA" is skipped in upload mode by design: no local IPA exists. In this run the checks came from three places:
+  - the static Xcode-project verification;
+  - the same IPA checks in run 37920931317 (same pipeline, build 1);
+  - Apple's server-side processing, which marked the build `VALID`.
+
+What this build contains: Chapters 1 and 2. Chapter 2 opens without a purchase because of `beta_unlock`, and real payments stay disabled.
+
+### Egasi uchun keyingi qadamlar (oʻzbekcha)
+1. **Ichki testerlar (review kerak emas):** App Store Connect → Apps → "Mystery Room: Lost Institute" → **TestFlight** → chap tomondagi **Internal Testing** yonidagi **"+"**. Guruh yarating (masalan, "Ichki test") va testerlarni qoʻshing.
+   - Faqat jamoangizdagi App Store Connect foydalanuvchilari qoʻshiladi (Users and Access'da roli bor odamlar), 100 kishigacha.
+   - Agar build 2 guruhda koʻrinmasa, guruhning **Builds** boʻlimidan "+" bilan qoʻshing.
+2. **Testerlar:** iPhone yoki iPad'ga App Store'dan **TestFlight** ilovasini oʻrnatadi. Keyin e-pochtadagi taklifni qabul qiladi va "Mystery Room"ni **Install** qiladi.
+3. Agar build yonida **"Missing Compliance"** chiqsa: "None of the algorithms mentioned above" ni tanlang. Odatda bu soʻralmaydi, chunki javob ilovaning ichida bor.
+4. **Keyinroq, tashqi testerlar uchun:** TestFlight → **Test Information** sahifasini toʻldiring: beta tavsifi, nimani sinash kerak va fikr uchun e-pochta. Matn qoralamasi `docs/store/testflight/TEST_INFORMATION.md` da.
+   - Tashqi testerlarga beriladigan birinchi build Apple'ning Beta App Review tekshiruvidan oʻtadi.
+   - Bu qadam faqat sizning alohida ruxsatingiz bilan qilinadi.
+5. Build taxminan 2027-01-07 gacha ishlaydi. Yangi build kerak boʻlsa, yana ruxsat bering: keyingi build raqami 3 boʻladi.
 
 ## App Store Connect record (read-only check, 2026-10-09)
 Source: `iOS App Store Connect check (read-only)` run [37920292331](https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37920292331) (`tools/ios/asc_check.py`, GET requests only). Only MYSTERY ROOM records were printed. No other app of the account appears in the log.
@@ -26,7 +63,7 @@ Source: `iOS App Store Connect check (read-only)` run [37920292331](https://gith
 | Bundle id registration | Registered, platform `UNIVERSAL`, name "Mystery Room", App ID prefix = `IOS_TEAM_ID`. Capability: `IN_APP_PURCHASE`. No provisioning profiles yet |
 | App info | state `PREPARE_FOR_SUBMISSION`; subtitle, privacy policy URL, categories and age rating are **not set** |
 | Version | iOS `1.0`, `PREPARE_FOR_SUBMISSION`: description, keywords, support URL and copyright are empty |
-| Builds / TestFlight | No builds, no TestFlight versions, no tester groups |
+| Builds / TestFlight | No builds, no TestFlight versions, no tester groups (before the upload; build 2 is now `VALID`, see above) |
 | In-app purchases | None |
 | Availability | Not set up yet (`appAvailabilityV2` → 404) |
 | Team certificates | `DEVELOPMENT` 1, `DISTRIBUTION` 2. These are team-wide (other projects too). Counts only, no names |
@@ -101,15 +138,17 @@ Inputs:
   - The profile's expiry is not one year from this run. It follows the certificate's expiry, so the Apple Distribution certificate already existed (from 2026-10-08) and was reused. This is an inference; no certificate list was printed.
 - **Not yet run on macOS:** the step that prints the bundle's `.lproj` folders. It was added after this run.
 
-**Known issue found by the export (not iOS-specific, not fixed here):**
-- The export logs `ERROR: Failed loading resource: res://assets/textures/decals/ch2/tape_label_1996.png`, in the dev container and on the runner.
-- The committed `tape_label_1996.png.import` says `valid=false`, so that Chapter 2 decal (`M_Decal_TapeLabel_1996.tres`) is probably missing from exported builds.
-- The owner of the Ch2 assets should re-import the file and commit the `.import`.
+**Known issue found by the export (not iOS-specific), now resolved:**
+- Run 37920931317's export logged `ERROR: Failed loading resource: res://assets/textures/decals/ch2/tape_label_1996.png`. Its `.import` said `valid=false`.
+- The `.import` was re-committed later. Run 37941801214's export (the uploaded build 2) logs no such error, only the usual three warnings.
+
+**Verified by the upload (run 37941801214, check 37945371549):**
+- the TestFlight upload ("Upload succeeded.");
+- Apple's server-side binary validation (build 2 `VALID`).
 
 **Unverified:**
-- the TestFlight upload itself;
-- Apple's server-side binary validation (it runs only on upload);
-- the game on a real iPhone or iPad (FPS, memory, Metal/MoltenVK).
+- the game on a real iPhone or iPad (FPS, memory, Metal/MoltenVK);
+- the `ios.yml` fix for the false failure in upload mode (commit `0bf16db`), until the next upload run.
 
 ### Runs and minutes
 | Run | Workflow | Runner | Result | Wall time | Billed |
@@ -118,7 +157,10 @@ Inputs:
 | [37920292331](https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37920292331) | ASC check #2 | ubuntu | success | 35 s | 1 min |
 | [37920931317](https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37920931317) | iOS build #1 (upload off, beta_unlock on) | ubuntu, then macOS 15 | success: signed IPA, build 1 | ubuntu 1 min 49 s; macOS 1 min 44 s (run 3 min 45 s) | 2 ubuntu min + 2 macOS min (= 20 min of quota at 10×)* |
 
-\* Estimated from the job durations (each job is rounded up to the minute; macOS counts 10×). The usage API returned 0 billable ms right after the runs. A TestFlight upload run should cost about the same plus the upload time (~1–3 min of macOS for 150 MB). Only one of the two allowed macOS runs was used.
+| [37941801214](https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37941801214) | iOS build #2 (**upload on**, beta_unlock on) | ubuntu, then macOS 15 | upload succeeded, build 2. The job showed failure only because of `ls` on the missing export folder (fixed in `0bf16db`) | ubuntu 2 min 00 s; macOS 3 min 57 s (archive 2 min 20 s, export + upload 55 s; run 6 min 14 s) | 2 ubuntu min + 4 macOS min (= 40 min of quota at 10×)* |
+| [37945371549](https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37945371549) | ASC check #3 (after the upload) | ubuntu | success: build 2 `VALID` | 24 s | 1 min |
+
+\* Estimated from the job durations (each job is rounded up to the minute; macOS counts 10×). The usage API returned 0 billable ms right after the runs. Total macOS so far: 2 runs, 6 billed min (= 60 min of quota).
 
 ## Metadata: record vs `docs/STORE_LISTING.md` (proposals only; nothing was changed)
 - **Name:**
@@ -162,12 +204,16 @@ Inputs:
 6. **Key role:** nothing to do. Cloud-managed distribution signing worked in run 37920931317, so the key has the needed (Admin) permission.
 
 ## One-click upload (director, only after the owner's explicit approval)
+First used on 2026-10-09 (run 37941801214, build 2). Each new upload needs a new approval. Never re-run an old run: a re-run reuses its build number.
+
 1. Optional, ubuntu, about 1 min: run `iOS App Store Connect check (read-only)` and confirm the record and bundle id are unchanged.
 2. Start the upload:
    - GitHub → Actions → **iOS build** → Run workflow → branch `main`, **upload_to_testflight = ✓**, **beta_unlock = ✓** (TestFlight build).
    - Or with the MCP tool: `actions_run_trigger` `run_workflow`, `workflow_id: ios.yml`, `ref: main`, `inputs: {"upload_to_testflight": "true", "beta_unlock": "true"}`.
    - Cost: the ubuntu job plus one macOS job (see the run table; macOS minutes count 10×).
-3. The log's "Export the IPA…" step ends with `** EXPORT SUCCEEDED **` after an upload line. The "Verify the signed IPA" step is skipped in upload mode. App Store Connect then processes the build for 5–30 minutes.
+3. The log's "Export the IPA…" step shows `Progress …: Upload succeeded.`, `Uploaded MysteryRoom` and `** EXPORT SUCCEEDED **`.
+   - The "Verify the signed IPA" step is skipped in upload mode.
+   - App Store Connect then processes the build. Build 2 was `VALID` within 22 minutes of the upload.
 4. Rerun the read-only check: the `builds` line shows the new build number and `processingState`.
 5. The owner adds internal testers in App Store Connect → TestFlight. Testers install the **TestFlight** app on the iPhone and accept the invitation.
 6. App Store release later: run with `beta_unlock = ☐`. Real payments stay off until the IAP products and store validation exist.

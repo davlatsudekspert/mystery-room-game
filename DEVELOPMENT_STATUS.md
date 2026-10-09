@@ -11,7 +11,7 @@ _Last updated: 2026-10-09_
 | 4 — Polish, UI, sound | 🔶 In progress | State-aware captions, drag-to-tune radio, soft dust motes, 1979 flashback staging, bookcase reveal camera. **2026-10-09:**<br>• the owner's logo is integrated: EN/RU/UZ subtitle on the main menu, app icons (adaptive, monochrome, iOS, store 512), home-screen previews in `docs/previews/logo/`;<br>• the unpowered Chapter 1 lab gets a moonlight bounce, so its dark corners are readable (`docs/previews/ch1_dark_state_before_after.jpg`);<br>• a Brightness setting;<br>• a privacy-policy link in Settings |
 | 5 — Localization & tests | ✅ Done for Chapter 1 | 299 keys EN → RU → UZ. The validator checks Uzbek Latin only, placeholders and font coverage. Layout-fit test at text scale 1.3. UI screenshots in all three languages (`qa/ui_screens.tscn`) |
 | 6 — Android build | 🔶 Ready for device testing | Debug APK from CI. Checked on the exported APK: target SDK 36 (the Play requirement since 2026-08-31), 16 KB native alignment, VIBRATE as the only permission, Vulkan optional with GL fallback, adaptive and monochrome icons, landscape. The back button never quits. PerfGuard scales the 3D resolution on slow phones. The upload key exists (outside the repo); the release AAB uses Gradle. **Not yet tested on a physical device**: see `docs/TESTING_ON_DEVICE.md` |
-| 7 — iOS preparation | 🔶 Ready to run, unverified | The Xcode project export was verified on Linux (scheme `MysteryRoom`, bundle `com.mysteryroom.forgotteninstitute`, automatic signing, iOS 15). The owner has added `IOS_TEAM_ID` and the `ASC_*` secrets. `ios.yml` has not run yet: it needs the App Store Connect app record (Actions runners work again) |
+| 7 — iOS preparation | ✅ First TestFlight build | **2026-10-09:**<br>• build 0.1.0 (2), with `beta_unlock`, was uploaded to TestFlight (`ios.yml` run 37941801214) after the owner's approval;<br>• Apple processing: `VALID`;<br>• internal testers are added by the owner;<br>• details and the owner's next steps: `docs/release/IOS_TESTFLIGHT.md`.<br>The pipeline: ubuntu (ASC gate, tests, Godot Xcode export + static checks), then macOS (Xcode 26.3 / iOS 26.2 SDK, unsigned archive, cloud-signed App Store export) |
 | 8 — Store & monetization | 🔶 Partly | Purchase abstraction (mock/disabled providers), real payments disabled. `docs/MONETIZATION.md`, `docs/STORE_LISTING.md` (EN/RU/UZ), `docs/RELEASE_PIPELINE.md` |
 
 ## Chapter 2 (in progress)
@@ -72,10 +72,12 @@ Budget: ≤ 150 draw calls (OK). Primitives are about 20% over the 150k target. 
 - ✅ `tests.yml` run 37831728496: 41 tests, 2494 checks, 0 failures (about 25 s).
 - ✅ `android.yml` debug runs 37831976693 and 37832359209 (latest, commit 2a23bad): tests plus a signed debug APK. The latest artifact is 101 MB zipped and is kept for 7 days. The debug key is generated per run, so uninstall the previous build before installing a newer one.
 - ⏳ `android.yml` release (AAB + Play internal testing) waits for the upload keystore secrets.
-- ⏳ `ios.yml` waits for the App Store Connect app record. It runs on macOS, where 1 minute counts as 10 against the free quota.
+- ✅ `ios.yml` uploaded build 0.1.0 (2) to TestFlight on 2026-10-09, and it is `VALID`.
+  - It runs on macOS, where 1 minute counts as 10 against the free quota. Two runs so far used 6 macOS min (60 min of quota).
+  - The upload job showed a false failure (an `ls` of a folder that does not exist in upload mode). It is fixed in `0bf16db`; the fix has not been run yet.
 
 ## Known limitations
 - The dev container has no GPU. Screenshots use software Vulkan (lavapipe), so FPS measured here does not represent phones.
-- There is no macOS here, so the iOS archive and upload steps cannot be verified in this environment (the Xcode project export can be).
+- There is no macOS here. The iOS archive, signing and upload were verified on GitHub macOS runners (runs 37920931317 and 37941801214).
 - No physical Android or iOS device has been tested yet.
 - Under heavy CPU load (several Blender builds at once), software Vulkan under Xvfb sometimes deadlocks or hangs on exit. Headless runs of the same scenes do not, so this is the container, not the game. Run QA scenes through `tools/qa_run.sh`, which uses the `QA_DONE` marker and restarts stalled runs.

@@ -59,7 +59,7 @@ Full details, record facts and the owner checklist: [`docs/release/IOS_TESTFLIGH
 App Store Connect (checked read-only on 2026-10-09):
 - The app record "Mystery Room: Lost Institute" (app id `6820786933`, SKU `MYSTERYROOM-FI-001`, `en-US`) exists.
 - It uses the registered bundle id `com.mysteryroom.forgotteninstitute`, the same as the repo.
-- No builds yet.
+- Build 0.1.0 (2) was uploaded to TestFlight on 2026-10-09 (run 37941801214) and is `VALID` (read-only check 37945371549).
 
 `ios.yml` (manual; `upload_to_testflight` defaults to **false**):
 1. **ubuntu** runs `asc_check.py --gate`.
@@ -98,5 +98,10 @@ App Store Connect (checked read-only on 2026-10-09):
     - signed App Store IPA, 150 MB, build 1;
     - Xcode 26.3 with the iOS 26.2 SDK;
     - App Store profile; `codesign --verify` OK.
-  - TestFlight upload: **not done**. It waits for the owner's approval.
+  - ✅ TestFlight upload, approved by the owner (2026-10-09, run 37941801214):
+    - build 0.1.0 (2), `beta_unlock` on;
+    - "Upload succeeded." and `** EXPORT SUCCEEDED **`;
+    - App Store Connect processing `VALID`.
+    - The job showed failure only because of an `ls` of the export folder, which does not exist in upload mode. Fixed in `0bf16db`; the fix has not been run yet.
+    - Internal testers are added by the owner.
 - ❌ No physical-device testing yet. FPS, load time and memory on real phones are **not measured**. Container figures come from a software renderer.
