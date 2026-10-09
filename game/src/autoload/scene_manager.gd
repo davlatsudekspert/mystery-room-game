@@ -42,6 +42,9 @@ func _ready() -> void:
 	_toast.add_theme_constant_override("outline_size", 6)
 	_toast.add_theme_font_size_override("font_size", 26)
 	_layer.add_child(_toast)
+	Settings.changed.connect(func(key: String) -> void:
+		if key == "safe_graphics" and bool(Settings.get_value(key)):
+			simplify_graphics(get_tree().current_scene)) # turning it off takes effect when the next scene loads
 
 
 ## Android back button/gesture (with application/config/quit_on_go_back off) and Escape on desktop go to
@@ -49,6 +52,10 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		_dispatch_back()
+	elif what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		CrashGuard.paused()
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		CrashGuard.resumed()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -78,18 +85,49 @@ func goto(path: String, fade_time: float = 0.45) -> void:
 	_loading.add_theme_font_size_override("font_size", UITheme.size(28))
 	_loading.visible = true
 	await _frames_drawn(1)
+	var stage := "load:" + path.get_file().get_basename()
+	CrashGuard.mark(stage)
 	get_tree().paused = false
 	get_tree().change_scene_to_file(path)
 	await get_tree().process_frame
+	if bool(Settings.get_value("safe_graphics")):
+		simplify_graphics(get_tree().current_scene) # before the new scene's first frame is drawn
 	await get_tree().process_frame
 	scene_changed.emit(path)
 	await _frames_drawn(3)
 	_loading.visible = false
+	# the first seconds of a room (reflection probe capture, first shadow maps) still count as loading
+	get_tree().create_timer(6.0).timeout.connect(func() -> void:
+		if CrashGuard.stage() == stage:
+			CrashGuard.mark("play:" + path.get_file().get_basename()))
 	var tw2 := create_tween()
 	tw2.tween_property(_fade, "color:a", 0.0, fade_time)
 	await tw2.finished
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_busy = false
+
+
+## Safe graphics (Settings "safe_graphics"): the scene keeps every light and every puzzle effect, but drops the
+## features most likely to fail on a phone's GPU driver: positional light shadows, reflection probes (the
+## ambient light is raised a little instead) and particles.
+func simplify_graphics(scene: Node) -> void:
+	if scene == null:
+		return
+	for l in scene.find_children("*", "Light3D", true, false):
+		if l is OmniLight3D or l is SpotLight3D:
+			(l as Light3D).shadow_enabled = false
+	var probes := scene.find_children("*", "ReflectionProbe", true, false)
+	for p in probes:
+		(p as ReflectionProbe).visible = false
+	if not probes.is_empty():
+		for we in scene.find_children("*", "WorldEnvironment", true, false):
+			var env := (we as WorldEnvironment).environment
+			if env != null and not env.has_meta("safe_ambient"):
+				env.set_meta("safe_ambient", true)
+				env.ambient_light_energy *= 1.5
+	for p in scene.find_children("*", "GPUParticles3D", true, false):
+		(p as GPUParticles3D).emitting = false
+		(p as GPUParticles3D).visible = false
 
 
 ## Waits until `n` frames have been drawn (just `n` frames where nothing is drawn: headless tests).

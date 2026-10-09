@@ -96,6 +96,7 @@ func _build() -> void:
 		_scale_buttons.append(b)
 	left.add_child(sh)
 	left.add_child(_toggle("ui.haptics", "haptics"))
+	left.add_child(_toggle("ui.safe_graphics", "safe_graphics"))
 	right.add_child(_slider("ui.music", "music_volume"))
 	right.add_child(_slider("ui.sfx", "sfx_volume"))
 	right.add_child(_slider("ui.ambience", "ambience_volume"))

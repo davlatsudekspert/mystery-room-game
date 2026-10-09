@@ -29,6 +29,10 @@ GameState="*res://src/autoload/game_state.gd"
 AudioManager="*res://src/autoload/audio_manager.gd"
 SceneManager="*res://src/autoload/scene_manager.gd"
 
+[debug]
+
+file_logging/enable_file_logging=true
+
 [display]
 
 window/size/viewport_width=1920

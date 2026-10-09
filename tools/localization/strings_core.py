@@ -43,6 +43,8 @@ S = [
 ("ui.music", "Music", "Музыка", "Musiqa"),
 ("ui.sfx", "Sound effects", "Звуковые эффекты", "Tovush effektlari"),
 ("ui.ambience", "Ambience", "Атмосфера", "Muhit tovushlari"),
+("ui.safe_graphics", "Simplified graphics", "Упрощённая графика", "Soddalashtirilgan grafika"),
+("msg.safe_graphics_on", "Simplified graphics are on after a problem while loading. You can change this in Settings.", "После сбоя при загрузке включена упрощённая графика. Изменить можно в настройках.", "Yuklashdagi nosozlikdan soʻng soddalashtirilgan grafika yoqildi. Sozlamalarda oʻzgartirish mumkin."),
 ("ui.text_size", "Text size", "Размер текста", "Matn oʻlchami"),
 ("ui.haptics", "Vibration", "Вибрация", "Tebranish"),
 ("ui.reduce_motion", "Reduce camera motion", "Меньше движения камеры", "Kamera harakatini kamaytirish"),

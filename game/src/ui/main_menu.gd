@@ -66,6 +66,10 @@ func _ready() -> void:
 	if Premium.tester_build():
 		# a tester's screenshot then says which renderer the phone ran (metal / vulkan / opengl3, mobile / gl_compatibility)
 		ver += "  ·  %s %s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_current_rendering_method()]
+		if CrashGuard.previous != "":
+			ver += "  ·  last stop: " + CrashGuard.previous # where the previous session ended without a clean pause
+		if bool(Settings.get_value("safe_graphics")):
+			ver += "  ·  safe"
 	_ver = UITheme.label(ver, 20, UITheme.MUTED)
 	_ver.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
@@ -74,6 +78,10 @@ func _ready() -> void:
 	_ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_ver)
 	_build_menu()
+	CrashGuard.mark("menu")
+	if CrashGuard.switched_to_safe:
+		CrashGuard.switched_to_safe = false
+		SceneManager.toast(tr("msg.safe_graphics_on"), 6.0)
 	AudioManager.music("music_menu", 3.0)
 	Loc.language_changed.connect(_on_language_changed)
 	Settings.changed.connect(_on_setting_changed)

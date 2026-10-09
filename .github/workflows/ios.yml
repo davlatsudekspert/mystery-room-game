@@ -107,7 +107,11 @@ jobs:
           # Tester builds: custom feature beta_unlock in the iOS preset only (Premium.tester_build() opens the paid
           # chapters; real payments stay disabled). An App Store release build must run with beta_unlock=false.
           FEATURES=""
-          if [ "$BETA_UNLOCK" = "true" ]; then FEATURES="beta_unlock"; fi
+          if [ "$BETA_UNLOCK" = "true" ]; then
+            FEATURES="beta_unlock"
+            # tester builds: the game's folder (logs/godot.log) shows in the Files app, so a tester can send the log
+            sed -i "s/^user_data\/accessible_from_files_app=.*/user_data\/accessible_from_files_app=true/" export_presets.cfg
+          fi
           awk -v f="$FEATURES" '/^\[preset\.[0-9]+\]$/ {ios=0} /^name="iOS"$/ {ios=1}
             ios && /^custom_features=/ {print "custom_features=\"" f "\""; next} {print}' export_presets.cfg > "$RUNNER_TEMP/presets.cfg"
           mv "$RUNNER_TEMP/presets.cfg" export_presets.cfg

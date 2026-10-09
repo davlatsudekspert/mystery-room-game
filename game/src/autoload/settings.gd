@@ -16,6 +16,7 @@ const DEFAULTS := {
 	"look_sensitivity": 1.0,
 	"brightness": 1.0, # scene exposure multiplier (dark rooms on dim phone screens)
 	"render_scale": 1.0, # 3D resolution chosen by PerfGuard on phones (not shown in the UI)
+	"safe_graphics": false, # no positional shadows, reflection probes or particles (CrashGuard turns it on after a crash)
 }
 const TEXT_SCALES: Array[float] = [0.9, 1.0, 1.15, 1.3]
 

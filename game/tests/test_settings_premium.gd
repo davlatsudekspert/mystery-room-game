@@ -110,3 +110,46 @@ func test_hint_escalation() -> void:
 	(GameState.logic as Lab7Logic).take("notebook")
 	eq(GameState.next_hint()["level"], 1, "new goal restarts at nudge")
 	SaveSystem.delete_game()
+
+
+## A session that dies while loading a scene is remembered (CrashGuard); a clean pause or a crash later in play is not
+## a loading crash, so only the first turns safe graphics on at the next launch.
+func test_crash_guard_stages() -> void:
+	CrashGuard.mark("load:lab7")
+	eq(CrashGuard.read_previous(), "load:lab7", "a session that died while loading is remembered")
+	check(CrashGuard.crashed_while_loading(), "a loading crash")
+	CrashGuard.mark("play:lab7")
+	CrashGuard.paused()
+	eq(CrashGuard.read_previous(), "", "a clean pause is not a crash")
+	CrashGuard.resumed()
+	eq(CrashGuard.read_previous(), "play:lab7", "after resuming, the stage is back")
+	check(not CrashGuard.crashed_while_loading(), "a crash during play keeps the graphics")
+	CrashGuard.mark("menu")
+	eq(CrashGuard.read_previous(), "", "the main menu is a clean stage")
+	DirAccess.remove_absolute(CrashGuard.PATH)
+	CrashGuard.previous = ""
+
+
+## Safe graphics keep every light but drop positional shadows, reflection probes and particles.
+func test_safe_graphics_simplify_a_scene() -> void:
+	var scene := Node3D.new()
+	var omni := OmniLight3D.new()
+	omni.shadow_enabled = true
+	var spot := SpotLight3D.new()
+	spot.shadow_enabled = true
+	var sun := DirectionalLight3D.new()
+	sun.shadow_enabled = true
+	var probe := ReflectionProbe.new()
+	var dust := GPUParticles3D.new()
+	var we := WorldEnvironment.new()
+	we.environment = Environment.new()
+	we.environment.ambient_light_energy = 0.4
+	for n: Node in [omni, spot, sun, probe, dust, we]:
+		scene.add_child(n)
+	SceneManager.simplify_graphics(scene)
+	SceneManager.simplify_graphics(scene) # twice: the ambient boost is applied once
+	check(not omni.shadow_enabled and not spot.shadow_enabled, "no positional shadows")
+	check(sun.shadow_enabled and omni.visible and spot.visible, "every light stays; the sun keeps its shadow")
+	check(not probe.visible and not dust.visible, "no reflection probe, no particles")
+	eq(snappedf(we.environment.ambient_light_energy, 0.001), 0.6, "ambient raised once to make up for the probe")
+	scene.free()
