@@ -12,6 +12,8 @@ Debug builds show **"FPS NN · 3D NN%"** under the pause button. Take a screensh
 ## Checklist: report anything that is not ✅
 **First launch**
 - [ ] The app icon looks right on the home screen, including round and themed icons on Android 13+.
+- [ ] The home-screen name reads **Mystery Room** (with the space) in every phone language.
+- [ ] The launch screen shows the game logo on the dark menu colour, never the Godot engine logo.
 - [ ] The language picker preselects the phone's language (EN, RU or UZ). Other languages fall back to English.
 - [ ] The main menu works, settings are readable, and the version is shown at the bottom right.
 
@@ -34,7 +36,7 @@ Debug builds show **"FPS NN · 3D NN%"** under the pause button. Take a screensh
 
 **Performance and comfort**
 - [ ] FPS in the room overview, darkroom and finale. The "3D %" value drops automatically on slow phones, and the image gets slightly softer.
-- [ ] Load time from tapping New Game to the room.
+- [ ] Load time from tapping New Game to the room. The black screen in between says "Loading…"; note how long it stays.
 - [ ] Phone temperature after 15 minutes. Battery drain per 15 minutes.
 - [ ] Notch and rounded corners: no button is hidden.
 
@@ -44,3 +46,13 @@ For each issue, send:
 - the language used;
 - a screenshot (with the FPS line in debug builds);
 - what you did just before the issue.
+
+In tester builds the main menu's version line also names the graphics driver and renderer (for example
+`metal mobile`, `vulkan mobile` or `opengl3 gl_compatibility`). Include it in a screenshot with any rendering issue.
+
+## Device reports
+| Date | Device / build | Report | Status |
+|---|---|---|---|
+| 2026-10-09 | iPhone, TestFlight 0.1.0 (2) | The launch screen showed the Godot engine logo | Fixed in build 3: the export used Godot's default image because no launch images were set. The launch storyboard now shows the game logo (`game/platform/ios/launch@2x/3x.png`), and `tools/ios/verify_xcode_project.py` fails the build if it falls back again |
+| 2026-10-09 | iPhone, TestFlight 0.1.0 (2) | The home-screen name read "MysteryRoom" | Fixed in build 3: `config/name_localized` gives "Mystery Room" to every language's InfoPlist.strings (ru/uz had none). The Xcode project check enforces it, and the archive step prints what the phone reads |
+| 2026-10-09 | iPhone, TestFlight 0.1.0 (2) | New Game: black screen with the chapter music and nothing else | Open. The room had loaded (its music started), so the first frames were not drawn, or were drawn very late. Most likely the phone compiled the room's shaders on first run. Build 3 shows "Loading…" until the room's first frames are drawn, and names the renderer in the menu. Next: the owner's timing on build 3, then baking shaders for Metal at export (the Godot shader baker needs a macOS export) |

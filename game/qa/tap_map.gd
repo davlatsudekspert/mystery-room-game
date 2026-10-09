@@ -120,6 +120,7 @@ func _breakdown(view_id: String) -> void:
 		n.visible = true
 		if base - c != 0:
 			rows.append([base - c, str(n.name)])
+		print("  breakdown %s: %s %d" % [view_id, n.name, base - c]) # progress for tools/qa_run.sh's stall watchdog
 		if base - c >= 12: # a big one: which of its meshes
 			for mi in n.find_children("*", "MeshInstance3D", true, false):
 				var m := mi as MeshInstance3D
@@ -128,6 +129,7 @@ func _breakdown(view_id: String) -> void:
 				m.visible = false
 				var cm := await _draw_calls()
 				m.visible = true
+				print("    %s/%s %d" % [n.name, m.name, base - cm])
 				if base - cm >= 2:
 					rows.append([base - cm, "%s/%s (%d surfaces, shadow %s)" % [n.name, m.name,
 						m.get_surface_override_material_count(),
