@@ -8,6 +8,7 @@ extends Node
 ##        [--steps=N] (solver steps first) [--do=open_cat_drawer:4,pick_divider:1] (logic calls with int args)
 ##        [--until=booth_open] (solver steps until that state key is true) [--lens=take|leave]
 ##        [--perf] (no tap marks: log draw calls / primitives / objects per view instead)
+##        [--breakdown] (with --perf: the draw calls each model, effect node and light shadow adds to the view)
 ## Writes <view>.png and tap_map.txt (one line per orange or red part).
 
 var out_dir := "/tmp/tap_map"
@@ -90,6 +91,8 @@ func _run() -> void:
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)])
 			get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out_dir, v]) # a clean shot, no marks
+			if OS.get_cmdline_user_args().has("--breakdown"):
+				await _breakdown(v)
 			continue
 		await _map(v)
 	var f := FileAccess.open(out_dir + "/tap_map.txt", FileAccess.WRITE)
@@ -98,6 +101,54 @@ func _run() -> void:
 	SaveSystem.delete_game()
 	print("QA_DONE exit=0") # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit()
+
+
+## The draw calls each part of the room adds to this view: hide it (or switch its light's shadow off), measure,
+## restore. Hiding removes both its colour pass and its shadow pass draws.
+func _breakdown(view_id: String) -> void:
+	var base := await _draw_calls()
+	var rows: Array = []
+	var nodes: Array[Node3D] = []
+	for n in room.get_children():
+		if n is Node3D and not (n is Light3D or n is Camera3D or n is ReflectionProbe):
+			nodes.append(n)
+	for n in nodes:
+		if not n.visible:
+			continue
+		n.visible = false
+		var c := await _draw_calls()
+		n.visible = true
+		if base - c != 0:
+			rows.append([base - c, str(n.name)])
+		if base - c >= 12: # a big one: which of its meshes
+			for mi in n.find_children("*", "MeshInstance3D", true, false):
+				var m := mi as MeshInstance3D
+				if not m.is_visible_in_tree():
+					continue
+				m.visible = false
+				var cm := await _draw_calls()
+				m.visible = true
+				if base - cm >= 2:
+					rows.append([base - cm, "%s/%s (%d surfaces, shadow %s)" % [n.name, m.name,
+						m.get_surface_override_material_count(),
+						"off" if m.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF else "on"]])
+	for l in room.find_children("*", "Light3D", true, false):
+		var light := l as Light3D
+		if not light.shadow_enabled or not light.is_visible_in_tree():
+			continue
+		light.shadow_enabled = false
+		var c := await _draw_calls()
+		light.shadow_enabled = true
+		rows.append([base - c, "shadow of " + str(light.name)])
+	rows.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) > int(b[0]))
+	for r: Array in rows:
+		lines.append("  %s %4d  %s" % [view_id, int(r[0]), str(r[1])])
+
+
+func _draw_calls() -> int:
+	for _i in 3:
+		await RenderingServer.frame_post_draw
+	return RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
 
 
 func _settle(seconds: float) -> void:
