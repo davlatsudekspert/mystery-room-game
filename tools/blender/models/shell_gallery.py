@@ -378,7 +378,11 @@ def qa(parts, args):
         K.shoot(NAME + "_2", (2.7, 1.65, 2.2), (-1.8, 1.0, -2.2), vfov=62)
     if K.want(args, "3"):    # 'glass_floor' view: the Array 30 m below through the glass
         lights((0.0, 1.55, 1.1))
+        # Cycles mirrors the lit ceiling in the glass (a faint warm disc); Godot's mobile renderer has no SSR, so hide
+        # the ceiling from glossy rays for this shot
+        parts["ceiling"].visible_glossy = False
         K.shoot(NAME + "_3", (0.0, 1.55, 1.1), (0.0, -30.0, -0.6), vfov=32)
+        parts["ceiling"].visible_glossy = True
     if K.want(args, "4"):    # hero: high three-quarter over the shaft
         lights()
         K.shoot(NAME + "_4", (2.3, 3.5, 2.5), (-0.7, 0.5, -0.9), vfov=66)

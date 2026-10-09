@@ -13,11 +13,11 @@ const BOX_YAW_DEG := 8.0
 const FOCUS_UP := 0.068 # the point kept on screen: the box centre, above its base
 const BOX_SPAN := 0.34 # m: the box's apparent width (with its top and side in view) that set_frame() fits
 const FOV_H := 36.0 # horizontal (KEEP_WIDTH): the box keeps its share of the width on any aspect ratio
-const AZIMUTH := 30.0 # camera bearing, degrees right of the box front
-const ELEVATION := 27.0
+const AZIMUTH := 32.0 # camera bearing, degrees right of the box front
+const ELEVATION := 24.0
 const GEAR_DEG_S := 3.0 # wheel speed, degrees per second
-const LAMP_ENERGY := 1.7
-const BRASS_METALLIC := 0.6 # no reflection probe here: half-metallic brass shows its gold under the lamp
+const LAMP_ENERGY := 1.15
+const BRASS_METALLIC := 0.35 # no reflection probe here: half-metallic brass shows its gold under the lamp
 
 var _cam: Camera3D
 var _lamp: OmniLight3D
@@ -61,14 +61,15 @@ func _ready() -> void:
 				_gears.append(g)
 				_gear_rest.append(g.transform.basis)
 	# storytelling around the hero, kept clear of it: the stopped clock, Leyla's tea and spectacles
-	ModelUtil.spawn("flip_clock", self, Transform3D(Basis(Vector3.UP, deg_to_rad(28.0)), Vector3(-0.27, 0.78, -0.2)), "none")
-	ModelUtil.spawn("cc0/tea_set_01/tea_set_01", self, Transform3D(Basis(Vector3.UP, -0.5), Vector3(0.5, 0.78, -0.2)), "none")
-	ModelUtil.spawn("cc0/round_spectacles/round_spectacles", self, Transform3D(Basis(Vector3.UP, 0.5), Vector3(-0.17, 0.78, 0.2)), "none")
+	ModelUtil.spawn("flip_clock", self, Transform3D(Basis(Vector3.UP, deg_to_rad(38.0)), Vector3(-0.21, 0.78, 0.17)), "none")
+	ModelUtil.spawn("cc0/tea_set_01/tea_set_01", self, Transform3D(Basis(Vector3.UP, 0.3), Vector3(0.24, 0.78, -0.24)), "none")
+	ModelUtil.spawn("cc0/round_spectacles/round_spectacles", self, Transform3D(Basis(Vector3.UP, 0.9), Vector3(0.09, 0.78, 0.25)), "none")
 	_lamp = OmniLight3D.new()
 	_lamp.light_color = Color("ffb46b")
 	_lamp.light_energy = LAMP_ENERGY
-	_lamp.omni_range = 2.4
-	_lamp.position = BOX_POS + Vector3(-0.36, 0.44, 0.02)
+	_lamp.omni_range = 2.0
+	_lamp.omni_attenuation = 2.0 # inverse square: the pool of light falls off fast around the box
+	_lamp.position = BOX_POS + Vector3(-0.26, 0.4, 0.3)
 	_lamp.shadow_enabled = not safe
 	add_child(_lamp)
 	var moon := DirectionalLight3D.new() # cool rim from behind (no shadow)

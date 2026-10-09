@@ -19,6 +19,7 @@ var _cover: ColorRect # black over the 3D at first, faded out by the entrance
 const LOGO_SIZE := Vector2(760, 570)
 const MENU_SEP := 6.0
 const VER_GAP := 10.0 # between the version line and the column above it
+const LOGO_GAP := 6.0
 
 var _safe_seen := Vector4.ZERO
 var _safe_poll := 0.0
@@ -53,7 +54,7 @@ func _ready() -> void:
 	_left = VBoxContainer.new()
 	_left.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	_left.alignment = BoxContainer.ALIGNMENT_CENTER
-	_left.add_theme_constant_override("separation", 16)
+	_left.add_theme_constant_override("separation", 0)
 	add_child(_left)
 	# The logo artwork carries the subtitle, so there is one image per language (tools/ui/make_logo_variants.py).
 	_logo = TextureRect.new()
@@ -65,7 +66,7 @@ func _ready() -> void:
 	_left.add_child(_logo)
 	_update_logo()
 	_gap = Control.new()
-	_gap.custom_minimum_size = Vector2(0, 18)
+	_gap.custom_minimum_size = Vector2(0, LOGO_GAP) # the first item's row adds its own air above the text
 	_left.add_child(_gap)
 	_menu = VBoxContainer.new()
 	_menu.add_theme_constant_override("separation", int(MENU_SEP))
@@ -190,7 +191,7 @@ func _layout() -> void:
 		b.custom_minimum_size.y = btn_h
 		btn_h = maxf(btn_h, b.get_combined_minimum_size().y)
 	var buttons := n * btn_h + maxf(0, n - 1) * MENU_SEP
-	var logo_h := minf(avail - buttons - 18.0 - 2 * 16.0, LOGO_SIZE.y)
+	var logo_h := minf(avail - buttons - LOGO_GAP, LOGO_SIZE.y)
 	# a short screen with large text: the logo gives way first, then the items' extra height (never below 7 mm)
 	_logo.visible = logo_h >= 150.0
 	_gap.visible = _logo.visible
@@ -200,10 +201,10 @@ func _layout() -> void:
 		var fit_h := maxf((avail - maxf(0, n - 1) * MENU_SEP) / maxf(1, n), UITheme.px_for_mm(7.0))
 		for b: Control in _menu.get_children():
 			b.custom_minimum_size.y = fit_h
-	# the hero box: centred in the free space right of the column, about 60 % of its width
+	# the hero box: centred in the free space right of the column, about 70 % of its width
 	var free_l := _left.offset_right
 	var free_r := canvas.x - safe.z
-	_bg.set_frame(Vector2((free_l + free_r) * 0.5 / canvas.x, 0.54), (free_r - free_l) / canvas.x * 0.6)
+	_bg.set_frame(Vector2((free_l + free_r) * 0.5 / canvas.x, 0.54), (free_r - free_l) / canvas.x * 0.72)
 	_update_atmosphere()
 
 
@@ -240,9 +241,14 @@ func _build_menu() -> void:
 			_new_game())
 	_add("ui.chapters", _show_chapters)
 	_add("ui.settings", _show_settings)
-	if not OS.has_feature("mobile") and not OS.has_feature("web"):
+	if not _mobile() and not OS.has_feature("web"):
 		_add("ui.quit", func() -> void: get_tree().quit())
 	_layout()
+
+
+## Phones and tablets have no Quit item (the OS closes apps); neither has QA's phone emulation.
+static func _mobile() -> bool:
+	return OS.has_feature("mobile") or bool(Settings.emulate.get("mobile", false))
 
 
 func _add(key: String, cb: Callable) -> void:

@@ -250,7 +250,7 @@ def qa(parts, args):
         lights()
         K.light("shaft_top", "POINT", (0.0, 9.0, 6.0), 400.0, "FFD7A0", radius=0.1)
         K.light("shaft_mid", "POINT", (0.6, 5.5, 6.6), 150.0, "FFD7A0", radius=0.1)
-        K.shoot(NAME + "_4", (2.6, 1.5, 6.2), (0.3, 6.0, 6.0), vfov=62)
+        K.shoot(NAME + "_4", (0.55, 1.45, 6.55), (0.0, 8.0, 6.0), vfov=62)
 
 
 def main():

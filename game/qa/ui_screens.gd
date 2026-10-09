@@ -12,6 +12,7 @@ extends Node
 ##   --size=WxH --dpi=N     emulate any screen (overrides the preset); --safe=l,t,r,b insets in screen px
 ##   --text-scale=X         the player's Settings → Text size (0.9 / 1.0 / 1.15 / 1.3)
 ##   --saved                start with a saved game, so the main menu shows Continue
+##   --mobile               menus as on a phone or tablet (no Quit item): Settings.emulate["mobile"]
 ##   --window=WxH           render window (default: the emulated screen). Same aspect = same canvas layout. Use one
 ##                          that fits the Xvfb screen (1280x1024) for builds that read DisplayServer's safe area
 ##                          directly: a window larger than the X screen makes it report bogus insets.
@@ -45,6 +46,7 @@ func _run() -> void:
 	var langs: PackedStringArray = ["en", "ru", "uz"]
 	var menus_only := false
 	var saved := false
+	var mobile := false
 	var device := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
@@ -55,6 +57,8 @@ func _run() -> void:
 			menus_only = true
 		elif a == "--saved":
 			saved = true
+		elif a == "--mobile":
+			mobile = true
 		elif a.begins_with("--device="):
 			device = a.substr(9)
 	if device != "":
@@ -78,6 +82,8 @@ func _run() -> void:
 			window_size = Vector2i(int(p[0]), int(p[1]))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	await _apply_screen()
+	if mobile:
+		Settings.emulate["mobile"] = true
 	SaveSystem.save_path = "user://qa_ui_save.json"
 	if saved:
 		GameState.start_new("ch1") # saves: the menu offers Continue

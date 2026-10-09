@@ -169,7 +169,7 @@ glass chimneys. The shutter tunnel mouth has a brass frame on the drum face and 
 
 | Node | Position | Materials | Notes |
 |---|---|---|---|
-| `gallery_drum` | (0,0,0) | Concrete | openings: door bays |z| < 0.8, y < 2.4; shutter φ 38.05° … 59.17°, y 0.30 … 2.10; memorial arc φ −30° … 30° plain |
+| `gallery_drum` | (0,0,0) | Concrete | openings: door bays z −0.8 … 0.8, y < 2.4; shutter φ 38.05° … 59.17°, y 0.30 … 2.10; memorial arc φ −30° … 30° plain |
 | `gallery_ceiling` | (0,0,0) | Concrete | y 4.5; ribs y 4.20 … 4.50; corbels y 3.95 … 4.20; ring beam bottom y 4.12 |
 | `gallery_floor` | (0,0,0) | Stone | r 1.62 → the drum face (and the bays to x ±3.70) |
 | `IA_glass_floor` | (0,0,0) | Glass | r 1.5, y −0.08 … 0 |
@@ -241,7 +241,7 @@ a concrete ceiling at 6.0 with two 0.4 × 0.58 beams along x at z −2.0 and 3.2
 
 | Node | Materials | Notes |
 |---|---|---|
-| `choir_walls` | Concrete, Paint_Green | openings: east wall |z| < 0.8, y < 2.4 (tunnel mouth, finished by `blast_door`'s hall flange); south wall x −6.3 … −4.8, y < 2.6 (finished by `IA_passage_w`) |
+| `choir_walls` | Concrete, Paint_Green | openings: east wall z −0.8 … 0.8, y < 2.4 (tunnel mouth, finished by `blast_door`'s hall flange); south wall x −6.3 … −4.8, y < 2.6 (finished by `IA_passage_w`) |
 | `choir_floor` | Concrete, Paint_Green | y 0 (strips at 0.003) |
 | `choir_ceiling` | Concrete | y 6.0; beams y 5.42 … 6.0 |
 | `catwalk` | Steel_Dark | deck x −13.0 … −12.0, top y 4.0, with the ladder opening x −12.95 … −12.45, z −4.0 … −3.40; tread bars; toe board on x −12.0 (to 4.12); edge channel; brackets with struts at z −3.85, −2.15, −0.45, 1.25, 2.75 (between the transformers; strut at x −12.45 is at y 3.71, above the 3.6 limit); handrail posts at z −3.95, −3.1, −2.1, −1.1, −0.1, 0.9, **1.9**, 2.9, 3.95 (x −12.03), rails at y 5.0 and 4.52; the **port_b mounting plate** 0.44 × 0.44 whose front plane passes through (−12.0, 4.55, 1.9) facing yaw 110 (normal (0.940, 0, −0.342)), clamped to the post; the ladder x −12.88 / −12.52, rungs every 0.30, stiles to y 5.0 |
@@ -269,7 +269,7 @@ box with riveted ribs, a kick rail and a doorway reveal.
 
 | Node | Materials | Notes |
 |---|---|---|
-| `nursery_walls` | Tile_Glazed | open sweep from the camp's east wall (x 7.75) round the north, east, south and west walls to the camp's south wall (z −1.05); openings: west wall |z| < 0.8, y < 2.4 (tunnel mouth); south wall x 4.8 … 6.3, y < 2.6 |
+| `nursery_walls` | Tile_Glazed | open sweep from the camp's east wall (x 7.75) round the north, east, south and west walls to the camp's south wall (z −1.05); openings: west wall z −0.8 … 0.8, y < 2.4 (tunnel mouth); south wall x 4.8 … 6.3, y < 2.6 |
 | `nursery_floor` | Linoleum | the room minus the camp (and its walls) |
 | `nursery_ceiling` | Steel_Cream | y 4.0; grid bars 18 mm deep; fittings y 3.935 … 3.985; pipe hangers and straps |
 | `nursery_pipes` | Glass_Frosted | x 7.75 … 13.0, y 0 … 3.36 |
