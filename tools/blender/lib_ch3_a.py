@@ -220,6 +220,70 @@ def cut(target, cutter_objs) -> None:
         M.boolean(target, c)
 
 
+def wall_sweep(name, path, profile, mat, closed=True):
+    """Sweep an open wall profile [(s, y)] (s > 0 = into the wall) along a horizontal path [(x, z)] traversed
+    CLOCKWISE seen from above (so the faces look into the room); mitred corners."""
+    n = len(path)
+    P = [Vector((x, 0.0, z)) for x, z in path]
+    up = Vector((0, 1, 0))
+    bm = bmesh.new()
+    cols = []
+    for i in range(n):
+        if closed or 0 < i < n - 1:
+            t_in = (P[i] - P[i - 1]).normalized()
+            t_out = (P[(i + 1) % n] - P[i]).normalized()
+        elif i == 0:
+            t_in = t_out = (P[1] - P[0]).normalized()
+        else:
+            t_in = t_out = (P[i] - P[i - 1]).normalized()
+        n_in, n_out = up.cross(t_in), up.cross(t_out)
+        m = (n_in + n_out)
+        m = m.normalized() if m.length > 1e-6 else n_in
+        k = 1.0 / max(0.25, m.dot(n_in))
+        cols.append([bm.verts.new(P[i] + m * (s * k) + up * y) for (s, y) in profile])
+    last = n if closed else n - 1
+    for i in range(last):
+        a, b = cols[i], cols[(i + 1) % n]
+        for r in range(len(profile) - 1):
+            bm.faces.new((a[r], b[r], b[r + 1], a[r + 1]))
+    return obj_from_bm(name, bm, mat)
+
+
+def flat_poly(name, outer, holes, y, mat, up=True):
+    """Horizontal filled polygon (G-frame (x, z) loops, even-odd holes) at height y, facing up or down."""
+    if up:
+        loops = [[(x, -z) for (x, z) in lp] for lp in [outer] + list(holes)]
+        o = L.flat_shape(name, loops, mat=mat)
+        o.data.transform(Matrix.Translation((0, y, 0)) @ Matrix.Rotation(math.radians(-90), 4, "X"))
+    else:
+        loops = [[(x, z) for (x, z) in lp] for lp in [outer] + list(holes)]
+        o = L.flat_shape(name, loops, mat=mat)
+        o.data.transform(Matrix.Translation((0, y, 0)) @ Matrix.Rotation(math.radians(90), 4, "X"))
+    return o
+
+
+def rock_panel(name, origin, u, v, w, h, nu, nv, amp, seed, mat="M_Rock", normal_sign=1.0):
+    """Subdivided rectangle (origin + a u + b v, a in [0, w], b in [0, h]) displaced along its normal by random rock
+    relief (edges kept flat); faces look along normal_sign * (u x v)."""
+    import random
+    rng = random.Random(seed)
+    o, U, Vv = Vector(origin), Vector(u).normalized(), Vector(v).normalized()
+    nrm = U.cross(Vv) * normal_sign
+    bm = bmesh.new()
+    grid = []
+    for j in range(nv + 1):
+        row = []
+        for i in range(nu + 1):
+            d = 0.0 if i in (0, nu) or j in (0, nv) else rng.uniform(-amp, amp)
+            row.append(bm.verts.new(o + U * (w * i / nu) + Vv * (h * j / nv) + nrm * d))
+        grid.append(row)
+    for j in range(nv):
+        for i in range(nu):
+            f = (grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i])
+            bm.faces.new(f if normal_sign > 0 else tuple(reversed(f)))
+    return obj_from_bm(name, bm, mat)
+
+
 # ====================================================================== GLB facts
 def glb_json(path):
     return V.glb_json(path)

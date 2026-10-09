@@ -5,10 +5,11 @@ docs/models/ch3_a.md.
 Origin = the cage floor centre at lobby level, world (0, 0, 6.0), yaw 0. The cage floor is at local y 0.25; the
 interior is local x, z ∈ [-1.1, 1.1].
 
-  freight_cage (static)   deck, bridge ramps (1.0 long) down to the lobby at both gates, riveted panel walls north and
-                          south (bars above 1.35 m), corner posts, roof frame at 2.6 with the hoist crosshead, sheave and
-                          ropes, gate tracks and jambs, brass grab rails, brass level plates "−2" above both gates,
-                          the bulb cage
+  freight_cage (static)   deck, riveted panel walls north and south (bars above 1.35 m), corner posts, roof frame at 2.6
+                          with the hoist crosshead, sheave and ropes, the hoist guide rails up the shaft to y 12, gate
+                          tracks and jambs, brass grab rails, brass level plates "−2" above both gates, the bulb cage.
+                          (The bridge ramps are part of shell_lift's lobby_floor, so they hide with the lobby during the
+                          intro instead of poking through intro_shaft — see docs/models/ch3_a.md.)
   IA_gate_west / _east    collapsible lattice gates, origin at the north post (∓1.1, 0.25, -0.95), lattice +Z to +0.95,
                           2.1 high. Open = scale local Z to 0.15 about the origin.
   IA_gate_lock_west       brass lock box at (-1.0, 1.15, 0.92) with Strand's mark inlaid; gate_key_mount_west on its slot
@@ -47,29 +48,11 @@ FOLD = 0.15
 # ====================================================================== static cage
 def cage():
     p = []
-    # deck (y 0 .. 0.25) with a steel skirt and tread bars, ramps down to the lobby at both gates
+    # deck (y 0 .. 0.25) with a steel skirt and tread bars
     p.append(K.gbox("deck", (-HW - 0.05, 0.0, -HW - 0.05), (HW + 0.05, FY, HW + 0.05), STEEL, 0.01))
     for k in range(9):
         z = -0.88 + 0.22 * k
         p.append(K.gbox("tread", (-0.98, FY, z - 0.012), (0.98, FY + 0.008, z + 0.012), STEEL, 0.0))
-    for sx in (-1, 1):
-        x0, x1 = sx * (HW + 0.05), sx * (HW + 1.05)
-        ramp = K.gbox("ramp", (-0.5, -0.025, -0.80), (0.5, 0.0, 0.80), STEEL, 0.006)
-        ang = math.atan2(FY, 1.0)
-        ramp.data.transform(Matrix.Translation(((x0 + x1) / 2, FY / 2, 0.0)) @ Matrix.Rotation(-sx * ang, 4, "Z"))
-        p.append(ramp)
-        for k in range(5):
-            t = (k + 0.5) / 5
-            x = x0 + (x1 - x0) * t
-            y = FY * (1 - t)
-            bar = K.gbox("rtread", (-0.012, 0.0, -0.72), (0.012, 0.008, 0.72), STEEL, 0.0)
-            bar.data.transform(Matrix.Translation((x, y, 0.0)) @ Matrix.Rotation(-sx * ang, 4, "Z"))
-            p.append(bar)
-        # side curbs on the ramp
-        for sz in (-1, 1):
-            c = K.gbox("curb", (-0.5, 0.0, -0.02), (0.5, 0.05, 0.02), STEEL, 0.004)
-            c.data.transform(Matrix.Translation(((x0 + x1) / 2, FY / 2, sz * 0.80)) @ Matrix.Rotation(-sx * ang, 4, "Z"))
-            p.append(c)
     # corner posts (angles)
     for sx in (-1, 1):
         for sz in (-1, 1):
@@ -116,6 +99,15 @@ def cage():
     p.append(K.gcyl("axle", 0.035, -0.12, 0.12, base=(0.0, 3.0, 0.0), axis=(1, 0, 0), segments=10, mat=STEEL))
     for sz in (-1, 1):
         p.append(K.gcyl("rope", 0.011, 0.0, 12.0 - 3.0, base=(0.0, 3.0, sz * 0.31), axis=(0, 1, 0), segments=5, mat=STEEL))
+        # hoist guide rails on the shaft walls (z = ±1.15) from above the cage roof to the top of the shaft (y 12)
+        zw = sz * 1.15
+        f0, f1 = sorted((zw, zw - sz * 0.012))
+        w0, w1 = sorted((zw - sz * 0.012, zw - sz * 0.08))
+        b0, b1 = sorted((zw, zw - sz * 0.02))
+        p.append(K.gbox("gflange", (-0.05, 2.75, f0), (0.05, 12.0, f1), STEEL, 0.0))
+        p.append(K.gbox("gweb", (-0.008, 2.75, w0), (0.008, 12.0, w1), STEEL, 0.0))
+        for y in (4.0, 6.0, 8.0, 10.0):
+            p.append(K.gbox("gbrk", (-0.09, y - 0.05, b0), (0.09, y + 0.05, b1), STEEL, 0.0))
     # bulb cage (wire guard) under the crosshead
     bx, by, bz = BULB
     p.append(K.gcyl("lampholder", 0.03, 0.0, 0.08, base=(bx, by + 0.12, bz), axis=(0, 1, 0), segments=10, mat=STEEL))

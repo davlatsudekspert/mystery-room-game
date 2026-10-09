@@ -37,7 +37,7 @@ GAUGE_G = (-0.05, 1.45, 0.20)                     # where tech_a looks (vessel f
 # ====================================================================== tech_a: the woman with the clipboard
 def tech_a():
     key = "tech_a"
-    tris = dict(body=4500, hand=600, head=1750)
+    tris = dict(body=4200, hand=580, head=1700)
     s = 0.95
     sp = L.Spine(hip_xy=(0.010, -0.010), neck_xy=(-0.006, 0.006), z_hip=0.86, z_neck=1.41, yaw_hip=-4.0, yaw_chest=6.0,
                  z_twist0=0.90, z_twist1=1.24)
