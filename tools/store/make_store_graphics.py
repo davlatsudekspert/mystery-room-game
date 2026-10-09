@@ -117,7 +117,7 @@ def caption_band(im: Image.Image, text: str) -> Image.Image:
     band = Image.new("RGBA", (w, bh), (0, 0, 0, 0))
     bd = ImageDraw.Draw(band)
     for y in range(bh): # fade in over the top third of the band
-        a = int(205 * min(1.0, y / (bh * 0.35)))
+        a = int(235 * min(1.0, y / (bh * 0.35)))
         bd.line([(0, y), (w, y)], fill=INK + (a,))
     font = ImageFont.truetype(FONT_TITLE, round(h * 0.05))
     tb = bd.textbbox((0, 0), text, font=font)
