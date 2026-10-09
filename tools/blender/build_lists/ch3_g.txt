@@ -1,5 +1,10 @@
 # Chapter 3 inventory items (group G, lib_ch3_items.py). QA-only: models/items_lineup_ch3.py (not built here).
+key_diamond.py
+key_triangle.py
+key_circle.py
+key_square.py
+resonance_meter.py
+ecg_strip.py
 seed_crystal.py
 nursery_crystal.py
 strand_fork.py
-ecg_strip.py
