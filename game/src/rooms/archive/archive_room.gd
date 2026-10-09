@@ -258,7 +258,7 @@ func _build_views() -> void:
 	V.call("reading", Vector3(1.9, 1.6, 2.35), Vector3(1.9, 0.8, 1.0), 52.0)
 	V.call("hatch", Vector3(1.5, 1.45, 3.0), Vector3(0.9, 0.0, 2.5), 50.0)
 	V.call("lockers", Vector3(0.6, 1.35, 1.5), Vector3(0.6, 0.95, 3.5), 56.0)
-	V.call("locker9", Vector3(0.4, 0.95, 2.45), Vector3(0.4, 0.55, 3.35), 46.0)
+	V.call("locker9", Vector3(0.8, 0.95, 2.45), Vector3(0.8, 0.58, 3.35), 46.0) # centred on locker 9 (x 0.6–1.0)
 	V.call("station", Vector3(3.55, 1.55, -1.4), Vector3(4.95, 1.2, -1.4), 52.0)
 	V.call("chart", Vector3(3.9, 1.7, -0.35), Vector3(5.0, 1.75, -0.35), 44.0)
 	V.call("compressor", Vector3(3.65, 1.45, 0.8), Vector3(5.0, 1.25, 0.8), 52.0)
@@ -271,7 +271,7 @@ func _build_views() -> void:
 	V.call("socket", Vector3(-2.5, 1.2, -2.65), Vector3(-2.5, 0.92, -3.38), 40.0)
 	V.call("booth_door", Vector3(-1.55, 1.45, 0.75), Vector3(-1.55, 1.2, 2.0), 52.0)
 	V.call("dial", Vector3(-1.8, 1.25, 1.5), Vector3(-1.82, 1.2, 2.0), 36.0)
-	V.call("projector", Vector3(-2.2, 1.75, 3.15), Vector3(-2.9, 1.5, 2.6), 50.0)
+	V.call("projector", Vector3(-2.1, 2.05, 2.95), Vector3(-2.86, 1.98, 2.6), 50.0) # the control side: lever, focus, frame keys, reels
 	V.call("splicer", Vector3(-3.9, 1.55, 2.55), Vector3(-3.9, 0.95, 3.3), 48.0)
 	V.call("slides", Vector3(-3.85, 1.3, 2.8), Vector3(-4.8, 0.7, 2.8), 48.0)
 	V.call("slide_projector", Vector3(-1.75, 1.95, 2.95), Vector3(-2.35, 1.8, 2.45), 44.0)

@@ -127,6 +127,10 @@ func _map(view_id: String) -> void:
 					others[got] = int(others.get(got, 0)) + 1
 		if total == 0:
 			continue
+		# a far part hidden behind walls or furniture is simply not in view: skip it, so the report lists only
+		# parts a player could aim at (a near part blocked by scenery is still reported)
+		if hits == 0 and others.keys() == [""] and cam.global_position.distance_to(mi.global_position) > 1.2:
+			continue
 		var pos := centroid / hits if hits > 0 else r.get_center()
 		var top := ""
 		var best := 0

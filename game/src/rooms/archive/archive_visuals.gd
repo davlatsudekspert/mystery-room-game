@@ -82,7 +82,31 @@ func _ready() -> void:
 	if _tray:
 		_tray.visible = false
 		_record(_tray)
+		# cards and dividers stand in tight rows with staggered tabs: tap them by their exact shape
+		for mi in ModelUtil.find_meshes(_tray):
+			if mi.name.begins_with("IA_card_") or mi.name.begins_with("IA_divider_"):
+				ModelUtil.use_exact_collider(mi)
 	_compressor_on = logic.state["pressure_ok"]
+	_legible_piping_plate()
+
+
+## The compressor's piping diagram is the evidence for P2. Polished brass inlay on black lacquer only shows what
+## it reflects, and on a phone it read as an empty black panel: give the inlay a satin, faintly glowing brass.
+func _legible_piping_plate() -> void:
+	var plate := part("compressor_panel", "piping_plate") as MeshInstance3D
+	if plate == null or plate.mesh == null:
+		return
+	var inlay := StandardMaterial3D.new()
+	inlay.albedo_color = Color("dcb65e")
+	inlay.metallic = 0.3
+	inlay.roughness = 0.42
+	inlay.emission_enabled = true
+	inlay.emission = Color("7a5c24")
+	inlay.emission_energy_multiplier = 0.7
+	for i in plate.mesh.get_surface_count():
+		var src := plate.mesh.surface_get_material(i)
+		if src != null and src.resource_name.begins_with("M_Brass"):
+			plate.set_surface_override_material(i, inlay)
 
 
 # ====================================================================== lookups

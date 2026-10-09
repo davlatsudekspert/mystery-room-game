@@ -5,7 +5,6 @@ extends RefCounted
 
 const MAT_DIR := "res://assets/materials/%s.tres"
 const LARGE_PART_M := 0.15
-const THIN_PART_M := 0.006
 static var _mat_cache: Dictionary = {}
 
 
@@ -75,23 +74,33 @@ static func build_colliders(root: Node3D, mode: String) -> void:
 		var is_ia := mi.name.begins_with("IA_")
 		# Large interactive parts (drawers, doors, panels) get an exact trimesh too, so their bounding box
 		# never covers the small controls mounted on them (drawer digits, knobs, keyholes).
-		# Thin interactive parts (cards, divider guides, paper) also get an exact shape: an inflated box would cover
-		# the empty space beside their tabs and steal taps meant for the card or tab standing behind.
-		var thin := is_ia and mi.mesh.get_aabb().size[mi.mesh.get_aabb().get_shortest_axis_index()] < THIN_PART_M
-		if is_ia and not thin and mi.mesh.get_aabb().get_longest_axis_size() <= LARGE_PART_M:
+		if is_ia and mi.mesh.get_aabb().get_longest_axis_size() <= LARGE_PART_M:
 			var aabb := mi.mesh.get_aabb()
 			var box := BoxShape3D.new()
 			box.size = (aabb.size + Vector3.ONE * 0.004).max(Vector3.ONE * 0.012)
 			shape.shape = box
 			shape.position = aabb.get_center()
 		else:
-			var tri := mi.mesh.create_trimesh_shape()
-			if thin and tri != null:
-				tri.backface_collision = true # a card can be tapped from either side
-			shape.shape = tri
+			shape.shape = mi.mesh.create_trimesh_shape()
 		body.add_child(shape)
 		mi.add_child(body)
 		body.set_meta("part", str(mi.name) if is_ia else "")
+
+
+## Give one interactive part its exact shape instead of the padded box. For tabbed cards and divider guides
+## standing in a row: a box would cover the empty space beside each tab and steal taps meant for the card behind.
+## (Not for rings or holes, such as a rotary dial: there the padded box is what makes the hole tappable.)
+static func use_exact_collider(mi: MeshInstance3D) -> void:
+	if mi == null or mi.mesh == null:
+		return
+	for body in mi.get_children():
+		if body is StaticBody3D:
+			for cs in body.get_children():
+				if cs is CollisionShape3D:
+					var tri := mi.mesh.create_trimesh_shape()
+					tri.backface_collision = true # a card can be tapped from either side
+					(cs as CollisionShape3D).shape = tri
+					(cs as CollisionShape3D).position = Vector3.ZERO
 
 
 ## Find a node by exact name anywhere below root (GLB hierarchies can nest).
