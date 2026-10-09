@@ -6,6 +6,11 @@ name: iOS App Store Connect check (read-only)
 
 on:
   workflow_dispatch:
+    inputs:
+      crashes:
+        description: "Only report the latest TestFlight crash reports testers shared (0 = the full record check)"
+        type: number
+        default: 0
 
 permissions:
   contents: read
@@ -28,4 +33,5 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
-        run: '"$RUNNER_TEMP/venv/bin/python" tools/ios/asc_check.py --bundle-id com.mysteryroom.forgotteninstitute'
+          CRASHES: ${{ inputs.crashes }}
+        run: '"$RUNNER_TEMP/venv/bin/python" tools/ios/asc_check.py --bundle-id com.mysteryroom.forgotteninstitute --crashes "${CRASHES:-0}"'

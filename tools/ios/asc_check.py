@@ -17,6 +17,10 @@ Modes:
   --gate     preflight for ios.yml: exit 3 unless the bundle id is registered AND an app record uses
              it (otherwise Xcode's automatic signing could register a new App ID). Writes
              app_found/next_build to $GITHUB_OUTPUT.
+  --crashes N  the N latest TestFlight crash reports testers shared for this app, plus the latest builds'
+             processing state. Only what is needed to find the bug is printed (build, device model, iOS
+             version, exception, termination reason, the crashed thread); never a tester's e-mail, name or
+             comment, nor the report's device and incident identifiers (the run log of a public repo is public).
 """
 from __future__ import annotations
 
@@ -248,12 +252,97 @@ def report_app(asc: Asc, app: dict, bundle_id: str) -> int:
 	return max(nums) if nums else 0
 
 
+def _frames(frames: list, images: list, limit: int = 40) -> list[str]:
+	lines = []
+	for i, f in enumerate(frames[:limit]):
+		img = images[f["imageIndex"]].get("name", "?") if isinstance(f.get("imageIndex"), int) and f["imageIndex"] < len(images) else "?"
+		sym = f.get("symbol") or ""
+		where = f"{sym} + {f.get('symbolLocation', 0)}" if sym else f"+0x{int(f.get('imageOffset', 0)):x}"
+		lines.append(f"    {i:2d} {img:<28} {where}")
+	return lines
+
+
+def crash_summary(log: str) -> list[str]:
+	"""The parts of a crash report that locate the bug, without identifiers."""
+	text = log.strip()
+	if text.startswith("{"):  # .ips: a one-line JSON header, then the JSON report
+		head, _, body = text.partition("\n")
+		try:
+			hdr, rep = json.loads(head), json.loads(body)
+		except ValueError:
+			return ["  (unreadable .ips report)"]
+		images = rep.get("usedImages") or []
+		lines = [f"  device {rep.get('modelCode', '?')}, iOS {(rep.get('osVersion') or {}).get('train', hdr.get('os_version', '?'))}, "
+			f"app {hdr.get('app_version', '?')} ({hdr.get('build_version', '?')})"]
+		for k in ("exception", "termination", "asi", "ktriageinfo", "vmregioninfo"):
+			if rep.get(k):
+				lines.append(f"  {k}: {json.dumps(rep[k], ensure_ascii=False)[:1500]}")
+		if rep.get("lastExceptionBacktrace"):
+			lines.append("  last exception backtrace:")
+			lines += _frames(rep["lastExceptionBacktrace"], images)
+		threads = rep.get("threads") or []
+		ft = rep.get("faultingThread")
+		crashed = next((t for t in threads if t.get("triggered")), threads[ft] if isinstance(ft, int) and ft < len(threads) else None)
+		if crashed:
+			lines.append(f"  crashed thread {crashed.get('name') or crashed.get('queue') or ''}:")
+			lines += _frames(crashed.get("frames") or [], images)
+		return lines
+	keep, lines, in_crashed = re.compile(r"^(Hardware Model|OS Version|Version|Exception Type|Exception Subtype|Exception Codes|"
+		r"Exception Reason|Termination Reason|Termination Description|Triggered by Thread|Crashed Thread)"), [], False
+	for ln in text.splitlines():
+		if keep.match(ln):
+			lines.append("  " + ln)
+		elif re.match(r"^(Thread \d+ Crashed|Last Exception Backtrace|Application Specific Information)", ln):
+			in_crashed = True
+			lines.append("  " + ln)
+		elif in_crashed:
+			if not ln.strip():
+				in_crashed = False
+			else:
+				lines.append("  " + ln[:200])
+	return lines or ["  (no crash details found in the report)"]
+
+
+def report_crashes(asc: Asc, app_id: str, n: int) -> None:
+	st, builds = asc.get("/v1/builds", {"filter[app]": app_id, "sort": "-uploadedDate", "limit": "5",
+		"fields[builds]": "version,processingState,uploadedDate,expired"})
+	out("### Latest builds")
+	for b in (builds.get("data") or []) if st == 200 else []:
+		a = b["attributes"]
+		out(f"- build {a.get('version')}: {a.get('processingState')} (uploaded {a.get('uploadedDate')}, expired={a.get('expired')})")
+	if st != 200:
+		out(f"- GET /v1/builds: HTTP {st}: {err(builds)}")
+	st, subs = asc.get(f"/v1/apps/{app_id}/betaFeedbackCrashSubmissions", {"limit": str(n), "sort": "-createdDate",
+		"fields[betaFeedbackCrashSubmissions]": "createdDate,deviceModel,osVersion,appUptimeInMilliseconds,buildBundleId,build,crashLog",
+		"include": "build", "fields[builds]": "version"})
+	out("### TestFlight crash reports shared by testers")
+	if st != 200:
+		out(f"- GET betaFeedbackCrashSubmissions: HTTP {st}: {err(subs)}")
+		return
+	versions = {b["id"]: b["attributes"].get("version") for b in subs.get("included") or [] if b.get("type") == "builds"}
+	data = subs.get("data") or []
+	if not data:
+		out("- none yet (the tester taps Share on the crash prompt, or sends feedback from the TestFlight app)")
+	for c in data:
+		a = c["attributes"]
+		build = versions.get(((c.get("relationships") or {}).get("build") or {}).get("data", {}).get("id", ""), "?")
+		out(f"- {a.get('createdDate')}: build {build}, {a.get('deviceModel')}, iOS {a.get('osVersion')}, "
+			f"app up {int(a.get('appUptimeInMilliseconds') or 0) / 1000:.1f} s")
+		st2, log = asc.get(f"/v1/betaFeedbackCrashSubmissions/{c['id']}/crashLog", {"fields[betaCrashLogs]": "logText"})
+		if st2 != 200:
+			out(f"  crash log: HTTP {st2}: {err(log)}")
+			continue
+		for ln in crash_summary(((log.get("data") or {}).get("attributes") or {}).get("logText") or ""):
+			out(ln)
+
+
 def main() -> int:
 	ap = argparse.ArgumentParser()
 	ap.add_argument("--bundle-id", default="com.mysteryroom.forgotteninstitute")
 	ap.add_argument("--gate", action="store_true", help="preflight mode for ios.yml (exit 3 unless record + bundle id exist)")
 	ap.add_argument("--min-build", type=int, default=1, help="gate mode: next_build is at least this")
 	ap.add_argument("--write-p8", metavar="PATH", help="only write the normalised .p8 (PKCS#8 PEM, mode 600) for xcodebuild")
+	ap.add_argument("--crashes", type=int, default=0, metavar="N", help="report the N latest shared TestFlight crashes")
 	args = ap.parse_args()
 	bundle_id = args.bundle_id
 
@@ -290,6 +379,14 @@ def main() -> int:
 	st, exact = asc.get_all("/v1/apps", {"filter[bundleId]": bundle_id, "fields[apps]": "name,bundleId,sku,primaryLocale"})
 	exact = [a for a in exact if a["attributes"].get("bundleId") == bundle_id]
 	out(f"- GET /v1/apps?filter[bundleId]={bundle_id}: HTTP {st}, {len(exact)} exact match(es)")
+	if args.crashes:
+		if exact:
+			report_crashes(asc, exact[0]["id"], args.crashes)
+		summary = os.environ.get("GITHUB_STEP_SUMMARY")
+		if summary:
+			with open(summary, "a", encoding="utf-8") as f:
+				f.write("\n".join(LINES) + "\n")
+		return 0 if exact else 1
 	st, all_apps = asc.get_all("/v1/apps", {"limit": "200", "fields[apps]": "name,bundleId,sku,primaryLocale"})
 	ours = {a["id"]: a for a in exact}
 	for a in all_apps:
