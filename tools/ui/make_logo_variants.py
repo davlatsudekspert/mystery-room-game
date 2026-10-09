@@ -27,9 +27,14 @@ FONT = os.path.join(ROOT, "game/assets/fonts/CormorantGaramond-Bold.ttf")
 # subtitle band in source pixels (the gold ✦ marks at both ends stay)
 BAND = (312, 836, 1132, 882)
 SUBTITLES = {"ru": "ЗАБЫТЫЙ ИНСТИТУТ", "uz": "UNUTILGAN INSTITUT"}
-# the emblem (eye medallion) used for the icon
-EMBLEM = (238, 12, 1212, 592) # the eye medallion, cut just above the lettering
-EMBLEM_FADE = 60 # px faded out at the bottom so the cut does not show
+# the emblem (eye medallion) used for the icon. The lettering overlaps the bottom of the medallion disc, so the
+# icon keeps everything above the eye corners and, below them, only what lies inside the lower eyelid (whole
+# sphere, whole lid, the bottom diamond); the disc around it dissolves softly into the icon background.
+EMBLEM = (238, 8, 1212, 640)
+EYE_CORNERS = ((300, 410), (1145, 410)) # the gold orbs at the eye's corners (source px)
+LID_BOTTOM_Y = 618 # outer edge of the lower lid under the sphere
+DIAMOND = ((700, 566), (746, 566), (723, 632)) # the gold diamond under the lid
+EMBLEM_FADE = 16 # px of soft edge where the disc is cut
 
 
 def erase_band(im: Image.Image) -> Image.Image:
@@ -116,12 +121,26 @@ def fit(img: Image.Image, box: int) -> Image.Image:
     return img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS)
 
 
+def emblem_mask(size: tuple[int, int]) -> np.ndarray:
+    """Alpha multiplier in source pixels: 1 above the eye corners and inside the lower lid, soft edge below."""
+    w, h = size
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    (x0, y0), (x1, _) = EYE_CORNERS
+    t = np.clip((xx - x0) / (x1 - x0), 0.0, 1.0)
+    lid = y0 + (LID_BOTTOM_Y - y0) * np.sin(np.pi * t) # almond curve through both corners
+    lid = np.maximum(lid, 540.0) # the disc and side spikes level with the corners stay
+    keep = np.clip((lid - yy) / EMBLEM_FADE + 0.5, 0.0, 1.0)
+    d = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(d).polygon(DIAMOND, fill=255)
+    diamond = np.asarray(d.filter(ImageFilter.GaussianBlur(0.8))).astype(np.float32) / 255.0
+    return np.maximum(keep, diamond)
+
+
 def emblem_of(src: Image.Image) -> Image.Image:
-    emblem = src.crop(EMBLEM)
-    alpha = np.asarray(emblem.getchannel("A")).astype(np.float32)
-    h = alpha.shape[0]
-    ramp = np.clip((h - 1 - np.arange(h)) / EMBLEM_FADE, 0.0, 1.0)[:, None]
-    emblem.putalpha(Image.fromarray((alpha * ramp).astype(np.uint8), "L"))
+    alpha = np.asarray(src.getchannel("A")).astype(np.float32) * emblem_mask(src.size)
+    masked = src.copy()
+    masked.putalpha(Image.fromarray(alpha.astype(np.uint8), "L"))
+    emblem = masked.crop(EMBLEM)
     bbox = emblem.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox()
     return emblem.crop(bbox)
 
