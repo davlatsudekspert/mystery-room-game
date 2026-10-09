@@ -242,3 +242,11 @@ Values the design above left open, as implemented in `game/src/rooms/underground
 - Puzzles (`solved:<id>`): interlock, heart, choir, restore, startup, seed, grow, prisms, melody, rings, resonance.
 - Hint goals follow the table above with a `c3_` prefix, as in Chapter 2 (`c3_interlock` … `c3_finale`). The order depends on the entry wing: first wing → `c3_rings` → second wing → `c3_resonance` → `c3_finale`.
 - Strings: `tools/localization/strings_ch3.py` (`msg.c3_*`, `cap3.*`, `obj3.*`, `doc3.*`, `echo3.*`, `intro3.*`, `epi3.*`, `ui.trust_*`, `ui.choice_trust_prompt`, `achv.echoes_of_the_deep`). Symbols are written as words because the UI font (Noto Sans) has no ◆ ▲ ● ■ ☼ ☾ ✦ glyphs.
+
+## Open points for the scene build (found while implementing the logic)
+- **W1/W1b:** every isolator starts ON, so the desk arms only after the office has been opened and every isolator is back ON. The scene shows a dead desk lamp until then.
+- **W3 by eye:** the tube lengths alone can solve the Choir without the meter. This is allowed as a fair alternative; the hints still lead through W2.
+- **E1:** the log sketch must show a small turning arrow (clockwise, a third of a turn), so the direction is never a guess.
+- **Symbols:** ◆ ▲ ● ■ ☼ ☾ ✦ are drawn as art (decals and 3D inlays). They are never typed in UI text, because the UI font has no such glyphs.
+- **Leave-path echoes:** the inspection-port views must be able to show the kept echoes of all three zones, not only the desk operator.
+- **Cloudy-crystal recovery** (remelt → unload → return the seed) takes several steps. The scene should make each step obvious: the door opens by itself after a remelt, and the seed glows in the tray.
