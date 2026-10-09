@@ -328,6 +328,8 @@ def light(name, kind, pos, energy, colour="FFE2C0", radius=0.05, target=None, sp
     lo = V.qa_light(name, kind, pos, energy, colour, radius, target, spot_deg, blend)
     lo.visible_camera = False
     lo.visible_transmission = False
+    if name.startswith("fill"):            # the game's focus_fill has no specular (no hot spots on glass / enamel)
+        lo.data.specular_factor = 0.0
     return lo
 
 

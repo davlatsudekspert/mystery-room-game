@@ -378,7 +378,7 @@ def qa(parts, args):
         K.shoot(NAME + "_3", (0.0, 1.55, 1.1), (0.0, -30.0, -0.6), vfov=32)
     if K.want(args, "4"):    # hero: high three-quarter over the shaft
         lights()
-        K.shoot(NAME + "_4", (2.9, 3.9, 3.0), (-0.6, 0.6, -0.8), vfov=66)
+        K.shoot(NAME + "_4", (2.3, 3.5, 2.5), (-0.7, 0.5, -0.9), vfov=66)
     if K.want(args, "5"):    # 'finale' view (console absent: group F)
         lights()
         K.shoot(NAME + "_5", (0.0, 1.85, 3.75), (0.0, 1.15, 0.4), vfov=66)
