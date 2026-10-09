@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/decals/ch2/slide_mark.png" id="1"]
+
+[resource]
+resource_name = "M_Decal_SlideMark"
+albedo_texture = ExtResource("1")
+transparency = 1
+roughness = 0.08
+metallic_specular = 0.7

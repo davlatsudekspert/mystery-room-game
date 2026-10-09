@@ -156,22 +156,22 @@ def qa_item(item: str, mount, proxy_fn):
 
 
 def proxy_film_reel():
-    """16 mm reel, Ø 0.18 x 0.02, face along ±X (reel plane = YZ), centred on the origin (QA only)."""
+    """16 mm reel, Ø 0.18 x 0.02, standing on edge with its face (and axle) along Godot +Z, like
+    film_reel.glb (the code spins it about its local +Z). Centred on the origin (QA only)."""
     parts = []
     for s in (-1, 1):
         fl = L.curve_solid("QA_reel_flange", [disc_loop(0.09, 40)] +
                            [disc_loop(0.022, 10, 0.052 * math.cos(a), 0.052 * math.sin(a))
                             for a in (math.radians(90 + 120 * k) for k in range(3))] + [disc_loop(0.0045, 8)],
                            0.0012, bevel=0.0003, mat="M_Chrome")
-        fl.data.transform(Matrix.Rotation(math.pi / 2, 4, "Y"))
-        fl.location = (s * 0.0094 - 0.0006, 0, 0)
+        front_plate(fl, s * 0.0094 + 0.0006, 0.0, 0.0)       # flanges at Godot z = -/+ 0.0094
         parts.append(fl)
     film = L.lathe2("QA_reel_film", [(0.016, -0.0085), (0.074, -0.0085), (0.074, 0.0085), (0.016, 0.0085)],
                     segments=40, mat="M_Film")
-    film.data.transform(Matrix.Rotation(math.pi / 2, 4, "Y"))
+    film.data.transform(Matrix.Rotation(math.pi / 2, 4, "X"))
     hub = L.lathe2("QA_reel_hub", [(0.0045, -0.0095), (0.016, -0.0095), (0.016, 0.0095), (0.0045, 0.0095)],
                    segments=16, mat="M_Steel_Dark")
-    hub.data.transform(Matrix.Rotation(math.pi / 2, 4, "Y"))
+    hub.data.transform(Matrix.Rotation(math.pi / 2, 4, "X"))
     return parts + [film, hub]
 
 
@@ -436,3 +436,40 @@ def beam_clearance(lens_world, aperture_r: float = 0.0, window=WINDOW, inset: fl
               f"west {c[0]:.3f} east {c[1]:.3f} bottom {c[2]:.3f} top {c[3]:.3f}")
     print(f"[beam]   min clearance {worst:.3f} m {'OK' if worst > 0 else 'CLIPS'}")
     return worst
+
+
+# ---------------------------------------------------------------- extra solids
+def ring_solid(name, loop, centre, direction, segments=24, mat="M_Chrome"):
+    """Revolve a CLOSED (r, z) loop into a solid ring (correct outward normals) whose axis points along
+    `direction` (Blender) with the loop's z = 0 at `centre`."""
+    o = A.lathe_loop(name, loop, segments=segments, mat=mat)
+    o.data.transform(Matrix.Translation(Vector(centre)) @ D.axis_matrix(direction))
+    return o
+
+
+def qa_emit(obj, colour: str, strength: float = 6.0, base: str | None = None):
+    """QA only: give an object a private copy of its material(s) with emission (lamp on)."""
+    for i, slot in enumerate(obj.material_slots):
+        m = slot.material
+        if m is None:
+            continue
+        q = m.copy()
+        q.name = "QA_" + m.name + "_on"
+        b = q.node_tree.nodes.get("Principled BSDF")
+        b.inputs["Emission Color"].default_value = M.hex_rgba(colour)
+        b.inputs["Emission Strength"].default_value = strength
+        if base:
+            b.inputs["Base Color"].default_value = M.hex_rgba(base)
+        obj.material_slots[i].material = q
+
+
+def blender_rot_about_godot(axis: str, deg: float):
+    """Euler (Blender) for a rotation about a Godot local axis (rest = identity)."""
+    a = math.radians(deg)
+    if axis == "X":
+        return (a, 0.0, 0.0)
+    if axis == "Y":        # Godot +Y = Blender +Z
+        return (0.0, 0.0, a)
+    if axis == "Z":        # Godot +Z = Blender -Y
+        return (0.0, -a, 0.0)
+    raise ValueError(axis)

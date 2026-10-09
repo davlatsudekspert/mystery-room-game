@@ -1,0 +1,663 @@
+"""MYSTERY ROOM — helpers for the Chapter 2 group B1 furniture (card catalogue + tray, stacks shelving,
+staff lockers, routing chart).
+
+Builds on mrlib / lib_arch / lib_mech / lib_props (never edit those: they are shared).
+
+Everything here takes **Godot coordinates** (x, y up, z toward the viewer) and converts them to
+Blender (x, -z, y), so the model scripts can be written straight from docs/models/ch2.md.
+
+  * G(x, y, z)                       Godot point -> Blender Vector
+  * gbox(name, mn, mx, ...)          bevelled box from Godot min/max corners
+  * gcyl / glathe(..., axis="y")     cylinders / lathes starting on a Godot point along a Godot axis
+  * gtext(...)                       low-poly 3D text on a plane facing a Godot direction
+  * gquad(...)                       a decal quad with UV 0..1 (u = left->right, v = bottom->top)
+  * part(name, objs, pivot)          join parts into one object with its origin at a Godot pivot
+  * mount(name, loc, par)            mount empty (identity rotation unless given)
+  * verify_glb(...)                  reads the exported GLB: names, pivots, identity rotations, tris
+  * qa_*                             QA scene: room (or proxy), neighbours, item proxies, poses, cameras
+"""
+from __future__ import annotations
+
+import json
+import math
+import os
+import random
+import struct
+import sys
+
+import bmesh
+import bpy
+from mathutils import Matrix, Quaternion, Vector
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mrlib as M  # noqa: E402
+import lib_arch as A  # noqa: E402
+import lib_mech as K  # noqa: E402
+import lib_props as P  # noqa: E402
+
+ROOT = M.ROOT
+DECALS2 = os.path.join(ROOT, "game", "assets", "textures", "decals", "ch2")
+QA_SUB = "ch2"
+TAG = "[b1]"
+
+FONT_SANS_B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT_MONO_B = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
+FONT_SERIF_B = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
+FONT_COND = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+
+# New Chapter 2 slots (docs/models/ch2.md §0): name -> (hex, roughness, metallic, alpha)
+CH2_SLOTS = {
+    "M_Linoleum": ("3E5A48", 0.55, 0.0, 1.0),
+    "M_Paint_Green": ("6F8C78", 0.6, 0.0, 1.0),
+    "M_Concrete": ("8C8A84", 0.85, 0.0, 1.0),
+    "M_Steel_Cream": ("D8CFB4", 0.4, 0.1, 1.0),
+    "M_Screen": ("E9E6DF", 0.95, 0.0, 1.0),
+    "M_Velvet": ("5A1420", 0.9, 0.0, 1.0),
+    "M_Film": ("3A2414", 0.25, 0.0, 0.9),
+    "M_Tape": ("4A2C1A", 0.35, 0.0, 1.0),
+    "M_Cardboard": ("9A7B55", 0.85, 0.0, 1.0),
+    "M_Linen": ("8C7B5E", 0.8, 0.0, 1.0),
+}
+# Existing game slots that mrlib.PREVIEW does not know (values from the .tres files).
+OTHER_SLOTS = {
+    "M_Glass_Green": ("16472A", 0.07, 0.0, 1.0),
+    "M_Lacquer_Black": ("161210", 0.32, 0.0, 1.0),
+    "M_Glass_Dark": ("0C0F10", 0.06, 0.0, 1.0),
+    "M_Glass_Amber": ("5A2A0C", 0.08, 0.0, 0.82),
+}
+
+
+def ensure_materials() -> None:
+    """Preview versions of every slot the B1 models use (call right after reset_scene)."""
+    A.prepare_materials()
+    P.init_materials()          # M_Book_*, M_Felt, M_Cork ...
+    K.ensure_materials()        # enamels
+    for name, (hx, rough, metal, alpha) in {**CH2_SLOTS, **OTHER_SLOTS}.items():
+        if bpy.data.materials.get(name) is None:
+            M.material(name, color=hx, rough=rough, metal=metal, alpha=alpha)
+
+
+def decal_path(fname: str) -> str | None:
+    p = os.path.join(DECALS2, fname)
+    return p if os.path.exists(p) else None
+
+
+def decal_material(slot: str, fname: str, color: str = "E8DFC8", rough: float = 0.6):
+    mat = bpy.data.materials.get(slot)
+    if mat is not None:
+        return mat
+    return M.material(slot, color=color, rough=rough, image=decal_path(fname))
+
+
+# ---------------------------------------------------------------- coordinates
+def G(x, y, z) -> Vector:
+    """Godot (x, y, z) -> Blender (x, -z, y)."""
+    return Vector((x, -z, y))
+
+
+def GV(v) -> Vector:
+    return Vector((v[0], -v[2], v[1]))
+
+
+def to_godot(v) -> tuple:
+    return (v[0], v[2], -v[1])
+
+
+def gbox(name, mn, mx, mat="M_Wood_Walnut", bevel=0.003, seg=1):
+    """Bevelled box between Godot corners mn and mx."""
+    bmn = (min(mn[0], mx[0]), -max(mn[2], mx[2]), min(mn[1], mx[1]))
+    bmx = (max(mn[0], mx[0]), -min(mn[2], mx[2]), max(mn[1], mx[1]))
+    return A.box_minmax(name, bmn, bmx, mat=mat, bevel=bevel, segments=seg)
+
+
+def gmat(yaw=0.0, pitch=0.0, roll=0.0) -> Matrix:
+    """Blender rotation matrix of a Godot rotation: roll about Godot Z, then pitch about X, then yaw about Y."""
+    rz = Matrix.Rotation(math.radians(roll), 4, Vector((0, -1, 0)))
+    rx = Matrix.Rotation(math.radians(pitch), 4, "X")
+    ry = Matrix.Rotation(math.radians(yaw), 4, "Z")
+    return ry @ rx @ rz
+
+
+def gbox_c(name, centre, size, mat="M_Wood_Walnut", bevel=0.003, seg=1, yaw=0.0, pitch=0.0, roll=0.0):
+    """Box of Godot size (sx, sy, sz) centred on a Godot point, rotated (degrees, Godot axes)."""
+    o = M.box(name, (size[0], size[2], size[1]), loc=(0, 0, 0), mat=mat, bevel=bevel, segments=seg)
+    if yaw or pitch or roll:
+        o.data.transform(gmat(yaw, pitch, roll))
+    o.location = G(*centre)
+    return o
+
+
+GAXIS = {"x": (1, 0, 0), "-x": (-1, 0, 0), "y": (0, 0, 1), "-y": (0, 0, -1), "z": (0, -1, 0), "-z": (0, 1, 0)}
+
+
+def axis_vec(axis) -> Vector:
+    if isinstance(axis, str):
+        return Vector(GAXIS[axis])
+    return GV(axis).normalized()
+
+
+def aim_z(o, axis) -> None:
+    """Rotate mesh data so local Blender +Z points along the Godot axis/direction."""
+    d = axis_vec(axis)
+    z = Vector((0, 0, 1))
+    if (d - z).length < 1e-9:
+        return
+    if (d + z).length < 1e-9:
+        o.data.transform(Matrix.Rotation(math.pi, 4, "X"))
+        return
+    o.data.transform(z.rotation_difference(d).to_matrix().to_4x4())
+
+
+def gcyl(name, r, h, base, axis="y", verts=24, mat="M_Brass_Aged", bevel=0.001, seg=1, r_top=None, smooth=60.0):
+    """Cylinder (or frustum) of length h starting at Godot point `base` and running along `axis`."""
+    o = M.cylinder(name, r, h, loc=(0, 0, 0), verts=verts, mat=mat, bevel=bevel, segments=seg, radius_top=r_top)
+    o.data.transform(Matrix.Translation((0, 0, h / 2)))
+    aim_z(o, axis)
+    o.location = G(*base)
+    return A.hint(o, smooth) if smooth else o
+
+
+def glathe(name, profile, base, axis="y", segments=24, mat="M_Brass_Aged", smooth=60.0):
+    """Lathe [(r, h)] around a Godot axis, profile h = 0 at `base`."""
+    o = M.lathe(name, profile, segments=segments, mat=mat)
+    aim_z(o, axis)
+    o.location = G(*base)
+    return A.hint(o, smooth) if smooth else o
+
+
+def glathe2(name, profile, base, axis="y", segments=24, mat="M_Brass_Aged", smooth=60.0, **kw):
+    o = K.lathe2(name, profile, segments=segments, mat=mat, **kw)
+    aim_z(o, axis)
+    o.location = G(*base)
+    return A.hint(o, smooth) if smooth else o
+
+
+def gtube(name, pts, r, sides=8, mat="M_Steel_Dark", fillet=0.0, caps=True):
+    return A.tube(name, [G(*p) for p in pts], r, sides=sides, fillet=fillet, mat=mat, caps=caps)
+
+
+def frame(origin, ex, ey) -> Matrix:
+    """4x4 Blender matrix mapping local (x, y, z) to Godot origin + x*ex + y*ey + z*(ex x ey)."""
+    bx, by = GV(ex).normalized(), GV(ey).normalized()
+    bz = bx.cross(by)
+    return A.frame_matrix(G(*origin), bx, by, bz)
+
+
+def gtext(name, body, size, centre, ex=(1, 0, 0), ey=(0, 1, 0), font=FONT_SANS_B, mat="M_Lacquer_Black",
+          depth=0.0, res=2, align="CENTER", spacing=1.0):
+    """Low-poly text centred on a Godot point; reads along Godot `ex`, glyph up along `ey`, faces ex x ey."""
+    o = K.text_flat(name, body, size, font=font, depth=depth, res=res, align=align, mat=mat, spacing=spacing)
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(1.0), verts=bm.verts, edges=bm.edges)
+    bm.to_mesh(o.data)
+    bm.free()
+    # centre the glyph block vertically on its bounding box (align_y CENTER is font-metric based)
+    ys = [v.co.y for v in o.data.vertices]
+    if ys:
+        o.data.transform(Matrix.Translation((0, -(min(ys) + max(ys)) / 2, 0)))
+    o.data.transform(frame(centre, ex, ey))
+    return o
+
+
+def gquad(name, centre, u_axis, v_axis, w, h, mat, uv=None):
+    """Single quad centred on a Godot point. u_axis/v_axis are Godot directions of the image's
+    left->right and bottom->top; the face normal is u x v. uv = (u0, v0, u1, v1) sub-rect (default 0..1)."""
+    c, u, v = GV(centre), GV(u_axis).normalized(), GV(v_axis).normalized()
+    co = [c - u * w / 2 - v * h / 2, c + u * w / 2 - v * h / 2, c + u * w / 2 + v * h / 2, c - u * w / 2 + v * h / 2]
+    me = bpy.data.meshes.new(name)
+    me.from_pydata([tuple(p) for p in co], [], [(0, 1, 2, 3)])
+    me.update()
+    o = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(o)
+    M.assign(o, mat)
+    u0, v0, u1, v1 = uv if uv else (0.0, 0.0, 1.0, 1.0)
+    uvl = me.uv_layers.new(name="UVMap")
+    for li, (uu, vv) in zip(me.polygons[0].loop_indices, ((u0, v0), (u1, v0), (u1, v1), (u0, v1))):
+        uvl.data[li].uv = (uu, vv)
+    return o
+
+
+def gpoly(name, pts2d, depth, origin, ex, ey, mat="M_Brass_Aged", bevel=0.0004, drop_bottom=False):
+    """Extrude 2D loops (lib_mech.curve_solid, holes allowed) in a Godot plane: 2D x -> Godot `ex`,
+    2D y -> `ey`, extrusion along ex x ey, starting on the plane through `origin`."""
+    loops = pts2d if isinstance(pts2d[0][0], (tuple, list)) else [pts2d]
+    o = K.curve_solid(name, loops, depth, bevel=bevel, mat=mat, drop_bottom=drop_bottom)
+    o.data.transform(frame(origin, ex, ey))
+    return o
+
+
+def screw(name, r, loc, normal, mat="M_Brass_Aged", slot=30.0, segs=8):
+    return A.screw(name, r, G(*loc), normal=axis_vec(normal), mat=mat, slot_angle=slot, segs=segs)
+
+
+def prism(name, pts2d, a0, a1, axis="x", mat="M_Wood_Walnut", bevel=0.0, seg=1, angle=40.0):
+    """Straight prism of a closed 2D polygon, extruded along a Godot axis from a0 to a1.
+    axis 'x': 2D = (z, y); axis 'z': 2D = (x, y); axis 'y': 2D = (x, z). Sharp edges optionally bevelled."""
+    bm = bmesh.new()
+
+    def P(u, v, a):
+        if axis == "x":
+            return G(a, v, u)
+        if axis == "z":
+            return G(u, v, a)
+        return G(u, a, v)
+    pts = A.ccw([tuple(p) for p in pts2d])
+    lo = [bm.verts.new(P(u, v, a0)) for (u, v) in pts]
+    hi = [bm.verts.new(P(u, v, a1)) for (u, v) in pts]
+    n = len(pts)
+    for i in range(n):
+        bm.faces.new((lo[i], lo[(i + 1) % n], hi[(i + 1) % n], hi[i]))
+    bm.faces.new(list(reversed(lo)))
+    bm.faces.new(hi)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    if bevel > 0:
+        edges = [e for e in bm.edges if len(e.link_faces) == 2 and e.calc_face_angle(0) > math.radians(angle)]
+        bmesh.ops.bevel(bm, geom=edges, offset=bevel, offset_type="OFFSET", segments=seg, profile=0.5,
+                        affect="EDGES", clamp_overlap=True)
+    return A.obj_from_bm(name, bm, mat)
+
+
+def stepped_pack(name, z0, z1, pitch, h_min, h_max, width, seed, x=0.0, mat="M_Paper", y0=0.0):
+    """A pack of index cards seen as one solid: side profile (z, y) with a ragged stepped top (one step per
+    card, heights in [h_min, h_max]), extruded across x (width). Godot coords, card faces normal to z."""
+    r = random.Random(seed)
+    n = max(1, int(round((z1 - z0) / pitch)))
+    top = []
+    for k in range(n):
+        za = z0 + (z1 - z0) * k / n
+        zb = z0 + (z1 - z0) * (k + 1) / n
+        h = y0 + r.uniform(h_min, h_max)
+        top += [(za, h), (zb, h)]
+    pts = [(z0, y0), (z1, y0)] + list(reversed(top))
+    # drop collinear duplicates
+    clean = []
+    for p in pts:
+        if not clean or (abs(p[0] - clean[-1][0]) > 1e-7 or abs(p[1] - clean[-1][1]) > 1e-7):
+            clean.append(p)
+    return prism(name, clean, x - width / 2, x + width / 2, axis="x", mat=mat)
+
+
+# ---------------------------------------------------------------- parts
+def part(name, objs, pivot=None, presmooth=True):
+    """Join objs into one object named `name` with its origin at Godot `pivot` (identity rotation)."""
+    objs = [o for o in objs if o is not None]
+    if presmooth:
+        A.presmooth(objs)
+    o = M.join(objs, name) if len(objs) > 1 or objs[0].name != name else objs[0]
+    o.name = name
+    if o.data is not None:
+        o.data.name = name
+    if pivot is not None:
+        M.set_origin(o, G(*pivot))
+    return o
+
+
+def parent(child, par) -> None:
+    M.set_parent(child, par)
+
+
+def mount(name, loc, par=None, rot_deg=(0.0, 0.0, 0.0), size=0.03):
+    """Mount empty at Godot `loc`; rot_deg = Godot Euler (x, y, z) degrees."""
+    e = M.empty(name, loc=G(*loc))
+    rx, ry, rz = rot_deg
+    e.rotation_mode = "QUATERNION"
+    e.rotation_quaternion = gmat(ry, rx, rz).to_quaternion()
+    e.empty_display_size = size
+    if par is not None:
+        M.set_parent(e, par)
+    return e
+
+
+def finalize_all(wood_grain=True) -> None:
+    A.finalize_uv()
+    if wood_grain:
+        for o in bpy.context.scene.objects:
+            if o.type == "MESH" and any(m and m.name in A.WOOD_SLOTS for m in o.data.materials):
+                A.grain_uv(o)
+
+
+def report(label: str) -> int:
+    M.refresh()
+    total = M.tri_count()
+    print(f"{TAG} {label}: TOTAL tris={total}")
+    for o in sorted(bpy.context.scene.objects, key=lambda o: o.name):
+        if o.name.lower().startswith("qa"):
+            continue
+        t = A.tris(o) if o.type == "MESH" else 0
+        g = to_godot(o.matrix_world.translation)
+        print(f"{TAG}   {o.name:26s} {o.type:5s} tris={t:5d} origin(godot)=({g[0]:+.4f}, {g[1]:+.4f}, {g[2]:+.4f}) "
+              f"parent={o.parent.name if o.parent else '-'}")
+    return total
+
+
+def export(name: str) -> str:
+    return A.export_lean(name)
+
+
+def rng(seed: int) -> random.Random:
+    return random.Random(seed)
+
+
+# ---------------------------------------------------------------- GLB verification (glTF = Godot axes)
+def glb_json(path: str) -> dict:
+    with open(path, "rb") as f:
+        data = f.read()
+    n = struct.unpack("<I", data[12:16])[0]
+    return json.loads(data[20:20 + n])
+
+
+def _node_matrix(n) -> Matrix:
+    t = Vector(n.get("translation", (0, 0, 0)))
+    q = n.get("rotation", (0, 0, 0, 1))
+    s = n.get("scale", (1, 1, 1))
+    return Matrix.Translation(t) @ Quaternion((q[3], q[0], q[1], q[2])).to_matrix().to_4x4() @ Matrix.Diagonal((*s, 1))
+
+
+def verify_glb(path: str, required=(), identity=(), budget: int | None = None, show=(), expect=None,
+               top_level=()) -> list[str]:
+    """Check an exported GLB: required node names exist; `identity` nodes have identity rotation and unit
+    scale; `expect` = {name: (x, y, z)} model-space (Godot) positions to within 1 mm; `top_level` nodes have
+    no parent; print tris and the transforms of `show` nodes. Returns the list of errors."""
+    doc = glb_json(path)
+    nodes = doc.get("nodes", [])
+    parent_of = {}
+    for i, n in enumerate(nodes):
+        for c in n.get("children", []):
+            parent_of[c] = i
+    by_name = {n.get("name", ""): i for i, n in enumerate(nodes)}
+
+    def world(i):
+        m = _node_matrix(nodes[i])
+        while i in parent_of:
+            i = parent_of[i]
+            m = _node_matrix(nodes[i]) @ m
+        return m
+
+    acc = doc.get("accessors", [])
+    tris = 0
+    for n in nodes:
+        if "mesh" in n:
+            for prim in doc["meshes"][n["mesh"]]["primitives"]:
+                tris += acc[prim["indices"]]["count"] // 3 if "indices" in prim else acc[prim["attributes"]["POSITION"]]["count"] // 3
+    errors = []
+    for r in required:
+        if r not in by_name:
+            errors.append(f"missing node {r}")
+    for r in identity:
+        if r not in by_name:
+            continue
+        n = nodes[by_name[r]]
+        q = n.get("rotation", (0, 0, 0, 1))
+        s = n.get("scale", (1, 1, 1))
+        if max(abs(q[0]), abs(q[1]), abs(q[2])) > 1e-4 or max(abs(c - 1) for c in s) > 1e-4:
+            errors.append(f"{r}: rest rotation/scale not identity (q={q}, s={s})")
+    for r, p in (expect or {}).items():
+        if r not in by_name:
+            continue
+        wt = world(by_name[r]).translation
+        if (wt - Vector(p)).length > 1e-3:
+            errors.append(f"{r}: model position {tuple(round(c, 4) for c in wt)} != expected {p}")
+    for r in top_level:
+        if r in by_name and by_name[r] in parent_of:
+            errors.append(f"{r}: must be a top-level node (parent {nodes[parent_of[by_name[r]]].get('name')})")
+    print(f"{TAG}-verify {os.path.basename(path)}: nodes={len(nodes)} tris={tris}"
+          + (f" budget={budget} {'OK' if tris <= budget else 'OVER'}" if budget else ""))
+    if budget and tris > budget:
+        errors.append(f"tris {tris} > budget {budget}")
+    for r in show:
+        if r not in by_name:
+            continue
+        i = by_name[r]
+        n = nodes[i]
+        w = world(i)
+        q = n.get("rotation", (0, 0, 0, 1))
+        e = Quaternion((q[3], q[0], q[1], q[2])).to_euler("YXZ")
+        wt = w.translation
+        par = nodes[parent_of[i]].get("name") if i in parent_of else "-"
+        print(f"{TAG}-verify   {r:24s} parent={par:20s} local_t={tuple(round(c, 4) for c in n.get('translation', (0, 0, 0)))} "
+              f"local_rot_deg(x,y,z)=({math.degrees(e.x):+.1f}, {math.degrees(e.y):+.1f}, {math.degrees(e.z):+.1f}) "
+              f"model_t=({wt.x:+.4f}, {wt.y:+.4f}, {wt.z:+.4f})")
+    for e in errors:
+        print(f"{TAG}-verify ERROR {e}")
+    if not errors:
+        print(f"{TAG}-verify all checks passed")
+    return errors
+
+
+def check_names(path: str) -> None:
+    import subprocess
+    script = os.path.join(ROOT, "tools", "blender", "check_glb_names.py")
+    r = subprocess.run([sys.executable if sys.executable and "python" in os.path.basename(sys.executable) else "python3",
+                        script, path], capture_output=True, text=True)
+    print(f"{TAG} check_glb_names: rc={r.returncode} {r.stdout.strip()} {r.stderr.strip()}")
+
+
+# ---------------------------------------------------------------- QA scene
+def qa_begin(bounces: int = 8) -> None:
+    """Call AFTER export. Shared-machine render settings + Cycles-friendly glass."""
+    os.makedirs(os.path.join(M.QA_DIR, QA_SUB), exist_ok=True)
+    P.preview_tweak()
+    for mat in bpy.data.materials:
+        if not mat.use_nodes:
+            continue
+        b = mat.node_tree.nodes.get("Principled BSDF")
+        if b is None:
+            continue
+        n = mat.name
+        if n == "M_Glass_Dark":
+            b.inputs["Alpha"].default_value = 1.0
+        if n == "M_Film":
+            b.inputs["Alpha"].default_value = 1.0
+        if n == "M_Glass":
+            b.inputs["Roughness"].default_value = 0.02
+    sc = bpy.context.scene
+    sc.render.engine = "CYCLES"
+    P.render_threads(2)
+    sc.cycles.max_bounces = bounces
+    sc.cycles.diffuse_bounces = 3
+    sc.cycles.glossy_bounces = 4
+    sc.cycles.transmission_bounces = 8
+    sc.cycles.transparent_max_bounces = 12
+
+
+def model_roots():
+    return [o for o in bpy.context.scene.objects if o.parent is None and not o.name.lower().startswith("qa")]
+
+
+def qa_place(pos, yaw_deg: float, name="qa_place"):
+    """Move the built model (all non-QA roots) to its world placement (Godot pos + yaw)."""
+    root = bpy.data.objects.new(name, None)
+    bpy.context.scene.collection.objects.link(root)
+    for o in model_roots():
+        o.parent = root
+    root.location = G(*pos)
+    root.rotation_euler = (0, 0, math.radians(yaw_deg))
+    M.refresh()
+    return root
+
+
+def qa_import(path: str, pos=(0, 0, 0), yaw_deg: float = 0.0, parent_obj=None, prefix: str = "qa_"):
+    """Import a GLB under a holder empty (QA only). With parent_obj, the holder sits at identity under it."""
+    if not os.path.exists(path):
+        return None
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=path)
+    new = [o for o in bpy.data.objects if o not in before]
+    holder = bpy.data.objects.new(prefix + "holder_" + os.path.basename(path), None)
+    bpy.context.scene.collection.objects.link(holder)
+    for o in new:
+        if o.parent is None:
+            o.parent = holder
+        o.name = prefix + o.name
+        # imported slots arrive as flat copies ("M_Paper.001"): use the scene's preview material instead
+        if o.type == "MESH":
+            for slot in o.material_slots:
+                m = slot.material
+                if m is None:
+                    continue
+                base = m.name.split(".")[0]
+                if base.startswith("M_") and base != m.name and bpy.data.materials.get(base) is not None:
+                    slot.material = bpy.data.materials[base]
+    if parent_obj is not None:
+        holder.parent = parent_obj
+        holder.matrix_parent_inverse = Matrix.Identity(4)
+        holder.matrix_basis = Matrix.Identity(4)
+    else:
+        holder.location = G(*pos)
+        holder.rotation_euler = (0, 0, math.radians(yaw_deg))
+    M.refresh()
+    return holder
+
+
+def model_glb(name: str) -> str:
+    return os.path.join(M.MODELS_DIR, name + ".glb")
+
+
+def qa_room() -> bool:
+    """room_archive.glb if it exists (returns True), otherwise a simple proxy shell."""
+    room = model_glb("room_archive")
+    if os.path.exists(room):
+        qa_import(room)
+        return True
+    paint, plaster = "M_Paint_Green", "M_Plaster_Wall"
+    gbox("qa_floor", (-5.2, -0.02, -3.7), (5.2, 0.0, 3.7), "M_Linoleum", 0.0)
+    gbox("qa_ceiling", (-5.2, 3.6, -3.7), (5.2, 3.65, 3.7), "M_Ceiling", 0.0)
+    dado = 1.25
+    for nm, mn, mx in (("north", (-5.2, 0, -3.7), (5.2, 3.6, -3.5)), ("south", (-5.2, 0, 3.5), (5.2, 3.6, 3.7)),
+                       ("west", (-5.2, 0, -3.5), (-5.0, 3.6, 3.5)), ("east", (5.0, 0, -3.5), (5.2, 3.6, 3.5))):
+        lo, hi = list(mn), list(mx)
+        hi[1] = dado
+        gbox(f"qa_wall_{nm}_lo", tuple(lo), tuple(hi), paint, 0.0)
+        lo[1] = dado
+        hi[1] = 3.6
+        gbox(f"qa_wall_{nm}_hi", tuple(lo), tuple(hi), plaster, 0.0)
+    # booth enclosure (approximate)
+    gbox("qa_booth_n", (-5.0, 0, 2.0), (-1.95, 2.8, 2.1), paint, 0.0)
+    gbox("qa_booth_n2", (-1.15, 0, 2.0), (-1.0, 2.8, 2.1), paint, 0.0)
+    gbox("qa_booth_e", (-1.1, 0, 2.1), (-1.0, 2.8, 3.5), paint, 0.0)
+    gbox("qa_booth_ceil", (-5.0, 2.8, 2.0), (-1.0, 2.9, 3.5), "M_Concrete", 0.0)
+    return False
+
+
+def qa_neighbours(items) -> None:
+    """items: [(glb name, (x, y, z), yaw)] imported when the GLB exists."""
+    for name, pos, yaw in items:
+        qa_import(model_glb(name), pos, yaw)
+
+
+def qa_light(name, kind, pos, energy, colour="FFE2C0", radius=0.05, target=None, spot_deg=None, blend=0.3):
+    ld = bpy.data.lights.new("qa_" + name, kind)
+    ld.energy = energy
+    ld.color = M.hex_rgba(colour)[:3]
+    if kind in ("POINT", "SPOT"):
+        ld.shadow_soft_size = radius
+    if kind == "AREA":
+        ld.size = radius
+    if kind == "SPOT" and spot_deg:
+        ld.spot_size = math.radians(spot_deg)
+        ld.spot_blend = blend
+    lo = bpy.data.objects.new("qa_" + name, ld)
+    bpy.context.scene.collection.objects.link(lo)
+    lo.location = G(*pos)
+    if target is not None:
+        M._look_at(lo, G(*target))
+    return lo
+
+
+PENDANTS = [(-3.0, 3.6, -2.0), (0.0, 3.6, -2.4), (3.0, 3.6, -2.0), (-2.8, 3.6, 1.4), (0.0, 3.6, 1.6), (3.0, 3.6, 1.4)]
+
+
+def qa_room_lights(energy=140.0, drop=0.75) -> None:
+    """Warm point lights where the six archive pendants hang (QA approximation of the game lighting)."""
+    for i, p in enumerate(PENDANTS):
+        qa_light(f"pendant{i}", "POINT", (p[0], p[1] - drop, p[2]), energy, "FFD8A8", radius=0.12)
+
+
+def qa_clear_lights() -> None:
+    for o in [o for o in bpy.context.scene.objects if o.type == "LIGHT" and o.name.startswith("qa_")]:
+        bpy.data.objects.remove(o, do_unlink=True)
+
+
+def lens_for_vfov(vfov_deg: float, res=(960, 640)) -> float:
+    """Blender lens (36 mm sensor, horizontal fit for landscape) matching a Godot vertical FOV."""
+    aspect = res[0] / res[1]
+    return 18.0 / (math.tan(math.radians(vfov_deg) / 2) * aspect)
+
+
+NO_LIGHTS = [((0, 0, 1), 0.0, "FFFFFF", 0.1)]
+
+
+def shoot(name, cam, target, vfov=None, lens=None, res=(960, 640), samples=32, world=0.06, lights=None):
+    """Render qa/blender/ch2/<name>.png from Godot camera/target points (Godot vertical FOV)."""
+    if lens is None:
+        lens = lens_for_vfov(vfov or 50.0, res)
+    return M.render_preview(f"{QA_SUB}/{name}", G(*cam), G(*target), lens=lens, res=res, samples=min(samples, 32),
+                            world_strength=world, lights=lights if lights is not None else NO_LIGHTS)
+
+
+def want(tag: str, args) -> bool:
+    if "--shots" not in args:
+        return True
+    return tag in args[args.index("--shots") + 1].split(",")
+
+
+# ---------------------------------------------------------------- QA poses (never exported)
+_AX = {"x": Vector((1, 0, 0)), "y": Vector((0, 0, 1)), "z": Vector((0, -1, 0))}
+
+
+def pose_rot(obj, axis: str, deg: float) -> None:
+    """Rotate an object about its own local Godot axis (x / y / z) by `deg` (Godot sign convention)."""
+    obj.matrix_basis = obj.matrix_basis @ Matrix.Rotation(math.radians(deg), 4, _AX[axis])
+    M.refresh()
+
+
+def pose_slide(obj, godot_vec) -> None:
+    obj.matrix_basis = obj.matrix_basis @ Matrix.Translation(GV(godot_vec))
+    M.refresh()
+
+
+def pose_to(obj, godot_pos) -> None:
+    """Set an object's local (parent-space) position in Godot axes, keeping its rotation."""
+    mb = obj.matrix_basis.copy()
+    mb.translation = GV(godot_pos)
+    obj.matrix_basis = mb
+    M.refresh()
+
+
+# ---------------------------------------------------------------- item proxies (QA only)
+def _attach(objs, mount_obj):
+    for x in objs:
+        x.parent = mount_obj
+        x.matrix_parent_inverse = Matrix.Identity(4)
+    M.refresh()
+
+
+def item_or_proxy(item: str, mount_obj):
+    """Attach the item GLB at a mount with identity; if it does not exist yet, a proxy of its size."""
+    h = qa_import(model_glb(item), parent_obj=mount_obj)
+    if h is not None:
+        print(f"{TAG} QA: real {item}.glb attached at {mount_obj.name}")
+        return h
+    print(f"{TAG} QA: proxy {item} attached at {mount_obj.name}")
+    if item == "tape_reel":       # Ø0.127 x 0.014 disc lying flat, label (hub) side up, origin = centre
+        flange_a = M.cylinder("qa_proxy_reel_a", 0.0635, 0.0016, loc=(0, 0, -0.0062), verts=48,
+                              mat="M_Lacquer_Black", bevel=0.0004)
+        flange_b = M.cylinder("qa_proxy_reel_b", 0.0635, 0.0016, loc=(0, 0, 0.0062), verts=48,
+                              mat="M_Lacquer_Black", bevel=0.0004)
+        tape = M.cylinder("qa_proxy_reel_tape", 0.052, 0.0108, verts=48, mat="M_Tape", bevel=0.0)
+        hub = M.cylinder("qa_proxy_reel_label", 0.022, 0.0004, loc=(0, 0, 0.0071), verts=32, mat="M_Paper", bevel=0.0)
+        objs = [flange_a, flange_b, tape, hub]
+    elif item == "pocket_receiver":   # 0.075 x 0.12 x 0.03 bakelite box, face +Z, strap loop on top
+        body = M.box("qa_proxy_rx", (0.075, 0.03, 0.12), mat="M_Bakelite", bevel=0.006, segments=2)
+        win = M.box("qa_proxy_rx_win", (0.05, 0.002, 0.032), loc=(0, -0.0152, 0.028), mat="M_Enamel_Cream", bevel=0.0)
+        grille = M.box("qa_proxy_rx_grille", (0.05, 0.002, 0.04), loc=(0, -0.0152, -0.025), mat="M_Steel_Dark", bevel=0.0)
+        knob = M.cylinder("qa_proxy_rx_knob", 0.011, 0.006, loc=(0.0395, 0, 0.0), rot=(0, math.pi / 2, 0), verts=16,
+                          mat="M_Brass_Aged")
+        strap = M.torus("qa_proxy_rx_strap", 0.016, 0.0028, loc=(0, 0, 0.074), rot=(math.pi / 2, 0, 0),
+                        major_seg=20, minor_seg=6, mat="M_Leather")
+        objs = [body, win, grille, knob, strap]
+    else:
+        return None
+    _attach(objs, mount_obj)
+    return objs[0]

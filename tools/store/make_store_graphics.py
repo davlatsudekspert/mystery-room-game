@@ -23,7 +23,7 @@ SHOTS = ["17_lab_powered", "30_projector_beam_on", "21_bookcase_open", "26_shado
 
 
 def icon() -> None:
-    im = Image.open(os.path.join(ROOT, "game", "assets", "ui", "icon.png")).convert("RGBA")
+    im = Image.open(os.path.join(ROOT, "game", "assets", "ui", "icon.png")).convert("RGB")
     im.resize((512, 512), Image.LANCZOS).save(os.path.join(OUT, "icon_512.png"))
 
 
@@ -43,21 +43,12 @@ def feature() -> None:
     for x in range(1024):
         sd.line([(x, 0), (x, 500)], fill=int(200 * max(0.0, 1.0 - x / 760.0)))
     bg = Image.composite(Image.new("RGB", (1024, 500), (8, 10, 12)), bg, shade)
-    d = ImageDraw.Draw(bg)
-    brass = (227, 194, 122)
-    cream = (232, 223, 200)
-    ft = ImageFont.truetype(FONT_TITLE, 92)
-    fs = ImageFont.truetype(FONT_SUB, 46)
-    fl = ImageFont.truetype(FONT_SUB, 28)
-    glow = Image.new("RGBA", (1024, 500), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glow)
-    gd.text((64, 150), "MYSTERY ROOM", font=ft, fill=(255, 200, 120, 160))
-    glow = glow.filter(ImageFilter.GaussianBlur(10))
-    bg.paste(glow, (0, 0), glow)
-    d.text((64, 150), "MYSTERY ROOM", font=ft, fill=brass)
-    d.text((68, 262), "The Forgotten Institute", font=fs, fill=cream)
-    d.line([(68, 330), (460, 330)], fill=(176, 141, 87), width=2)
-    d.text((68, 344), "Light remembers.", font=fl, fill=(200, 190, 170))
+    logo = Image.open(os.path.join(ROOT, "game", "assets", "ui", "logo", "logo_en.png")).convert("RGBA")
+    k = 470 / logo.height
+    logo = logo.resize((round(logo.width * k), 470), Image.LANCZOS)
+    bg = bg.convert("RGBA")
+    bg.alpha_composite(logo, (24, 15))
+    bg = bg.convert("RGB")
     bg.save(os.path.join(OUT, "feature_1024x500.png"))
 
 

@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/paper/albedo.jpg" id="1"]
+[ext_resource type="Texture2D" path="res://assets/textures/paper/normal.png" id="2"]
+
+[resource]
+resource_name = "M_Cardboard"
+albedo_texture = ExtResource("1")
+albedo_color = Color(0.7412, 0.6392, 0.5294, 1.0)
+roughness = 0.85
+normal_scale = 1.2
+normal_enabled = true
+normal_texture = ExtResource("2")
+uv1_scale = Vector3(2, 2, 2)

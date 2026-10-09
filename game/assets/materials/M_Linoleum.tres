@@ -1,0 +1,17 @@
+[gd_resource type="ORMMaterial3D" load_steps=4 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/linoleum/albedo.jpg" id="1"]
+[ext_resource type="Texture2D" path="res://assets/textures/linoleum/normal.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/textures/linoleum/orm.jpg" id="3"]
+
+[resource]
+resource_name = "M_Linoleum"
+albedo_texture = ExtResource("1")
+orm_texture = ExtResource("3")
+metallic = 0
+roughness = 1.0
+normal_enabled = true
+normal_texture = ExtResource("2")
+ao_enabled = true
+uv1_scale = Vector3(1.6667, 1.6667, 1.6667)
+texture_filter = 5

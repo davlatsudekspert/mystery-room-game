@@ -155,6 +155,8 @@ func _build_environment() -> void:
 	env.adjustment_saturation = 0.92
 	we.environment = env
 	add_child(we)
+	_apply_brightness("brightness")
+	Settings.changed.connect(_apply_brightness) # a bound method: disconnected automatically with the room
 
 
 func _spawn(id: String, model: String, pos: Vector3, yaw: float, hotspot: String, mode: String) -> Node3D:
@@ -1321,3 +1323,9 @@ func _play_ending() -> void:
 	await get_tree().create_timer(2.4).timeout
 	hud.call("set_busy", false)
 	hud.call("show_choice")
+
+
+## Settings → Brightness scales the scene exposure (dark rooms on dim phone screens).
+func _apply_brightness(key: String) -> void:
+	if key == "brightness" and env != null:
+		env.tonemap_exposure = float(Settings.get_value("brightness"))

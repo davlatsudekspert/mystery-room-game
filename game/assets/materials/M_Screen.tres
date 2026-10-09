@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Screen"
+albedo_color = Color(0.9137, 0.9020, 0.8745, 1.0)
+roughness = 0.95
+metallic_specular = 0.3

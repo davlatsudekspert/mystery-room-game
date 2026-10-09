@@ -70,4 +70,79 @@ std("M_Glass_Green", {"albedo_color": hexc("16472A"), "roughness": 0.07, "metall
     "rim": 0.25, "rim_tint": 0.6})
 std("M_Chalk", {"albedo_color": hexc("ECE6D6"), "roughness": 1.0})
 std("M_Glass_Amber", {"albedo_color": hexc("5A2A0C", 0.82), "transparency": 1, "roughness": 0.08, "metallic_specular": 0.7})
+
+# ---------------------------------------------------------------- Chapter 2 (Records Archive B)
+# New slots of docs/models/ch2.md §0 and the M_Decal_* slots of §3–§6. Model UVs are world-scale
+# (1 UV unit = 1 m), so tiling materials use uv1_scale = 1 / tile_m. Mobile renderer: plain
+# StandardMaterial3D / ORMMaterial3D, at most albedo + normal + ORM. Tints of reused CC0 texture sets
+# were computed once from the texture means (linear ratio target / mean) and are hard-coded so a
+# re-run is deterministic.
+TX = "res://assets/textures/"
+D2 = D + "ch2/"
+
+
+def orm(name, folder, tile_m, props=None, anisotropic=False):
+    """ORMMaterial3D over game/assets/textures/<folder>/{albedo.jpg, normal.png, orm.jpg}
+    (same layout as tools/textures/fetch_textures.py write_textured_tres)."""
+    uv = f"{1.0 / tile_m:.4f}".rstrip("0").rstrip(".")
+    lines = ['[gd_resource type="ORMMaterial3D" load_steps=4 format=3]', "",
+             f'[ext_resource type="Texture2D" path="{TX}{folder}/albedo.jpg" id="1"]',
+             f'[ext_resource type="Texture2D" path="{TX}{folder}/normal.png" id="2"]',
+             f'[ext_resource type="Texture2D" path="{TX}{folder}/orm.jpg" id="3"]', "",
+             "[resource]", f'resource_name = "{name}"', 'albedo_texture = ExtResource("1")',
+             'orm_texture = ExtResource("3")', "metallic = 0", "roughness = 1.0", "normal_enabled = true",
+             'normal_texture = ExtResource("2")', "ao_enabled = true", f"uv1_scale = Vector3({uv}, {uv}, {uv})"]
+    for k, v in (props or {}).items():
+        lines.append(f"{k} = {v}")
+    if anisotropic:
+        lines.append("texture_filter = 5")  # LINEAR_WITH_MIPMAPS_ANISOTROPIC: floors are seen at grazing angles
+    open(os.path.join(OUT, name + ".tres"), "w").write("\n".join(lines) + "\n")
+
+
+def tiled(name, folder, tile_m, props):
+    """StandardMaterial3D reusing a texture set's albedo + normal with constant roughness (and a tint)."""
+    uv = f"{1.0 / tile_m:.4f}".rstrip("0").rstrip(".")
+    p = dict(props)
+    p.update({"normal_enabled": "true", "normal_texture": 'ExtResource("2")',
+              "uv1_scale": f"Vector3({uv}, {uv}, {uv})"})
+    std(name, p, TX + folder + "/albedo.jpg", [("Texture2D", TX + folder + "/normal.png")])
+
+
+# Linoleum: procedural set from tools/textures/make_decals_ch2.py; one repeat = 2 x 2 tiles of 0.30 m.
+orm("M_Linoleum", "linoleum", 0.6, anisotropic=True)
+# Institutional green eggshell paint over the plaster texture (plaster mean #ACAA98 -> #6F8C78).
+tiled("M_Paint_Green", "plaster_wall", 2.0, {"albedo_color": hexc("A7D3CB"), "roughness": 0.6, "normal_scale": 0.7,
+      "metallic_specular": 0.45})
+# Cast concrete: the Concrete036 texture set of M_Stone (mean #87847B, close to the #8C8A84 target).
+orm("M_Concrete", "stone", 1.0)
+# Cream stove-enamel on steel: the M_Enamel_Cream set, tinted from #E4D6BD to #D8CFB4.
+orm("M_Steel_Cream", "enamel_cream", 0.5, {"albedo_color": hexc("F2F6F3")})
+std("M_Screen", {"albedo_color": hexc("E9E6DF"), "roughness": 0.95, "metallic_specular": 0.3})
+std("M_Velvet", {"albedo_color": hexc("5A1420"), "roughness": 0.9, "metallic_specular": 0.35, "rim_enabled": "true",
+    "rim": 0.45, "rim_tint": 0.35})
+std("M_Film", {"transparency": 1, "albedo_color": hexc("3A2414", 0.9), "roughness": 0.25, "metallic_specular": 0.6})
+std("M_Tape", {"albedo_color": hexc("4A2C1A"), "roughness": 0.35, "metallic_specular": 0.55})
+# Archive-box board: the paper set tinted from #D1C2A4 to #9A7B55, with its stains.
+tiled("M_Cardboard", "paper", 0.5, {"albedo_color": hexc("BDA387"), "roughness": 0.85, "normal_scale": 1.2})
+std("M_Linen", {"albedo_color": hexc("8C7B5E"), "roughness": 0.8})
+
+# Chapter 2 decals (images: tools/textures/make_decals_ch2.py, table: docs/models/ch2_decals.md).
+SCISSOR = {"transparency": 2, "alpha_scissor_threshold": 0.5}
+std("M_Decal_RoutingChart", {"roughness": 0.3, "metallic_specular": 0.6}, D2 + "routing_chart.png")
+std("M_Decal_DestSymbols", dict(SCISSOR, roughness=0.32, metallic_specular=0.6), D2 + "dest_symbols.png")
+std("M_Decal_Badge", {"roughness": 0.18, "metallic_specular": 0.6}, D2 + "badge.png")  # laminated
+std("M_Decal_IndexCard", dict(SCISSOR, roughness=0.85), D2 + "index_card.png")       # notches are cut out (alpha 0)
+std("M_Decal_RequestCard", {"roughness": 0.85}, D2 + "request_card.png")
+std("M_Decal_FileCover", {"roughness": 0.8}, D2 + "file_cover.png")
+for y in (1996, 1997, 1998):
+    std(f"M_Decal_TapeLabel_{y}", dict(SCISSOR, roughness=0.75), D2 + f"tape_label_{y}.png")
+for k in range(4):
+    # sprocket holes are cut out; a faint self-glow keeps the frames readable on the light box
+    std(f"M_Decal_FilmStrip_{k}", dict(SCISSOR, roughness=0.22, metallic_specular=0.6, emission_enabled="true",
+        emission=hexc("FFF4E0"), emission_energy_multiplier=0.35, emission_operator=1,
+        emission_texture='ExtResource("1")'), D2 + f"film_strip_{k}.png")
+std("M_Decal_ReelCanLid", dict(SCISSOR, roughness=0.5, metallic_specular=0.55), D2 + "reel_can_lid.png")
+std("M_Decal_SlideMark", {"transparency": 1, "roughness": 0.08, "metallic_specular": 0.7}, D2 + "slide_mark.png")
+std("M_Decal_ArchiveRules", {"roughness": 0.85}, D2 + "archive_rules.jpg")
+std("M_Decal_BoxLabels", {"roughness": 0.85}, D2 + "box_labels.jpg")
 print("extra materials written to", OUT)

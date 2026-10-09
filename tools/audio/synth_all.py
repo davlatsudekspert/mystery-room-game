@@ -3,6 +3,7 @@
 
     python3 tools/audio/synth_all.py                 # everything
     python3 tools/audio/synth_all.py --only ui_tap,reveal --qa-dir /tmp/qa
+    python3 tools/audio/synth_all.py --module archive,music_archive --readme   # one chapter's modules
 
 Pipeline per sound: render (fixed seed) -> clean-up (DC removal, fades for
 one-shots) -> level (peak target for SFX, EBU R128 loudness target for music
@@ -32,7 +33,20 @@ from synth import export, loops, qa  # noqa: E402
 from synth.core import (SR, db_to_amp, amp_to_db, fade, make_rng, normalize_peak, peak,  # noqa: E402
                         remove_dc, to_mono, to_stereo, trim_tail)
 from synth.filters import fft_filter, smooth_band  # noqa: E402
-from sounds import load_all  # noqa: E402
+from sounds import load_all as _load_core  # noqa: E402
+
+# Sound modules registered here in addition to ``sounds.MODULES``.
+# Chapter 2 (Records Archive B): props, room tone and its two music cues.
+EXTRA_MODULES = ("archive", "music_archive")
+
+
+def load_all() -> dict:
+    """Every registered sound: the core modules plus ``EXTRA_MODULES``."""
+    import importlib
+    specs = _load_core()
+    for mod in EXTRA_MODULES:
+        importlib.import_module(f"sounds.{mod}")
+    return specs
 
 REPO = HERE.parent.parent
 OUT_ROOT = REPO / "game" / "assets" / "audio"
@@ -136,30 +150,52 @@ def _fmt_dur(s: float) -> str:
     return f"{int(s // 60)}:{s % 60:04.1f}" if s >= 60 else f"{s:.2f} s"
 
 
-def update_readme(results: list[dict]) -> None:
+def _table_row(r: dict) -> str:
+    if "loudness" in r:
+        level = f"{r['loudness']['integrated_lufs']:.1f} LUFS"
+    else:
+        level = f"peak {r['decoded_peak_dbfs']:.1f} dBFS"
+    return (f"| `{r['path'].replace('game/assets/audio/', '')}` | {_fmt_dur(r['duration_s'])} | "
+            f"{'yes' if r['loop'] else 'no'} | {level} | {r['size_kb']:.0f} KB | {r['source']} | "
+            f"{r['desc']} |")
+
+
+def update_readme(results: list[dict], merge: bool = False) -> None:
+    """Rewrite the README asset table. With ``merge`` (partial runs), rows of
+    files that were not rendered this time are kept as they are."""
     if not README.exists():
         return
     order = {"ui": 0, "sfx": 1, "ambience": 2, "music": 3}
-    rows = ["| File | Duration | Loop | Level | Size | Source | Description |", "|---|---|:-:|---|---|---|---|"]
-    for r in sorted(results, key=lambda r: (order[r["category"]], r["name"])):
-        if "loudness" in r:
-            level = f"{r['loudness']['integrated_lufs']:.1f} LUFS"
-        else:
-            level = f"peak {r['decoded_peak_dbfs']:.1f} dBFS"
-        rows.append(f"| `{r['path'].replace('game/assets/audio/', '')}` | {_fmt_dur(r['duration_s'])} | "
-                    f"{'yes' if r['loop'] else 'no'} | {level} | {r['size_kb']:.0f} KB | {r['source']} | "
-                    f"{r['desc']} |")
+    specs = load_all()
     text = README.read_text()
     a, b = "<!-- ASSET-TABLE:START -->", "<!-- ASSET-TABLE:END -->"
-    if a in text and b in text:
-        head, rest = text.split(a, 1)
-        _, tail = rest.split(b, 1)
-        README.write_text(head + a + "\n" + "\n".join(rows) + "\n" + b + tail)
+    if a not in text or b not in text:
+        return
+    head, rest = text.split(a, 1)
+    old, tail = rest.split(b, 1)
+    rows: dict[str, str] = {}
+    if merge:
+        for line in old.splitlines():
+            if line.startswith("| `"):
+                rows[line.split("`")[1]] = line
+    for r in results:
+        rows[r["path"].replace("game/assets/audio/", "")] = _table_row(r)
+
+    def key(path: str):
+        name = Path(path).stem
+        spec = specs.get(name)
+        return (order[spec.category] if spec else 9, name)
+    header = ["| File | Duration | Loop | Level | Size | Source | Description |", "|---|---|:-:|---|---|---|---|"]
+    body = [rows[p] for p in sorted(rows, key=key)]
+    README.write_text(head + a + "\n" + "\n".join(header + body) + "\n" + b + tail)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--only", help="comma-separated sound names")
+    ap.add_argument("--module", help="comma-separated sound modules (e.g. archive,music_archive): add their sounds")
+    ap.add_argument("--readme", action="store_true",
+                    help="with --only/--module: merge the rendered files' rows into the README asset table")
     ap.add_argument("--qa-dir", help="write spectrogram PNGs and report.json here")
     ap.add_argument("--jobs", type=int, default=min(4, os.cpu_count() or 1))
     ap.add_argument("--list", action="store_true", help="list registered sounds and exit")
@@ -170,7 +206,17 @@ def main() -> int:
         for s in specs.values():
             print(f"{s.category:9s} {s.name:28s} {s.desc}")
         return 0
-    names = list(specs) if not args.only else [n.strip() for n in args.only.split(",") if n.strip()]
+    partial = bool(args.only or args.module)
+    names = [n.strip() for n in (args.only or "").split(",") if n.strip()]
+    if args.module:
+        mods = {m.strip() for m in args.module.split(",") if m.strip()}
+        known = {s.fn.__module__.rsplit(".", 1)[-1] for s in specs.values()}
+        if mods - known:
+            print("unknown modules:", ", ".join(sorted(mods - known)), file=sys.stderr)
+            return 2
+        names += [n for n, s in specs.items() if s.fn.__module__.rsplit(".", 1)[-1] in mods and n not in names]
+    if not partial:
+        names = list(specs)
     unknown = [n for n in names if n not in specs]
     if unknown:
         print("unknown sounds:", ", ".join(unknown), file=sys.stderr)
@@ -207,8 +253,10 @@ def main() -> int:
     if args.qa_dir:
         with open(os.path.join(args.qa_dir, "report.json"), "w") as fh:
             json.dump(results, fh, indent=1, default=float)
-    if not args.only:
+    if not partial:
         update_readme(results)
+    elif args.readme:
+        update_readme(results, merge=True)
     if not ok:
         print("LOOP SEAM CHECK FAILED", file=sys.stderr)
         return 1

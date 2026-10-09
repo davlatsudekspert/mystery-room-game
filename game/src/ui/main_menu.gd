@@ -4,6 +4,7 @@ extends Control
 var _menu: VBoxContainer
 var _panel_host: CenterContainer
 var _dim: ColorRect # darkens the menu behind an open panel
+var _logo: TextureRect
 
 
 func _ready() -> void:
@@ -25,26 +26,22 @@ func _ready() -> void:
 	add_child(shade)
 	var left := VBoxContainer.new()
 	left.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	left.offset_left = 120
+	left.offset_left = 100
 	left.offset_right = 900
 	left.alignment = BoxContainer.ALIGNMENT_CENTER
 	left.add_theme_constant_override("separation", 16)
 	add_child(left)
-	var t := UITheme.title("game.title", 96)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	t.add_theme_constant_override("outline_size", 0)
-	left.add_child(t)
-	var rule := ColorRect.new()
-	rule.color = Color(UITheme.BRASS, 0.8)
-	rule.custom_minimum_size = Vector2(520, 2)
-	rule.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	left.add_child(rule)
-	var sub := UITheme.title("game.subtitle", 40, false)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	sub.add_theme_color_override("font_color", UITheme.CREAM)
-	left.add_child(sub)
+	# The logo artwork carries the subtitle, so there is one image per language (tools/ui/make_logo_variants.py).
+	_logo = TextureRect.new()
+	_logo.custom_minimum_size = Vector2(620, 465)
+	_logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_logo.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left.add_child(_logo)
+	_update_logo()
 	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 40)
+	gap.custom_minimum_size = Vector2(0, 18)
 	left.add_child(gap)
 	_menu = VBoxContainer.new()
 	_menu.add_theme_constant_override("separation", 14)
@@ -68,7 +65,17 @@ func _ready() -> void:
 	add_child(ver)
 	_build_menu()
 	AudioManager.music("music_menu", 3.0)
-	Loc.language_changed.connect(func(_c: String) -> void: _build_menu())
+	Loc.language_changed.connect(func(_c: String) -> void:
+		_update_logo()
+		_build_menu())
+
+
+func _update_logo() -> void:
+	var path := "res://assets/ui/logo/logo_%s.png" % Loc.current()
+	if not ResourceLoader.exists(path):
+		path = "res://assets/ui/logo/logo_en.png"
+	_logo.texture = load(path)
+	_logo.tooltip_text = tr("game.title") + " — " + tr("game.subtitle")
 
 
 func _build_menu() -> void:

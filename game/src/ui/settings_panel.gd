@@ -37,6 +37,7 @@ func _ready() -> void:
 	v.add_child(_slider("ui.music", "music_volume"))
 	v.add_child(_slider("ui.sfx", "sfx_volume"))
 	v.add_child(_slider("ui.ambience", "ambience_volume"))
+	v.add_child(_slider("ui.brightness", "brightness", 0.7, 1.6))
 	v.add_child(_row_label("ui.text_size"))
 	var sh := HBoxContainer.new()
 	sh.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -81,7 +82,7 @@ func _row_label(key: String) -> Label:
 	return l
 
 
-func _slider(key: String, setting: String) -> Control:
+func _slider(key: String, setting: String, min_v: float = 0.0, max_v: float = 1.0) -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 20)
 	var l := UITheme.label(key, 26)
@@ -90,8 +91,8 @@ func _slider(key: String, setting: String) -> Control:
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	h.add_child(l)
 	var s := HSlider.new()
-	s.min_value = 0.0
-	s.max_value = 1.0
+	s.min_value = min_v
+	s.max_value = max_v
 	s.step = 0.05
 	s.value = float(Settings.get_value(setting))
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Linen"
+albedo_color = Color(0.5490, 0.4824, 0.3686, 1.0)
+roughness = 0.8

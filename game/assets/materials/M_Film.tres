@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Film"
+transparency = 1
+albedo_color = Color(0.2275, 0.1412, 0.0784, 0.9)
+roughness = 0.25
+metallic_specular = 0.6

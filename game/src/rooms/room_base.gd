@@ -95,6 +95,8 @@ func make_environment(bg: Color, ambient: Color, ambient_energy: float, fog_colo
 	env.adjustment_saturation = 0.92
 	we.environment = env
 	add_child(we)
+	_apply_brightness("brightness")
+	Settings.changed.connect(_apply_brightness) # a bound method: disconnected automatically with the room
 
 
 func spawn(id: String, model: String, pos: Vector3, yaw: float, hotspot: String, mode: String) -> Node3D:
@@ -334,3 +336,9 @@ func _on_view_changed(id: String) -> void:
 ## Override for per-view lighting, visibility culling and reveals.
 func view_changed_hook(_id: String) -> void:
 	pass
+
+
+## Settings → Brightness scales the scene exposure (dark rooms on dim phone screens).
+func _apply_brightness(key: String) -> void:
+	if key == "brightness" and env != null:
+		env.tonemap_exposure = float(Settings.get_value("brightness"))

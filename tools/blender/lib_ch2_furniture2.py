@@ -212,14 +212,17 @@ def gpoly(name, pts2d, depth, origin, ex, ey, mat="M_Brass_Aged", bevel=0.0004, 
     return o
 
 
-def screw(name, r, loc, normal, mat="M_Brass_Aged", slot=30.0):
-    return A.screw(name, r, G(*loc), normal=axis_vec(normal), mat=mat, slot_angle=slot)
+def screw(name, r, loc, normal, mat="M_Brass_Aged", slot=30.0, segs=6):
+    return A.screw(name, r, G(*loc), normal=axis_vec(normal), mat=mat, slot_angle=slot, segs=segs)
 
 
 # ---------------------------------------------------------------- parts
 def part(name, objs, pivot=None, presmooth=True):
     """Join objs into one object named `name` with its origin at Godot `pivot` (identity rotation)."""
     objs = [o for o in objs if o is not None]
+    if os.environ.get("B2_DEBUG"):
+        for x in sorted(objs, key=lambda x: -A.tris(x) if x.type == "MESH" else 0)[:12]:
+            print(f"[b2-debug] {name:16s} {x.name:28s} {A.tris(x) if x.type == 'MESH' else 0}")
     if presmooth:
         A.presmooth(objs)
     o = M.join(objs, name) if len(objs) > 1 or objs[0].name != name else objs[0]
@@ -562,3 +565,177 @@ def item_or_proxy(item: str, mount_obj):
         x.parent = mount_obj
         x.matrix_parent_inverse = Matrix.Identity(4)
     return objs[0]
+
+
+# ---------------------------------------------------------------- extra shapes (B2)
+def rrect_pts(w, d, r, n=4, cx=0.0, cy=0.0):
+    return K.rounded_rect(w, d, r, n, cx, cy)
+
+
+def gslab(name, centre, w, d, h, r=0.004, mat="M_Wood_Walnut", bevel=0.0006, n=4, plane="xz", hole=None,
+          drop_bottom=False):
+    """Rounded-corner slab.
+    plane 'xz': lying; w along X, d along Z, rising h from Godot y = centre[1] (centre x/z = footprint centre).
+    plane 'xy': standing, facing +Z; w along X, d along Y, extruded h toward +Z from z = centre[2].
+    hole = (w, d, r) cuts a centred rounded-rect opening (frames, bezels)."""
+    loops = [rrect_pts(w, d, r, n)]
+    if hole:
+        hw, hd, hr = hole[:3]
+        hcx, hcy = (hole[3], hole[4]) if len(hole) > 3 else (0.0, 0.0)
+        loops.append(rrect_pts(hw, hd, hr, n, hcx, hcy))
+    if plane == "xz":
+        return gpoly(name, loops, h, centre, (1, 0, 0), (0, 0, -1), mat=mat, bevel=bevel, drop_bottom=drop_bottom)
+    return gpoly(name, loops, h, centre, (1, 0, 0), (0, 1, 0), mat=mat, bevel=bevel, drop_bottom=drop_bottom)
+
+
+def gdisc(name, centre, r, normal="z", up="y", mat="M_Paper", n=32, uv_r=0.5):
+    """Flat n-gon disc (triangle fan) facing `normal`, with planar UVs: u along up x normal... i.e. image
+    right = (up x normal) seen from the front, v along `up`; the disc radius maps to uv_r around (0.5, 0.5)."""
+    nn = axis_vec(normal)
+    vv = axis_vec(up)
+    uu = vv.cross(nn).normalized()
+    c = GV(centre)
+    me = bpy.data.meshes.new(name)
+    verts = [tuple(c)] + [tuple(c + (uu * math.cos(2 * math.pi * i / n) + vv * math.sin(2 * math.pi * i / n)) * r)
+                          for i in range(n)]
+    faces = [(0, 1 + i, 1 + (i + 1) % n) for i in range(n)]
+    me.from_pydata(verts, [], faces)
+    me.update()
+    o = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(o)
+    M.assign(o, mat)
+    uvl = me.uv_layers.new(name="UVMap")
+    for p in me.polygons:
+        for li, vi in zip(p.loop_indices, p.vertices):
+            d = Vector(verts[vi]) - c
+            uvl.data[li].uv = (0.5 + uv_r * d.dot(uu) / r, 0.5 + uv_r * d.dot(vv) / r)
+    # make sure the fan faces `normal`
+    if me.polygons[0].normal.dot(nn) < 0:
+        me.flip_normals()
+    return o
+
+
+def gtext(name, text, size, centre, facing="z", mat="M_Bakelite", depth=0.0, font=None, res=2, align="CENTER",
+          spacing=1.0):
+    """Low-poly 3D text centred on a Godot point. facing 'z' = on a front face (+Z, upright);
+    'y' = lying on a top face, reading from the front (+Z side); '-z' = on a back face; 'x'/'-x' side faces."""
+    o = K.text_flat(name, text, size, font=font or K.FONT_SANS_B, depth=depth, res=res, align=align, mat=mat,
+                    spacing=spacing)
+    if facing == "z":
+        o.data.transform(Matrix.Rotation(math.pi / 2, 4, "X"))
+    elif facing == "-z":
+        o.data.transform(Matrix.Rotation(math.pi, 4, "Z") @ Matrix.Rotation(math.pi / 2, 4, "X"))
+    elif facing == "x":
+        o.data.transform(Matrix.Rotation(math.pi / 2, 4, "Z") @ Matrix.Rotation(math.pi / 2, 4, "X"))
+    elif facing == "-x":
+        o.data.transform(Matrix.Rotation(-math.pi / 2, 4, "Z") @ Matrix.Rotation(math.pi / 2, 4, "X"))
+    o.location = G(*centre)
+    return o
+
+
+def bake_xform(o, yaw=0.0, pitch=0.0, roll=0.0, about=(0, 0, 0)) -> None:
+    """Rotate an object's mesh (world space, object at identity rotation) about a Godot point."""
+    M.apply_transform(o)
+    p = GV(about)
+    o.data.transform(Matrix.Translation(p) @ gmat(yaw, pitch, roll) @ Matrix.Translation(-p))
+
+
+def qa_decal_alpha(prefixes=("M_Decal_",)) -> None:
+    """QA only: wire decal image alpha into the BSDF so cut-outs (sprocket holes, round lids) show."""
+    for mat in bpy.data.materials:
+        if not mat.use_nodes or not mat.name.startswith(prefixes):
+            continue
+        nt = mat.node_tree
+        b = nt.nodes.get("Principled BSDF")
+        tex = next((n for n in nt.nodes if n.type == "TEX_IMAGE"), None)
+        if b is None or tex is None:
+            continue
+        nt.links.new(tex.outputs["Alpha"], b.inputs["Alpha"])
+        if hasattr(mat, "surface_render_method"):
+            mat.surface_render_method = "DITHERED"
+
+
+def qa_emit(mat_name, colour="FFF4DC", strength=3.0, new_name=None) -> None:
+    """QA only: make a material glow (light box on, lamp bulbs)."""
+    mat = bpy.data.materials.get(mat_name)
+    if mat is None:
+        return
+    b = mat.node_tree.nodes.get("Principled BSDF")
+    b.inputs["Emission Color"].default_value = M.hex_rgba(colour)
+    b.inputs["Emission Strength"].default_value = strength
+
+
+def set_world_xform(o, target) -> None:
+    """QA only: put object `o` exactly at another object's world transform."""
+    M.refresh()
+    o.matrix_world = target.matrix_world.copy()
+    M.refresh()
+
+
+# ---------------------------------------------------------------- hardware + small shapes (B2)
+def qa_decal_emit(prefix: str, strength: float = 0.35, tint: str = "FFF4E0") -> None:
+    """QA only: decal texture also drives emission (mimics the .tres emission_texture, e.g. film strips)."""
+    for mat in bpy.data.materials:
+        if not mat.use_nodes or not mat.name.startswith(prefix):
+            continue
+        nt = mat.node_tree
+        b = nt.nodes.get("Principled BSDF")
+        tex = next((n for n in nt.nodes if n.type == "TEX_IMAGE"), None)
+        if b is None or tex is None:
+            continue
+        nt.links.new(tex.outputs["Color"], b.inputs["Emission Color"])
+        b.inputs["Emission Strength"].default_value = strength
+
+
+def bar_pull(name, centre, length=0.10, facing="z", r=0.0042, stand=0.022, mat="M_Chrome"):
+    """Bow/bar handle on a front face (Godot +Z by default): two posts and a round bar, centred on `centre`
+    (the face point). facing 'x' / '-x' for side faces. Returns a list of objects."""
+    cx, cy, cz = centre
+    if facing == "z":
+        a, b, n = (cx - length / 2, cy, cz), (cx + length / 2, cy, cz), (0, 0, 1)
+    elif facing == "x":
+        a, b, n = (cx, cy, cz + length / 2), (cx, cy, cz - length / 2), (1, 0, 0)
+    else:
+        a, b, n = (cx, cy, cz - length / 2), (cx, cy, cz + length / 2), (-1, 0, 0)
+    out = []
+
+    def off(p, d):
+        return (p[0] + n[0] * d, p[1] + n[1] * d, p[2] + n[2] * d)
+    for i, p in enumerate((a, b)):
+        out.append(gcyl(f"{name}_post{i}", r * 0.95, stand, p, axis=n, verts=8, mat=mat, bevel=0.0))
+        out.append(gcyl(f"{name}_rose{i}", r * 1.9, 0.0025, p, axis=n, verts=12, mat=mat, bevel=0.0))
+    out.append(gtube(f"{name}_bar", [off(a, stand), off(b, stand)], r, sides=10, mat=mat))
+    return out
+
+
+def card_holder(name, centre, w=0.050, h=0.022, facing="z", mat="M_Brass_Aged", card="M_Paper"):
+    """Pressed brass label frame with a paper card behind it (front face, +Z)."""
+    cx, cy, cz = centre
+    frame = gslab(name, (cx, cy, cz), w, h, 0.0016, r=0.002, mat=mat, plane="xy", hole=(w - 0.006, h - 0.007, 0.0012),
+                  bevel=0.0, n=2)
+    cardo = gbox(name + "_card", (cx - w / 2 + 0.003, cy - h / 2 + 0.003, cz), (cx + w / 2 - 0.003, cy + h / 2 - 0.003,
+                                                                              cz + 0.0006), mat=card, bevel=0.0)
+    rivets = [screw(f"{name}_rv{i}", 0.0016, (cx + s * (w / 2 - 0.0018), cy, cz + 0.0016), (0, 0, 1), mat=mat, segs=5)
+              for i, s in enumerate((-1, 1))]
+    objs = [frame, cardo] + rivets
+    if facing != "z":
+        ang = {"x": 90.0, "-x": -90.0, "-z": 180.0}[facing]
+        for o in objs:
+            bake_xform(o, yaw=ang, about=centre)
+    return objs
+
+
+def ribbon(name, path, width, thick=0.0004, mat="M_Film"):
+    """Thin ribbon standing on edge along a Godot polyline (film curls): width rises along +Y."""
+    prof = [(-thick / 2, 0.0), (thick / 2, 0.0), (thick / 2, width), (-thick / 2, width)]
+    return A.sweep(name, prof, [G(*p) for p in path], up=(0, 0, 1), mat=mat)
+
+
+def spiral(cx, cz, y, r0, r1, turns, n, phase=0.0):
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        a = phase + turns * 2 * math.pi * t
+        r = r0 + (r1 - r0) * t
+        pts.append((cx + r * math.cos(a), y, cz + r * math.sin(a)))
+    return pts

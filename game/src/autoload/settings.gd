@@ -14,6 +14,7 @@ const DEFAULTS := {
 	"reduce_motion": false,
 	"invert_look": false,
 	"look_sensitivity": 1.0,
+	"brightness": 1.0, # scene exposure multiplier (dark rooms on dim phone screens)
 	"render_scale": 1.0, # 3D resolution chosen by PerfGuard on phones (not shown in the UI)
 }
 const TEXT_SCALES: Array[float] = [0.9, 1.0, 1.15, 1.3]
@@ -43,6 +44,8 @@ func set_value(key: String, v: Variant) -> void:
 		v = clampf(float(v), 0.0, 2.0 if key == "look_sensitivity" else 1.0)
 	elif key == "render_scale":
 		v = clampf(float(v), 0.5, 1.0)
+	elif key == "brightness":
+		v = clampf(float(v), 0.7, 1.6)
 	values[key] = v
 	save_settings()
 	changed.emit(key)

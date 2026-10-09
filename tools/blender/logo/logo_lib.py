@@ -298,23 +298,30 @@ def mat_crystal(name: str = "LG_Crystal", tint: str = "D8F7FF", glow: str = "4FD
     return m
 
 
-def mat_velvet(name: str = "LG_Velvet", color: str = "0F2523", sheen_tint: str = "6FB9AC", scale: float = 1.0):
+def mat_velvet(name: str = "LG_Velvet", color: str = "0F2523", sheen_tint: str = "6FB9AC", scale: float = 1.0,
+               crush: float = 1.0):
+    """Crushed velvet: dark pile, strong teal sheen at grazing angles, patchy crush pattern, fine pile bump."""
     m, nt = new_mat(name)
     if nt is None:
         return m
     b = nt.nodes["Principled BSDF"]
     tc = node(nt, "ShaderNodeTexCoord")
-    n = noise(nt, tc.outputs["Object"], 2.0 / scale, 6.0, 0.6)
-    col = mix_rgb(nt, map_range(nt, n, 0.3, 0.7, 0.0, 1.0), lin(color), lin("17312E"))
+    co = tc.outputs["Object"]
+    amount = crush
+    crush = noise(nt, co, 3.5 / scale, 7.0, 0.68)
+    cr = map_range(nt, crush, 0.35, 0.68, 0.0, amount, interp="SMOOTHSTEP")
+    col = mix_rgb(nt, cr, lin(color), lin("163633"))
     nt.links.new(col, b.inputs["Base Color"])
-    b.inputs["Roughness"].default_value = 0.85
-    b.inputs["Sheen Weight"].default_value = 1.0
-    b.inputs["Sheen Roughness"].default_value = 0.35
+    b.inputs["Roughness"].default_value = 0.9
+    sw = map_range(nt, crush, 0.3, 0.7, 0.55, 1.0)
+    nt.links.new(sw, b.inputs["Sheen Weight"])
+    b.inputs["Sheen Roughness"].default_value = 0.42
     b.inputs["Sheen Tint"].default_value = lin(sheen_tint)
-    b.inputs["Specular IOR Level"].default_value = 0.2
-    fine = noise(nt, tc.outputs["Object"], 900.0 / scale, 2.0, 0.5)
-    bp = node(nt, "ShaderNodeBump", {"Strength": 0.25, "Distance": 0.001 * scale})
-    nt.links.new(fine, bp.inputs["Height"])
+    b.inputs["Specular IOR Level"].default_value = 0.15
+    fine = noise(nt, co, 900.0 / scale, 2.0, 0.5)
+    h = math_node(nt, "ADD", math_node(nt, "MULTIPLY", crush, 0.6), math_node(nt, "MULTIPLY", fine, 0.4))
+    bp = node(nt, "ShaderNodeBump", {"Strength": 0.35, "Distance": 0.002 * scale})
+    nt.links.new(h, bp.inputs["Height"])
     nt.links.new(bp.outputs["Normal"], b.inputs["Normal"])
     return m
 
@@ -1099,3 +1106,143 @@ def mask_render(path: str, white, cut, res: int, samples: int = 16) -> str:
     os.remove(exr)
     print(f"[logo] wrote {path} (mask)")
     return path
+
+
+# ------------------------------------------------------------------ 2D outline helpers (B, C)
+def catmull(pts, n: int = 6, closed: bool = True):
+    """Catmull-Rom spline through the points (smooth organic outlines)."""
+    out = []
+    N = len(pts)
+    rng = range(N) if closed else range(N - 1)
+    for i in rng:
+        p0 = pts[(i - 1) % N] if closed or i > 0 else pts[0]
+        p1, p2 = pts[i], pts[(i + 1) % N]
+        p3 = pts[(i + 2) % N] if closed or i + 2 < N else pts[-1]
+        for k in range(n):
+            t = k / n
+            t2, t3 = t * t, t * t * t
+            out.append(tuple(0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 +
+                                    (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3) for j in range(2)))
+    if not closed:
+        out.append(tuple(pts[-1]))
+    return out
+
+
+def poly_area(pts) -> float:
+    return 0.5 * sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1]
+                     for i in range(len(pts)))
+
+
+def offset_poly(pts, d: float):
+    """Offset a closed polygon inward by d (> 0) or outward (< 0), miter-limited."""
+    ccw = poly_area(pts) > 0
+    n = len(pts)
+    out = []
+    for i in range(n):
+        p0, p1, p2 = Vector(pts[i - 1]), Vector(pts[i]), Vector(pts[(i + 1) % n])
+        e1 = (p1 - p0).normalized()
+        e2 = (p2 - p1).normalized()
+        n1 = Vector((-e1.y, e1.x)) if ccw else Vector((e1.y, -e1.x))
+        n2 = Vector((-e2.y, e2.x)) if ccw else Vector((e2.y, -e2.x))
+        nm = (n1 + n2)
+        if nm.length < 1e-6:
+            nm = n1
+        nm.normalize()
+        c = max(nm.dot(n1), 0.5)
+        q = p1 + nm * (d / c)
+        out.append((q.x, q.y))
+    return out
+
+
+def ray_poly(c, ang: float, pts) -> float:
+    """Distance from c along angle `ang` to the first crossing of the closed polygon."""
+    dx, dy = math.cos(ang), math.sin(ang)
+    best = 1e9
+    n = len(pts)
+    for i in range(n):
+        (x1, y1), (x2, y2) = pts[i], pts[(i + 1) % n]
+        ex, ey = x2 - x1, y2 - y1
+        den = dx * ey - dy * ex
+        if abs(den) < 1e-12:
+            continue
+        t = ((x1 - c[0]) * ey - (y1 - c[1]) * ex) / den
+        u = ((x1 - c[0]) * dy - (y1 - c[1]) * dx) / den
+        if t > 1e-6 and 0.0 <= u <= 1.0:
+            best = min(best, t)
+    return best
+
+
+def keyhole(cx: float, cy: float, r: float, hw_top: float, hw_bot: float, slot: float, n: int = 48,
+            corner: float = 0.012):
+    """Classic keyhole outline (CCW): circle of radius r centred at (cx, cy) + a flared slot below."""
+    yj = math.sqrt(max(r * r - hw_top * hw_top, 0.0))
+    a_r = math.atan2(-yj, hw_top)
+    a_l = -math.pi - a_r + TAU
+    pts = [(cx + r * math.cos(a_r + (a_l - a_r) * k / n), cy + r * math.sin(a_r + (a_l - a_r) * k / n))
+           for k in range(n + 1)]
+    yb = cy - slot
+    pts += [(cx - hw_bot, yb), (cx + hw_bot, yb)]
+    radii = [0.0] * (n + 1) + [corner, corner]
+    radii[0] = radii[n] = corner * 0.5
+    return fillet(pts, 0.0, 4, closed=True, radii=radii)
+
+
+def mat_enamel_dial(name: str = "LG_Dial", color: str = "0C272B", rays: int = 96, scale: float = 1.0):
+    """Glossy deep-teal enamel over a guilloche sunburst (radial engine-turned lines) — watch-dial look."""
+    m, nt = new_mat(name)
+    if nt is None:
+        return m
+    b = nt.nodes["Principled BSDF"]
+    b.inputs["Base Color"].default_value = lin(color)
+    b.inputs["Roughness"].default_value = 0.32
+    b.inputs["Metallic"].default_value = 0.35
+    b.inputs["Coat Weight"].default_value = 1.0
+    b.inputs["Coat Roughness"].default_value = 0.04
+    b.inputs["Coat Tint"].default_value = lin("BFEFF0")
+    tc = node(nt, "ShaderNodeTexCoord")
+    sep = node(nt, "ShaderNodeSeparateXYZ")
+    nt.links.new(tc.outputs["Object"], sep.inputs[0])
+    ang = node(nt, "ShaderNodeMath", operation="ARCTAN2")
+    nt.links.new(sep.outputs[1], ang.inputs[0])
+    nt.links.new(sep.outputs[0], ang.inputs[1])
+    wave = math_node(nt, "SINE", math_node(nt, "MULTIPLY", ang.outputs[0], float(rays)))
+    bp = node(nt, "ShaderNodeBump", {"Strength": 0.35, "Distance": 0.002 * scale})
+    nt.links.new(wave, bp.inputs["Height"])
+    nt.links.new(bp.outputs["Normal"], b.inputs["Normal"])
+    return m
+
+
+def cloth(name: str, w: float, h: float, res: int, amp: float, seed: int, mat, dent=None, freq=(1.2, 3.2)):
+    """Draped velvet: a grid with soft folds (sum of oriented sines + low noise) and an optional dent
+    function dent(x, y) -> dz where a heavy object rests."""
+    rnd = random.Random(seed)
+    waves = [(rnd.uniform(0, TAU), rnd.uniform(*freq), rnd.uniform(0, TAU), rnd.uniform(0.4, 1.0))
+             for _ in range(6)]
+    bm = bmesh.new()
+    bmesh.ops.create_grid(bm, x_segments=res, y_segments=res, size=0.5)
+    bmesh.ops.scale(bm, vec=(w, h, 1.0), verts=bm.verts)
+    for v in bm.verts:
+        x, y = v.co.x, v.co.y
+        z = 0.0
+        for (dirn, freq, ph, a) in waves:
+            u = x * math.cos(dirn) + y * math.sin(dirn)
+            z += a * math.sin(u * freq + ph)
+        z = amp * z / 2.5
+        if dent is not None:
+            z += dent(x, y)
+        v.co.z = z
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    obj = link(bpy.data.objects.new(name, me))
+    set_mat(obj, mat)
+    shade(obj, 180.0)
+    return obj
+
+
+def light_only(light_obj, receivers) -> None:
+    """Cycles light linking: the light illuminates only `receivers` (e.g. keep it out of a haze volume)."""
+    coll = bpy.data.collections.new(light_obj.name + "_recv")
+    for o in receivers:
+        coll.objects.link(o)
+    light_obj.light_linking.receiver_collection = coll
