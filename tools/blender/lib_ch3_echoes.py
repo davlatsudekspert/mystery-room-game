@@ -211,6 +211,12 @@ def shoe_on(prefix, ankle_xy, yaw_deg, heel=0.012, scale=1.07, toe=1.0, toes_dow
     m = Matrix.Translation((ankle_xy[0], ankle_xy[1], 0.0)) @ Matrix.Rotation(math.radians(yaw_deg), 4, "Z") @ m
     for p in parts:
         E.transform_obj(p, m)
+    # a turned (toes-down) shoe can dip under the floor at the toe: lift it back onto the floor
+    low = min(v.co.z for p in parts for v in p.data.vertices)
+    if low < 0.0:
+        for p in parts:
+            E.transform_obj(p, Matrix.Translation((0.0, 0.0, -low)))
+        m = Matrix.Translation((0.0, 0.0, -low)) @ m
     return parts, m @ ankle
 
 
@@ -287,9 +293,40 @@ def make_pose(name, parts, hands, head, tris, voxel=0.0036, folds=None, flutes=N
                      hd.pop("hair_fn"), tris["head"], **hd)
     others = shells + [h] + (late or [])
     obj = L.bool_union(body, others, name)
+    dropped = L.drop_small_islands(obj, min_verts=60)      # boolean crumbs (a few mm), never real parts
+    if dropped:
+        E.clean_mesh(obj)
+        print(f"[echo3] {name}: dropped {dropped} boolean crumb island(s)")
     rep = E.mesh_report(obj)
     print(f"[echo3] {name}: {rep}")
+    if rep["shells"] > 1:
+        islands(obj)
     return obj
+
+
+def islands(obj) -> None:
+    """Print every connected island of a mesh (vertex count, bbox centre) to find a part that did not join."""
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    seen = set()
+    for v in bm.verts:
+        if v.index in seen:
+            continue
+        stack, isl = [v], []
+        seen.add(v.index)
+        while stack:
+            x = stack.pop()
+            isl.append(x.co.copy())
+            for e in x.link_edges:
+                o = e.other_vert(x)
+                if o.index not in seen:
+                    seen.add(o.index)
+                    stack.append(o)
+        lo = Vector((min(c.x for c in isl), min(c.y for c in isl), min(c.z for c in isl)))
+        hi = Vector((max(c.x for c in isl), max(c.y for c in isl), max(c.z for c in isl)))
+        print(f"[echo3]   island: {len(isl)} verts, bbox {tuple(round(c, 3) for c in lo)} .. {tuple(round(c, 3) for c in hi)}")
+    bm.free()
 
 
 def turn(obj) -> None:

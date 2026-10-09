@@ -189,7 +189,8 @@ def build():
         el[s] = e
     # filler rod (thin: unioned after the decimation)
     grip_l = info_l["W"] + info_l["F"] * 0.075 * HAND_S + info_l["N"] * 0.018 * HAND_S
-    rod = E.limb("rod", ROD_A, grip_l - rod_d * 0.16, [0.0026, 0.0026], seg=6, side=(0, 0, 1), cap0=0.3, cap1=0.3)
+    rod = E.limb("rod", ROD_A, grip_l + (grip_l - ROD_A).normalized() * 0.11, [0.0026, 0.0026], seg=6, side=(0, 0, 1),
+                 cap0=0.3, cap1=0.3)
 
     def folds():
         k = []

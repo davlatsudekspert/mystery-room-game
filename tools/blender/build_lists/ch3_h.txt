@@ -1,3 +1,4 @@
 # Chapter 3 light-echo figures (group H, lib_ch3_echoes.py on top of lib_echo.py and lib_ch2_echoes.py)
 echo_operator.py
 echo_technicians.py
+echo_welder.py
