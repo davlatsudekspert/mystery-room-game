@@ -85,6 +85,13 @@ func flash(color: Color, hold: float = 0.1, out: float = 0.8) -> void:
 
 
 func toast(text: String, seconds: float = 2.2) -> void:
+	# sized and placed for this screen each time (text scale, safe area and cutout can change between toasts)
+	_toast.add_theme_font_size_override("font_size", UITheme.size(26))
+	_toast.add_theme_stylebox_override("normal", UITheme.caption_plate())
+	var half := minf(400.0 * UITheme.wscale(), UITheme.usable_rect().size.x / 2.0)
+	_toast.offset_left = -half
+	_toast.offset_right = half
+	_toast.offset_top = UITheme.safe_margins().y + 36
 	_toast.text = text
 	var tw := create_tween()
 	tw.tween_property(_toast, "modulate:a", 1.0, 0.2)
