@@ -4,6 +4,13 @@ shader_type spatial;
 render_mode unshaded, cull_back, shadows_disabled, blend_mix;
 
 uniform sampler2D engraving : source_color, filter_linear, repeat_disable;
+// Per-game variant (docs/VARIANTS.md): the engraving is drawn from the two glyphs, the sign turned by eng_rot
+// and scaled by eng_scale, instead of the fixed texture.
+uniform bool eng_compose = false;
+uniform sampler2D eng_mark : source_color, filter_linear, repeat_disable;
+uniform sampler2D eng_sign : source_color, filter_linear, repeat_disable;
+uniform float eng_rot = 1.5707963;
+uniform float eng_scale = 0.55;
 uniform sampler2D left_img : source_color, filter_linear, repeat_disable;
 uniform sampler2D right_img : source_color, filter_linear, repeat_disable;
 uniform float left_on = 0.0;
@@ -33,6 +40,9 @@ void fragment() {
 	}
 	vec3 col = vec3(0.16, 0.19, 0.19) + vec3(0.06) * (1.0 - r * 2.0);
 	float eng = texture(engraving, UV).a;
+	if (eng_compose) {
+		eng = max(sample_img(eng_mark, UV, 0.0, 1.0), sample_img(eng_sign, UV, eng_rot, eng_scale));
+	}
 	col += vec3(0.85, 0.82, 0.72) * eng * 0.32;
 	float l = sample_img(left_img, UV, rot_left, 1.0) * left_on;
 	float rr = sample_img(right_img, UV, rot_right, scale_right) * right_on;

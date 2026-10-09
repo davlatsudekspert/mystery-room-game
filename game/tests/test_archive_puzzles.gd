@@ -337,3 +337,12 @@ func test_valve_target_pool_unique() -> void:
 	var pool := ArchiveLogic.valve_target_pool()
 	check(pool.size() >= 6, "at least 6 gauge-mark pairs (got %d)" % pool.size())
 	check(pool.has([ArchiveLogic.PRESSURE_TARGET, ArchiveLogic.FLOW_TARGET]), "the canonical marks are in the pool")
+
+
+func test_vault_variant_reachable() -> void:
+	for seed in range(1, 41):
+		var l := ArchiveLogic.new()
+		l.apply_seed(seed)
+		check(l.vault_rot_target() != ArchiveLogic.ROT_RIGHT_START and l.vault_rot_target() != 0,
+			"seed %d: the right image starts off its target" % seed)
+		check(l.vault_zoom_target() >= 1 and l.vault_zoom_target() < ArchiveLogic.ZOOM_STEPS, "seed %d: zoom target in range" % seed)

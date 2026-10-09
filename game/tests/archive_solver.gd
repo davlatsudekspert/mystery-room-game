@@ -173,9 +173,9 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 			return
 		while int(s["rot_left"]) % 4 != 0:
 			l.turn_collar("rot_left")
-		while int(s["rot_right"]) != ArchiveLogic.ROT_RIGHT_TARGET:
+		while int(s["rot_right"]) != l.vault_rot_target():
 			l.turn_collar("rot_right")
-		while int(s["zoom_right"]) != ArchiveLogic.ZOOM_TARGET and not s["vault_unlocked"]:
+		while int(s["zoom_right"]) != l.vault_zoom_target() and not s["vault_unlocked"]:
 			l.turn_collar("zoom_right")
 		return
 	if not s["vault_open"]:

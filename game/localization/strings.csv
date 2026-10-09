@@ -600,8 +600,8 @@ hint.c2_ports.1,The vault door has two lenses.,На двери хранилищ�
 hint.c2_ports.2,"The plates show which mark goes where: the star on the left, the crescent on the right.","Таблички показывают, где какой знак: звезда слева, полумесяц справа.","Lavhalar qaysi belgi qayerga ekanini koʻrsatadi: yulduz chapda, yarim oy oʻngda."
 hint.c2_ports.3,"Strand's mark crystal in the left port, Leyla's sign crystal in the right.","Кристалл со знаком Странда — в левый порт, со знаком Лейлы — в правый.","Strand belgili billur chap portga, Leyla belgili billur oʻng portga."
 hint.c2_align.1,Match the faint engraving on the glass.,Совместите изображения с бледной гравировкой на стекле.,Tasvirlarni shishadagi xira oʻyma bilan moslang.
-hint.c2_align.2,"The mark stands upright. The sign lies on its side inside the ring, smaller.",Знак стоит вертикально. Полумесяц лежит на боку внутри кольца и меньше.,Belgi tik turadi. Yarim oy halqa ichida yonboshlab yotadi va kichikroq.
-hint.c2_align.3,"Left collar upright, right collar 2 steps, zoom 3.","Левое кольцо вертикально, правое на 2 шага, масштаб 3.","Chap halqa tik, oʻng halqa 2 qadam, kattalik 3."
+hint.c2_align.2,The mark stands upright. The sign inside the ring is turned and smaller: copy the engraving exactly.,Знак стоит вертикально. Полумесяц внутри кольца повёрнут и меньше: повторите гравировку точно.,Belgi tik turadi. Halqa ichidagi yarim oy burilgan va kichikroq: oʻymani aynan takrorlang.
+hint.c2_align.3,"Left collar upright, right collar to mark %d, zoom to mark %d.","Левое кольцо вертикально, правое — на отметку %d, масштаб — на отметку %d.","Chap halqa tik, oʻng halqa %d-belgiga, kattalik %d-belgiga."
 hint.c2_wheel.1,The bolts are free.,Засовы свободны.,Zulfinlar boʻshadi.
 hint.c2_wheel.2,Turn the vault wheel.,Поверните штурвал хранилища.,Seyfxona gʻildiragini buring.
 hint.c2_wheel.3,Tap the wheel three times.,Нажмите на штурвал три раза.,Gʻildirakka uch marta bosing.

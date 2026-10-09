@@ -532,6 +532,12 @@ func _build_disc() -> void:
 	_disc_mat = ShaderMaterial.new()
 	_disc_mat.shader = load("res://src/fx/vault_overlay.gdshader")
 	_disc_mat.set_shader_parameter("engraving", _tex(DECALS + "vault_engraving.png"))
+	# this game's engraving: the sign at its own turn and size (the same maths as the projected right image)
+	_disc_mat.set_shader_parameter("eng_compose", true)
+	_disc_mat.set_shader_parameter("eng_mark", _tex(DECALS + "glyph_mark.png"))
+	_disc_mat.set_shader_parameter("eng_sign", _tex(DECALS + "glyph_sign.png"))
+	_disc_mat.set_shader_parameter("eng_rot", deg_to_rad(45.0 * logic.vault_rot_target()))
+	_disc_mat.set_shader_parameter("eng_scale", 1.0 - 0.15 * logic.vault_zoom_target())
 	disc.material_override = _disc_mat
 
 

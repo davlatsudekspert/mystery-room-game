@@ -233,8 +233,8 @@ H = {
 ],
 "c2_align": [
     ("Match the faint engraving on the glass.", "Совместите изображения с бледной гравировкой на стекле.", "Tasvirlarni shishadagi xira oʻyma bilan moslang."),
-    ("The mark stands upright. The sign lies on its side inside the ring, smaller.", "Знак стоит вертикально. Полумесяц лежит на боку внутри кольца и меньше.", "Belgi tik turadi. Yarim oy halqa ichida yonboshlab yotadi va kichikroq."),
-    ("Left collar upright, right collar 2 steps, zoom 3.", "Левое кольцо вертикально, правое на 2 шага, масштаб 3.", "Chap halqa tik, oʻng halqa 2 qadam, kattalik 3."),
+    ("The mark stands upright. The sign inside the ring is turned and smaller: copy the engraving exactly.", "Знак стоит вертикально. Полумесяц внутри кольца повёрнут и меньше: повторите гравировку точно.", "Belgi tik turadi. Halqa ichidagi yarim oy burilgan va kichikroq: oʻymani aynan takrorlang."),
+    ("Left collar upright, right collar to mark %d, zoom to mark %d.", "Левое кольцо вертикально, правое — на отметку %d, масштаб — на отметку %d.", "Chap halqa tik, oʻng halqa %d-belgiga, kattalik %d-belgiga."),
 ],
 "c2_wheel": [
     ("The bolts are free.", "Засовы свободны.", "Zulfinlar boʻshadi."),

@@ -97,6 +97,7 @@ func default_state() -> Dictionary:
 		"v_shadows": SPLICE_SHADOWS.duplicate(), # film frame -> shadow length
 		"v_focus": FOCUS_SHARP,
 		"v_targets": [PRESSURE_TARGET, FLOW_TARGET], # green marks on gauges P and F
+		"v_vault": [ROT_RIGHT_TARGET, ZOOM_TARGET], # the right image's rotation and zoom in the engraving
 		"dial_input": "",
 		"booth_open": false,
 		"splice": [-1, -1, -1, -1], # frame per slot
@@ -200,6 +201,8 @@ func apply_seed(seed: int) -> void:
 	state["v_focus"] = rng.randi_range(3, FOCUS_STEPS - 2) # never the start mark, never an end stop
 	var pool := valve_target_pool()
 	state["v_targets"] = pool[rng.randi_range(0, pool.size() - 1)]
+	var rots: Array = [1, 2, 3, 4, 6, 7] # never the start position (5), never upright (0)
+	state["v_vault"] = [rots[rng.randi_range(0, rots.size() - 1)], rng.randi_range(1, ZOOM_STEPS - 1)]
 
 
 func clicks_for(tape: String) -> int:
@@ -223,6 +226,14 @@ func splice_order() -> Array:
 
 func focus_sharp() -> int:
 	return int(state["v_focus"])
+
+
+func vault_rot_target() -> int:
+	return int(state["v_vault"][0])
+
+
+func vault_zoom_target() -> int:
+	return int(state["v_vault"][1])
 
 
 ## The unique valve setting for this game's gauge marks.
@@ -266,6 +277,8 @@ func hint_args(goal: String, level: int) -> Array:
 			return state["v_clicks"].duplicate()
 		"c2_focus":
 			return [focus_sharp()]
+		"c2_align":
+			return [vault_rot_target(), vault_zoom_target()]
 	return []
 
 
@@ -724,8 +737,8 @@ func overlay_left_ok() -> bool:
 
 
 func overlay_right_ok() -> bool:
-	return crystal_image(state["port_right"]) == "sign" and int(state["rot_right"]) == ROT_RIGHT_TARGET \
-		and int(state["zoom_right"]) == ZOOM_TARGET
+	return crystal_image(state["port_right"]) == "sign" and int(state["rot_right"]) == vault_rot_target() \
+		and int(state["zoom_right"]) == vault_zoom_target()
 
 
 func _check_lock() -> void:

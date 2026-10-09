@@ -450,12 +450,12 @@ func run() -> void:
 		var a0 := int(s["rot_left"])
 		await act("vault_door", "IA_collar_left", func() -> bool: return int(s["rot_left"]) != a0, func() -> void: L.turn_collar("rot_left"), "left collar")
 	for _guard in 12:
-		if not (int(s["rot_right"]) != ArchiveLogic.ROT_RIGHT_TARGET):
+		if not (int(s["rot_right"]) != L.vault_rot_target()):
 			break
 		var b0 := int(s["rot_right"])
 		await act("vault_door", "IA_collar_right", func() -> bool: return int(s["rot_right"]) != b0, func() -> void: L.turn_collar("rot_right"), "right collar")
 	for _guard in 12:
-		if not (int(s["zoom_right"]) != ArchiveLogic.ZOOM_TARGET and not s["vault_unlocked"]):
+		if not (int(s["zoom_right"]) != L.vault_zoom_target() and not s["vault_unlocked"]):
 			break
 		var z0 := int(s["zoom_right"])
 		await act("vault_door", "IA_zoom_right", func() -> bool: return int(s["zoom_right"]) != z0, func() -> void: L.turn_collar("zoom_right"), "zoom collar")
