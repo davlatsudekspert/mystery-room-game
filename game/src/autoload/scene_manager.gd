@@ -6,6 +6,7 @@ signal scene_changed(path: String)
 var _layer: CanvasLayer
 var _fade: ColorRect
 var _toast: Label
+var _loading: Label
 var _busy := false
 
 
@@ -19,6 +20,15 @@ func _ready() -> void:
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(_fade)
+	_loading = Label.new()
+	_loading.text = "ui.loading"
+	_loading.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_loading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_loading.add_theme_color_override("font_color", Color("9d9482"))
+	_loading.visible = false
+	_layer.add_child(_loading)
 	_toast = Label.new()
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_toast.offset_top = 36
@@ -63,16 +73,32 @@ func goto(path: String, fade_time: float = 0.45) -> void:
 	var tw := create_tween()
 	tw.tween_property(_fade, "color:a", 1.0, fade_time)
 	await tw.finished
+	# Loading a room and drawing its first frames (a phone compiles the room's shaders on its first run) can take
+	# seconds: say so on the black screen, and keep saying it until the new scene's first frames are drawn.
+	_loading.add_theme_font_size_override("font_size", UITheme.size(28))
+	_loading.visible = true
+	await _frames_drawn(1)
 	get_tree().paused = false
 	get_tree().change_scene_to_file(path)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	scene_changed.emit(path)
+	await _frames_drawn(3)
+	_loading.visible = false
 	var tw2 := create_tween()
 	tw2.tween_property(_fade, "color:a", 0.0, fade_time)
 	await tw2.finished
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_busy = false
+
+
+## Waits until `n` frames have been drawn (just `n` frames where nothing is drawn: headless tests).
+func _frames_drawn(n: int) -> void:
+	for _i in n:
+		if DisplayServer.get_name() == "headless":
+			await get_tree().process_frame
+		else:
+			await RenderingServer.frame_post_draw
 
 
 func flash(color: Color, hold: float = 0.1, out: float = 0.8) -> void:

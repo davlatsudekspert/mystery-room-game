@@ -191,7 +191,16 @@ jobs:
             > "$RUNNER_TEMP/archive.log" 2>&1 \
             || { grep -E "error:|warning: .*(sign|profile)" "$RUNNER_TEMP/archive.log" | head -40; tail -60 "$RUNNER_TEMP/archive.log"; exit 1; }
           tail -5 "$RUNNER_TEMP/archive.log"
-          test -d "$RUNNER_TEMP/MysteryRoom.xcarchive/Products/Applications/MysteryRoom.app"
+          APP="$RUNNER_TEMP/MysteryRoom.xcarchive/Products/Applications/MysteryRoom.app"
+          test -d "$APP"
+          # the home-screen name as the phone reads it (Info.plist, then the phone language's InfoPlist.strings); the
+          # ubuntu job's Xcode project check already enforces it, so a difference here is reported, not fatal
+          echo "Info.plist CFBundleDisplayName=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP/Info.plist" 2>/dev/null || echo '(absent)')"
+          for f in "$APP"/*.lproj/InfoPlist.strings; do
+            NAME=$(plutil -extract CFBundleDisplayName raw -o - "$f" 2>/dev/null || echo "(absent)")
+            echo "$(basename "$(dirname "$f")"): CFBundleDisplayName=$NAME"
+            [ "$NAME" = "Mystery Room" ] || echo "::warning::$f: home-screen name is \"$NAME\" (the Xcode project check passed)"
+          done
 
       - name: Export the IPA with cloud signing (and upload to TestFlight only if asked)
         env:

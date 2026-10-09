@@ -62,7 +62,11 @@ func _ready() -> void:
 	_panel_host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_panel_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_panel_host)
-	_ver = UITheme.label(tr("ui.version") % ProjectSettings.get_setting("application/config/version", "0.1.0"), 20, UITheme.MUTED)
+	var ver: String = tr("ui.version") % ProjectSettings.get_setting("application/config/version", "0.1.0")
+	if Premium.tester_build():
+		# a tester's screenshot then says which renderer the phone ran (metal / vulkan / opengl3, mobile / gl_compatibility)
+		ver += "  ·  %s %s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_current_rendering_method()]
+	_ver = UITheme.label(ver, 20, UITheme.MUTED)
 	_ver.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_ver.grow_vertical = Control.GROW_DIRECTION_BEGIN

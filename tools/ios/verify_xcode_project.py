@@ -6,7 +6,8 @@ Usage: verify_xcode_project.py <export dir> --bundle-id ID --version 0.1.0 --bui
 Checks what App Store Connect validation rejects or what TestFlight asks about:
 bundle id / version / build number / team / automatic signing in project.pbxproj, the shared scheme,
 Info.plist keys (export compliance, full screen on iPad, landscape, launch storyboard, non-empty purpose
-strings), localized InfoPlist.strings, the privacy manifest and its Resources entry, and icons without
+strings), localized InfoPlist.strings (each with the home-screen name), the game's own launch-screen images (not
+the engine logo), the privacy manifest and its Resources entry, and icons without
 alpha. The team id is compared with the env var, never printed. Exit 1 on any failure.
 """
 from __future__ import annotations
@@ -55,6 +56,8 @@ def main() -> int:
 	ap.add_argument("--version", required=True, help="CFBundleShortVersionString")
 	ap.add_argument("--build", required=True, help="CFBundleVersion")
 	ap.add_argument("--team-env", default="IOS_TEAM_ID", help="env var holding the expected team id")
+	ap.add_argument("--display-name", default="Mystery Room", help="the home-screen name in every InfoPlist.strings")
+	ap.add_argument("--launch-images", default="game/platform/ios", help="folder with launch@2x.png and launch@3x.png")
 	ap.add_argument("--custom-features", default="", help="comma list expected in the pck's project settings ('' = none)")
 	a = ap.parse_args()
 	root, n = Path(a.export_dir), a.name
@@ -119,6 +122,18 @@ def main() -> int:
 		empty = re.findall(r'^\s*(\w+UsageDescription)\s*=\s*""\s*;', text, re.M)
 		keys = re.findall(r'^\s*(\w+)\s*=', text, re.M)
 		ok(not empty, f"{lproj.name}: keys {keys}" + (f"; EMPTY {empty}" if empty else ""))
+		# the home-screen name, in every language the phone may use (the build settings' PRODUCT_NAME has no space)
+		names = re.findall(r'^\s*CFBundleDisplayName\s*=\s*"(.*)"\s*;', text, re.M)
+		ok(names == [a.display_name], f"{lproj.name}: CFBundleDisplayName {names} (expected {a.display_name!r})")
+
+	print("Launch screen")
+	# Without its own images the export falls back to the Godot engine logo (800x600) on the launch storyboard.
+	splash = root / n / "Images.xcassets/SplashImage.imageset"
+	for k in ("2x", "3x"):
+		src = Path(a.launch_images) / f"launch@{k}.png"
+		got = png_info(splash / f"splash@{k}.png")[:2]
+		want = png_info(src)[:2] if src.exists() else None
+		ok(got == want, f"splash@{k}.png {got[0]}x{got[1]} is the game's own launch image {src} {want}")
 
 	print("Privacy manifest")
 	priv = plistlib.loads((root / "PrivacyInfo.xcprivacy").read_bytes())
