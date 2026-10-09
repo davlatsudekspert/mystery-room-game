@@ -45,6 +45,7 @@ ui.delete_save,Delete progress,Удалить прогресс,Natijalarni oʻch
 ui.delete_save_confirm,Delete all saved progress? This cannot be undone.,Удалить весь сохранённый прогресс? Это действие необратимо.,Barcha saqlangan natijalar oʻchirilsinmi? Buni qaytarib boʻlmaydi.
 ui.restore,Restore purchases,Восстановить покупки,Xaridlarni tiklash
 ui.restored,Purchases restored.,Покупки восстановлены.,Xaridlar tiklandi.
+ui.privacy,Privacy policy,Политика конфиденциальности,Maxfiylik siyosati
 ui.unlock,Unlock the full game,Открыть полную игру,Toʻliq oʻyinni ochish
 ui.unlock_desc,"One purchase unlocks every chapter. No ads, no subscriptions.",Одна покупка открывает все главы. Без рекламы и подписок.,Bitta xarid barcha boblarni ochadi. Reklama va obunasiz.
 ui.store_unavailable,The store is not available yet. New chapters are coming soon.,Магазин пока недоступен. Новые главы скоро появятся.,Doʻkon hozircha mavjud emas. Yangi boblar tez orada chiqadi.
@@ -235,11 +236,11 @@ item.locker_key.desc,A small key on a brass tag: 9.,Маленький ключ 
 item.pocket_receiver.name,Pocket receiver,Карманный приёмник,Choʻntak qabul qilgichi
 item.pocket_receiver.desc,Leyla's direction-finding receiver. Its needle climbs near whatever it listens for.,"Пеленгационный приёмник Лейлы. Стрелка поднимается рядом с тем, что он слышит.",Leylaning yoʻnalish topuvchi qabul qilgichi. U eshitadigan narsa yaqinida mili koʻtariladi.
 item.tape_1996.name,Reel · 1996,Катушка · 1996,Gʻaltak · 1996
-item.tape_1996.desc,A wire-recorder reel. The label reads 1996 · 4.75.,Катушка проволочного магнитофона. На этикетке: 1996 · 4.75.,Simli magnitofon gʻaltagi. Yorligʻida: 1996 · 4.75.
+item.tape_1996.desc,A tape reel in Leyla's hand. The label reads 1996 · 4.75.,"Катушка с плёнкой, подписанная рукой Лейлы: 1996 · 4.75.",Leyla qoʻli bilan yozilgan lenta gʻaltagi: 1996 · 4.75.
 item.tape_1997.name,Reel · 1997,Катушка · 1997,Gʻaltak · 1997
-item.tape_1997.desc,A wire-recorder reel. The label reads 1997 · 4.75.,Катушка проволочного магнитофона. На этикетке: 1997 · 4.75.,Simli magnitofon gʻaltagi. Yorligʻida: 1997 · 4.75.
+item.tape_1997.desc,A tape reel in Leyla's hand. The label reads 1997 · 4.75.,"Катушка с плёнкой, подписанная рукой Лейлы: 1997 · 4.75.",Leyla qoʻli bilan yozilgan lenta gʻaltagi: 1997 · 4.75.
 item.tape_1998.name,Reel · 1998,Катушка · 1998,Gʻaltak · 1998
-item.tape_1998.desc,A wire-recorder reel. The label reads 1998 · 4.75.,Катушка проволочного магнитофона. На этикетке: 1998 · 4.75.,Simli magnitofon gʻaltagi. Yorligʻida: 1998 · 4.75.
+item.tape_1998.desc,A tape reel in Leyla's hand. The label reads 1998 · 4.75.,"Катушка с плёнкой, подписанная рукой Лейлы: 1998 · 4.75.",Leyla qoʻli bilan yozilgan lenta gʻaltagi: 1998 · 4.75.
 item.film_reel.name,Film reel,Бобина с плёнкой,Kinolenta bobinasi
 item.film_reel.desc,"Strand's 1979 film, spliced back together.","Фильм Странда 1979 года, снова склеенный.","Strandning 1979-yilgi filmi, qayta yelimlangan."
 item.crystal_blank_1.name,Blank Lumen crystal,Чистый кристалл Люмена,Boʻsh Lumen billuri
@@ -338,8 +339,8 @@ film.4,Dr. Rahimova draws her sign on the light glass.,Д-р Рахимова р
 film.secret,"13 November 1979. Strand, alone: ""If the Array keeps them, I will be with them. Forgive me, Leyla.""","13 ноября 1979. Странд, один: «Если Решётка сохранит их, я буду с ними. Прости меня, Лейла».","1979-yil 13-noyabr. Strand, yolgʻiz: «Agar Panjara ularni saqlab qolsa, men ular bilan boʻlaman. Meni kechir, Leyla»."
 cap2.vault_reel,"The Array Hall. Forty-one silhouettes in the light. And a forty-second at the edge of the frame: Leyla, 1998.","Зал Решётки. Сорок один силуэт в свете. И сорок второй на краю кадра: Лейла, 1998.","Panjara zali. Yorugʻlikda qirq bitta siluet. Kadr chetida esa qirq ikkinchisi: Leyla, 1998."
 echo2.catalogue,An archivist files a card that no one will ever read.,"Архивистка ставит на место карточку, которую уже никто не прочтёт.",Arxivchi ayol hech kim oʻqimaydigan kartochkani joyiga qoʻyadi.
-echo2.stacks,Two scientists argue in silence over a blueprint.,Двое учёных беззвучно спорят над чертежом.,Ikki olim chizma ustida jimgina bahslashmoqda.
-echo2.booth,"Strand threads a reel, smiling at someone you cannot see.","Странд заправляет плёнку и улыбается кому-то, кого вы не видите.","Strand lentani oʻrnatib, siz koʻrmaydigan kimgadir jilmayadi."
+echo2.stacks,Two scientists argue in silence over an open ledger.,Двое учёных беззвучно спорят над открытым гроссбухом.,Ikki olim ochiq daftar ustida jimgina bahslashmoqda.
+echo2.booth,"Strand watches the screen through the booth window, smiling at someone you cannot see.","Странд смотрит на экран через окно будки и улыбается кому-то, кого вы не видите.","Strand budka oynasidan ekranga qarab, siz koʻrmaydigan kimgadir jilmayadi."
 ui.choice_keys_prompt,Two keys rest on the velvet. Lifting one will lock the other.,"На бархате лежат два ключа. Если поднять один, другой запрётся.","Baxmalda ikki kalit yotibdi. Birini olsangiz, ikkinchisi qulflanadi."
 ui.take_strand_key,Strand's key,Ключ Странда,Strandning kaliti
 ui.take_leyla_key,Leyla's key,Ключ Лейлы,Leylaning kaliti
@@ -472,7 +473,7 @@ hint.c2_take_crystal.2,A velvet case lies on the shelf.,На полке лежи
 hint.c2_take_crystal.3,Take a blank crystal from the lens case.,Возьмите чистый кристалл из футляра.,Qutidan boʻsh billur oling.
 hint.c2_focus.1,The picture on the screen is blurred.,Изображение на экране размыто.,Ekrandagi tasvir xira.
 hint.c2_focus.2,Turn the projector's focus ring.,Поверните кольцо фокуса проектора.,Proyektorning fokus halqasini buring.
-hint.c2_focus.3,Focus to the middle mark (5).,Фокус на среднюю метку (5).,Fokusni oʻrta belgiga (5) qoʻying.
+hint.c2_focus.3,Turn the focus ring to mark 5.,Поверните кольцо фокуса на метку 5.,Fokus halqasini 5-belgiga buring.
 hint.c2_record_sign.1,"""The crystal remembers what falls on it.""","«Кристалл помнит то, что на него падает».",«Billur ustiga tushgan narsani eslab qoladi».
 hint.c2_record_sign.2,"The screen frame has a socket for a crystal. Show only her sign, sharp.","На раме экрана есть гнездо для кристалла. Покажите только её знак, чётко.",Ekran romida billur uchun uyacha bor. Faqat uning belgisini aniq koʻrsating.
 hint.c2_record_sign.3,Hold the last frame in focus and seat a blank crystal in the screen socket.,Остановитесь на последнем кадре в фокусе и вставьте чистый кристалл в гнездо экрана.,Oxirgi kadrni aniq holda toʻxtating va boʻsh billurni ekran uyachasiga qoʻying.

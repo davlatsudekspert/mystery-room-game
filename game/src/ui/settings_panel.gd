@@ -5,6 +5,9 @@ extends PanelContainer
 
 signal closed
 
+## Public privacy policy (Google Play and App Store also link to it).
+const PRIVACY_URL := "https://sites.google.com/view/mysteryroom-privacy"
+
 var _lang_buttons: Dictionary = {}
 var _scale_buttons: Array[Button] = []
 
@@ -63,6 +66,12 @@ func _ready() -> void:
 	close.pressed.connect(func() -> void: closed.emit())
 	bottom.add_child(close)
 	v.add_child(bottom)
+	var privacy := UITheme.button("ui.privacy", 460)
+	privacy.flat = true
+	privacy.pressed.connect(func() -> void: OS.shell_open(PRIVACY_URL))
+	var pc := CenterContainer.new()
+	pc.add_child(privacy)
+	v.add_child(pc)
 	_refresh()
 
 

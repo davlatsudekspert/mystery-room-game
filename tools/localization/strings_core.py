@@ -52,6 +52,7 @@ S = [
 ("ui.delete_save_confirm", "Delete all saved progress? This cannot be undone.", "Удалить весь сохранённый прогресс? Это действие необратимо.", "Barcha saqlangan natijalar oʻchirilsinmi? Buni qaytarib boʻlmaydi."),
 ("ui.restore", "Restore purchases", "Восстановить покупки", "Xaridlarni tiklash"),
 ("ui.restored", "Purchases restored.", "Покупки восстановлены.", "Xaridlar tiklandi."),
+("ui.privacy", "Privacy policy", "Политика конфиденциальности", "Maxfiylik siyosati"),
 ("ui.unlock", "Unlock the full game", "Открыть полную игру", "Toʻliq oʻyinni ochish"),
 ("ui.unlock_desc", "One purchase unlocks every chapter. No ads, no subscriptions.", "Одна покупка открывает все главы. Без рекламы и подписок.", "Bitta xarid barcha boblarni ochadi. Reklama va obunasiz."),
 ("ui.store_unavailable", "The store is not available yet. New chapters are coming soon.", "Магазин пока недоступен. Новые главы скоро появятся.", "Doʻkon hozircha mavjud emas. Yangi boblar tez orada chiqadi."),
