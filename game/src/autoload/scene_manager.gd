@@ -90,6 +90,8 @@ func goto(path: String, fade_time: float = 0.45) -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(path)
 	await get_tree().process_frame
+	# loaded and built (its _ready has run); what follows is the GPU drawing its first frames
+	CrashGuard.mark("draw:" + path.get_file().get_basename())
 	if bool(Settings.get_value("safe_graphics")):
 		simplify_graphics(get_tree().current_scene) # before the new scene's first frame is drawn
 	await get_tree().process_frame
@@ -98,7 +100,7 @@ func goto(path: String, fade_time: float = 0.45) -> void:
 	_loading.visible = false
 	# the first seconds of a room (reflection probe capture, first shadow maps) still count as loading
 	get_tree().create_timer(6.0).timeout.connect(func() -> void:
-		if CrashGuard.stage() == stage:
+		if CrashGuard.stage() == "draw:" + path.get_file().get_basename():
 			CrashGuard.mark("play:" + path.get_file().get_basename()))
 	var tw2 := create_tween()
 	tw2.tween_property(_fade, "color:a", 0.0, fade_time)

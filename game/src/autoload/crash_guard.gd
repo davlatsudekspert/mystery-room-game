@@ -1,9 +1,9 @@
 class_name CrashGuard
 extends RefCounted
 ## Remembers how far the running session got, so a crash on a phone can be located and recovered from.
-## The current stage is written to user:// before each risky step (loading a scene and drawing its first
-## frames); a clean pause or quit overwrites it. When a launch finds a "load:" stage, the previous session
-## died while loading or first drawing a scene: the game turns on safe graphics (Settings "safe_graphics":
+## The current stage is written to user:// before each risky step: "load:<scene>" while the scene loads and
+## builds, "draw:<scene>" while the GPU draws its first seconds; a clean pause or quit overwrites it. When a
+## launch finds either, the previous session died there: the game turns on safe graphics (Settings "safe_graphics":
 ## no positional light shadows, reflection probes or particles), and tester builds name the stage in the
 ## main menu. A crash report from the phone then says what failed; this keeps the game playable meanwhile.
 
@@ -45,7 +45,7 @@ static func read_previous() -> String:
 
 
 static func crashed_while_loading() -> bool:
-	return previous.begins_with("load:")
+	return previous.begins_with("load:") or previous.begins_with("draw:")
 
 
 static func _write(stage: String) -> void:
