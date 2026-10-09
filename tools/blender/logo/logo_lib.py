@@ -242,7 +242,7 @@ def mat_emit(name: str, color: str, strength: float):
     return m
 
 
-def mat_glow_disc(name: str, hot: str = "F4FDFF", cool: str = "36C8F0", strength: float = 12.0,
+def mat_glow_disc(name: str, hot: str = "EFFCFF", cool: str = "16B4EC", strength: float = 12.0,
                   radius: float = 1.0):
     """Radial emissive gradient (hot centre -> cyan edge) used behind crystals and in keyholes."""
     m, nt = new_mat(name)
@@ -258,9 +258,9 @@ def mat_glow_disc(name: str, hot: str = "F4FDFF", cool: str = "36C8F0", strength
     nt.links.new(sep.outputs[0], comb.inputs[0])
     nt.links.new(sep.outputs[1], comb.inputs[1])
     nt.links.new(comb.outputs[0], ln.inputs[0])
-    t = map_range(nt, ln.outputs["Value"], 0.0, radius, 0.0, 1.0)
+    t = map_range(nt, ln.outputs["Value"], 0.0, radius * 0.55, 0.0, 1.0, interp="SMOOTHSTEP")
     col = mix_rgb(nt, t, lin(hot), lin(cool))
-    s = map_range(nt, ln.outputs["Value"], 0.0, radius, strength, strength * 0.35, interp="SMOOTHSTEP")
+    s = map_range(nt, ln.outputs["Value"], 0.0, radius, strength, strength * 0.3, interp="SMOOTHSTEP")
     e = node(nt, "ShaderNodeEmission")
     nt.links.new(col, e.inputs["Color"])
     nt.links.new(s, e.inputs["Strength"])
@@ -480,9 +480,16 @@ def world(color: str = "0B0E0E", strength: float = 1.0, top: str | None = None, 
     return w
 
 
-def look_at(obj, target, up=(0, 0, 1)) -> None:
-    d = Vector(target) - obj.location
-    obj.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+def look_at(obj, target, up=(0, 1, 0)) -> None:
+    """Point local -Z at target with local +Y as close as possible to `up` (default world +Y, since
+    our subjects lie in XY with 'image up' = +Y and the camera looks down)."""
+    z = (Vector(obj.location) - Vector(target)).normalized()
+    u = Vector(up)
+    if abs(z.dot(u.normalized())) > 0.999:
+        u = Vector((0, 0, 1)) if abs(z.z) < 0.9 else Vector((0, 1, 0))
+    x = u.cross(z).normalized()
+    y = z.cross(x)
+    obj.rotation_euler = Matrix((x, y, z)).transposed().to_euler()
 
 
 def light(kind: str, name: str, loc, target=None, energy: float = 100.0, color: str = "FFFFFF",
@@ -805,6 +812,40 @@ def dust(name: str, n: int, lo, hi, rmin: float, rmax: float, seed: int, mat, we
         r = rmin * (rmax / rmin) ** (rnd.random() ** 2.2)
         res = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=r)
         bmesh.ops.translate(bm, vec=p, verts=res["verts"])
+        placed += 1
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    obj = link(bpy.data.objects.new(name, me))
+    set_mat(obj, mat)
+    shade(obj, 180.0)
+    obj.visible_shadow = False
+    return obj
+
+
+def dust_frustum(name: str, cam, n: int, dmin: float, dmax: float, rmin: float, rmax: float, seed: int, mat,
+                 spread: float = 0.55, weight=None):
+    """Motes placed along camera rays at distance dmin..dmax (out-of-focus bokeh near the lens).
+    `spread` = half-extent in frame fractions; weight(u, v) in 0..1 thins them by image position."""
+    import bmesh as _bm
+    rnd = random.Random(seed)
+    bpy.context.view_layer.update()
+    mw = cam.matrix_world
+    cd = cam.data
+    half = (cd.sensor_width / 2) / cd.lens
+    bm = _bm.new()
+    placed = tries = 0
+    while placed < n and tries < n * 60:
+        tries += 1
+        u, v = rnd.uniform(-spread, spread), rnd.uniform(-spread, spread)
+        if weight is not None and rnd.random() > weight(u, v):
+            continue
+        d = rnd.uniform(dmin, dmax)
+        local = Vector(((u * 2 + cd.shift_x * 2) * half * d, (v * 2 + cd.shift_y * 2) * half * d, -d))
+        p = mw @ local
+        r = (rmin + (rmax - rmin) * rnd.random() ** 1.5) * d
+        res = _bm.ops.create_icosphere(bm, subdivisions=2, radius=r)
+        _bm.ops.translate(bm, vec=p, verts=res["verts"])
         placed += 1
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
