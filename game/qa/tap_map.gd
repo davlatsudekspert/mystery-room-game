@@ -134,6 +134,18 @@ func _map(view_id: String) -> void:
 			if int(others[k]) > best:
 				best = int(others[k])
 				top = k
+		# parts that carry a 3D label (card tabs, divider tabs): the label is where a player taps
+		for lbl in mi.find_children("*", "Label3D", false, false):
+			var lp := (lbl as Node3D).global_position
+			if cam.is_position_behind(lp) or not rect.has_point(cam.unproject_position(lp)):
+				continue
+			var lh: Dictionary = room.call("raycast", cam.unproject_position(lp))
+			var lgot := "" if lh.is_empty() else str(room.call("resolve", lh)["part"])
+			if lgot != part:
+				lines.append("%s: tapping the label «%s» of %s hits %s" % [view_id, (lbl as Label3D).text, part,
+					lgot if lgot != "" else "(nothing)"])
+			elif hits < 3:
+				hits = 3 # its label is a sure target, even if most of its body is covered
 		marks.append({"pos": pos, "part": part, "hits": hits, "got": top})
 		if hits < 3:
 			lines.append("%s: %s reachable at %d/%d sample points (mostly hits %s)" % [view_id, part, hits, total,

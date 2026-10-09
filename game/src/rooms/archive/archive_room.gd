@@ -758,8 +758,12 @@ func _process(_delta: float) -> void:
 # ====================================================================== events → feedback
 func view_changed_hook(id: String) -> void:
 	var fill: OmniLight3D = lights["focus_fill"]
-	var e := 0.0 if cam.is_root() else (1.3 if id in ["catalogue", "cat_drawer", "cat_section", "grille", "hatch", "locker9", "ledger", "lens_case", "slides"] else 0.9)
+	var e := 0.0 if cam.is_root() else (1.3 if id in ["catalogue", "cat_drawer", "grille", "hatch", "locker9", "ledger", "lens_case", "slides"] else 0.9)
+	if id == "cat_section":
+		e = 0.45 # the fill sits close to the raised cream cards; more washes the numbers out
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
+	if id in CAT_VIEWS:
+		visuals.apply_state(true) # the picked section rises in the close-up and settles back in the tray view
 	visuals.update_visibility(id)
 	visuals.receiver_view(id)
 

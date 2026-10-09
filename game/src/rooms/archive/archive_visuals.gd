@@ -270,13 +270,19 @@ func _apply_catalogue(animated: bool) -> void:
 		l.queue_free()
 	_card_labels.clear()
 	var leyla_taken: bool = s["taken"].get("index_card", false)
+	# The picked section rises only in the close-up. In the tray view it stays down, so the raised cards never
+	# hide the dividers behind them and the player can always pick another section.
+	var cam: RoomCamera = room.get("cam")
+	var raised := g >= 0 and cam != null and cam.current() == "cat_section"
 	for n in 10:
 		var card := ModelUtil.find(_tray, "IA_card_%d" % n)
 		if card == null:
 			continue
 		var base: Transform3D = rest.get(card, card.transform)
-		if g < 0:
+		if not raised:
 			_to(card, base, animated, 0.3)
+			room.call("set_present", card, not (open == ArchiveLogic.CAT_DRAWER and n == ArchiveLogic.CAT_CARD
+				and leyla_taken))
 			continue
 		var divider := ModelUtil.find(_tray, "IA_divider_%d" % g)
 		var z := (divider.position.z if divider else 0.0) - 0.006 - n * 0.0026
@@ -327,7 +333,7 @@ func frame_cat_section(g: int) -> void:
 		return
 	var out := cat.global_basis.z.normalized()
 	var rest_z: float = (rest.get(divider, divider.transform) as Transform3D).origin.z
-	var focus: Vector3 = tray * Vector3(0, 0.125, rest_z - 0.02)
+	var focus: Vector3 = tray * Vector3(0, 0.135, rest_z - 0.02)
 	cam.add_view("cat_section", focus + out * 0.16 + Vector3(0, 0.13, 0), focus - out * 0.01, 42.0)
 
 
