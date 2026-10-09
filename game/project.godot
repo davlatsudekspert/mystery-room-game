@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 
-config/name="Mystery Room: The Forgotten Institute"
+config/name="Mystery Room"
 config/description="An original 3D mystery escape-room game."
 config/version="0.1.0"
 run/main_scene="res://src/ui/boot.tscn"

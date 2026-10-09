@@ -44,7 +44,7 @@ CTAB_W, CTAB_H = 0.021, 0.0125
 CARD_TAB_X = (-0.05, -0.025, 0.0, 0.025, 0.05)
 CARD_REST_Z0, CARD_PITCH = DIV_Z0 - 0.0045, 0.0026
 # drawer interior (card_catalogue.py): the front's inner face and the back board, in tray coordinates
-FRONT_IN, BACK_IN = 0.177, -0.265
+FRONT_IN, BACK_IN = 0.182, -0.260
 ROD_Y, ROD_R = 0.010, 0.0025
 PACK_H = (0.0455, 0.0490)
 

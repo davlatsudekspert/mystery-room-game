@@ -564,17 +564,17 @@ def picto(pen: Pen, kind: str, cx: float, cy: float, s: float, v: int = 255):
         poly(wave + [(0.38, 0.35), (0.34, 0.43), (-0.34, 0.43), (-0.38, 0.35)])
         for bx, by, br in ((-0.08, 0.30, 0.042), (0.09, 0.34, 0.032), (0.03, 0.22, 0.026)):
             circ(bx, by, br, 0)
-    elif kind == "film":     # film reel with a film tail
-        rx, ry = -0.07, -0.08
-        rect(rx, 0.18, 0.48, 0.40, rad=0.02)
-        circ(rx, ry, 0.40)
+    elif kind == "film":     # film reel with a short film tail
+        rx, ry, rad = -0.07, -0.07, 0.41
+        rect(rx, ry + rad - 0.17, 0.49, ry + rad + 0.005, rad=0.015)
+        circ(rx, ry, rad)
         for k in range(5):
             a = math.radians(-90 + 72 * k)
-            circ(rx + 0.225 * math.cos(a), ry + 0.225 * math.sin(a), 0.10, 0)
+            circ(rx + 0.225 * math.cos(a), ry + 0.225 * math.sin(a), 0.098, 0)
         circ(rx, ry, 0.045, 0)
-        for x in np.arange(0.06, 0.46, 0.085):
-            rect(x, 0.205, x + 0.04, 0.245, 0, rad=0.008)
-            rect(x, 0.335, x + 0.04, 0.375, 0, rad=0.008)
+        ty = ry + rad - 0.0825
+        for x in (0.24, 0.335, 0.43):
+            rect(x - 0.026, ty - 0.026, x + 0.026, ty + 0.026, 0, rad=0.006)
     elif kind == "envelope":
         rect(-0.47, -0.31, 0.47, 0.31, rad=0.04)
         line([(-0.43, -0.27), (0.0, 0.07), (0.43, -0.27)], 0.065, 0, caps=False)
@@ -633,23 +633,25 @@ def item_icon(kind: str, S: int, seed: int = 0):
         for i, y in enumerate((-0.20, -0.07, 0.06, 0.19, 0.31)):
             t.line([P(-0.21, y), P(0.22 if i else 0.02, y)], 0.035 * s)
         layers = [(a.arr(), "#F1EBDD"), (fold.arr(), "#D6CDB8"), (t.arr(), "#6E7680"), (o.arr(), INK), (fo.arr(), INK)]
-    elif kind == "request_card":
+    elif kind == "request_card":   # same look as request_card.png: buff, clipped corner, 8 circles, red band
         a = pen()
         clip = 0.07
-        pts = [(-0.46 + clip, -0.29), (0.46, -0.29), (0.46, 0.29), (-0.46, 0.29), (-0.46, -0.29 + clip)]
+        y0, y1 = -0.30, 0.30
+        pts = [(-0.48 + clip, y0), (0.48, y0), (0.48, y1), (-0.48, y1), (-0.48, y0 + clip)]
         a.poly([P(*p) for p in pts])
         o = pen()
-        o.line([P(*p) for p in pts + [pts[0]]], 0.04 * s)
+        o.line([P(*p) for p in pts + [pts[0]]], 0.035 * s)
         holes = pen()
         for k in range(8):
-            hx = -0.46 + (k + 0.5) * 0.92 / 8
-            holes.ring(*P(hx, -0.185), 0.032 * s, 0.018 * s)
+            hx = -0.48 + (k + 0.5) * 0.96 / 8
+            holes.ring(*P(hx, -0.20), 0.032 * s, 0.016 * s)
         red = pen()
-        red.rect(*P(-0.36, -0.08), *P(0.36, -0.045))
+        red.rect(*P(-0.42, -0.10), *P(0.42, -0.01))
         lines = pen()
-        for y in (0.06, 0.15, 0.23):
-            lines.line([P(-0.36, y), P(0.36, y)], 0.016 * s, caps=False)
-        layers = [(a.arr(), "#D8C192"), (lines.arr(), "#8A7650"), (red.arr(), "#A8322A"), (holes.arr(), "#4A3A28"),
+        for y in (0.08, 0.15, 0.22):
+            for x in np.arange(-0.40, 0.40, 0.05):
+                lines.rect(*P(x, y - 0.006), *P(x + 0.025, y + 0.006))
+        layers = [(a.arr(), "#D8C192"), (lines.arr(), "#7A6448"), (red.arr(), "#9A3B2E"), (holes.arr(), "#4A3A28"),
                   (o.arr(), INK)]
     elif kind == "vial":       # tilted test tube with amber liquid and a cork
         ax0, ay0, ax1, ay1 = -0.13, -0.30, 0.13, 0.34
@@ -774,13 +776,13 @@ def routing_chart():
     # rows
     rows = [("memo", "star"), ("request_card", "book"), ("vial", "flask"), ("film_can", "film"),
             ("envelope_sealed", "envelope")]
-    y0, dy = 205, 112
+    y0, dy = 214, 104
     lines = Pen(W, H, 4)
     for i in range(len(rows) + 1):
         y = y0 - dy / 2 + i * dy
         lines.rect(46, y - 1, W - 46, y + 1)
     rgb = paint(rgb, lines.arr(), "#1F3550", 0.35)
-    TILE = 92
+    TILE = 90
     for i, (item, dest) in enumerate(rows):
         y = y0 + i * dy
         # item tile (white enamel square)
@@ -801,29 +803,22 @@ def routing_chart():
         rgb = paint(rgb, ar.arr(), "#1F3550")
         # destination roundel: cream symbol on dark brass (same look as the dial ring)
         rgb = roundel(rgb, 482, y, 46, dest, 520 + i)
-    # bottom row: no entry -> padlock (sealed)
-    y = y0 + len(rows) * dy + 18
-    band = Pen(W, H, 4)
-    band.rect(46, y - 50, W - 46, y + 50, radius=10)
-    bm = band.arr()
-    rgb = paint(rgb, bm, "#E9DECA")
-    stripes = Pen(W, H, 4)
-    for xs in range(0, W + 200, 44):
-        stripes.poly([(xs, y - 50), (xs + 22, y - 50), (xs - 78, y + 50), (xs - 100, y + 50)])
-    rgb = paint(rgb, stripes.arr() * bm, "#B23A2E", 0.88)
-    irgb, ia = item_icon("no_entry", 92)
-    x0i, y0i = 70, int(y - 46)
-    sub = rgb[y0i:y0i + 92, x0i:x0i + 92]
-    rgb[y0i:y0i + 92, x0i:x0i + 92] = sub * (1 - ia[..., None]) + irgb * ia[..., None]
+    # bottom row: no entry -> padlock, crossed by a red "sealed" bar
+    y = y0 + len(rows) * dy + 10
+    irgb, ia = item_icon("no_entry", 90)
+    x0i, y0i = 70, int(y - 45)
+    sub = rgb[y0i:y0i + 90, x0i:x0i + 90]
+    rgb[y0i:y0i + 90, x0i:x0i + 90] = sub * (1 - ia[..., None]) + irgb * ia[..., None]
     rgb = roundel(rgb, 482, y, 46, "padlock", 530)
-    # red "sealed" bar across the arrow position
     sb = Pen(W, H, 4)
-    sb.rect(186, y - 13, 428, y + 13, radius=6)
-    rgb = paint(rgb, sb.arr(), "#B23A2E")
+    sb.rect(186, y - 15, 426, y + 15, radius=7)
+    sbm = sb.arr()
+    rgb = paint(rgb, blur(sbm, 3), "#4A3020", 0.35)
+    rgb = paint(rgb, sbm, "#B23A2E")
     sbt = Pen(W, H, 4)
-    for xd in range(198, 420, 36):
-        sbt.rect(xd, y - 3, xd + 20, y + 3, radius=2)
-    rgb = paint(rgb, sbt.arr(), "#F1EBDD", 0.9)
+    for xd in range(196, 426, 34):
+        sbt.poly([(xd, y + 15), (xd + 14, y - 15), (xd + 24, y - 15), (xd + 10, y + 15)])
+    rgb = paint(rgb, sbt.arr() * sbm, "#F1EBDD", 0.85)
     # mounting rivets in the corners and a small plate number
     for rx, ry in ((36, 36), (W - 36, 36), (36, H - 36), (W - 36, H - 36)):
         rv = Pen(W, H, 4)
@@ -833,18 +828,18 @@ def routing_chart():
         hl.circle(rx - 2, ry - 2, 3)
         rgb = paint(rgb, hl.arr(), "#E8E2D4", 0.8)
     pn = Pen(W, H, 4)
-    pn.text(W / 2, H - 36, "ARCHIVE  B", F_SANS_B, 18, spacing=3)
+    pn.text(W / 2, H - 40, "ARCHIVE  B", F_SANS_B, 18, spacing=3)
     rgb = paint(rgb, pn.arr(), "#1F3550", 0.75)
     # wear: enamel chips (dark iron showing) near the edges, grime, fine crazing
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     dmin = np.minimum(np.minimum(xx, W - 1 - xx), np.minimum(yy, H - 1 - yy))
-    chip = (smooth(0.80, 0.86, noise(H, W, 7, 3, 540)) * (dmin < 22)).astype(np.float32)
+    chip = (smooth(0.84, 0.90, noise(H, W, 7, 3, 540)) * (dmin < 20)).astype(np.float32)
     rgb = paint(rgb, blur(chip, 0.6), "#2A2622", 0.9)
     rgb = paint(rgb, np.clip(blur(chip, 2.0) - chip, 0, 1), "#6B4A2E", 0.5)
     grime = smooth(0.4, 1.0, noise(H, W, 80, 4, 541)) * 0.10 + edge_wear(W, H, 542, 40, 0.18)
     rgb = multiply(rgb, grime, "#6E5A3A")
     craze = Pen(W, H, 2)
-    for _ in range(26):
+    for _ in range(14):
         x, y = r.uniform(0, W), r.uniform(0, H)
         pts = [(x, y)]
         ang = r.uniform(0, 6.28)
@@ -854,7 +849,7 @@ def routing_chart():
             y += 9 * math.sin(ang)
             pts.append((x, y))
         craze.line(pts, 0.6, caps=False)
-    rgb = multiply(rgb, craze.arr(), "#7A6E58", 0.5)
+    rgb = multiply(rgb, craze.arr(), "#9A8E78", 0.35)
     save(to_img(rgb), "routing_chart.png")
 
 
@@ -875,7 +870,7 @@ def roundel(rgb: np.ndarray, cx: float, cy: float, R: float, kind: str, seed: in
     br = br * (1 + 0.45 * rim * np.cos(ang + 2.35))[..., None]
     inner_ring = smooth(0.80, 0.82, rr) * (1 - smooth(0.84, 0.86, rr))
     br = paint(br, inner_ring, "#2A2216", 0.7)
-    pm = picto_mask(kind, S, fill=1.0 * (R * 1.12) / S)
+    pm = picto_mask(kind, S, fill=PICTO_SCALE.get(kind, 1.0) * (R * 1.12) / S)
     shadow = np.roll(np.roll(blur(pm, 1.2), 2, 0), 1, 1)
     br = paint(br, shadow * dm, "#15110A", 0.6)
     br = paint(br, pm * dm, "#E9DFC6")
@@ -893,6 +888,7 @@ def roundel(rgb: np.ndarray, cx: float, cy: float, R: float, kind: str, seed: in
 # Destination ring (512 x 512, RGBA: transparent centre and outside)
 # =================================================================================================
 DEST_R_IN, DEST_R_OUT, DEST_R_SYM = 0.29, 0.492, 0.393   # fractions of the image width
+PICTO_SCALE = {"star": 0.88, "book": 1.06, "flask": 1.0, "film": 1.0, "envelope": 1.0, "padlock": 1.06}
 
 
 def dest_symbols():
@@ -922,13 +918,13 @@ def dest_symbols():
     for d, kind in enumerate(DEST_SYMBOLS):
         a = math.radians(-90 + 60 * d)
         px, py = S / 2 + DEST_R_SYM * S * math.cos(a), S / 2 + DEST_R_SYM * S * math.sin(a)
-        picto(sym, kind, px, py, 0.135 * S)
+        picto(sym, kind, px, py, 0.135 * S * PICTO_SCALE.get(kind, 1.0))
         # index wedge on the inner groove, pointing at the knob
         ri = (DEST_R_IN + 0.012) * S
         tx, ty = S / 2 + ri * math.cos(a), S / 2 + ri * math.sin(a)
         nx, ny = math.cos(a), math.sin(a)
-        ticks.poly([(tx - ny * 7 + nx * 10, ty + nx * 7 + ny * 10), (tx + ny * 7 + nx * 10, ty - nx * 7 + ny * 10),
-                    (tx - nx * 2, ty - ny * 2)])
+        ticks.poly([(tx - ny * 5 + nx * 8, ty + nx * 5 + ny * 8), (tx + ny * 5 + nx * 8, ty - nx * 5 + ny * 8),
+                    (tx - nx * 1, ty - ny * 1)])
         # small engraved dots half-way between positions
         a2 = a + math.radians(30)
         ticks.circle(S / 2 + DEST_R_SYM * S * math.cos(a2), S / 2 + DEST_R_SYM * S * math.sin(a2), 3.0)
@@ -943,8 +939,8 @@ def dest_symbols():
     rgb = paint(rgb, np.clip(sm - np.roll(np.roll(sm, -2, 0), -2, 1), 0, 1), "#8C7A58", 0.4)
     rgb = paint(rgb, tm, "#E8DEC4", 0.95)
     # wear: enamel chips, grime in the grooves, polished rub on the top
-    chips = smooth(0.84, 0.9, noise(S, S, 5, 2, 602)) * sm
-    rgb = paint(rgb, chips, "#4A3B24", 0.8)
+    chips = smooth(0.87, 0.93, noise(S, S, 5, 2, 602)) * sm
+    rgb = paint(rgb, chips, "#4A3B24", 0.6)
     rub = smooth(0.55, 0.9, noise(S, S, 50, 3, 603)) * (1 - sm)
     rgb = paint(rgb, rub, "#9C7F4C", 0.25)
     save(to_img(rgb, alpha), "dest_symbols.png")
@@ -953,110 +949,115 @@ def dest_symbols():
 # =================================================================================================
 # Procedural portrait (badge photo) -- stylised 1970s ID photograph, original
 # =================================================================================================
-def portrait(w: int, h: int, seed: int = 41) -> np.ndarray:
-    """Black-and-white studio ID portrait of a young woman with a dark bob (linear luminance 0..1)."""
+def _smooth_poly(pts, n=10):
+    """Chaikin-smoothed closed polygon."""
+    p = np.asarray(pts, np.float64)
+    for _ in range(n // 3 + 1):
+        q = np.roll(p, -1, 0)
+        p = np.stack([0.75 * p + 0.25 * q, 0.25 * p + 0.75 * q], 1).reshape(-1, 2)
+    return [tuple(v) for v in p]
+
+
+def portrait(w: int, h: int, seed: int = 41, up: int = 2) -> np.ndarray:
+    """Black-and-white studio ID portrait of a young woman with a dark bob (luminance 0..1).
+    Stylised and original: shaded ellipsoid face, simple features, key light from camera left."""
+    W, H = w * up, h * up
     r = np.random.default_rng(seed)
-    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-    u, v = xx / w, yy / h
-    # backdrop: soft light behind the head, darker corners
-    lum = 0.50 + 0.22 * np.exp(-(((u - 0.42) / 0.45) ** 2 + ((v - 0.35) / 0.55) ** 2)) - 0.10 * v
-    cx = 0.5 * w
-    hy = 0.40 * h             # face centre
-    fw, fh = 0.205 * w, 0.165 * h * (w / h) * (h / w) * 1.0
-    fh = 0.175 * h
-    ss = 4
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    cx, hy = 0.50 * W, 0.42 * H
+    fw, fh = 0.19 * W, 0.20 * H
+    X = (xx - cx) / fw
+    Y = (yy - hy) / fh
 
-    def P(px, py):
-        return (cx + px * w, hy + py * h)
+    def P(x, y):
+        return (cx + x * fw, hy + y * fh)
 
-    def mask(draw):
-        p = Pen(w, h, ss)
-        draw(p)
-        return p.arr()
+    def poly_mask(pts, smooth_n=9, soft=0.7):
+        p = Pen(W, H, 2)
+        p.poly([P(x, y) for x, y in _smooth_poly(pts, smooth_n)])
+        return blur(p.arr(), soft * up)
 
-    # shoulders: dark jacket with a white blouse collar
-    def jacket(p):
-        p.poly([P(-0.48, 0.62), P(-0.40, 0.40), P(-0.20, 0.31), P(-0.07, 0.27), P(0.07, 0.27), P(0.20, 0.31),
-                P(0.40, 0.40), P(0.48, 0.62)])
-    jm = mask(jacket)
-    lum = lum * (1 - jm) + jm * (0.09 + 0.05 * (1 - v) + 0.04 * (u < 0.5))
-    # lapels highlight (fabric fold)
-    lap = mask(lambda p: (p.poly([P(-0.20, 0.31), P(-0.07, 0.27), P(-0.02, 0.45), P(-0.12, 0.62), P(-0.20, 0.62)]),
-                          p.poly([P(0.20, 0.31), P(0.07, 0.27), P(0.02, 0.45), P(0.12, 0.62), P(0.20, 0.62)])))
-    lum = lum * (1 - lap * 0.6) + lap * 0.6 * 0.16
-    collar = mask(lambda p: (p.poly([P(-0.075, 0.262), P(0.0, 0.40), P(0.075, 0.262), P(0.11, 0.30), P(0.0, 0.47),
-                                     P(-0.11, 0.30)])))
-    lum = lum * (1 - collar) + collar * (0.80 - 0.15 * (u > 0.5))
-    # neck (shadowed under the jaw)
-    neck = mask(lambda p: p.poly([P(-0.07, 0.10), P(0.07, 0.10), P(0.075, 0.30), P(0.0, 0.40), P(-0.075, 0.30)]))
-    neck_l = 0.52 - 0.18 * smooth(hy + 0.12 * h, hy + 0.20 * h, yy) * 0 - 0.12 * ((u - 0.5) * 4)
-    jaw_shadow = 1 - 0.45 * np.exp(-((yy - (hy + 0.16 * h)) / (0.035 * h)) ** 2)
-    lum = lum * (1 - neck) + neck * np.clip(neck_l * jaw_shadow, 0.15, 0.7)
-    # face: egg-shaped, key light from camera left
-    face = mask(lambda p: p.poly([(cx + fw * math.sin(t) * (0.92 if math.cos(t) < 0 else 1.0) *
-                                   (1 - 0.18 * max(0, -math.cos(t)) ** 2),
-                                   hy - fh * math.cos(t)) for t in np.linspace(0, 2 * math.pi, 120)]))
-    nx = (xx - cx) / fw
-    ny = (yy - hy) / fh
-    key = 0.72 - 0.20 * nx - 0.06 * ny - 0.12 * np.clip(nx * nx + ny * ny - 0.5, 0, 1)
-    fl = key.copy()
-    # eye sockets, eyes, brows
+    # backdrop: soft light behind the head, darker toward the corners and the bottom
+    lum = 0.46 + 0.26 * np.exp(-(((xx / W - 0.40) / 0.50) ** 2 + ((yy / H - 0.30) / 0.60) ** 2)) - 0.08 * yy / H
+    # jacket and blouse
+    jacket = poly_mask([(-0.50, 1.02), (-1.3, 1.22), (-2.2, 1.50), (-2.9, 2.1), (-2.9, 3.4), (2.9, 3.4), (2.9, 2.1),
+                        (2.2, 1.50), (1.3, 1.22), (0.50, 1.02)], 6)
+    jl = 0.10 + 0.07 * np.clip(-X / 3, -0.3, 1) + 0.02 * noise(H, W, 30 * up, 2, seed + 5)
+    lum = lum * (1 - jacket) + jacket * jl
+    fold = poly_mask([(-0.60, 1.05), (-1.05, 1.25), (-0.70, 2.10), (-0.42, 3.4), (-0.20, 3.4), (-0.30, 2.0)], 3)
+    lum = lum * (1 - 0.5 * fold) + 0.5 * fold * 0.19
+    blouse = poly_mask([(-0.48, 0.98), (0.0, 1.62), (0.48, 0.98), (0.64, 1.16), (0.0, 2.05), (-0.64, 1.16)], 3)
+    bl = 0.80 - 0.22 * np.clip(X, 0, 1) - 0.1 * np.clip((Y - 1.4), 0, 1)
+    lum = lum * (1 - blouse) + blouse * bl
+    # neck: a lit cylinder with a shadow under the jaw
+    neck = poly_mask([(-0.40, 0.6), (0.40, 0.6), (0.46, 1.05), (0.0, 1.45), (-0.46, 1.05)], 3)
+    nl = 0.50 - 0.22 * np.clip(X / 0.45, -1, 1) - 0.22 * np.exp(-((Y - 0.92) / 0.10) ** 2)
+    lum = lum * (1 - neck) + neck * np.clip(nl, 0.12, 0.8)
+    # hair, back mass (behind the face): a bob that ends at the jaw, curling in
+    back = poly_mask([(1.02, 0.98), (1.30, 0.78), (1.40, 0.30), (1.38, -0.25), (1.24, -0.72), (0.95, -1.06),
+                      (0.52, -1.27), (0.0, -1.34), (-0.52, -1.28), (-0.95, -1.08), (-1.24, -0.72), (-1.38, -0.25),
+                      (-1.40, 0.30), (-1.32, 0.78), (-1.04, 0.98), (-0.8, 0.86), (0.0, 0.5), (0.8, 0.86)], 9)
+    strands = noise(H, W * 5, 1.8 * up, 1, seed + 3)[:, ::5]
+    sheen = np.exp(-(((X + 0.55) / 0.45) ** 2 + ((Y + 0.95) / 0.30) ** 2))
+    sheen_side = np.exp(-(((X + 1.18) / 0.16) ** 2 + ((Y - 0.1) / 0.55) ** 2))
+    hair_l = 0.06 + 0.05 * strands + (0.24 * sheen + 0.12 * sheen_side) * (0.55 + 0.45 * strands)
+    lum = lum * (1 - back) + back * hair_l
+    # face: ellipsoid shading
+    taper = 1 - 0.30 * np.clip(Y, 0, 1) ** 1.6
+    rr = np.sqrt((X / taper) ** 2 + Y ** 2)
+    face = smooth(1.03, 0.97, rr)
+    z = np.sqrt(np.clip(1 - (X / taper) ** 2 * 0.85 - Y ** 2 * 0.6, 0.02, 1))
+    nxv, nyv, nzv = X * 0.9, Y * 0.6, z
+    nn = np.sqrt(nxv ** 2 + nyv ** 2 + nzv ** 2)
+    Lx, Ly, Lz = -0.55, -0.30, 0.78
+    lam = np.clip((nxv * Lx + nyv * Ly + nzv * Lz) / nn, 0, 1)
+    fl = 0.12 + 0.74 * lam
     for sx in (-1, 1):
-        ex, ey = cx + sx * 0.38 * fw, hy - 0.10 * fh
-        sock = np.exp(-(((xx - ex) / (0.30 * fw)) ** 2 + ((yy - ey) / (0.16 * fh)) ** 2))
-        fl = fl - 0.16 * sock
-        eye = np.exp(-(((xx - ex) / (0.13 * fw)) ** 2 + ((yy - ey) / (0.045 * fh)) ** 2))
-        fl = fl * (1 - 0.75 * eye)
-        iris = np.exp(-(((xx - ex - 0.01 * fw) / (0.055 * fw)) ** 2 + ((yy - ey) / (0.05 * fh)) ** 2))
-        fl = fl * (1 - 0.6 * iris)
-        brow_y = ey - 0.17 * fh - 0.04 * fh * np.cos((xx - ex) / (0.3 * fw))
-        brow = np.exp(-((yy - brow_y) / (0.025 * fh)) ** 2) * np.exp(-((xx - ex - sx * 0.03 * fw) / (0.24 * fw)) ** 4)
+        ex, ey = sx * 0.40, -0.10
+        sock = np.exp(-(((X - ex) / 0.30) ** 2 + ((Y - ey) / 0.17) ** 2))
+        fl = fl - 0.10 * sock
+        lid = np.exp(-(((X - ex) / 0.17) ** 2 + ((Y - ey + 0.015 * 0) / 0.035) ** 2))
+        fl = fl * (1 - 0.60 * lid)
+        iris = np.exp(-(((X - ex - 0.02) / 0.065) ** 2 + ((Y - ey - 0.01) / 0.055) ** 2))
+        fl = fl * (1 - 0.70 * iris)
+        lash = np.exp(-(((X - ex) / 0.19) ** 2 + ((Y - ey + 0.045) / 0.02) ** 2))
+        fl = fl * (1 - 0.45 * lash)
+        by = ey - 0.20 - 0.05 * np.cos((X - ex) * 3.0)
+        brow = np.exp(-((Y - by) / 0.028) ** 2) * np.exp(-((X - ex - sx * 0.04) / 0.22) ** 4)
         fl = fl * (1 - 0.55 * brow)
-    # nose: shadow on the far side, nostrils, highlight on the bridge
-    nose_sh = np.exp(-(((xx - (cx + 0.10 * fw)) / (0.07 * fw)) ** 2) - (((yy - (hy + 0.12 * fh)) / (0.20 * fh)) ** 2))
-    fl = fl - 0.12 * nose_sh
-    nost = np.exp(-(((xx - cx) / (0.16 * fw)) ** 2 + ((yy - (hy + 0.30 * fh)) / (0.035 * fh)) ** 2))
-    fl = fl - 0.14 * nost
-    bridge = np.exp(-(((xx - (cx - 0.04 * fw)) / (0.05 * fw)) ** 2 + ((yy - (hy + 0.08 * fh)) / (0.18 * fh)) ** 2))
-    fl = fl + 0.06 * bridge
-    # mouth: dark line, lower lip highlight
-    my = hy + 0.52 * fh
-    mouth = np.exp(-(((xx - cx) / (0.26 * fw)) ** 4 + ((yy - my) / (0.022 * fh)) ** 2))
-    fl = fl * (1 - 0.45 * mouth)
-    lip = np.exp(-(((xx - cx) / (0.20 * fw)) ** 2 + ((yy - my - 0.06 * fh) / (0.035 * fh)) ** 2))
-    fl = fl - 0.05 * lip
-    chin = np.exp(-(((xx - cx) / (0.30 * fw)) ** 2 + ((yy - (hy + 0.80 * fh)) / (0.08 * fh)) ** 2))
-    fl = fl + 0.03 * chin
-    lum = lum * (1 - face) + face * np.clip(fl, 0.08, 0.95)
-    # hair: dark bob with a side parting, framing the face to the jaw, a soft sheen
-    def hair(p):
-        pts = []
-        for t in np.linspace(math.pi * 0.62, math.pi * 2.38, 80):
-            rx = fw * 1.30
-            ry = fh * 1.18
-            px = cx + rx * math.cos(t) * 1.0
-            py = hy - 0.10 * fh + ry * math.sin(t) * (1.0 if math.sin(t) < 0 else 0.0) - 0.02 * fh
-            pts.append((px, py))
-        # sides fall to the jaw line
-        right = [(cx + fw * 1.30, hy + 0.05 * fh), (cx + fw * 1.22, hy + 0.62 * fh), (cx + fw * 0.98, hy + 0.80 * fh),
-                 (cx + fw * 0.82, hy + 0.62 * fh), (cx + fw * 0.92, hy + 0.05 * fh)]
-        left = [(cx - fw * 0.88, hy + 0.05 * fh), (cx - fw * 0.80, hy + 0.62 * fh), (cx - fw * 0.98, hy + 0.82 * fh),
-                (cx - fw * 1.24, hy + 0.66 * fh), (cx - fw * 1.30, hy + 0.05 * fh)]
-        p.poly(pts)
-        p.poly(right)
-        p.poly(left)
-        # fringe sweeping from the parting (left) across the forehead
-        p.poly([(cx - 0.55 * fw, hy - 1.15 * fh), (cx + 1.15 * fw, hy - 0.95 * fh), (cx + 0.95 * fw, hy - 0.30 * fh),
-                (cx + 0.30 * fw, hy - 0.52 * fh), (cx - 0.40 * fw, hy - 0.60 * fh), (cx - 0.90 * fw, hy - 0.35 * fh)])
-    hm = mask(hair)
-    hm = np.clip(hm - 0.0, 0, 1)
-    strands = noise(h, w * 4, 2.0, 1, seed + 3)[:, ::4]
-    sheen = np.exp(-(((xx - (cx - 0.55 * fw)) / (0.35 * fw)) ** 2 + ((yy - (hy - 0.85 * fh)) / (0.22 * fh)) ** 2))
-    hl = 0.07 + 0.05 * strands + 0.20 * sheen * (0.6 + 0.4 * strands)
-    lum = lum * (1 - hm) + hm * hl
-    lum = blur(lum, 0.8)
-    lum = lum + r.normal(0, 0.02, lum.shape).astype(np.float32)
-    return np.clip(lum, 0, 1)
+    nose_sh = np.exp(-(((X - 0.10) / 0.07) ** 2 + ((Y - 0.14) / 0.20) ** 2))
+    fl = fl - 0.09 * nose_sh
+    tip_sh = np.exp(-(((X - 0.02) / 0.16) ** 2 + ((Y - 0.36) / 0.035) ** 2))
+    fl = fl - 0.10 * tip_sh
+    bridge = np.exp(-(((X + 0.03) / 0.05) ** 2 + ((Y - 0.12) / 0.20) ** 2))
+    fl = fl + 0.05 * bridge
+    mouth = np.exp(-((X / 0.25) ** 4 + ((Y - 0.585) / 0.020) ** 2))
+    fl = fl * (1 - 0.50 * mouth)
+    upper = np.exp(-((X / 0.20) ** 2 + ((Y - 0.55) / 0.03) ** 2))
+    fl = fl - 0.06 * upper
+    lower = np.exp(-((X / 0.17) ** 2 + ((Y - 0.64) / 0.035) ** 2))
+    fl = fl + 0.03 * lower
+    cheek = np.exp(-(((X + 0.48) / 0.25) ** 2 + ((Y - 0.22) / 0.18) ** 2))
+    fl = fl + 0.03 * cheek
+    lum = lum * (1 - face) + face * np.clip(fl, 0.06, 0.95)
+    # front hair: side-swept fringe from a left parting, and locks over the cheek edges
+    fringe = poly_mask([(-0.40, -1.30), (0.6, -1.25), (1.18, -0.92), (1.16, -0.30), (0.78, -0.36), (0.30, -0.50),
+                        (-0.20, -0.64), (-0.70, -0.74), (-1.06, -0.62), (-1.20, -0.80), (-0.95, -1.15)], 9)
+    rlock = poly_mask([(0.80, -0.50), (1.15, -0.55), (1.36, 0.20), (1.26, 0.80), (1.00, 0.97), (0.86, 0.62),
+                       (0.90, 0.10)], 6)
+    llock = poly_mask([(-0.86, -0.45), (-1.20, -0.55), (-1.36, 0.20), (-1.28, 0.80), (-1.04, 0.97), (-0.93, 0.60),
+                       (-0.96, 0.10)], 6)
+    front = np.clip(fringe + rlock + llock, 0, 1)
+    part = np.exp(-(((X + 0.40) / 0.05) ** 2) - ((Y + 1.10) / 0.25) ** 2)
+    fsheen = np.exp(-(((X + 0.15) / 0.55) ** 2 + ((Y + 0.92) / 0.18) ** 2))
+    hair_f = 0.06 + 0.05 * strands + 0.26 * fsheen * (0.5 + 0.5 * strands) + 0.10 * part
+    shade = blur(np.roll(front, int(0.07 * fh), 0), 2.5 * up) * face
+    lum = lum * (1 - 0.40 * shade)
+    lum = lum * (1 - front) + front * hair_f
+    lum = blur(lum, 0.5 * up)
+    out = np.asarray(Image.fromarray(lum.astype(np.float32), "F").resize((w, h), Image.BOX), np.float32)
+    out = out + r.normal(0, 0.018, out.shape).astype(np.float32)
+    return np.clip(out, 0, 1)
 
 
 # =================================================================================================
@@ -1071,10 +1072,10 @@ def badge():
     gx, gy = 610, 330
     rr = np.hypot(xx - gx, yy - gy)
     th = np.arctan2(yy - gy, xx - gx)
-    g1 = np.abs(np.sin(rr / 7.0 + 3.0 * np.sin(th * 9 + rr / 60.0)))
-    g2 = np.abs(np.sin(rr / 9.0 - 2.4 * np.sin(th * 7 - rr / 45.0)))
-    guil = (smooth(0.86, 0.97, g1) + smooth(0.88, 0.98, g2)) * (1 - smooth(260, 420, rr))
-    rgb = paint(rgb, np.clip(guil, 0, 1), "#9FB8A4", 0.55)
+    g1 = np.abs(np.sin(rr / 4.2 + 1.6 * np.sin(th * 12)))
+    g2 = np.abs(np.sin(rr / 4.2 - 1.6 * np.sin(th * 12 + 0.5)))
+    guil = (smooth(0.93, 0.99, g1) + smooth(0.93, 0.99, g2)) * (1 - smooth(200, 330, rr)) * smooth(30, 60, rr)
+    rgb = paint(rgb, np.clip(guil, 0, 1), "#A9C2AE", 0.40)
     # top band
     band = Pen(W, H, 4)
     band.rect(0, 0, W, 112)
@@ -1105,8 +1106,8 @@ def badge():
     lab = Pen(W, H, 4)
     lab.text(306, 302, "STAFF  No.", F_SANS_B, 20, anchor="ls", spacing=2)
     lab.text(306, 452, "ISSUED", F_SANS_B, 18, anchor="ls", spacing=2)
-    lab.text(560, 452, "SIGNATURE", F_SANS_B, 18, anchor="ls", spacing=2)
-    lab.rect(560, 470, 820, 472)
+    lab.text(560, 498, "SIGNATURE", F_SANS_B, 16, anchor="ls", spacing=2)
+    lab.rect(560, 472, 800, 473.5)
     rgb = paint(rgb, lab.arr(), "#4A5A50")
     num = Pen(W, H, 4)
     num.text(300, 410, "№", F_TYPE_B, 70, anchor="ls")
@@ -1116,7 +1117,7 @@ def badge():
     yr.text(306, 492, "1976", F_TYPE_B, 34, anchor="ls")
     rgb = paint(rgb, yr.arr(), "#1C1E22")
     sig = Pen(W, H, 4)
-    rot_text(sig, 690, 448, "L. Rahimova", F_HAND, 46, angle=4, weight=520)
+    rot_text(sig, 676, 452, "L. Rahimova", F_HAND, 48, angle=4, weight=520)
     rgb = paint(rgb, ink(sig.arr(), 704, 0.25), "#22306A", 0.9)
     # access-level diagonal stripe (red) in the lower right corner
     ds = Pen(W, H, 4)
@@ -1130,8 +1131,8 @@ def badge():
     arc_text(st, sx, sy, sr - 15, "MERIDIAN · INSTITUTE ·", F_SANS_B, 13, a_mid=-90, spacing=1.05)
     arc_text(st, sx, sy, sr - 15, "· PERSONNEL ·", F_SANS_B, 13, a_mid=90, spacing=1.05, inward=True)
     draw_mark(st, sx, sy, 58, ticks=False, ring_w=0.06, line_w=0.06)
-    sm = st.arr() * stamp_mask(W, H, 705, 0.5)
-    rgb = paint(rgb, sm, "#4B3C8C", 0.7)
+    sm = st.arr() * stamp_mask(W, H, 705, 0.3)
+    rgb = paint(rgb, sm, "#4B3C8C", 0.72)
     # lamination: gloss streak + slight edge yellowing
     gl = np.clip(1 - np.abs((xx * 0.55 - yy + 120) / 90.0), 0, 1) ** 2
     rgb = rgb + (gl * 18)[..., None]
@@ -1168,7 +1169,7 @@ def punch_positions(pen: Pen, numbers: bool = True, ring_w: float = 3.0):
 def index_card():
     W, H = CARD_W, CARD_H
     rng = np.random.default_rng(800)
-    rgb = paper(W, H, base=(236, 228, 206), seed=801, stains=2, vignette=0.14, fibres=0.8)
+    rgb = paper(W, H, base=(246, 240, 222), seed=801, stains=1, vignette=0.12, fibres=0.8)
     # printed form: red header rule, blue ruling
     pr = Pen(W, H, 4)
     for y in range(318, H - 60, 62):
@@ -1177,7 +1178,7 @@ def index_card():
     red = Pen(W, H, 4)
     red.rect(36, 196, W - 36, 199.5)
     red.rect(36, 204, W - 36, 205.5)
-    red.rect(250, 210, 252, H - 40)
+    red.rect(250, 262, 252, H - 40)
     rgb = paint(rgb, red.arr(), "#C0574B", 0.8)
     # edge positions 1..8 (printed circles + numbers)
     pp = Pen(W, H, 4)
@@ -1198,9 +1199,9 @@ def index_card():
     rgb = paint(rgb, ink(tp.arr(), 803, 0.3, 1.6), "#1E1F26", 0.92)
     # pencil note
     pc = Pen(W, H, 4)
-    rot_text(pc, 980, 640, "req. via tube", F_HAND, 58, angle=6, weight=560)
-    pc.line([(800, 650), (842, 642), (870, 650)], 3.0)
-    pc.line([(842, 662), (870, 650), (848, 632)], 3.0)
+    rot_text(pc, 1000, 636, "req. via tube", F_HAND, 58, angle=6, weight=560)
+    pc.line([(770, 664), (812, 656), (846, 660)], 3.0)
+    pc.line([(826, 674), (846, 660), (828, 644)], 3.0)
     rgb = paint(rgb, ink(pc.arr(), 804, 0.5, 1.4), "#5A5A60", 0.85)
     # catalogue rod hole (bottom centre) -- dark so it reads as a hole even without alpha
     hole = Pen(W, H, 4)
@@ -1245,9 +1246,12 @@ def request_card():
     # small canister pictogram in the corner
     cp = Pen(W, H, 4)
     cx, cy = W - 120, 640
-    cp.rect(cx - 40, cy - 14, cx + 40, cy + 14, radius=12)
-    cp.rect(cx - 30, cy - 17, cx - 24, cy + 17, 0)
-    cp.rect(cx + 24, cy - 17, cx + 30, cy + 17, 0)
+    cp.rect(cx - 44, cy - 15, cx + 44, cy + 15, radius=14)
+    cp.rect(cx - 29, cy - 16, cx - 26, cy + 16, 0)
+    cp.rect(cx + 26, cy - 16, cx + 29, cy + 16, 0)
+    cp.rect(cx + 44, cy - 5, cx + 54, cy + 5, radius=2)
+    for xo in (-70, -88, -106):
+        cp.rect(cx + xo, cy - 2, cx + xo + 10, cy + 2)
     rgb = paint(rgb, cp.arr(), "#9A3B2E", 0.8)
     rgb = multiply(rgb, edge_wear(W, H, 823, 22, 0.12), "#8C7650")
     alpha = card_outline_alpha(clip_tl=REQ_CLIP_PX)
@@ -1357,18 +1361,18 @@ def tape_label(year: int):
     # printed fields
     pf = Pen(S, S, 4)
     pf.ring(c, c, 62, 2.5)
-    pf.rect(120, 156, 392, 158)
-    pf.text(120, 106, "DATE / NAME", F_SANS_B, 15, anchor="ls", spacing=1.5)
-    pf.rect(112, 410, 330, 412)
-    pf.text(112, 330, "SPEED", F_SANS_B, 15, anchor="ls", spacing=1.5)
-    pf.text(338, 408, "cm/s", F_SANS_B, 34, anchor="ls")
+    pf.rect(118, 160, 394, 162)
+    pf.text(150, 92, "DATE / NAME", F_SANS_B, 15, anchor="ls", spacing=1.5)
+    pf.rect(112, 396, 318, 398)
+    pf.text(118, 270, "SPEED", F_SANS_B, 15, anchor="ls", spacing=1.5)
+    pf.text(326, 392, "cm/s", F_SANS_B, 30, anchor="ls")
     rgb = paint(rgb, ink(pf.arr(), year + 1, 0.15), "#8A3A24", 0.85)
     # Leyla's handwriting
     hw = Pen(S, S, 4)
     tilt = {1996: -4, 1997: -2, 1998: -6}[year]
-    rot_text(hw, 256, 132, f"L.R. {year}", F_HAND, 66, angle=tilt * 0.5, weight=640)
-    rot_text(hw, 220, 372, TAPE_SPEED, F_HAND, 150, angle=tilt, weight=700)
-    hw.line([(124, 426), (318, 418)], 4.0)   # underline the speed
+    rot_text(hw, 258, 134, f"L.R. {year}", F_HAND, 66, angle=tilt * 0.5, weight=640)
+    rot_text(hw, 214, 352, TAPE_SPEED, F_HAND, 140, angle=tilt, weight=700)
+    hw.line([(128, 412), (306, 405)], 4.0)   # underline the speed
     rgb = paint(rgb, ink(hw.arr(), year + 2, 0.25, 1.4), TAPE_INK[year], 0.95)
     # handling: grime, a little tape-oxide smudge
     smudge = smooth(0.70, 0.95, noise(S, S, 40, 3, year + 3)) * 0.25
@@ -1409,7 +1413,7 @@ def slide_mark():
     m = mark_mask(400)
     mark = np.zeros((S, S), np.float32)
     mark[56:456, 56:456] = m
-    pin = (noise(S, S, 1.2, 1, 951) > 0.86).astype(np.float32) * 0.5
+    pin = (noise(S, S, 1.2, 1, 951) > 0.93).astype(np.float32) * 0.4
     mark = mark * (1 - pin * mark)
     rgb = paint(rgb, mark, "#0E0F10")
     alpha = np.maximum(alpha, mark * 0.94)
@@ -1453,7 +1457,7 @@ def tone_curve(x: np.ndarray, contrast: float = 1.15, toe: float = 0.03) -> np.n
 
 def film_finish(lum: np.ndarray, seed: int, grain_amt=0.055, scratches=6, dust=60, vignette=0.55,
                 weave=(2, 1), gate=True, tint=(1.0, 0.985, 0.95), hair=True, halation=0.0,
-                contrast=1.15, flicker=0.0) -> np.ndarray:
+                contrast=1.15, flicker=0.0, dust_big=0.1) -> np.ndarray:
     """Turn a linear luminance scene (0..~2) into a 1979 black-and-white projected print (sRGB 0..255)."""
     h, w = lum.shape
     r = np.random.default_rng(seed)
@@ -1489,7 +1493,7 @@ def film_finish(lum: np.ndarray, seed: int, grain_amt=0.055, scratches=6, dust=6
     dd = np.zeros((h, w), np.float32)
     for _ in range(dust):
         cx, cy = r.uniform(0, w), r.uniform(0, h)
-        rad = r.uniform(0.6, 2.6) if r.random() < 0.9 else r.uniform(3, 6)
+        rad = r.uniform(0.6, 2.6) if r.random() > dust_big else r.uniform(3, 6)
         tgt = dd if r.random() < 0.7 else dl
         x0, x1 = int(max(0, cx - rad - 2)), int(min(w, cx + rad + 3))
         y0, y1 = int(max(0, cy - rad - 2)), int(min(h, cy + rad + 3))
@@ -1532,49 +1536,50 @@ SUN_H_UNITS = 2.2          # obelisk height in shadow units: tan(elevation) = 2.
 
 
 def obelisk_scene(fw: int, fh: int, L: int, seed: int, unit_frac: float = 0.12) -> np.ndarray:
-    """Sundial obelisk film frame (linear luminance 0..~1.6). Shadow length L units, 1 unit = unit_frac * fw.
+    """Sundial obelisk film frame (linear luminance 0..~1.8). Shadow length L units, 1 unit = unit_frac * fw.
     The sun is on the left; its elevation follows tan(e) = H / L for an obelisk H = 2.2 units tall.
-    Unit stones on the ground at 1..5 units from the obelisk make the length easy to read."""
+    Marker posts on the ground at 1..5 units from the obelisk make the length easy to read."""
     u = unit_frac * fw
     H = SUN_H_UNITS
     elev = math.degrees(math.atan2(H, L))
     k = float(np.clip((elev - 28.8) / (65.6 - 28.8), 0, 1))     # 0 = dawn (L = 4) .. 1 = high sun (L = 1)
-    hor = 0.60 * fh
+    hor = 0.56 * fh
     yy, xx = np.mgrid[0:fh, 0:fw].astype(np.float32)
-    # sky: dawn darker and graded toward the sun, high sun bright and even
-    top = 0.30 + 0.45 * k
-    sky = top + (0.92 - top) * (yy / hor) ** 1.3
-    sx = (0.11 + 0.03 * k) * fw
-    sy = hor - (elev / 90.0) * hor * 1.05
-    sy = max(sy, 0.10 * fh)
+    # sky (yellow-filtered B&W: darker overhead), dawn darker and graded toward the sun
+    top, low = 0.16 + 0.22 * k, 0.50 + 0.12 * k
+    sky = top + (low - top) * np.clip(yy / hor, 0, 1) ** 1.2
+    sx = (0.09 + 0.06 * k) * fw
+    sun_h = float(np.clip((elev - 18.0) / (68.0 - 18.0), 0, 1)) ** 1.15     # 0 on the horizon .. 1 high
+    sy = hor - 0.06 * fh - sun_h * (hor - 0.17 * fh)
     d = np.sqrt((xx - sx) ** 2 + (yy - sy) ** 2)
-    sky = sky + (0.85 - 0.25 * k) * np.exp(-d / (0.12 * fw)) + 0.5 * np.exp(-(d / (0.04 * fw)) ** 2)
-    sky = np.where(d < 0.032 * fw, 1.7, sky)
+    sky = sky + (0.55 - 0.2 * k) * np.exp(-d / (0.16 * fw)) + 0.6 * np.exp(-(d / (0.05 * fw)) ** 2)
+    sky = np.where(d < 0.034 * fw, 1.9, sky)
     img = sky.copy()
     # far hills
-    ridge = hor - (4 + 8 * noise(1, fw, 40, 3, seed)[0]) * fh / 180
-    img = np.where(yy > ridge[None, :], 0.40 + 0.12 * k, img)
+    ridge = hor - (3 + 7 * noise(1, fw, 40, 3, seed)[0]) * fh / 180
+    img = np.where(yy > ridge[None, :], 0.30 + 0.10 * k, img)
     # ground: light paving, brighter toward the camera
-    g = 0.70 + 0.16 * ((yy - hor) / (fh - hor))
+    g = 0.58 + 0.16 * ((yy - hor) / (fh - hor))
     img = np.where(yy >= hor, g, img)
     bx = 0.22 * fw
-    by = hor + 0.20 * fh          # obelisk base line on the ground
-    # unit stones at 1..5 units (dark studs on the ground line)
-    marks = Pen(fw, fh, 4)
+    by = hor + 0.24 * fh          # obelisk base line on the ground
+    # marker posts at 1..5 units, standing just behind the shadow line (a ruler)
+    posts = Pen(fw, fh, 4)
     for i in range(1, 6):
         mx = bx + i * u
-        marks.rect(mx - 0.010 * fw, by - 0.020 * fh, mx + 0.010 * fw, by + 0.030 * fh, radius=1)
-    mm = marks.arr()
+        posts.rect(mx - 0.0075 * fw, by - 0.085 * fh, mx + 0.0075 * fw, by - 0.020 * fh)
+        posts.ellipse(mx, by - 0.020 * fh, 0.012 * fw, 0.006 * fh)
+    pm = posts.arr()
     # shadow on the ground: from the base to L units, tapering to the tip
-    ow = 0.085 * fw
     shp = Pen(fw, fh, 4)
     tip = bx + L * u
-    shp.poly([(bx, by - 0.030 * fh), (tip, by - 0.008 * fh), (tip + 0.004 * fw, by), (tip, by + 0.010 * fh),
-              (bx, by + 0.040 * fh)])
-    sm = blur(shp.arr(), 0.4 + 0.5 * (1 - k))
-    img = img * (1 - (0.88 - 0.1 * (1 - k)) * sm)
-    img = img * (1 - mm) + mm * 0.22
+    shp.poly([(bx, by - 0.020 * fh), (tip - 0.01 * fw, by - 0.006 * fh), (tip, by + 0.002 * fh),
+              (tip - 0.01 * fw, by + 0.010 * fh), (bx, by + 0.032 * fh)])
+    sm = blur(shp.arr(), 0.35 + 0.5 * (1 - k))
+    img = img * (1 - 0.86 * sm)
+    img = img * (1 - pm) + pm * 0.16
     # obelisk: tapered shaft + pyramidion, lit face toward the sun (left), dark face right
+    ow = 0.085 * fw
     top_y = by - H * u
     w0, w1 = ow / 2, ow * 0.28
     cap = top_y + 0.30 * u
@@ -1585,11 +1590,11 @@ def obelisk_scene(fw: int, fh: int, L: int, seed: int, unit_frac: float = 0.12) 
     dark.poly([(bx, by), (bx, cap), (bx + w1, cap), (bx + w0, by)])
     dark.poly([(bx, cap), (bx, top_y - 0.05 * u), (bx + w1, cap)])
     base = Pen(fw, fh, 4)
-    base.rect(bx - w0 * 1.5, by - 0.045 * fh, bx + w0 * 1.5, by + 0.015 * fh)
+    base.rect(bx - w0 * 1.5, by - 0.045 * fh, bx + w0 * 1.5, by + 0.012 * fh)
     lm, dm, bm = lit.arr(), dark.arr(), base.arr()
-    img = img * (1 - lm) + lm * (0.62 + 0.25 * k)
+    img = img * (1 - lm) + lm * (0.70 + 0.2 * k)
     img = img * (1 - dm) + dm * 0.10
-    img = img * (1 - bm) + bm * (0.30 + 0.1 * k)
+    img = img * (1 - bm) + bm * (0.34 + 0.1 * k)
     return img
 
 
@@ -1622,8 +1627,8 @@ def film_strip(k: int):
         ep.text(ex, h - 6, "SAFETY  FILM", F_SANS_B, 12, anchor="ms", spacing=1.2)
         ep.poly([(ex + 72, h - 16), (ex + 82, h - 11), (ex + 72, h - 6)])
     lum = lum + ep.arr() * 0.45
-    rgb = film_finish(lum, 330 + k, grain_amt=0.04, scratches=3, dust=22, vignette=0.0, gate=False,
-                      tint=(1.0, 0.94, 0.82), hair=False, contrast=1.25)
+    rgb = film_finish(lum, 330 + k, grain_amt=0.04, scratches=3, dust=16, vignette=0.0, gate=False,
+                      tint=(1.0, 0.94, 0.82), hair=False, contrast=1.25, dust_big=0.0)
     yy, xx = np.mgrid[0:h, 0:w]
     edge = smooth(0, 50, np.minimum(xx, w - 1 - xx)).astype(np.float32)
     rgb = rgb * (0.80 + 0.20 * edge)[..., None]
@@ -1672,34 +1677,30 @@ def reel_can_lid():
     # three panels: sunrise (long shadow) -> morning -> high sun (short shadow); sun on the left
     ink_p = Pen(S, S, 4)
     sun_p = Pen(S, S, 4)
-    pw = bw / 3
+    pw = (bw - 40) / 3
     ground = by0 + 172
-    U = 30                                   # shadow unit (px)
-    for i, (shadow, elev) in enumerate(((5.0, 3.0), (2.6, 40.0), (0.9, 68.0))):
-        px0 = bx0 + i * pw
+    U = 24                                   # shadow unit (px)
+    # (shadow units, sun x offset from the obelisk, sun height above the ground; None = on the horizon)
+    for i, (shadow, sdx, sh) in enumerate(((4.2, -54, None), (2.4, -52, 78), (0.9, -24, 128))):
+        px0 = bx0 + 20 + i * pw
         if i:
             ink_p.rect(px0 - 1.5, by0 + 22, px0 + 1.5, by0 + 200)      # panel divider
-        ox = px0 + 44                         # obelisk x
-        ink_p.rect(px0 + 14, ground, px0 + pw - 14, ground + 4)        # ground line
+        ox = px0 + 0.42 * pw                  # obelisk x
+        ink_p.rect(px0 + 14, ground, px0 + pw - 14, ground + 3)        # ground line
         ink_p.poly([(ox - 9, ground), (ox - 5, ground - 76), (ox + 5, ground - 76), (ox + 9, ground)])
         ink_p.poly([(ox - 5, ground - 76), (ox, ground - 88), (ox + 5, ground - 76)])
-        ink_p.poly([(ox + 8, ground + 4), (ox + 8 + shadow * U, ground + 6), (ox + 8 + shadow * U, ground + 11),
-                    (ox + 8, ground + 15)])
-        if elev < 10:          # sunrise: half sun on the horizon, behind (left of) the obelisk
-            sx = ox - 26
-            if sx - 22 < px0 + 6:
-                sx = px0 + 30
+        ink_p.poly([(ox + 8, ground + 2), (ox + 8 + shadow * U, ground + 6), (ox + 8 + shadow * U, ground + 10),
+                    (ox + 8, ground + 16)])
+        sx = ox + sdx
+        if sh is None:         # sunrise: half sun on the horizon
             sun_p.circle(sx, ground, 19)
             sun_p.rect(sx - 30, ground, sx + 30, ground + 30, v=0)
             for a in range(195, 346, 30):
                 ra = math.radians(a)
                 sun_p.line([(sx + 26 * math.cos(ra), ground + 26 * math.sin(ra)),
                             (sx + 37 * math.cos(ra), ground + 37 * math.sin(ra))], 4.5)
-        else:                  # sun up and to the left, height by elevation
-            dist = 120
-            sx = ox - dist * math.cos(math.radians(elev)) * 0.45 - 4
-            sy = ground - 14 - dist * math.sin(math.radians(elev)) * 1.05
-            sx = max(sx, px0 + 30)
+        else:
+            sy = ground - sh
             sun_p.circle(sx, sy, 16)
             for a in range(0, 360, 45):
                 ra = math.radians(a)
@@ -1727,6 +1728,773 @@ def reel_can_lid():
     save(to_img(rgb, alpha), "reel_can_lid.png")
 
 
+# =================================================================================================
+# Linoleum texture set (1024^2, seamless: one repeat = 2 x 2 tiles of 0.30 m -> 0.6 m, M_Linoleum)
+# =================================================================================================
+def _wrap_pen_lines(S: int, strokes, ss: int = 2) -> np.ndarray:
+    """Draw polylines [(pts, width, value 0..1)] with wrap-around (seamless) and return a float mask."""
+    pen = Pen(S, S, ss)
+    for pts, wdt, val in strokes:
+        for ox in (-S, 0, S):
+            for oy in (-S, 0, S):
+                q = [(x + ox, y + oy) for x, y in pts]
+                xs = [p[0] for p in q]
+                ys = [p[1] for p in q]
+                if max(xs) < -10 or min(xs) > S + 10 or max(ys) < -10 or min(ys) > S + 10:
+                    continue
+                pen.line(q, wdt, int(255 * val), caps=True)
+    return pen.arr()
+
+
+def normal_from_height(hgt: np.ndarray, strength: float) -> np.ndarray:
+    """OpenGL (Y+) tangent-space normal from a periodic height map (same convention as fetch_textures.py)."""
+    dx = (np.roll(hgt, -1, 1) - np.roll(hgt, 1, 1)) * 0.5 * strength
+    dy = (np.roll(hgt, -1, 0) - np.roll(hgt, 1, 0)) * 0.5 * strength
+    v = np.stack([-dx, dy, np.ones_like(hgt)], axis=-1)
+    v /= np.linalg.norm(v, axis=-1, keepdims=True)
+    return (v * 0.5 + 0.5).astype(np.float32)
+
+
+def linoleum():
+    S, T = 1024, 512
+    r = np.random.default_rng(1300)
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
+    green = ((xx < T) == (yy < T))
+    alb = np.zeros((S, S, 3), np.float32)
+    rough = np.zeros((S, S), np.float32)
+    # per-tile marbled chip pattern (each tile is a separate piece, so tile textures need not wrap)
+    for ty in range(2):
+        for tx in range(2):
+            g = (tx == ty)
+            seed = 1310 + 10 * (2 * ty + tx)
+            horiz = g                       # tiles laid with the grain alternating (quarter-turned)
+            st = (5.0, 1.0) if horiz else (1.0, 5.0)
+            m1 = fbm(T, T, 60, seed, 4, st)
+            m2 = fbm(T, T, 14, seed + 3, 3, st)
+            chips = pnoise(T, T, 2.2, seed + 5, (2.5, 1.0) if horiz else (1.0, 2.5))
+            if g:
+                base, light, dark, speck = hexf("#33493C"), hexf("#435E4D"), hexf("#26382D"), hexf("#A9AE96")
+                lot = 1.0 + (0.04 if (tx, ty) == (1, 1) else 0.0)     # dye-lot difference between tiles
+            else:
+                base, light, dark, speck = hexf("#D0C6A6"), hexf("#DCD3B7"), hexf("#BFB28F"), hexf("#7E8A70")
+                lot = 1.0 - (0.025 if (tx, ty) == (0, 1) else 0.0)
+            t = np.clip((m1 - 0.5) * 1.6 + (m2 - 0.5) * 1.1, -1, 1)
+            col = base[None, None] + np.clip(t, 0, 1)[..., None] * (light - base) + np.clip(-t, 0, 1)[..., None] * (dark - base)
+            sp = smooth(0.84, 0.90, chips)
+            col = col * (1 - 0.32 * sp[..., None]) + speck * 0.32 * sp[..., None]
+            col = col * lot
+            alb[ty * T:(ty + 1) * T, tx * T:(tx + 1) * T] = col
+            rough[ty * T:(ty + 1) * T, tx * T:(tx + 1) * T] = 0.34 if g else 0.40
+    # seams (tile joints) centred on the tile borders, incl. the image edges (wraps)
+    def seam_dist(c):
+        return np.minimum(np.mod(c, T), T - np.mod(c, T))
+    sd = np.minimum(seam_dist(xx + 0.5), seam_dist(yy + 0.5))
+    seam = np.exp(-(sd / 1.3) ** 2)
+    seam_dirt = np.exp(-(sd / 7.0) ** 2) * (0.6 + 0.4 * pnoise(S, S, 40, 1320))
+    # global wear (periodic over the repeat)
+    grime = fbm(S, S, 260, 1330, 4)
+    traffic = smooth(0.45, 0.85, fbm(S, S, 380, 1331, 3))
+    wax_haze = smooth(0.5, 0.9, fbm(S, S, 140, 1332, 3))
+    # scuffs (black heel marks) and scratches, drawn with wrap-around
+    scuffs = []
+    for _ in range(14):                        # clusters of heel marks
+        cx0, cy0 = r.uniform(0, S), r.uniform(0, S)
+        base_ang = r.uniform(0, math.tau)
+        for _ in range(int(r.integers(2, 7))):
+            x, y = cx0 + r.normal(0, 40), cy0 + r.normal(0, 40)
+            ang = base_ang + r.normal(0, 0.5)
+            ln = r.uniform(6, 34)
+            bend = r.normal(0, 0.03)
+            pts = []
+            for i in range(8):
+                a = ang + bend * i
+                pts.append((x + math.cos(a) * ln * i / 7, y + math.sin(a) * ln * i / 7))
+            scuffs.append((pts, r.uniform(2.5, 7.0), r.uniform(0.25, 0.65)))
+    scuff = blur(_wrap_pen_lines(S, scuffs), 1.6, wrap=True) * (0.6 + 0.6 * pnoise(S, S, 5, 1335))
+    scr = []
+    for _ in range(170):
+        x, y = r.uniform(0, S), r.uniform(0, S)
+        ang = r.normal(0.35, 0.5) if r.random() < 0.7 else r.uniform(0, math.tau)
+        ln = r.uniform(25, 180)
+        scr.append(([(x, y), (x + math.cos(ang) * ln, y + math.sin(ang) * ln)], r.uniform(0.6, 1.3), r.uniform(0.3, 0.9)))
+    scratch = _wrap_pen_lines(S, scr)
+    # chipped tile corners / edges (dark adhesive showing)
+    chip_pen = Pen(S, S, 2)
+    for cx, cy in ((T, T), (0, T), (T, 0), (0, 0)):
+        for _ in range(int(r.integers(0, 3))):
+            px, py = cx + r.normal(0, 30), cy + r.normal(0, 30)
+            pts = []
+            for k in range(9):
+                a = 2 * math.pi * k / 9
+                rad = r.uniform(3, 9)
+                pts.append((px + rad * math.cos(a), py + rad * math.sin(a)))
+            for ox in (-S, 0, S):
+                for oy in (-S, 0, S):
+                    chip_pen.poly([(x + ox, y + oy) for x, y in pts])
+    chips = blur(chip_pen.arr() * smooth(16, 6, sd), 0.5, wrap=True)
+    # compose albedo
+    g3 = green[..., None]
+    alb = alb * (1 - 0.16 * (grime[..., None] - 0.35) * (1.4 - 0.8 * g3))
+    worn = traffic[..., None]
+    grey = alb.mean(-1, keepdims=True)
+    alb = alb * (1 - 0.25 * worn) + (grey * 0.9 + 18) * 0.25 * worn                 # dulled, faded walkway
+    alb = alb * (1 - (0.10 * wax_haze)[..., None]) + np.array([150, 130, 80], np.float32) * (0.10 * wax_haze)[..., None] * (1 - g3 * 0.6)
+    alb = alb * (1 - 0.30 * seam_dirt[..., None])
+    alb = alb * (1 - 0.85 * seam[..., None]) + np.array([24, 22, 18], np.float32) * 0.85 * seam[..., None]
+    alb = alb * (1 - 0.65 * scuff[..., None]) + np.array([30, 28, 26], np.float32) * 0.65 * scuff[..., None]
+    sc_col = np.where(g3, np.array([110, 130, 112], np.float32), np.array([168, 156, 128], np.float32))
+    alb = alb * (1 - 0.30 * scratch[..., None]) + sc_col * 0.30 * scratch[..., None]
+    alb = alb * (1 - chips[..., None]) + np.array([34, 30, 24], np.float32) * chips[..., None]
+    alb = alb * (0.985 + 0.03 * pnoise(S, S, 2.0, 1340))[..., None]
+    # roughness: waxed, duller in the walkway, scuffs / scratches / seams rough
+    rough = rough + 0.18 * traffic + 0.06 * (grime - 0.5) + 0.12 * scuff + 0.20 * scratch + 0.45 * seam + 0.3 * chips
+    rough = rough - 0.06 * wax_haze
+    rough = np.clip(rough + 0.03 * (pnoise(S, S, 6, 1341) - 0.5), 0.2, 0.95)
+    # height -> normal
+    hgt = -1.0 * seam - 0.25 * np.exp(-(sd / 4.0) ** 2) + 0.12 * smooth(30, 3, sd) * 0     # joint groove
+    cup = 0.35 * np.exp(-(sd / 60.0) ** 2)                                              # slight edge curl
+    hgt = hgt + cup - 0.12 * scratch + 0.05 * scuff - 0.7 * chips
+    hgt = hgt + 0.04 * (pnoise(S, S, 3, 1342) - 0.5) + 0.25 * (fbm(S, S, 200, 1343, 3) - 0.5)
+    normal = normal_from_height(hgt, 2.2)
+    ao = np.clip(1 - 0.40 * seam - 0.10 * seam_dirt - 0.35 * chips, 0, 1)
+    orm = np.stack([ao, rough, np.zeros_like(ao)], -1)
+    folder = os.path.join(TEX, "linoleum")
+    os.makedirs(folder, exist_ok=True)
+    save(to_img(alb), "albedo.jpg", folder)
+    save(to_img(normal * 255.0), "normal.png", folder)
+    save(to_img(orm * 255.0), "orm.jpg", folder)
+
+
+# =================================================================================================
+# Film frames, secret reel, vault reel (1200 x 800, black-and-white 1979 prints)
+# =================================================================================================
+FW, FH = 1200, 800
+
+
+def _limb(d: ImageDraw.ImageDraw, pts, widths, k: float):
+    """Tapered limb through points with per-point widths (in canvas px), round joints."""
+    for (x0, y0), (x1, y1), w0, w1 in zip(pts[:-1], pts[1:], widths[:-1], widths[1:]):
+        dx, dy = x1 - x0, y1 - y0
+        L = max(1e-6, math.hypot(dx, dy))
+        nx, ny = -dy / L, dx / L
+        d.polygon([(x0 + nx * w0 / 2, y0 + ny * w0 / 2), (x1 + nx * w1 / 2, y1 + ny * w1 / 2),
+                   (x1 - nx * w1 / 2, y1 - ny * w1 / 2), (x0 - nx * w0 / 2, y0 - ny * w0 / 2)], fill=255)
+    for (x, y), w in zip(pts, widths):
+        d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=255)
+    del k
+
+
+def person_mask(h: float, sex: str = "m", outfit: str = "coat", hair: str = "short", arms: str = "down",
+                reach=None, arm_angles=(20.0, 25.0), width: float = 1.0, ss: int = 3):
+    """Organic human silhouette (front or back view, ~7.4 heads tall) as an 'L' image at ss x scale.
+    Returns (image, feet_x, feet_y) in canvas pixels. reach = target (dx, dy) in px relative to the feet."""
+    u = h / 7.4 * ss
+    X0, X1, Y0, Y1 = -4.4, 4.4, -2.2, 7.8
+    Wc, Hc = int((X1 - X0) * u) + 2, int((Y1 - Y0) * u) + 2
+    im = Image.new("L", (Wc, Hc), 0)
+    d = ImageDraw.Draw(im)
+
+    def P(X, Y):
+        return ((X - X0) * u, (Y - Y0) * u)
+
+    def poly(pts):
+        d.polygon([P(a, b) for a, b in _smooth_poly(pts, 6)], fill=255)
+
+    f = sex == "f"
+    S = (0.84 if f else 0.98) * width * (1.07 if outfit == "longcoat" else 1.0)
+    # head (egg) and neck
+    pts = []
+    for t in np.linspace(0, 2 * math.pi, 48, endpoint=False):
+        sx = math.sin(t) * (0.37 if f else 0.39) * (1 - 0.22 * max(0.0, -math.cos(t)) ** 1.5)
+        pts.append(P(sx, 0.52 - 0.52 * math.cos(t)))
+    d.polygon(pts, fill=255)
+    poly([(-0.15, 0.85), (0.15, 0.85), (0.19, 1.22), (-0.19, 1.22)])
+    # torso
+    wa, hp = (0.66, 0.90) if f else (0.80, 0.84)
+    poly([(-0.20, 1.02), (-0.55, 1.10), (-0.86 * S / 0.98, 1.20), (-S, 1.46), (-S * 0.96, 1.95), (-S * wa, 2.95),
+          (-S * hp, 3.6), (-S * hp, 4.0), (S * hp, 4.0), (S * hp, 3.6), (S * wa, 2.95), (S * 0.96, 1.95), (S, 1.46),
+          (0.86 * S / 0.98, 1.20), (0.55, 1.10), (0.20, 1.02)])
+    # legs
+    for sg in (-1, 1):
+        if f:
+            leg = [(sg * 0.30, 3.75), (sg * 0.24, 5.35), (sg * 0.22, 6.35), (sg * 0.21, 7.12)]
+            lwid = [0.46, 0.30, 0.26, 0.15]
+        elif outfit == "suit":
+            leg = [(sg * 0.36, 3.8), (sg * 0.33, 5.3), (sg * 0.32, 7.12)]
+            lwid = [0.52, 0.42, 0.36]
+        else:
+            leg = [(sg * 0.36, 3.8), (sg * 0.31, 5.3), (sg * 0.30, 6.3), (sg * 0.29, 7.12)]
+            lwid = [0.52, 0.38, 0.34, 0.22]
+        _limb(d, [P(*q) for q in leg], [w * u for w in lwid], u)
+        sx_, sy_ = P(sg * (0.33 if not f else 0.24), 7.26)
+        rx, ry = (0.25 if not f else 0.17) * u, 0.11 * u
+        d.ellipse([sx_ - rx + sg * 0.05 * u, sy_ - ry, sx_ + rx + sg * 0.05 * u, sy_ + ry], fill=255)
+    # clothes
+    if outfit == "coat":
+        poly([(-S * 0.99, 1.44), (-S * 0.95, 2.6), (-S * 0.98, 4.0), (-S * 1.04, 5.12), (-0.05, 5.12), (0.0, 4.75),
+              (0.05, 5.12), (S * 1.04, 5.12), (S * 0.98, 4.0), (S * 0.95, 2.6), (S * 0.99, 1.44), (0.0, 1.2)])
+    elif outfit == "longcoat":
+        poly([(-S * 1.0, 1.42), (-S * 0.97, 2.6), (-S * 1.0, 4.2), (-S * 1.10, 6.05), (-0.04, 6.05), (0.0, 5.6),
+              (0.04, 6.05), (S * 1.10, 6.05), (S * 1.0, 4.2), (S * 0.97, 2.6), (S * 1.0, 1.42), (0.0, 1.15)])
+        poly([(-0.22, 0.98), (-0.66, 1.08), (-0.58, 1.70), (-0.14, 1.32)])
+        poly([(0.22, 0.98), (0.66, 1.08), (0.58, 1.70), (0.14, 1.32)])
+    elif outfit == "suit":
+        poly([(-S * 1.0, 1.44), (-S * 0.94, 2.5), (-S * 0.88, 3.4), (-S * 0.90, 4.0), (S * 0.90, 4.0), (S * 0.88, 3.4),
+              (S * 0.94, 2.5), (S * 1.0, 1.44), (0.0, 1.2)])
+    elif outfit == "skirt":
+        poly([(-S * 0.64, 2.95), (-S * 0.90, 4.0), (-S * 0.94, 5.35), (S * 0.94, 5.35), (S * 0.90, 4.0), (S * 0.64, 2.95)])
+    # arms
+    sleeve = 1.12 if outfit in ("coat", "longcoat") else 1.0
+    upper, fore = 1.42, 1.30
+    for sg in (-1, 1):
+        mode = arms
+        if arms == "reach":
+            mode = "reach" if sg == -1 else "down"
+        elif arms == "up_r":
+            mode = "up" if sg == 1 else "down"
+        elif arms == "up_l":
+            mode = "up" if sg == -1 else "down"
+        sh = (sg * (S - 0.17), 1.47)
+        if mode == "down":
+            el = (sg * (S + 0.04), 2.72)
+            wr = (sg * (S - 0.04), 3.92)
+            hand = (sg * (S - 0.06), 4.16)
+        elif mode == "pockets":
+            el = (sg * (S + 0.06), 2.70)
+            wr = (sg * (S - 0.22), 3.62)
+            hand = None
+        elif mode == "up":
+            a1 = math.radians(arm_angles[0] if sg == -1 else arm_angles[1])
+            a2 = a1 - math.radians(14)
+            el = (sh[0] + sg * upper * math.sin(a1), sh[1] - upper * math.cos(a1))
+            wr = (el[0] + sg * fore * math.sin(a2), el[1] - fore * math.cos(a2))
+            hand = (wr[0] + sg * 0.20 * math.sin(a2), wr[1] - 0.20 * math.cos(a2))
+        else:   # reach toward the target (relative to the feet, in px at 1x)
+            tx, ty = reach[0] / (h / 7.4), 7.4 + reach[1] / (h / 7.4)
+            dx, dy = tx - sh[0], ty - sh[1]
+            dist = max(1e-3, math.hypot(dx, dy))
+            d2 = min(dist, upper + fore + 0.1 - 1e-3)
+            a = math.acos(float(np.clip((upper ** 2 + d2 ** 2 - (fore + 0.1) ** 2) / (2 * upper * d2), -1, 1)))
+            base = math.atan2(dy, dx)
+            ang = base + a if dx < 0 else base - a
+            el = (sh[0] + upper * math.cos(ang), sh[1] + upper * math.sin(ang))
+            hand = (sh[0] + d2 * dx / dist, sh[1] + d2 * dy / dist)
+            wr = (hand[0] - 0.16 * dx / dist, hand[1] - 0.16 * dy / dist)
+            fx, fy = hand[0] + 0.24 * dx / dist, hand[1] + 0.24 * dy / dist
+            _limb(d, [P(*hand), P(fx, fy)], [0.10 * u, 0.06 * u], u)
+        _limb(d, [P(*sh), P(*el), P(*wr)], [0.42 * sleeve * u, 0.34 * sleeve * u, 0.27 * sleeve * u], u)
+        if hand is not None:
+            hx, hy = P(*hand)
+            d.ellipse([hx - 0.14 * u, hy - 0.17 * u, hx + 0.14 * u, hy + 0.17 * u], fill=255)
+    # hair
+    if hair == "short":
+        poly([(-0.42, 0.62), (-0.44, 0.30), (-0.30, 0.02), (0.0, -0.06), (0.30, 0.02), (0.44, 0.30), (0.42, 0.62),
+              (0.36, 0.40), (-0.36, 0.40)])
+    elif hair == "bob":
+        poly([(-0.47, 0.98), (-0.52, 0.62), (-0.50, 0.24), (-0.36, -0.02), (0.0, -0.09), (0.36, -0.02), (0.50, 0.24),
+              (0.52, 0.62), (0.47, 0.98), (0.32, 0.92), (0.30, 0.50), (-0.30, 0.50), (-0.32, 0.92)])
+    elif hair == "bun":
+        poly([(-0.41, 0.55), (-0.43, 0.25), (-0.30, 0.0), (0.0, -0.06), (0.30, 0.0), (0.43, 0.25), (0.41, 0.55),
+              (0.0, 0.35)])
+        cx_, cy_ = P(0.0, -0.08)
+        d.ellipse([cx_ - 0.22 * u, cy_ - 0.20 * u, cx_ + 0.22 * u, cy_ + 0.20 * u], fill=255)
+    elif hair == "long":
+        poly([(-0.46, 0.30), (-0.36, -0.02), (0.0, -0.09), (0.36, -0.02), (0.46, 0.30), (0.56, 1.10), (0.54, 1.70),
+              (0.30, 1.66), (0.28, 1.0), (-0.28, 1.0), (-0.30, 1.66), (-0.54, 1.70), (-0.56, 1.10)])
+    # organic merge: blur + threshold, then a whisper of softness for the downsample
+    from PIL import ImageFilter
+    r = max(1.0, 0.035 * u)
+    im = im.filter(ImageFilter.GaussianBlur(r)).point(lambda v: 255 if v >= 128 else 0)
+    im = im.filter(ImageFilter.GaussianBlur(max(0.6, ss * 0.35)))
+    fx_, fy_ = P(0, 7.4)
+    return im, fx_, fy_
+
+
+def figure_row(lum: np.ndarray, figs: list, rim: float = 0.5, rim_w: float = 2.0, light=None, ss: int = 3,
+               rim_dir=None):
+    """Composite one row of figures (dicts: x, feet, h + person_mask kwargs + 'lb' luminance) onto lum.
+    Rim light on the silhouette edges: all round (back light, favouring upward edges) or toward rim_dir."""
+    H, W = lum.shape
+    cov = Image.new("L", (W * ss, H * ss), 0)
+    val = Image.new("L", (W * ss, H * ss), 0)
+    for fg in figs:
+        kw = {k: v for k, v in fg.items() if k not in ("lb", "lh", "x", "feet", "h")}
+        if "reach" in kw and kw["reach"] is not None:
+            kw["reach"] = (kw["reach"][0] - fg["x"], kw["reach"][1] - fg["feet"])
+        im, fx, fy = person_mask(fg["h"], ss=ss, **kw)
+        ox, oy = int(round(fg["x"] * ss - fx)), int(round(fg["feet"] * ss - fy))
+        base = cov.crop((ox, oy, ox + im.width, oy + im.height))
+        cov.paste(ImageChops.lighter(base, im), (ox, oy))
+        val.paste(Image.new("L", im.size, int(255 * fg["lb"])), (ox, oy), im)
+    c = np.asarray(cov.resize((W, H), Image.BOX), np.float32) / 255.0
+    v = np.asarray(val.resize((W, H), Image.BOX), np.float32) / 255.0 / np.maximum(c, 1e-3)
+    if light is not None:
+        v = v * light
+    b = blur(c, rim_w)
+    edge = np.clip(c - b, 0, 1) * 2.0
+    gx = np.roll(b, -1, 1) - np.roll(b, 1, 1)
+    gy = np.roll(b, -1, 0) - np.roll(b, 1, 0)
+    if rim_dir is None:
+        wgt = 0.35 + np.clip(gy * 8, 0, 1)
+    else:
+        gl = np.hypot(gx, gy) + 1e-6
+        # outward normal = -grad; light from rim_dir (unit vector pointing from the figure toward the light)
+        wgt = np.clip((-gx * rim_dir[0] - gy * rim_dir[1]) / gl, 0, 1) ** 1.5
+    fig = v + rim * edge * wgt
+    return lum * (1 - c) + fig * c, c
+
+
+def zoom_rays(src: np.ndarray, cx: float, cy: float, length: float = 0.4, steps: int = 32) -> np.ndarray:
+    """Radial (god-ray) blur of an emission image toward the light centre (cx, cy)."""
+    im = Image.fromarray(src.astype(np.float32), "F")
+    acc = np.zeros_like(src, dtype=np.float32)
+    wsum = 0.0
+    for i in range(steps):
+        sc = 1.0 - length * i / steps
+        t = im.transform(im.size, Image.AFFINE, (sc, 0, cx * (1 - sc), 0, sc, cy * (1 - sc)), resample=Image.BILINEAR)
+        wgt = 1.0 - i / steps
+        acc += np.asarray(t, np.float32) * wgt
+        wsum += wgt
+    return acc / wsum
+
+
+def ring_machine(W: int, H: int, cx: float, cy: float, R: float, tilt: float = 0.12, seed: int = 0,
+                 power: float = 1.0, unstable: float = 0.0):
+    """The Array: a vast ring of light. Returns (emission, structure mask, structure luminance)."""
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    ry = R * (1 - tilt)
+    q = np.sqrt(((xx - cx) / R) ** 2 + ((yy - cy) / ry) ** 2)
+    ang = np.arctan2((yy - cy) / ry, (xx - cx) / R)
+    e = 1.2 / R
+    t_in = 0.82
+    band = smooth(1.0 + e, 1.0 - e, q) * smooth(t_in - e, t_in + e, q)
+    # torus shading: lit from inside (the inner edge glows), ribs every 15 deg, coils
+    tq = np.clip((q - t_in) / (1 - t_in), 0, 1)
+    ribs = np.abs(np.mod(np.degrees(ang) + 7.5, 15.0) - 7.5) < 0.9
+    coils = (np.abs(np.sin(np.degrees(ang) * 2.0 * math.pi / 3.0)) > 0.55).astype(np.float32)
+    s_lum = 0.06 + 0.30 * (1 - tq) ** 3 + 0.05 * coils * (1 - tq) - 0.04 * ribs + 0.08 * np.clip(-np.sin(ang), 0, 1) * tq
+    s_lum = s_lum * (0.9 + 0.2 * noise(H, W, 30, 2, seed))
+    # membrane of light inside the ring
+    n1 = noise(H, W, 90, 3, seed + 1)
+    swirl = np.sin(ang * 3 + q * 9 + n1 * 4) * 0.5 + 0.5
+    inside = smooth(t_in + e, t_in - 3 * e, q)
+    emit = inside * (0.16 + 0.42 * np.exp(-(q / 0.38) ** 2) + 0.16 * swirl * (0.5 + unstable)
+                     + 0.25 * smooth(0.45, t_in, q))
+    emit = emit + 1.1 * np.exp(-((q - t_in) / 0.016) ** 2)                      # inner rim
+    emit = emit + 1.8 * np.exp(-(q / 0.08) ** 2)                                 # core
+    lamps = np.zeros((H, W), np.float32)
+    for k in range(24):
+        a = math.radians(k * 15 + 7.5)
+        lx, ly = cx + R * 0.91 * math.cos(a), cy + ry * 0.91 * math.sin(a)
+        lamps += np.exp(-(((xx - lx) ** 2 + (yy - ly) ** 2) / (0.010 * R) ** 2))
+    if unstable:
+        emit = emit * (1 + unstable * (noise(H, W, 40, 2, seed + 7) - 0.5))
+    ring_machine.inside = inside
+    ring_machine.lamps = lamps * power
+    return emit * power, band, s_lum
+
+
+def hall_columns(W: int, H: int, vpx: float, vpy: float, depths, f: float = 200.0, X: float = 5.6,
+                 cam_h: float = 1.6, ceil: float = 9.0, width: float = 0.9):
+    """Column masks of a one-point-perspective hall: list of (mask, depth)."""
+    out = []
+    for z in depths:
+        for sg in (-1, 1):
+            sx = vpx + sg * f * X / z
+            wpx = f * width / z
+            y0 = vpy - f * (ceil - cam_h) / z
+            y1 = vpy + f * cam_h / z
+            pen = Pen(W, H, 2)
+            pen.rect(sx - wpx / 2, y0, sx + wpx / 2, y1)
+            pen.rect(sx - wpx * 0.7, y1 - f * 0.5 / z, sx + wpx * 0.7, y1)          # plinth
+            pen.rect(sx - wpx * 0.65, y0 + f * 0.6 / z, sx + wpx * 0.65, y0 + f * 1.0 / z)  # capital
+            out.append((pen.arr(), z, sx, wpx))
+    return out
+
+
+def scratched_text(W, H, x, y, txt, size, angle=0.0):
+    p = Pen(W, H, 4)
+    rot_text(p, x, y, txt, F_HAND, size, angle=angle, weight=420)
+    return p.arr()
+
+
+def hall_floor(lum, vpx, vpy, f=200.0, cam_h=1.6, base=0.05, line=0.04, tile=2.0):
+    H, W = lum.shape
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    floor = yy > vpy + 1
+    zf = np.where(floor, f * cam_h / np.maximum(yy - vpy, 1), 1e3)
+    xw = (xx - vpx) * zf / f
+    aa = np.clip(zf / 40.0, 0.002, 0.5)
+    tiles = smooth(1 - aa * 2.5, 1.0, np.abs(np.mod(xw, tile) - tile / 2) * 2 / tile) + \
+        smooth(1 - aa * 2.5, 1.0, np.abs(np.mod(zf, tile) - tile / 2) * 2 / tile)
+    fade = np.clip(1.2 - zf / 30.0, 0, 1)
+    return np.where(floor, base + line * np.clip(tiles, 0, 1) * fade, lum), floor
+
+
+def film_frame_0():
+    """The Array Hall: a vast hall with the ring machine of light, tiny figures for scale."""
+    W, H = FW, FH
+    vpx, vpy = 600, 410
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    cx, cy, R = 600, 300, 255
+    lum = np.full((H, W), 0.03, np.float32)
+    lum, floor = hall_floor(lum, vpx, vpy)
+    glow = np.exp(-np.hypot(xx - cx, (yy - cy) * 1.2) / 380.0)
+    lum = lum + 0.10 * glow
+    # ceiling beams converging to the vanishing point, and rows of hanging lamps
+    cb = Pen(W, H, 2)
+    for xb in np.linspace(-14, 14, 9):
+        cb.line([(vpx + xb * 200 / 1.0, vpy - 200 * 7.4 / 1.0), (vpx + xb * 200 / 60, vpy - 200 * 7.4 / 60)], 3)
+    for z in (1.4, 2.0, 2.8, 3.9, 5.4, 7.5):
+        cb.rect(0, vpy - 200 * 7.4 / z - 300 / z, W, vpy - 200 * 7.4 / z)
+    lum = lum * (1 - cb.arr() * (yy < vpy)) + cb.arr() * (yy < vpy) * 0.015
+    lamps = np.zeros((H, W), np.float32)
+    for z in (1.6, 2.2, 3.0, 4.1, 5.6, 7.7, 10.5):
+        for xl in (-3.2, 3.2):
+            lx, ly = vpx + 200 * xl / z, vpy - 200 * 5.2 / z
+            lamps += np.exp(-((xx - lx) ** 2 + (yy - ly) ** 2) / (2 + 14 / z) ** 2)
+    # gantry: dais with steps under the ring, pylons and a catwalk
+    st = Pen(W, H, 4)
+    st.poly([(cx - 280, 520), (cx + 280, 520), (cx + 330, 548), (cx - 330, 548)])
+    for i in range(6):
+        y0 = 548 + i * 7
+        st.rect(cx - 330 - i * 14, y0, cx + 330 + i * 14, y0 + 4.5)
+    for sg in (-1, 1):
+        st.poly([(cx + sg * 170, 522), (cx + sg * 228, 372), (cx + sg * 246, 372), (cx + sg * 204, 522)])
+        st.poly([(cx + sg * 286, 522), (cx + sg * 244, 400), (cx + sg * 256, 398), (cx + sg * 308, 522)])
+    st.rect(cx - 400, 476, cx + 400, 480)
+    for xr in range(cx - 400, cx + 401, 25):
+        st.rect(xr, 476, xr + 2, 506)
+    st.rect(cx - 400, 504, cx + 400, 507)
+    sm = st.arr()
+    gantry_l = 0.03 + 0.12 * np.exp(-np.abs(xx - cx) / 260) * (yy < 530) + \
+        (yy > 547) * 0.10 * np.exp(-np.abs(xx - cx) / 300)
+    cols = hall_columns(W, H, vpx, vpy, [1.15, 1.55, 2.1, 2.85, 3.85, 5.2, 7.0], f=200, X=6.2, ceil=8.6)
+    z_ring = 2.9
+    occl = sm.copy()
+
+    def draw_cols(lum, occl, far):
+        for m, z, sx, wpx in sorted(cols, key=lambda t: -t[1]):
+            if (z > z_ring) != far:
+                continue
+            edge_x = sx - np.sign(sx - cx) * wpx / 2
+            lit = np.clip(1 - np.abs(xx - edge_x) / (wpx * 0.45), 0, 1) ** 1.5
+            cl = 0.02 + 0.03 / z + 0.30 * np.exp(-np.abs(sx - cx) / 420) * lit * (1 - 0.5 * smooth(vpy - 40, vpy - 400, yy))
+            lum = lum * (1 - m) + m * cl
+            occl = np.maximum(occl, m)
+        return lum, occl
+    lum, occl = draw_cols(lum, occl, True)
+    emit, band, s_lum = ring_machine(W, H, cx, cy, R, tilt=0.10, seed=1500)
+    inside = ring_machine.inside
+    lum = lum * (1 - 0.85 * inside)
+    lum = lum * (1 - band) + band * s_lum
+    lum = lum + (emit + ring_machine.lamps) * (1 - band)
+    occl = np.maximum(occl, band)
+    lum = lum * (1 - sm) + sm * gantry_l
+    lum, occl = draw_cols(lum, occl, False)
+    lum = lum + 0.9 * lamps * (1 - np.maximum(occl, inside))
+    # tiny figures at the foot of the dais (scale)
+    figs = []
+    for x0, hh, sx_, hr in ((474, 60, "m", "short"), (506, 56, "f", "bun"), (686, 62, "m", "short"),
+                            (722, 58, "m", "short"), (748, 55, "f", "bob")):
+        figs.append(dict(x=x0, feet=572, h=hh, sex=sx_, outfit="coat", hair=hr, lb=0.025, lh=0.03))
+    lum, fc = figure_row(lum, figs, rim=0.18, rim_w=0.8)
+    occl = np.maximum(occl, fc)
+    # polished floor: reflection streak of the ring, figures' shadows toward the camera
+    yr = np.clip(yy - 548, 0, None)
+    streak = np.exp(-((xx - cx) / 120.0) ** 2) * np.exp(-yr / 240.0) * (yy > 548)
+    lum = lum + 0.28 * streak * (0.75 + 0.25 * noise(H, W, 6, 2, 1501))
+    src = (emit * (1 - occl)) * smooth(0.2, 1.2, emit)
+    rays = zoom_rays(src, cx, cy, length=0.6, steps=40)
+    lum = lum + 0.40 * rays
+    lum = lum + 0.05 * np.exp(-np.hypot(xx - cx, yy - cy) / 450.0)
+    rgb = film_finish(lum * 0.92, 1510, grain_amt=0.035, scratches=6, dust=60, vignette=0.55, halation=0.25,
+                      contrast=1.22, flicker=0.05)
+    save(to_img(rgb), "film_frame_0.jpg")
+
+
+def _rand_staff(rng, n, x0, dx, feet, h, jitter=6.0):
+    figs = []
+    for i in range(n):
+        f = rng.random() < 0.34
+        outfit = "coat" if rng.random() < 0.62 else ("skirt" if f else "suit")
+        hair = rng.choice(["bob", "bun", "long"], p=[0.45, 0.4, 0.15]) if f else "short"
+        figs.append(dict(x=x0 + i * dx + rng.normal(0, jitter), feet=feet + rng.normal(0, 2),
+                         h=h * rng.uniform(0.93, 1.05) * (0.95 if f else 1.0), sex="f" if f else "m", outfit=outfit,
+                         hair=hair, width=rng.uniform(0.94, 1.08), lb=rng.uniform(0.025, 0.06), lh=0.05))
+    return figs
+
+
+def staff_photo_lum(extra: bool, seed: int = 1700):
+    """The 1979 staff photograph in the Array Hall: 41 silhouettes in rows before the ring of light.
+    With extra=True a 42nd figure stands alone at the far right edge (Leyla, 1998, long coat)."""
+    W, H = FW, FH
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    cx, cy = 600, 290
+    lum = np.full((H, W), 0.03, np.float32)
+    lum, floor = hall_floor(lum, 600, 470, base=0.05, line=0.03)
+    emit, band, s_lum = ring_machine(W, H, cx, cy, 470, tilt=0.08, seed=seed + 1)
+    inside = ring_machine.inside
+    lum = lum * (1 - 0.85 * inside)
+    lum = lum * (1 - band) + band * s_lum
+    lum = lum + (emit + ring_machine.lamps) * (1 - band) * 0.9
+    lum = lum + 0.08 * np.exp(-np.hypot(xx - cx, yy - cy) / 500.0)
+    # the dais edge they stand on
+    da = Pen(W, H, 4)
+    da.rect(0, 540, W, 556)
+    dm = da.arr()
+    lum = lum * (1 - dm) + dm * (0.10 + 0.10 * np.exp(-np.abs(xx - cx) / 300))
+    occl = band.copy()
+    rows = [_rand_staff(rng, 14, 600 - 6.5 * 66, 66, 552, 232),
+            _rand_staff(rng, 14, 600 - 6.5 * 71 + 8, 71, 604, 260),
+            _rand_staff(rng, 13, 600 - 6.0 * 81, 81, 672, 294)]
+    assert sum(len(r) for r in rows) == STAFF_COUNT
+    for i, row in enumerate(rows):
+        lum, c = figure_row(lum, row, rim=0.55 - 0.08 * i, rim_w=1.6 + 0.3 * i)
+        occl = np.maximum(occl, c)
+    # shadows of the front row thrown toward the camera on the polished floor
+    sh = Pen(W, H, 2)
+    for fg in rows[2]:
+        x, ft = fg["x"], fg["feet"]
+        sh.poly([(x - 18, ft), (x + 18, ft), (x + 30 + (x - 600) * 0.12, H), (x - 30 + (x - 600) * 0.12, H)])
+    shm = blur(sh.arr(), 4) * (yy > 672)
+    lum = lum * (1 - 0.6 * shm)
+    if extra:
+        leyla = [dict(x=1138, feet=700, h=312, sex="f", outfit="longcoat", hair="long", arms="pockets",
+                      lb=0.05, lh=0.06)]
+        _, hm = figure_row(np.zeros_like(lum), leyla, rim=0.0)
+        lum = lum + 0.22 * np.clip(blur(hm, 14) - hm, 0, 1)        # she stands in the light
+        lum, c = figure_row(lum, leyla, rim=0.75, rim_w=1.8)
+        occl = np.maximum(occl, c)
+        sh2 = Pen(W, H, 2)
+        sh2.poly([(1120, 700), (1156, 700), (1220, H), (1150, H)])
+        lum = lum * (1 - 0.55 * blur(sh2.arr(), 4) * (yy > 700))
+    src = emit * (1 - occl) * smooth(0.25, 1.0, emit)
+    lum = lum + 0.45 * zoom_rays(src, cx, cy, length=0.5, steps=36)
+    return lum
+
+
+def film_frame_2():
+    rgb = film_finish(staff_photo_lum(False) * 0.95, 1720, grain_amt=0.035, scratches=5, dust=55, vignette=0.55,
+                      halation=0.25, contrast=1.2, flicker=0.04)
+    save(to_img(rgb), "film_frame_2.jpg")
+
+
+def vault_reel():
+    rgb = film_finish(staff_photo_lum(True) * 0.95, 1790, grain_amt=0.04, scratches=9, dust=85, vignette=0.6,
+                      halation=0.25, contrast=1.2, flicker=0.07, tint=(1.0, 0.97, 0.90), weave=(-1, 2))
+    save(to_img(rgb), "vault_reel.jpg")
+
+
+def film_frame_1():
+    """Professor Strand demonstrates light memory: a figure before a glowing crystal disc."""
+    W, H = FW, FH
+    rng = np.random.default_rng(1600)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    lum = np.full((H, W), 0.03, np.float32)
+    dx, dy = 420, 360            # disc centre
+    # blackboard with chalk diagrams behind
+    bb = Pen(W, H, 4)
+    bb.rect(90, 70, 1110, 450, radius=4)
+    bm = bb.arr()
+    lum = lum * (1 - bm) + bm * 0.055
+    fr = Pen(W, H, 4)
+    fr.rect(84, 64, 1116, 456, outline=8)
+    fr.rect(80, 450, 1120, 466)
+    lum = lum * (1 - fr.arr()) + fr.arr() * 0.09
+    ch = Pen(W, H, 4)
+    ch.text(170, 140, "E = hν", F_HAND, 54, anchor="lm", weight=450)
+    ch.text(830, 130, "λ  →  ψ(t)", F_HAND, 46, anchor="lm", weight=450)
+    ch.text(820, 220, "LUX MEMINIT", F_HAND, 44, anchor="lm", weight=450)
+    for k in range(3):
+        ch.ring(250, 300, 40 + 26 * k, 2.5)
+    ch.line([(140, 300), (380, 300)], 2.5)
+    ch.line([(880, 330), (960, 270), (1040, 330), (1080, 300)], 3)
+    for a in range(0, 360, 30):
+        ra = math.radians(a)
+        ch.line([(960 + 30 * math.cos(ra), 390 + 30 * math.sin(ra)), (960 + 52 * math.cos(ra), 390 + 52 * math.sin(ra))], 2)
+    chalk = blur(ch.arr(), 0.8) * (0.6 + 0.4 * noise(H, W, 3, 2, 1601))
+    lum = lum + 0.14 * chalk * bm
+    # floor
+    lum = np.where(yy > 690, 0.045 + 0.03 * (yy - 690) / 110, lum)
+    # pedestal and the disc in its brass ring
+    pd = Pen(W, H, 4)
+    pd.rect(dx - 9, dy + 80, dx + 9, 700)
+    pd.poly([(dx - 70, 705), (dx + 70, 705), (dx + 30, 690), (dx - 30, 690)])
+    pd.rect(dx - 50, dy + 78, dx + 50, dy + 92, radius=4)
+    pm = pd.arr()
+    lum = lum * (1 - pm) + pm * (0.05 + 0.18 * np.clip(1 - np.abs(xx - dx - 5) / 12, 0, 1))
+    d = np.hypot(xx - dx, yy - dy)
+    ringm = smooth(84, 82, d) * smooth(68, 70, d)
+    core = smooth(70, 66, d)
+    lum = lum * (1 - ringm) + ringm * (0.12 + 0.25 * np.clip(-(yy - dy) / 80, 0, 1))
+    disc = core * (0.9 + 1.2 * np.exp(-(d / 30) ** 2) + 0.2 * noise(H, W, 14, 2, 1602))
+    lum = lum * (1 - core) + disc
+    # light falling on the board and the room
+    spill = np.exp(-d / 260.0)
+    lum = lum + 0.16 * spill
+    # Strand, reaching toward the disc, lit from the disc side
+    sx, sfeet, sh = 770, 770, 610
+    light = 1.0 + 3.0 * np.clip((sx - xx) / 140.0, 0, 1) ** 1.5
+    fig = [dict(x=sx, feet=sfeet, h=sh, sex="m", outfit="coat", hair="short", arms="reach", reach=(dx + 92, dy + 6),
+                width=1.04, lb=0.05, lh=0.06)]
+    lum, sc = figure_row(lum, fig, rim=0.65, rim_w=2.2, light=light)
+    # audience heads in the foreground, out of focus
+    aud = [dict(x=x, feet=1420 + rng.normal(0, 30), h=900 * rng.uniform(0.92, 1.05), sex=sx_, outfit="suit",
+                hair=hr, lb=0.015, lh=0.02) for x, sx_, hr in ((150, "m", "short"), (420, "f", "bun"),
+                                                               (700, "m", "short"), (1010, "f", "bob"))]
+    al = np.zeros((H, W), np.float32)
+    al, ac = figure_row(al, aud, rim=0.0)
+    ac = blur(ac, 7)
+    lum = lum * (1 - ac) + ac * 0.015
+    src = disc * (1 - np.maximum(sc, ac))
+    lum = lum + 0.45 * zoom_rays(src, dx, dy, length=0.6, steps=36)
+    rgb = film_finish(lum, 1610, grain_amt=0.035, scratches=6, dust=55, vignette=0.55, halation=0.35, contrast=1.2,
+                      flicker=0.05, weave=(1, -1))
+    save(to_img(rgb), "film_frame_1.jpg")
+
+
+def film_frame_3():
+    """Leyla draws her sign on the light glass: a woman's silhouette, the sign half-drawn."""
+    W, H = FW, FH
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    lum = np.full((H, W), 0.025, np.float32)
+    lum = np.where(yy > 700, 0.04, lum)
+    # the light glass: a frosted pane in a frame, glowing from within
+    gx0, gy0, gx1, gy1 = 150, 70, 840, 640
+    gp = Pen(W, H, 4)
+    gp.rect(gx0, gy0, gx1, gy1, radius=6)
+    gm = gp.arr()
+    glow = 0.42 + 0.18 * np.exp(-(((xx - 470) / 380) ** 2 + ((yy - 330) / 300) ** 2)) + 0.05 * noise(H, W, 60, 3, 1801)
+    lum = lum * (1 - gm) + gm * glow
+    fr = Pen(W, H, 4)
+    fr.rect(gx0 - 14, gy0 - 14, gx1 + 14, gy1 + 14, radius=8, outline=14)
+    fr.rect(gx0 + 140, gy1 + 14, gx0 + 158, 712)
+    fr.rect(gx1 - 158, gy1 + 14, gx1 - 140, 712)
+    fr.rect(gx0 + 90, 705, gx0 + 210, 715)
+    fr.rect(gx1 - 210, 705, gx1 - 90, 715)
+    fm = fr.arr()
+    lum = lum * (1 - fm) + fm * 0.06
+    # the half-drawn sign: luminous strokes on the glass
+    size, scx, scy, prog = 340, 470, 330, 0.55
+    sm = sign_mask(size, progress=prog)
+    sg = np.zeros((H, W), np.float32)
+    x0, y0 = scx - size // 2, scy - size // 2
+    sg[y0:y0 + size, x0:x0 + size] = sm
+    tipx, tipy = sign_end_point(prog)
+    tx, ty = scx + tipx * size, scy + tipy * size
+    tip = np.exp(-((xx - tx) ** 2 + (yy - ty) ** 2) / 14.0 ** 2)
+    lum = lum + 1.4 * sg + 0.35 * blur(sg, 6) + 1.2 * tip
+    # floor reflection of the pane
+    refl = np.flipud(lum[2 * 700 - H:700, :]) if False else None
+    del refl
+    lum = lum + 0.10 * np.exp(-((xx - 495) / 300) ** 2) * np.exp(-np.clip(yy - 715, 0, None) / 50) * (yy > 715)
+    # Leyla, in front of the glass, reaching to the end of the stroke
+    fig = [dict(x=700, feet=780, h=650, sex="f", outfit="coat", hair="bob", arms="reach", reach=(tx + 6, ty + 4),
+                lb=0.03, lh=0.035, width=0.98)]
+    lum, c = figure_row(lum, fig, rim=0.45, rim_w=2.4)
+    src = (sg * 1.4 + tip) * (1 - c)
+    lum = lum + 0.30 * zoom_rays(src, tx, ty, length=0.35, steps=28)
+    rgb = film_finish(lum, 1810, grain_amt=0.035, scratches=5, dust=50, vignette=0.55, halation=0.3, contrast=1.2,
+                      flicker=0.05, weave=(2, 0))
+    save(to_img(rgb), "film_frame_3.jpg")
+
+
+def film_frame_4():
+    """The crowd raises their hands toward the light (seen from behind)."""
+    W, H = FW, FH
+    rng = np.random.default_rng(1900)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    cx, cy = 600, 250
+    lum = np.full((H, W), 0.03, np.float32)
+    emit, band, s_lum = ring_machine(W, H, cx, cy, 300, tilt=0.12, seed=1901)
+    inside = ring_machine.inside
+    lum = lum * (1 - 0.85 * inside)
+    lum = lum * (1 - band) + band * s_lum
+    lum = lum + (emit + ring_machine.lamps) * (1 - band)
+    lum = lum + 0.18 * np.exp(-np.hypot(xx - cx, yy - cy) / 380.0)
+    occl = band.copy()
+    specs = [(22, 520, 140, 0.0), (15, 610, 240, 0.0), (10, 790, 420, 0.0), (6, 1090, 720, 0.0)]
+    for n, feet, hgt, _ in specs:
+        row = []
+        dxs = W / (n - 1)
+        for i in range(n):
+            mode = rng.choice(["up", "up", "up_r", "up_l", "down"], p=[0.45, 0.2, 0.15, 0.1, 0.1])
+            f = rng.random() < 0.35
+            row.append(dict(x=-40 + i * (W + 80) / (n - 1) + rng.normal(0, dxs * 0.15), feet=feet + rng.normal(0, 6),
+                            h=hgt * rng.uniform(0.92, 1.06), sex="f" if f else "m",
+                            outfit="coat" if rng.random() < 0.7 else ("skirt" if f else "suit"),
+                            hair=rng.choice(["bob", "bun", "long"]) if f else "short", arms=mode,
+                            arm_angles=(rng.uniform(5, 40), rng.uniform(5, 40)), lb=0.02, lh=0.025))
+        lum, c = figure_row(lum, row, rim=0.55, rim_w=1.2 + hgt / 300)
+        occl = np.maximum(occl, c)
+    src = (emit + 0.3 * np.exp(-np.hypot(xx - cx, yy - cy) / 200)) * (1 - occl)
+    lum = lum + 0.9 * zoom_rays(src, cx, cy, length=0.7, steps=44)
+    rgb = film_finish(lum * 0.9, 1910, grain_amt=0.035, scratches=6, dust=55, vignette=0.55, halation=0.35,
+                      contrast=1.22, flicker=0.05, weave=(0, 1))
+    save(to_img(rgb), "film_frame_4.jpg")
+
+
+def film_frame_5():
+    """Leyla's sign alone, white on dark, centred, 60 % of the frame height, sharp (recordable)."""
+    W, H = FW, FH
+    size = 600                                  # sign height = 0.80 * size = 480 px = 60 % of 800
+    sm = sign_mask(size, ss=4)
+    sg = np.zeros((H, W), np.float32)
+    x0, y0 = (W - size) // 2, (H - size) // 2
+    sg[y0:y0 + size, x0:x0 + size] = sm
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    lum = 0.03 + 0.03 * np.exp(-np.hypot(xx - W / 2, yy - H / 2) / 400.0)
+    lum = lum + 1.25 * sg + 0.10 * blur(sg, 10)
+    rgb = film_finish(lum, 1950, grain_amt=0.022, scratches=2, dust=14, vignette=0.4, halation=0.08, contrast=1.1,
+                      weave=(1, 0), hair=False, dust_big=0.0)
+    save(to_img(rgb), "film_frame_5.jpg")
+
+
+def film_secret():
+    """13 November 1979: Strand alone at the ring machine, the hall empty."""
+    W, H = FW, FH
+    vpx, vpy = 600, 440
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    cx, cy, R = 600, 310, 300
+    lum = np.full((H, W), 0.02, np.float32)
+    lum, floor = hall_floor(lum, vpx, vpy, base=0.04, line=0.03)
+    cols = hall_columns(W, H, vpx, vpy, [1.3, 1.9, 2.7, 3.8], f=200, X=6.8, ceil=8.6)
+    for m, z, sxc, wpx in sorted(cols, key=lambda t: -t[1]):
+        edge_x = sxc - np.sign(sxc - cx) * wpx / 2
+        lit = np.clip(1 - np.abs(xx - edge_x) / (wpx * 0.45), 0, 1) ** 1.5
+        lum = lum * (1 - m) + m * (0.015 + 0.22 * np.exp(-np.abs(sxc - cx) / 420) * lit)
+    emit, band, s_lum = ring_machine(W, H, cx, cy, R, tilt=0.10, seed=2001, power=1.1, unstable=0.8)
+    inside = ring_machine.inside
+    lum = lum * (1 - 0.9 * inside)
+    lum = lum * (1 - band) + band * s_lum * 0.8
+    lum = lum + (emit + ring_machine.lamps * 0.5) * (1 - band)
+    st = Pen(W, H, 4)
+    st.poly([(cx - 300, 592), (cx + 300, 592), (cx + 350, 616), (cx - 350, 616)])
+    for i in range(5):
+        st.rect(cx - 350 - i * 16, 616 + i * 7, cx + 350 + i * 16, 620 + i * 7)
+    for sg in (-1, 1):
+        st.poly([(cx + sg * 200, 594), (cx + sg * 268, 420), (cx + sg * 288, 420), (cx + sg * 240, 594)])
+    sm = st.arr()
+    lum = lum * (1 - sm) + sm * (0.02 + 0.10 * np.exp(-np.abs(xx - cx) / 240) * (yy < 600))
+    occl = np.maximum(band, sm)
+    fig = [dict(x=cx + 8, feet=596, h=96, sex="m", outfit="coat", hair="short", arms="down", lb=0.02, lh=0.025)]
+    lum, c = figure_row(lum, fig, rim=0.6, rim_w=0.9)
+    occl = np.maximum(occl, c)
+    shp = Pen(W, H, 2)
+    shp.poly([(cx + 2, 596), (cx + 14, 596), (cx + 40, H), (cx - 22, H)])
+    lum = lum * (1 - 0.7 * blur(shp.arr(), 3) * (yy > 596))
+    yr = np.clip(yy - 616, 0, None)
+    lum = lum + 0.22 * np.exp(-((xx - cx) / 130.0) ** 2) * np.exp(-yr / 200.0) * (yy > 616)
+    src = emit * (1 - occl) * smooth(0.2, 1.2, emit)
+    lum = lum + 0.45 * zoom_rays(src, cx, cy, length=0.6, steps=40)
+    lum = lum + 0.30 * scratched_text(W, H, 150, 742, "13.XI.1979", 34, angle=3)
+    rgb = film_finish(lum * 0.9, 2010, grain_amt=0.045, scratches=11, dust=95, vignette=0.65, halation=0.3,
+                      contrast=1.22, flicker=0.10, tint=(0.97, 0.98, 1.0), weave=(-2, 1))
+    save(to_img(rgb), "film_secret.jpg")
+
+
 GENERATORS: dict = {}
 
 
@@ -1749,6 +2517,15 @@ for _y in TAPE_YEARS:
     register(f"tape_label_{_y}", (lambda y: (lambda: tape_label(y)))(_y))
 register("slide_mark", slide_mark)
 register("file_cover", file_cover)
+register("linoleum", linoleum)
+register("film_frame_0", film_frame_0)
+register("film_frame_1", film_frame_1)
+register("film_frame_2", film_frame_2)
+register("film_frame_3", film_frame_3)
+register("film_frame_4", film_frame_4)
+register("film_frame_5", film_frame_5)
+register("film_secret", film_secret)
+register("vault_reel", vault_reel)
 
 
 # ================================================================================================= main

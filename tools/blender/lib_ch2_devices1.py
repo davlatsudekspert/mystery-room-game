@@ -229,10 +229,10 @@ def gbox(name, mn_g, mx_g, mat="M_Steel_Cream", bevel=0.002, seg=1):
     return L.box_mm(name, mn, mx, mat=mat, bevel=bevel, segments=seg)
 
 
-def gtube(name, pts_g, r, sides=8, mat="M_Copper", fillet=0.0, caps=True):
+def gtube(name, pts_g, r, sides=8, mat="M_Copper", fillet=0.0, caps=True, fillet_segs=3):
     """Polyline tube through Godot points (lib_arch.tube, optional filleted corners)."""
     pts = [tuple(GV(p)) for p in pts_g]
-    o = A.tube(name, pts, r, sides=sides, fillet=fillet, mat=mat, caps=caps)
+    o = A.tube(name, pts, r, sides=sides, fillet=fillet, fillet_segs=fillet_segs, mat=mat, caps=caps)
     sm(o, 70.0)
     return o
 

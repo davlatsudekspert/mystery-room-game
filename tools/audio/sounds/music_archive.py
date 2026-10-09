@@ -32,7 +32,7 @@ from .music_tracks import _bass, _celesta_with_echo, _master
 ARCH_SECTION = 15.0
 ARCH_EIGHTH = 60.0 / 64.0 / 2.0
 ARCH_CHORDS = [  # (bass, pad voicing)
-    ("A1", ["E3", "G3", "B3", "C4"]),    # Am9
+    ("A2", ["E3", "G3", "B3", "C4"]),    # Am9
     ("F2", ["E3", "A3", "B3", "C4"]),    # Fmaj7(#11)
     ("D2", ["F3", "A3", "C4", "E4"]),    # Dm9
     ("E2", ["D3", "A3", "B3", "E4"]),    # E7sus4
@@ -179,7 +179,7 @@ def music_archive(rng):
     tr = Track(L, loop=True)
     _pad_chords(tr, ARCH_SECTION, [v for _, v in ARCH_CHORDS], rng, [0.14] * len(ARCH_CHORDS), attack=5.0,
                 release=5.5, overlap=2.5, cutoff=950, bright_cutoff=2100)
-    _bass(tr, ARCH_SECTION, [b for b, _ in ARCH_CHORDS], rng, gain=0.17)
+    _bass(tr, ARCH_SECTION, [b for b, _ in ARCH_CHORDS], rng, gain=0.11)
     # soft arpeggio: eighth notes on the chord tones an octave up, with a dotted-eighth tape echo
     cache: dict[str, np.ndarray] = {}
     for i, (_, voicing) in enumerate(ARCH_CHORDS):
@@ -193,7 +193,7 @@ def music_archive(rng):
             if key not in cache:
                 cache[key] = _pluck(hz(m))
             t = i * ARCH_SECTION + k * ARCH_EIGHTH + rng.uniform(-0.006, 0.006)
-            g = 0.06 * g_sec * ARP_ACCENT[k % 8] * rng.uniform(0.85, 1.0)
+            g = 0.085 * g_sec * ARP_ACCENT[k % 8] * rng.uniform(0.85, 1.0)
             p = 0.35 * np.sin(2 * np.pi * k / 16.0)
             tr.add(t, cache[key], g, p)
             echo = cache[key]
@@ -209,12 +209,12 @@ def music_archive(rng):
         tr.add(t, _vibes(hz(note), vel, rng), 0.5, rng.uniform(-0.45, 0.45))
     for t, note, d, g in ARCH_SWELLS:
         tr.add(t, music.bowed_metal(hz(note), d, rng, attack=d * 0.4, release=d * 0.45), 1.5 * g)
-    # a low, loop-periodic drone under everything (A1 + E2)
+    # a low, loop-periodic drone under everything (A2 + E3)
     n = tr.n
-    dr = music.drone(periodic_freq(hz("A1"), L), n, rng, harmonics=(1.0, 0.5, 0.2, 0.08), breath_rate=5.0 / L,
+    dr = music.drone(periodic_freq(hz("A2"), L), n, rng, harmonics=(1.0, 0.5, 0.2, 0.08), breath_rate=5.0 / L,
                      depth=0.5)
-    dr += 0.5 * music.drone(periodic_freq(hz("E2"), L), n, rng, breath_rate=3.0 / L, depth=0.5)
-    tr.buf += 0.025 * biquad(dr, "lowpass", 400)
+    dr += 0.5 * music.drone(periodic_freq(hz("E3"), L), n, rng, breath_rate=3.0 / L, depth=0.5)
+    tr.buf += 0.015 * biquad(dr, "lowpass", 500)
     out = reverb.reverb_circular(tr.buf, reverb.preset("hall_dark", True), wet=0.45, dry=0.8)
     out = _tape_wow(out, L, rng)
     out += _hiss(out, rng)

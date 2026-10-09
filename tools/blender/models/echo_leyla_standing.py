@@ -181,8 +181,8 @@ def hand_right():
         return [tb, p1, p2, tip]
 
     objs, info = L.hand2("handR", wr, F, N, T,
-                         curls=[(2, 5, 3), (84, 100, 58), (88, 100, 56), (92, 98, 50)],
-                         spread=[3, -1, -3, -6], thumb=thumb, scale=HAND_S, width=0.075, finger_r=0.0078)
+                         curls=[(2, 6, 4), (92, 108, 80), (94, 108, 78), (96, 104, 72)],
+                         spread=[3, -1, -3, -6], thumb=thumb, scale=HAND_S, width=0.075, finger_r=0.0086)
     return [wrist_stub(1)] + objs, info
 
 
@@ -193,7 +193,7 @@ def hand_left():
     N, T = L.arm_hand_frame(F, 8.0, right=False)
     objs, info = L.hand2("handL", WRIST[-1], F, N, T,
                          curls=[(14, 22, 12), (20, 28, 14), (24, 32, 16), (28, 36, 18)],
-                         spread=[5, 1, -3, -8], scale=HAND_S, width=0.077, finger_r=0.0080)
+                         spread=[3, 0, -2, -5], scale=HAND_S, width=0.076, finger_r=0.0082)
     return [wrist_stub(-1)] + objs, info
 
 
@@ -251,9 +251,9 @@ def hem_flutes(body):
     """Soft vertical flutes in the coat skirt, strongest at the hem (cloth, not a cone)."""
     def amp(co, t):
         z = co[:, 2]
-        return 0.0075 * E.smoothstep(0.82, 0.45, z) * (0.65 + 0.35 * np.sin(co[:, 0] * 23.0 + co[:, 1] * 17.0))
+        return 0.0075 * E.smoothstep(0.70, 0.44, z) * (0.65 + 0.35 * np.sin(co[:, 0] * 23.0 + co[:, 1] * 17.0))
     L.flutes(body, hipf((0.008, 0.012, 0.0)), (0, 0, 1), 9, amp, phase=0.7,
-             region=lambda co: E.smoothstep(0.86, 0.70, co[:, 2]) * (co[:, 2] > 0.40))
+             region=lambda co: E.smoothstep(0.69, 0.60, co[:, 2]) * (co[:, 2] > 0.40))
 
 
 def build_body():
@@ -349,6 +349,7 @@ def renders(body, head, info_r):
     # hands (finger count, separation) and the pointing line
     L.clay(NAME + "_7", tuple(Vector(fr(*hc_r)) + Vector(fr(0.42, 0.10, 0.10))), fr(*hc_r), lens=60, res=(640, 640))
     L.clay(NAME + "_8", tuple(Vector(fr(*hc_l)) + Vector(fr(0.40, 0.05, 0.22))), fr(*hc_l), lens=60, res=(640, 640))
+    L.clay(NAME + "_11", tuple(Vector(fr(*hc_r)) + Vector(fr(-0.05, 0.12, 0.45))), fr(*hc_r), lens=60, res=(640, 640))
     # in context: the game's booth view, and a side view that shows the gesture (suggested walk camera)
     L.context_render(NAME + "_9", objs, body, PLACE, YAW, booth_context, (-1.55, 1.6, 2.6), (-4.6, 1.1, 2.9),
                      lens_fov_deg=62)
@@ -356,8 +357,32 @@ def renders(body, head, info_r):
                      lens_fov_deg=56)
 
 
+def dev_hands():
+    """--hands: build only the two hand shells (build space) and render close-ups (fast iteration)."""
+    hr, info_r = hand_right()
+    hl, info_l = hand_left()
+    hands = [L.hand_shell(hr, "handR_shell", HAND_TRIS), L.hand_shell(hl, "handL_shell", HAND_TRIS)]
+    for h in hands:
+        E.finish_echo(h)
+        print("[leyla] hand", h.name, E.mesh_report(h))
+    c = (info_r["tips"][0] + WRIST[1]) * 0.5
+    F, N, S = info_r["F"], info_r["N"], info_r["S"]
+    L.clay("dev_handR_a", tuple(c + S * 0.35 + N * 0.12), tuple(c), lens=70, res=(560, 560))
+    L.clay("dev_handR_b", tuple(c + N * 0.35 + S * 0.08), tuple(c), lens=70, res=(560, 560))
+    L.clay("dev_handR_c", tuple(c - S * 0.35 + N * 0.05), tuple(c), lens=70, res=(560, 560))
+    c2 = (info_l["tips"][1] + WRIST[-1]) * 0.5
+    F, N, S = info_l["F"], info_l["N"], info_l["S"]
+    L.clay("dev_handL_a", tuple(c2 - N * 0.35 + S * 0.05), tuple(c2), lens=70, res=(560, 560))
+    L.clay("dev_handL_b", tuple(c2 + S * 0.35 + N * 0.05), tuple(c2), lens=70, res=(560, 560))
+    L.clay("dev_handL_c", tuple(c2 + N * 0.35 + S * 0.05), tuple(c2), lens=70, res=(560, 560))
+
+
 def main():
     mrlib.reset_scene()
+    if "--hands" in ARGS:
+        L.QA_DIR = DEV or L.QA_DIR
+        dev_hands()
+        return
     body, info_r = build_body()
     head = build_head()
     pivots = L.finalize(body, [(head, "echo_head", PIVOT)])

@@ -5,7 +5,8 @@ right = positions 1..8, position k centred at u = (k - 0.5) / 8 of the card widt
 wide at the edge, 10 mm deep, matching the decal builder's NOTCH_W_PX / NOTCH_D_PX) are cut through the
 edge at positions 1, 3, 4 and 7 only (pattern 1 0 1 1 0 0 1 0); 2, 5, 6 and 8 are plain.
 The printed face (typed text, position numbers) is the separate mesh `card_face` with UV 0..1 over the
-whole card rectangle, slot M_Decal_IndexCard; it carries the same notches. Lies flat, face up
+whole card rectangle, slot M_Decal_IndexCard; it carries the same notches. A Ø 6 mm catalogue rod hole
+is punched at the bottom centre, 5.2 mm above the bottom edge (also transparent in the decal). Lies flat, face up
 (Blender +Z, Godot +Y), top edge toward Blender +Y (Godot -Z). Origin at the centre of mass.
     blender -b --factory-startup -P tools/blender/models/index_card.py [-- --no-render]
 """
@@ -22,6 +23,7 @@ W, H, T = C.CARD_W, C.CARD_H, 0.0003
 NOTCHED = tuple(k + 1 for k, bit in enumerate(C.PUNCH_CODE) if bit)     # (1, 3, 4, 7)
 NOTCH_FLAT = 0.0006
 CORNER = 0.0015
+ROD_R, ROD_FROM_BOTTOM = 0.0030, 0.0052   # catalogue rod hole (bottom centre), as drawn in index_card.png
 
 
 def outline(notched=NOTCHED):
@@ -41,9 +43,10 @@ def outline(notched=NOTCHED):
 
 def build():
     loop = outline()
-    card = L.curve_solid(NAME, [loop], T, bevel=0.0, mat="M_Paper")
+    rod = L.circle(ROD_R, 20, cx=0.0, cy=-H / 2 + ROD_FROM_BOTTOM)
+    card = L.curve_solid(NAME, [loop, rod], T, bevel=0.0, mat="M_Paper")
     C.drop_cap(card, T)                       # the printed face replaces the top cap
-    face = L.flat_shape("card_face", [loop], mat="M_Decal_IndexCard", loc=(0, 0, T))
+    face = L.flat_shape("card_face", [loop, rod], mat="M_Decal_IndexCard", loc=(0, 0, T))
     C.parent_all([face], card)
     return [card]
 

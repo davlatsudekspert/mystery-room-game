@@ -187,10 +187,10 @@ def build_block():
                        bevel=0.0012, seg=1)
         knob = F.gcyl(f"blk_clamp_knob_{s}", 0.0045, 0.008, (x, 0.031, 0.0022), axis="z", verts=8, mat="M_Bakelite",
                       bevel=0.0)
-        pad = F.gbox(f"blk_clamp_pad_{s}", (x - 0.058, 0.004, 0.0022), (x + 0.058, 0.030, 0.0034), mat="M_Rubber",
+        pad = F.gbox(f"blk_clamp_pad_{s}", (x - 0.058, 0.004, 0.0022), (x + 0.058, 0.030, 0.0034), mat="M_Felt",
                      bevel=0.0006)
         for o in (clamp, knob, pad):
-            F.bake_xform(o, pitch=-12.0, about=(x, 0.0, 0.0))    # lean back toward the wall
+            F.bake_xform(o, pitch=-32.0, about=(x, 0.0, 0.0))    # opened past vertical, leaning back toward the wall
             o.location = G(0.0, hy, hz - 0.002)
             M.apply_transform(o)
         S(bl, clamp, knob, pad)
@@ -367,8 +367,8 @@ def main():
 def qa():
     F.qa_begin()
     F.qa_decal_alpha()
-    F.qa_decal_emit("M_Decal_FilmStrip_", 0.35)
-    F.qa_emit("M_Glass_Frosted", "FFF4DC", 2.2)
+    F.qa_decal_emit("M_Decal_FilmStrip_", 0.18)
+    F.qa_emit("M_Glass_Frosted", "FFF4DC", 0.9)
     F.qa_room("booth")
     place = F.qa_place((-3.9, 0.0, 3.5), 180.0)
     F.qa_neighbours([("slide_cabinet", (-5.0, 0.0, 2.8), 90.0), ("lens_case", (-3.75, 1.45, 3.37), 180.0),

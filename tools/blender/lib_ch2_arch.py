@@ -55,7 +55,7 @@ EXTRA_SLOTS = {
     "M_Enamel_Amber": ("C98A1E", 0.28, 0.0, 1.0),
     "M_Enamel_Crimson": ("8E1B22", 0.28, 0.0, 1.0),
     "M_Enamel_Cobalt": ("1F3E7A", 0.28, 0.0, 1.0),
-    "M_Felt": ("2A3A2E", 0.95, 0.0, 1.0),
+    "M_Felt": ("3A3A3A", 1.0, 0.0, 1.0),
 }
 
 
@@ -119,6 +119,14 @@ def glathe_loop(name, loop, base, axis="y", segments=24, mat="M_Brass_Aged", smo
     return A.hint(o, smooth)
 
 
+def hint_torus(name, centre_blender, major, minor, axis="z", major_seg=24, minor_seg=6, mat="M_Brass_Polished"):
+    """Torus around the Godot axis through a Blender point."""
+    o = M.torus(name, major, minor, major_seg=major_seg, minor_seg=minor_seg, mat=mat)
+    aim(o, axis)
+    o.data.transform(Matrix.Translation(Vector(centre_blender)))
+    return A.hint(o, 70)
+
+
 def gtube(name, pts, r, sides=8, mat="M_Steel_Dark", fillet=0.0, fillet_segs=4, caps=True):
     return A.tube(name, [GV(p) for p in pts], r, sides=sides, fillet=fillet, fillet_segs=fillet_segs, mat=mat, caps=caps)
 
@@ -163,7 +171,7 @@ def gtext(name, body, size, matrix, depth=0.0008, font=FONT_SANS_B, mat="M_Lacqu
     return o
 
 
-def screw(name, r, loc, normal, mat="M_Brass_Aged", slot=30.0, segs=8):
+def screw(name, r, loc, normal, mat="M_Brass_Aged", slot=30.0, segs=6):
     return A.screw(name, r, GV(loc), gdir(normal), mat, slot, segs)
 
 

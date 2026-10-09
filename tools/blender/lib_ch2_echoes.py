@@ -202,7 +202,7 @@ FINGER_LEN = (0.068, 0.076, 0.071, 0.056)
 
 def hand2(prefix: str, wrist, fwd, palm_n, thumb_side, curls, spread=None, thumb=None, scale: float = 1.0,
           palm_len: float = 0.088, width: float = 0.072, finger_r: float = 0.0082, lengths=FINGER_LEN,
-          knuckles: bool = True):
+          knuckles: bool = True, web: bool = True):
     """Hand with fixed-axis finger flexion (see module doc). Returns (objects, info).
 
     curls[i] = (mcp, pip, dip) flexion in degrees toward the palm for index..little.
@@ -252,23 +252,32 @@ def hand2(prefix: str, wrist, fwd, palm_n, thumb_side, curls, spread=None, thumb
                                     rot=E._frame(Sd, F, N), seg=10, rings=6))
         tips.append(cur)
         joints.append(pts)
+        if sum(curls[i]) > 200:
+            # fleshy pads of a tightly curled finger close the loop between the finger and the palm
+            cen = sum(pts, Vector()) / len(pts)
+            objs.append(E.ellipsoid(f"{prefix}_pad{i}", cen, (r * 0.95, r * 1.25, r * 1.25),
+                                    rot=E._frame(Sd, F, N), seg=10, rings=6))
     info = {"tips": tips, "joints": joints, "knuckles": P_kn, "F": F, "N": N, "S": Sd, "W": W}
     if callable(thumb):
         thumb = thumb(info)
     if thumb is None:
-        tb = W + F * 0.022 * s + Sd * 0.026 * s + N * 0.006 * s
-        d1 = (F * 0.55 + Sd * 0.65 + N * 0.45).normalized()
-        p1 = tb + d1 * 0.042 * s
-        d2 = (F * 0.85 + Sd * 0.25 + N * 0.35).normalized()
-        p2 = p1 + d2 * 0.03 * s
-        p3 = p2 + (F * 0.85 + N * 0.45).normalized() * 0.026 * s
-        thumb = [tb, p1, p2, p3]
+        thumb = relaxed_thumb(info, s)
     objs.append(E.loft(prefix + "_thumb", [vec(p) for p in thumb],
                        [0.0135 * s, 0.0105 * s, 0.0092 * s, 0.0082 * s][:len(thumb)] if len(thumb) <= 4 else
                        [0.0135 * s] + [0.0105 * s] * (len(thumb) - 3) + [0.0092 * s, 0.0082 * s],
                        side=tuple(N), seg=12, sub=3, cap0=0.8, cap1=0.95))
     info["thumb_tip"] = vec(thumb[-1])
     info["thumb"] = [vec(p) for p in thumb]
+    if web:
+        # first web space: skin between the thumb's metacarpal and the index knuckle
+        th = [vec(p) for p in thumb]
+        a = th[0].lerp(th[1], 0.75)
+        b = joints[0][0] - F * 0.010 * s
+        m = (a + b) * 0.5 - N * 0.002 * s
+        ax = (b - a)
+        objs.append(E.ellipsoid(prefix + "_web", m, (ax.length * 0.55, 0.0105 * s, 0.0068 * s),
+                                rot=frame_matrix(ax, ortho(N, ax).cross(ax.normalized()), ortho(N, ax)),
+                                seg=14, rings=8))
     return objs, info
 
 
@@ -309,6 +318,18 @@ def bool_union(base, others, name: str | None = None) -> bpy.types.Object:
     if name:
         base.name = base.data.name = name
     return base
+
+
+def relaxed_thumb(info, s: float = 1.0, gap: float = 1.0):
+    """Relaxed thumb: the metacarpal angles toward the front of the palm and the tip rests beside the
+    index finger's middle phalanx, a little on the palm side (not splayed out sideways)."""
+    F, N, S = info["F"], info["N"], info["S"]
+    tb = thumb_base(info, s)
+    j = info["joints"][0]
+    tip = j[1].lerp(j[2], 0.2) + S * 0.0150 * s * gap + N * 0.0065 * s
+    p1 = tb + (F * 0.64 + S * 0.52 + N * 0.50).normalized() * 0.038 * s
+    p2 = p1.lerp(tip, 0.52) + S * 0.003 * s * gap + N * 0.001 * s
+    return [tb, p1, p2, tip]
 
 
 def thumb_base(info, s: float = 1.0) -> Vector:

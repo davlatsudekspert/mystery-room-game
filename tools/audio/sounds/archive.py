@@ -470,7 +470,8 @@ def locker_rattle(rng):
     return _room(out, 0.12)
 
 
-@sound("locker_open", "sfx", "Locker 9 unlocked: key clack, latch lifts, the thin steel door swings open and taps the next one")
+@sound("locker_open", "sfx",
+       "Locker 9 unlocked: key clack, latch lifts, the thin steel door swings open and taps the next one")
 def locker_open(rng):
     out = np.zeros(n_of(1.4))
     for tt, g in ((0.0, 0.35), (0.045, 0.4)):
@@ -514,7 +515,8 @@ def grille_creak(rng):
     return _room(out, 0.12)
 
 
-@sound("hatch_open", "sfx", "Floor hatch: iron ring clinks, the heavy lid lifts with a creak and a breath of air, falls back with a thud")
+@sound("hatch_open", "sfx",
+       "Floor hatch: iron ring clinks, the heavy lid lifts with a creak and a breath of air, falls back with a thud")
 def hatch_open(rng):
     out = np.zeros(n_of(1.9))
     add_at(out, kit.clank(rng, 500, 6000, 14, t60=0.18, contact=0.0004, dur=0.25), 0.0, 0.5)  # ring lifted
@@ -538,7 +540,8 @@ def hatch_open(rng):
     return _room(biquad(out, "highpass", 75, 0.7), 0.14)
 
 
-@sound("ledger_thump", "sfx", "Heavy hollow ledger pulled out and opened: book thump, cover flap, hollow box with something inside")
+@sound("ledger_thump", "sfx",
+       "Heavy hollow ledger pulled out and opened: book thump, cover flap, hollow box with something inside")
 def ledger_thump(rng):
     out = np.zeros(n_of(0.85))
     d = 0.2
@@ -575,7 +578,8 @@ def receiver_beep(rng):
 
 
 @sound("receiver_static", "sfx",
-       "Pocket receiver static: soft hiss with a drifting band, crackles and a faint heterodyne whistle (seamless loop)",
+       "Pocket receiver static: soft hiss with a drifting band, crackles and a faint heterodyne whistle (seamless "
+       "loop)",
        loop=True)
 def receiver_static(rng):
     L = STATIC_LOOP
@@ -586,19 +590,19 @@ def receiver_static(rng):
     # a slowly drifting, resonant band: the receiver 'searching'
     centre = 1300.0 * 2.0 ** (0.7 * noise.smooth_random(n, rng, 0.7))
     src = noise.colored(n, rng, 0.0)
-    band = tv_biquad(np.concatenate([src, src]), "bandpass", np.concatenate([centre, centre]), 4.0, block=64)[n:]
+    band = tv_biquad(np.concatenate([src, src]), "bandpass", np.concatenate([centre, centre]), 6.0, block=64)[n:]
     band *= 0.6 + 0.4 * noise.smooth_random(n, rng, 0.9)
     # crackles (wrap-around)
 
     def crack(r):
         m = n_of(0.006)
         return r.standard_normal(m) * np.exp(-np.arange(m) / (SR * r.uniform(0.0004, 0.0015)))
-    cr = granular.cloud(L, 9.0, crack, rng, stereo=False, gain_db=(-24, 0), gain_skew=2.5)
+    cr = granular.cloud(L, 14.0, crack, rng, stereo=False, gain_db=(-24, 0), gain_skew=2.0)
     # faint heterodyne whistle with a wandering pitch (all rates fit the loop)
     fw = periodic_freq(1760.0, L)
     wh = np.sin(2 * np.pi * fw * t + 1.2 * np.sin(2 * np.pi * (2.0 / L) * t) + 0.4 * np.sin(2 * np.pi * (5.0 / L) * t))
     wh *= np.clip(noise.smooth_random(n, rng, 0.5), 0, 1) ** 2
-    out = 0.5 * _norm(hiss) + 0.3 * _norm(band) + 0.35 * _norm(cr) + 0.04 * wh
+    out = 0.32 * _norm(hiss) + 0.5 * _norm(band) + 0.5 * _norm(cr) + 0.07 * wh
     out = fft_filter(out, lambda f: smooth_band(f, 350, 5000, 0.6))  # the receiver's tiny speaker
     return out
 
@@ -637,7 +641,8 @@ def deck_eject(rng):
 
 
 @sound("tape_voice", "sfx",
-       "Leyla's tape diary: a muffled, speech-like murmur (no real words) with hiss, wow and hum through the deck speaker",
+       "Leyla's tape diary: a muffled, speech-like murmur (no real words) with hiss, wow and hum through the deck "
+       "speaker",
        fade_out=0.25)
 def tape_voice(rng):
     dur = 9.0
@@ -673,10 +678,11 @@ def tape_garble(rng):
     hiss = _tape_hiss(n, rng)
     x = 0.8 * y + 0.03 * squeal + 0.18 * _norm(hiss)
     x *= env.curve([(0, 0), (0.03, 1), (dur - 0.15, 1), (dur, 0)], n, "cos")
-    return _room(_deck_speaker(x, 300, 3800), 0.07)
+    return kit.limit(_room(_deck_speaker(x, 300, 3800), 0.07), 2.6, 0.12)
 
 
-@sound("tape_clicks", "sfx", "One click recorded at the end of a reel (a sharp tap with a little mic thump), through the deck speaker")
+@sound("tape_clicks", "sfx",
+       "One click recorded at the end of a reel (a sharp tap with a little mic thump), through the deck speaker")
 def tape_clicks(rng):
     out = np.zeros(n_of(0.3))
     add_at(out, kit.knock(rng, 600, 3800, 10, t60=0.02, contact=0.0003, dur=0.06, noise_amt=0.6), 0.0, 1.0)
@@ -699,7 +705,9 @@ def tape_hiss(rng):
     f0 = periodic_freq(50.0, L)
     hum = sum(a * np.sin(2 * np.pi * k * f0 * t + rng.uniform(0, 6.3)) for k, a in ((1, 0.5), (2, 1.0), (3, 0.3)))
     x = 0.85 * _norm(h) + 0.06 * hum / 1.8
-    return fft_filter(x, lambda f: smooth_band(f, 300, 3000, 0.5) * (1 + 0.5 * np.exp(-((np.log2(np.maximum(f, 1) / 1300)) ** 2) / 0.3)))
+    # the deck speaker: band-limited with its cone resonance near 1.3 kHz
+    return fft_filter(x, lambda f: smooth_band(f, 300, 3000, 0.5)
+                      * (1 + 0.5 * np.exp(-(np.log2(np.maximum(f, 1) / 1300)) ** 2 / 0.3)))
 
 
 # ------------------------------------------------------------------------------------------
@@ -736,7 +744,8 @@ def dial_return(rng):
     return _room(out, 0.06, "booth")
 
 
-@sound("booth_unlatch", "sfx", "Booth door lock releases: solenoid clunk, bolt slides back, the door creaks ajar and bumps its stop")
+@sound("booth_unlatch", "sfx",
+       "Booth door lock releases: solenoid clunk, bolt slides back, the door creaks ajar and bumps its stop")
 def booth_unlatch(rng):
     out = np.zeros(n_of(1.6))
     add_at(out, kit.relay(rng, 1.0), 0.0, 0.7)
@@ -829,13 +838,16 @@ def film_projector_loop(rng):
     spin = np.ones(n) * (1.0 + 0.006 * noise.smooth_random(n, rng, 0.5, periodic=False))
     bed = _projector_bed(rng, d, spin, bank)
     # film flutter through the gate, slow sway as the reels change weight
-    gate = butter(noise.white(n, rng), "bandpass", (3000, 9000), 2) * (0.6 + 0.4 * noise.smooth_random(n, rng, 0.3, False))
+    grain = noise.white(n, rng)
+    sway = 0.6 + 0.4 * noise.smooth_random(n, rng, 0.3, periodic=False)
+    gate = butter(grain, "bandpass", (3000, 9000), 2) * sway
     bed += 0.05 * _norm(gate)
     bed *= env.curve([(0, 0), (1.2, 1.0), (d, 1.0)], n, "cos")
     return _room(bed, 0.08, "booth")
 
 
-@sound("film_projector_stop", "sfx", "Projector switched off: lever clack, the clatter slows and stops, motor and fan wind down")
+@sound("film_projector_stop", "sfx",
+       "Projector switched off: lever clack, the clatter slows and stops, motor and fan wind down")
 def film_projector_stop(rng):
     total = 2.4
     out = np.zeros(n_of(total))
@@ -853,7 +865,8 @@ def film_projector_stop(rng):
     return _room(out, 0.08, "booth")
 
 
-@sound("slide_clunk", "sfx", "Glass slide pushed into (or out of) the slide projector gate: plastic-and-metal clunk with a spring")
+@sound("slide_clunk", "sfx",
+       "Glass slide pushed into (or out of) the slide projector gate: plastic-and-metal clunk with a spring")
 def slide_clunk(rng):
     out = np.zeros(n_of(0.5))
     d = 0.08
@@ -888,7 +901,8 @@ def slide_fan_loop(rng):
 # ------------------------------------------------------------------------------------------
 # Crystals and the vault
 # ------------------------------------------------------------------------------------------
-@sound("crystal_record", "sfx", "A crystal records the image: rising glassy shimmer that locks into a bright A chime and glows out")
+@sound("crystal_record", "sfx",
+       "A crystal records the image: rising glassy shimmer that locks into a bright A chime and glows out")
 def crystal_record(rng):
     out = np.zeros(n_of(3.0))
     # charge: glass partials gliding up as the light pours in
@@ -931,7 +945,8 @@ def collar_click(rng):
     return _room(out, 0.08)
 
 
-@sound("vault_bolts", "sfx", "Vault light lock accepted: eight heavy bolts retract around the door in a rolling cascade")
+@sound("vault_bolts", "sfx",
+       "Vault light lock accepted: eight heavy bolts retract around the door in a rolling cascade")
 def vault_bolts(rng):
     out = np.zeros(n_of(2.6))
     add_at(out, kit.relay(rng, 1.0), 0.0, 0.6)
@@ -970,7 +985,8 @@ def vault_wheel(rng):
 
 
 @sound("vault_door_open", "sfx",
-       "The round vault door swings open: seal breaks with a sigh of air, massive hinge groans, deep rumble, it settles")
+       "The round vault door swings open: seal breaks with a sigh of air, massive hinge groans, deep rumble, it "
+       "settles")
 def vault_door_open(rng):
     total = 5.0
     out = np.zeros(n_of(total))
@@ -1036,7 +1052,8 @@ def _distant_tube(rng, d=2.6):
 
 
 @sound("amb_archive", "ambience",
-       "Records Archive B: deep room tone, the Array humming far below, a slow clock, ticking pipes, distant canisters in the tubes",
+       "Records Archive B: deep room tone, the Array humming far below, a slow clock, ticking pipes, distant "
+       "canisters in the tubes",
        loop=True, lufs=-24.0)
 def amb_archive(rng):
     L = ARCHIVE_LOOP
@@ -1045,9 +1062,9 @@ def amb_archive(rng):
     out = np.zeros((2, n))
     # 1) room tone: ventilation and the big still air of the stacks
     vent = np.vstack([noise.colored(n, rng, -5.0, 40, 500), noise.colored(n, rng, -5.0, 40, 500)])
-    out += 0.12 * vent * (1.0 + 0.15 * noise.smooth_random(n, rng, 0.05))
+    out += 0.08 * vent * (1.0 + 0.15 * noise.smooth_random(n, rng, 0.05))
     air = np.vstack([noise.colored(n, rng, -2.5, 200, 5000), noise.colored(n, rng, -2.5, 200, 5000)])
-    out += 0.035 * air
+    out += 0.05 * air
     # 2) the Array, far beneath the floor: a breathing 100 Hz-led hum (all rates fit the loop)
     f0 = periodic_freq(50.0, L)
     hum = np.zeros((2, n))
@@ -1059,20 +1076,20 @@ def amb_archive(rng):
     out += 0.012 * hum * breath
     # 3) a wall clock, tick-tock, left of centre, quiet
     clock = np.zeros((2, n))
-    tick_a = kit.tick(rng, 1800, 6000, 10, t60=0.03, contact=0.0003, dur=0.06)
-    tick_b = kit.tick(rng, 1400, 5000, 10, t60=0.035, contact=0.0003, dur=0.06)
+    tick_a = _norm(kit.tick(rng, 1800, 6000, 10, t60=0.03, contact=0.0003, dur=0.06))
+    tick_b = _norm(kit.tick(rng, 1400, 5000, 10, t60=0.035, contact=0.0003, dur=0.06))
     for k in range(int(L)):
         add_circular(clock, pan((tick_a if k % 2 == 0 else tick_b) * rng.uniform(0.85, 1.0), -0.45), k + 0.31)
-    out += 0.04 * butter(clock, "bandpass", (700, 5000), 2)
+    out += 0.12 * butter(clock, "bandpass", (700, 6000), 2)
     # 4) pipes ticking as they cool: little clusters of metallic ticks
     pipes = np.zeros((2, n))
     for t0, p in ((4.2, 0.6), (17.9, -0.3), (29.5, 0.7), (41.0, 0.2), (55.3, -0.65)):
         tt = t0
         for k in range(int(rng.integers(3, 7))):
-            add_circular(pipes, pan(kit.tick(rng, 2000, 7000, 8, t60=0.05, contact=0.0002, dur=0.08), p), tt,
+            add_circular(pipes, pan(_norm(kit.tick(rng, 2000, 7000, 8, t60=0.05, contact=0.0002, dur=0.08)), p), tt,
                          rng.uniform(0.3, 1.0))
             tt += rng.uniform(0.15, 0.7)
-    out += 0.05 * pipes
+    out += 0.04 * pipes
     # 5) canisters in the ceiling tubes, far off, crossing the room
     tubes = np.zeros((2, n))
     for t0, p0, p1, g in ((9.0, -0.8, 0.6, 1.0), (33.5, 0.7, -0.5, 0.8), (48.8, -0.4, 0.8, 0.7)):
@@ -1084,14 +1101,14 @@ def amb_archive(rng):
     for t0, p in ((14.6, 0.4), (44.2, -0.5)):
         d = 0.5
         rs = _paper(rng, d, env.curve([(0, 0), (0.1, 1), (0.3, 0.5), (d, 0)], n_of(d), "cos"), 500.0)
-        add_circular(ev, pan(butter(rs, "lowpass", 5000, 2), p), t0, 0.25)
+        add_circular(ev, pan(_norm(butter(rs, "lowpass", 5000, 2)), p), t0, 0.05)
     for t0, d, r0, r1, p in ((23.4, 0.8, 30, 60, -0.3), (51.1, 0.6, 40, 80, 0.5)):
         m = n_of(d)
         cr = kit.creak(rng, d, env.curve([(0, r0), (d * 0.6, r1), (d, r0)], m),
                        env.curve([(0, 0), (d * 0.3, 1.0), (d * 0.7, 0.6), (d, 0)], m, "cos"),
                        modal.random_modes(rng, 90, 900, 14, 0.04, 0.14, -2), jitter=0.1, hiss=0.05)
-        add_circular(ev, pan(np.convolve(cr, np.ones(4) / 4, mode="same"), p), t0, 0.16)
-    add_circular(ev, pan(kit.relay(rng, 0.6), 0.8), 37.2, 0.12)
+        add_circular(ev, pan(_norm(np.convolve(cr, np.ones(4) / 4, mode="same")), p), t0, 0.05)
+    add_circular(ev, pan(_norm(kit.relay(rng, 0.6)), 0.8), 37.2, 0.025)
     out += reverb.reverb_circular(ev, _ir("amb", True), 0.45)
     out = reverb.reverb_circular(out, _ir("amb", True), 0.15)
     return rotate_to_calm_point(out)

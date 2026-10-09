@@ -143,7 +143,7 @@ def leaf():
     # upper panel with the round porthole opening
     pc = (LOCK1 + TOP0) / 2
     up = L.curve_solid("panel_up", [L.rounded_rect(ix1 - ix0 + 0.016, TOP0 - LOCK1 + 0.016, 0.001, 1),
-                                    L.circle(PORT_R, 40, cy=PORT_C - pc)], 2 * UP_HT, bevel=0.0012, mat=MAH)
+                                    L.circle(PORT_R, 32, cy=PORT_C - pc)], 2 * UP_HT, bevel=0.0, mat=MAH)
     L.to_front(up, y_back=LYM + UP_HT, x=0.0, z=pc)
     parts.append(up)
     # ogee mouldings around the three openings, both faces
@@ -155,27 +155,26 @@ def leaf():
                                  mat=MAH))
     # porthole: brass rings both faces, glass, six screws on the hall ring
     yf, yb = LYM - UP_HT, LYM + UP_HT
-    ring_f = L.lathe2("port_ring_f", [(0.1425, 0.0), (0.136, 0.0105), (0.122, 0.0135), (PORT_R, 0.008),
-                                      (PORT_R, -0.003)], segments=32, mat="M_Brass_Aged",
-                      band_mats=["M_Brass_Aged", "M_Brass_Aged", "M_Brass_Polished", "M_Brass_Aged"],
+    ring_f = L.lathe2("port_ring_f", [(0.1425, 0.0), (0.131, 0.0128), (PORT_R, 0.008), (PORT_R, -0.003)],
+                      segments=32, mat="M_Brass_Aged", band_mats=["M_Brass_Aged", "M_Brass_Polished", "M_Brass_Aged"],
                       cap_bottom=False, cap_top=False)
     ring_f.data.transform(Matrix.Translation((0, yf, PORT_C)) @ Matrix.Rotation(math.pi / 2, 4, "X"))
-    ring_b = L.lathe2("port_ring_b", [(0.138, 0.0), (0.130, 0.008), (PORT_R, 0.006), (PORT_R, -0.003)],
-                      segments=32, mat="M_Brass_Aged", cap_bottom=False, cap_top=False)
+    ring_b = L.lathe2("port_ring_b", [(0.138, 0.0), (PORT_R, 0.006), (PORT_R, -0.003)],
+                      segments=24, mat="M_Brass_Aged", cap_bottom=False, cap_top=False)
     ring_b.data.transform(Matrix.Translation((0, yb, PORT_C)) @ Matrix.Rotation(-math.pi / 2, 4, "X"))
     parts += [A.hint(ring_f, 50.0), A.hint(ring_b, 50.0)]
-    glass = M.cylinder("port_glass", PORT_R + 0.006, 0.005, loc=(0, LYM, PORT_C), rot=(math.pi / 2, 0, 0), verts=32,
-                       mat="M_Glass", bevel=0.0)
-    parts.append(glass)
-    for k in range(6):
-        a = math.radians(30 + 60 * k)
+    parts.append(L.flat_front("port_glass_f", [L.circle(PORT_R + 0.004, 32)], 0.0, LYM - 0.0025, PORT_C, mat="M_Glass"))
+    gb = L.flat_front("port_glass_b", [L.circle(PORT_R + 0.004, 32)], 0.0, LYM + 0.0025, PORT_C, mat="M_Glass")
+    parts.append(flip(gb))
+    for k in range(4):
+        a = math.radians(45 + 90 * k)
         parts.append(L.screw("port_screw", 0.0032, (0.1305 * math.cos(a), yf - 0.0118, PORT_C + 0.1305 * math.sin(a)),
                              normal=(-0.0, -1, 0), slot_angle=0.4 + k, segs=6, slot_mat="M_Brass_Aged"))
     # brass kick plate (hall face), D-pull (hall face, latch stile), push plate (booth face)
     parts.append(box("kick", (-LX + 0.03, LYF - 0.002, 0.045), (LX - 0.03, LYF, 0.215), "M_Brass_Aged", 0.001))
     px = LX - STILE / 2
     pull = A.tube("pull", [(px, LYF - 0.004, 0.872), (px, LYF - 0.038, 0.886), (px, LYF - 0.038, 0.992),
-                           (px, LYF - 0.004, 1.006)], 0.0068, sides=10, fillet=0.014, fillet_segs=3,
+                           (px, LYF - 0.004, 1.006)], 0.0068, sides=8, fillet=0.014, fillet_segs=3,
                   mat="M_Brass_Polished")
     parts.append(pull)
     for z in (0.876, 1.002):
@@ -212,8 +211,8 @@ def dial_static():
                                  normal=(0, -1, 0), slot_angle=0.3 + sx + 2 * sz, segs=8, slot_mat="M_Brass_Aged"))
     parts.append(keyhole("keyhole", DX, DZ - 0.100, PLATE_F - 0.00005))
     # black bezel cup around the number plate
-    bez = L.lathe2("bezel", [(0.0712, 0.0), (0.0712, 0.0062), (0.0690, 0.0105), (0.0638, 0.0105), (0.0626, 0.0055)],
-                   segments=40, mat="M_Bakelite", cap_bottom=False, cap_top=False)
+    bez = L.lathe2("bezel", [(0.0712, 0.0), (0.0712, 0.0060), (0.0672, 0.0107), (0.0626, 0.0055)],
+                   segments=36, mat="M_Bakelite", cap_bottom=False, cap_top=False)
     bez.data.transform(Matrix.Translation((DX, PLATE_F, DZ)) @ Matrix.Rotation(math.pi / 2, 4, "X"))
     parts.append(A.hint(bez, 40.0))
     # cream number plate with black digits under the holes + the Institute mark in the centre
@@ -225,7 +224,7 @@ def dial_static():
         # thin printed ring around each digit (as on a real number plate)
         parts.append(L.flat_front(f"digit_ring{n % 10}", L.circle_line(0.0104, 0.0006, 20), DX + hx, NUM_F - 0.0001,
                                   DZ + hz, mat="M_Bakelite"))
-    parts.append(L.flat_front("mark_ring", L.circle_line(0.0090, 0.0016, 28), DX, NUM_F - 0.0001, DZ, mat="M_Bakelite"))
+    parts.append(L.flat_front("mark_ring", L.circle_line(0.0090, 0.0016, 22), DX, NUM_F - 0.0001, DZ, mat="M_Bakelite"))
     parts.append(L.flat_front("mark_line", [L.rounded_rect(0.0016, 0.0300, 0.0003, 1)], DX, NUM_F - 0.00015, DZ,
                               mat="M_Bakelite"))
     # chrome finger stop at -10 deg: foot on the bezel lip, bent over the wheel face to the hole ring
@@ -246,19 +245,18 @@ def dial_static():
 
 # ================================================================ finger wheel + holes (interactive)
 def wheel():
-    loops = [L.circle(R_FACE, 48), L.circle(R_IN, 32)]
+    loops = [L.circle(R_FACE, 40), L.circle(R_IN, 28)]
     for n in range(1, 11):
         hx, hz = hole_xy(n)
         loops.append(L.circle(R_HOLE_MOUTH, 14, cx=hx, cy=hz))
     face = L.flat_front("wheel_face", loops, DX, WF, DZ, mat="M_Chrome")
     parts = [face]
     # rounded outer rim (seen from the front and the side)
-    rim = L.lathe2("wheel_rim", [(0.0594, 0.0), (0.0602, 0.0008), (R_WHEEL, 0.0020), (0.0598, 0.0031),
-                                 (R_FACE, TW)], segments=48, mat="M_Chrome", cap_bottom=False, cap_top=False)
+    rim = L.lathe2("wheel_rim", [(0.0594, 0.0), (R_WHEEL, 0.0013), (0.0601, 0.0029), (R_FACE, TW)], segments=40, mat="M_Chrome", cap_bottom=False, cap_top=False)
     rim.data.transform(Matrix.Translation((DX, WB, DZ)) @ Matrix.Rotation(math.pi / 2, 4, "X"))
     parts.append(A.hint(rim, 60.0))
     # inner lip (faces the axis)
-    lip = L.lathe2("wheel_lip", [(R_IN, 0.0), (R_IN, TW)], segments=32, mat="M_Chrome", cap_bottom=False,
+    lip = L.lathe2("wheel_lip", [(R_IN, 0.0), (R_IN, TW)], segments=28, mat="M_Chrome", cap_bottom=False,
                    cap_top=False)
     lip.data.transform(Matrix.Translation((DX, WB, DZ)) @ Matrix.Rotation(math.pi / 2, 4, "X"))
     parts.append(A.hint(flip(lip), 60.0))
@@ -302,12 +300,12 @@ def casing():
                                              (CAS_IN, 0, PL_H)], up=(0, -1, 0), mat=PAINT))
     for s in (-1, 1):
         x0, x1 = sorted((s * (CAS_IN - 0.006), s * (CAS_IN + CAS_W + 0.006)))
-        parts.append(box(f"plinth{s}", (x0, -0.032, 0.0), (x1, 0.0, PL_H), PAINT, 0.004, 2))
+        parts.append(box(f"plinth{s}", (x0, -0.032, 0.0), (x1, 0.0, PL_H), PAINT, 0.004, 1))
     top = HEAD_IN + CAS_W
     parts.append(box("head_fillet", (-CAS_IN - CAS_W - 0.010, -0.034, top), (CAS_IN + CAS_W + 0.010, 0.0, top + 0.010),
                      PAINT, 0.002))
     parts.append(box("head_cap", (-CAS_IN - CAS_W - 0.022, -0.046, top + 0.010),
-                     (CAS_IN + CAS_W + 0.022, 0.0, top + 0.032), PAINT, 0.005, 2))
+                     (CAS_IN + CAS_W + 0.022, 0.0, top + 0.032), PAINT, 0.005, 1))
     # booth side: plain boards (narrow: the booth's east wall is 5 cm from the hinge jamb)
     yb = WT
     parts += [box("bb_l", (-OW2 - BB_W, yb, 0.0), (-OW2, yb + BB_T, OH + BB_W), PAINT, 0.002),
@@ -322,9 +320,9 @@ def casing():
     # lamp: bakelite housing on the latch-side architrave + chrome bezel
     lx, ly, lz = LAMP
     parts.append(box("lamp_housing", (lx - 0.017, ly, lz - 0.026), (lx + 0.017, -0.010, lz + 0.026), "M_Bakelite",
-                     0.003, 2))
+                     0.003, 1))
     bz = L.lathe2("lamp_bezel", [(0.0094, 0.0), (0.0128, 0.0), (0.0130, 0.0026), (0.0112, 0.0042), (0.0094, 0.0032)],
-                  segments=16, mat="M_Chrome", cap_bottom=False, cap_top=False)
+                  segments=14, mat="M_Chrome", cap_bottom=False, cap_top=False)
     bz.data.transform(Matrix.Translation((lx, ly, lz)) @ Matrix.Rotation(math.pi / 2, 4, "X"))
     parts.append(A.hint(bz, 50.0))
     for sz in (-1, 1):

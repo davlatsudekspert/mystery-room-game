@@ -15,6 +15,7 @@ Blender XY plane with the hero face up (+Z) and their top edge toward Blender +Y
 Main helpers
   ensure_materials()          every slot the items use (library + Chapter 2 + decals)
   text_loops(body, size)      2D outline loops of a text (for stamped / pierced digits in curve_solid)
+  union_circle(poly, ...)     2D union of an outline and an overlapping circle (key eyes)
   key_shank(...)              turned key shank along Blender -Y with beads and a domed tip
   ward_bit(...)               flat key bit plate with ward notches
   item_main(...)              the build / export / check / QA pipeline
@@ -53,15 +54,16 @@ CH2_SLOTS = {
     "M_Glass_Dark": ("0C0F10", 0.06, 0.0, 0.85),       # game/assets/materials/M_Glass_Dark.tres
 }
 
-# decal slot -> image file in DECALS_CH2 (group F); (fallback preview colour, alpha-wired in QA)
+# decal slot -> image file in DECALS_CH2 (group F); (fallback preview colour, alpha-wired in QA like the
+# .tres: IndexCard / TapeLabel use alpha scissor, SlideMark alpha blend, the others are opaque)
 DECALS = {
     "M_Decal_Badge": ("badge.png", "E6DCC4", False),
-    "M_Decal_IndexCard": ("index_card.png", "E9DFC6", False),
+    "M_Decal_IndexCard": ("index_card.png", "E9DFC6", True),
     "M_Decal_RequestCard": ("request_card.png", "D9C495", False),
     "M_Decal_FileCover": ("file_cover.png", "CDB27A", False),
-    "M_Decal_TapeLabel_1996": ("tape_label_1996.png", "E8DFC8", False),
-    "M_Decal_TapeLabel_1997": ("tape_label_1997.png", "E8DFC8", False),
-    "M_Decal_TapeLabel_1998": ("tape_label_1998.png", "E8DFC8", False),
+    "M_Decal_TapeLabel_1996": ("tape_label_1996.png", "E8DFC8", True),
+    "M_Decal_TapeLabel_1997": ("tape_label_1997.png", "E8DFC8", True),
+    "M_Decal_TapeLabel_1998": ("tape_label_1998.png", "E8DFC8", True),
     "M_Decal_SlideMark": ("slide_mark.png", "D8E0DC", True),
 }
 
@@ -189,6 +191,28 @@ def text_loops(body: str, size: float, font: str = L.FONT_SANS_B, res: int = 3, 
 def move_loops(loops, dx: float = 0.0, dy: float = 0.0, rot: float = 0.0):
     c, s = math.cos(rot), math.sin(rot)
     return [[(x * c - y * s + dx, x * s + y * c + dy) for (x, y) in lp] for lp in loops]
+
+
+def union_circle(poly, cx: float, cy: float, r: float, n: int = 24):
+    """Outline of a CCW polygon united with a circle that overlaps one stretch of its boundary (e.g. a
+    hanging eye on a key bow): the polygon's points inside the circle are replaced by the circle's arc
+    outside the polygon. Avoids coplanar overlapping solids (z-fighting in Godot)."""
+    inside = [math.hypot(x - cx, y - cy) < r for (x, y) in poly]
+    if not any(inside) or all(inside):
+        return list(poly)
+    m = len(poly)
+    start = next(i for i in range(m) if inside[i] and not inside[i - 1])     # first point inside
+    out = [poly[(start + k) % m] for k in range(m) if not inside[(start + k) % m]]
+    # out[-1] is the last outside point before the run (going CCW), out[0] the first one after it
+    ax, ay = out[-1]
+    bx, by = out[0]
+    a0 = math.atan2(ay - cy, ax - cx)
+    a1 = math.atan2(by - cy, bx - cx)
+    while a1 <= a0:
+        a1 += TAU
+    arc = [(cx + r * math.cos(a0 + (a1 - a0) * i / n), cy + r * math.sin(a0 + (a1 - a0) * i / n))
+           for i in range(1, n)]
+    return out + arc
 
 
 def key_shank(name: str, profile, y_top: float, mat: str, segments: int = 14) -> bpy.types.Object:
@@ -339,6 +363,12 @@ def summary(name: str, budget: int = 2500) -> None:
 
 
 # ---------------------------------------------------------------- QA
+# A softer three-point rig for printed paper (the default mrlib rig over-exposes cream decals).
+SOFT = [((1.0, -1.2, 1.4), 420, "FFE2C0", 1.8), ((-1.4, -0.6, 0.8), 150, "BFD4FF", 2.0),
+        ((0.2, 1.4, 1.6), 300, "FFFFFF", 1.2)]
+LIGHTS = None            # set to SOFT in an item script to use it for all of its shots
+
+
 def setup_threads() -> None:
     sc = bpy.context.scene
     sc.render.threads_mode = "FIXED"
@@ -387,4 +417,4 @@ def item_main(name: str, build_fn, shots=(), post=None, required=(), budget: int
             suffix, cam, target, lens = s[:4]
             if len(s) > 4 and s[4] is not None:
                 s[4]()
-            shot(f"item_{name}{suffix}", cam, target, lens=lens, floor_z=lo.z - 0.0002)
+            shot(f"item_{name}{suffix}", cam, target, lens=lens, floor_z=lo.z - 0.0002, lights=LIGHTS)

@@ -358,6 +358,18 @@ func _build_lights() -> void:
 	add_child(lumen)
 	lights["lumen"] = lumen
 
+	# Moonlight bouncing off the ceiling: before the power comes back it keeps the dark corners readable on a
+	# dim phone screen (shapes, not detail); afterwards it fades to a faint cool rim under the pendants.
+	var bounce := OmniLight3D.new()
+	bounce.light_color = Color("8fb0d6")
+	bounce.light_energy = 0.0
+	bounce.omni_range = 6.5
+	bounce.omni_attenuation = 0.9
+	bounce.shadow_enabled = false
+	bounce.position = Vector3(-0.4, 2.75, 0.5)
+	add_child(bounce)
+	lights["moon_bounce"] = bounce
+
 	var fill := OmniLight3D.new()
 	fill.light_color = Color("ffe2c2")
 	fill.light_energy = 0.0
@@ -1232,7 +1244,7 @@ func _update_lighting(animated: bool) -> void:
 	var targets := {
 		"pendant_0": 2.2 if on else 0.0, "pendant_1": 1.7 if on else 0.0,
 		"desk_lamp": 1.3 if on else 1.0, "safelight": 0.7 if on else 0.0,
-		"shadow_lamp": 3.2 if on else 0.0,
+		"shadow_lamp": 3.2 if on else 0.0, "moon_bounce": 0.12 if on else 0.55,
 	}
 	for k: String in targets:
 		var l: Light3D = lights[k]
@@ -1248,11 +1260,11 @@ func _update_lighting(animated: bool) -> void:
 			create_tween().tween_property(l, "light_energy", targets[k], dur)
 		else:
 			l.light_energy = targets[k]
-	var amb := Color("2f3a38") if on else Color("26383a")
+	var amb := Color("2f3a38") if on else Color("2b4049")
 	if animated:
-		create_tween().tween_property(env, "ambient_light_energy", 0.55 if on else 0.5, dur)
+		create_tween().tween_property(env, "ambient_light_energy", 0.55 if on else 0.75, dur)
 	else:
-		env.ambient_light_energy = 0.55 if on else 0.5
+		env.ambient_light_energy = 0.55 if on else 0.75
 	env.ambient_light_color = amb
 	visuals.set_power_emissives(on)
 
