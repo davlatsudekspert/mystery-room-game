@@ -226,11 +226,6 @@ def shutter_frame():
     out.append(K.ring_wall("sf_r", r, SH_Y0 - 0.07, SH_Y1 + 0.07, a1, a1 + da, 1, BRASS))
     out.append(K.ring_wall("sf_t", r, SH_Y1, SH_Y1 + 0.07, a0, a1, 6, BRASS))
     out.append(K.ring_wall("sf_b", r, SH_Y0 - 0.07, SH_Y0, a0, a1, 6, BRASS))
-    # edge returns (frame thickness) on the outer outline
-    for (aa, y0, y1) in ((a0 - da, SH_Y0 - 0.07, SH_Y1 + 0.07), (a1 + da, SH_Y0 - 0.07, SH_Y1 + 0.07)):
-        p, q = K.polar(R_IN, aa), K.polar(r, aa)
-        out.append(K.quad("sf_e", ((p + q) / 2 + Vector((0, (y0 + y1) / 2, 0))), (q - p), (0, 1, 0), (q - p).length,
-                          y1 - y0, BRASS))
     # threshold plate on the tunnel floor at the mouth
     pts = [(xc(z), z) for z in [SH_Z0 + (SH_Z1 - SH_Z0) * t / 6 for t in range(7)]]
     inner = [(x + 0.10, z) for (x, z) in reversed(pts)]
@@ -241,7 +236,7 @@ def shutter_frame():
 def rim_and_brass():
     parts = []
     rim = K.revolve("rim", [(1.44, -0.11), (1.44, -0.082), (1.50, -0.082), (1.50, 0.0), (1.506, 0.006), (1.614, 0.006),
-                            (1.62, 0.0), (1.62, -0.11)], 0.0, 360.0, 64, BRASS, flip=True)
+                            (1.62, 0.0), (1.62, -0.11)], 0.0, 360.0, 64, BRASS)
     A.hint(rim, 40.0)
     parts.append(rim)
     for k in range(24):
