@@ -34,8 +34,8 @@ BK, CR, BR = "M_Bakelite", "M_Enamel_Cream", "M_Brass_Aged"
 BW, BH, BD = 0.085, 0.150, 0.040
 YF = -BD / 2                        # front plane (Blender y)
 DZ, RW = 0.030, 0.031               # dial centre height and window radius
-PZ = DZ - 0.016                     # needle pivot height
-R_NUM, R_TICK0, R_TICK1, R_ARC = 0.0270, 0.0180, 0.0218, 0.0174
+PZ = DZ - 0.019                     # needle pivot height
+R_NUM, R_TICK0, R_TICK1, R_ARC = 0.0305, 0.0210, 0.0252, 0.0204
 REST = 142.5
 TOP = BH / 2
 
@@ -75,15 +75,15 @@ def dial():
         th = REST - 15 * r
         parts.append(L.flat_front(f"tick_{r}", [radial_bar(th, R_TICK0, R_TICK1, 0.0008)], 0.0, yi, 0.0, mat=BK))
         nx, nz = polar(th, R_NUM)
-        t = L.text_flat(f"num_{r}", str(r), 0.0062, font=L.FONT_SANS_B, res=2, mat=BK)
-        t.data.transform(Matrix.Translation((0.0, -0.0062 * 0.05, 0.0)))
+        t = L.text_flat(f"num_{r}", str(r), 0.0068, font=L.FONT_SANS_B, res=2, mat=BK)
+        t.data.transform(Matrix.Translation((0.0, -0.0068 * 0.05, 0.0)))
         L.to_front(t, y_back=yi, x=nx, z=nz)
         parts.append(t)
         if r < 7:
             parts.append(L.flat_front(f"minor_{r}", [radial_bar(th - 7.5, R_ARC, R_TICK1 - 0.0016, 0.0005)], 0.0, yi,
                                       0.0, mat=BK))
     # rest-stop pin just beyond the rest position, and the needle's pivot cap
-    sx, sz = polar(REST + 6.0, 0.0150)
+    sx, sz = polar(REST + 6.0, 0.0175)
     pin = D.revolve("stop_pin", [(0.0, 0.0), (0.0008, 0.0), (0.0008, 0.0022), (0.0006, 0.0028), (0.0, 0.0028)],
                     direction=(0, -1, 0), loc=(sx, YF - 0.0002, sz), segments=8, mat=BR)
     cap = D.revolve("cap", [(0.0, 0.0), (0.0026, 0.0), (0.0026, 0.0008), (0.0018, 0.0016), (0.0, 0.0019)],
@@ -99,7 +99,9 @@ def lower_front():
                     direction=(0, -1, 0), loc=(0.0, YF + 0.0003, -0.024), segments=16, mat=BR)
     parts.append(btn)
     if S is not None:
-        mk = S.inlay("mark", "mark", 0.0150, depth=0.0, mat=BR)
+        # one flat fill per piece (the ring and the three meridian pieces touch: a single even-odd fill of all
+        # loops mis-fills where their outlines meet)
+        mk = M.join([L.flat_shape(f"mark_{i}", sh, mat=BR) for i, sh in enumerate(S.shapes("mark", 0.0150))], "mark")
         L.to_front(mk, y_back=YF - 0.0002, z=-0.052)
         parts.append(mk)
     for sx in (-1, 1):
@@ -150,8 +152,8 @@ def strap():
 
 
 def needle():
-    pts = [(-0.00065, -0.0045), (0.00065, -0.0045), (0.00040, 0.0120), (0.00014, 0.0236), (-0.00014, 0.0236),
-           (-0.00040, 0.0120)]
+    pts = [(-0.00065, -0.0045), (0.00065, -0.0045), (0.00040, 0.0140), (0.00014, 0.0272), (-0.00014, 0.0272),
+           (-0.00040, 0.0140)]
     n = L.flat_shape("needle", [pts, L.circle(0.0007, 8, cx=0.0, cy=0.0)], mat=BK)
     tail = L.flat_shape("needle_tail", [L.circle(0.0021, 12, cx=0.0, cy=-0.0040)], mat=BK)
     obj = M.join([n, tail], "needle")
@@ -195,7 +197,7 @@ def reading(r):
 def main():
     G.item_main(NAME, build, post=post, required=("needle", "probe_tip"), budget=2500, surf_budget=4, mat_budget=3,
                 extra_report=report, shots=[
-                    ("", (0.17, -0.36, 0.16), (0.0, 0.0, 0.012), 60),
+                    ("", (0.21, -0.45, 0.20), (0.0, 0.0, 0.025), 60),
                     ("_2", (0.0, -0.20, 0.05), (0.0, 0.0, 0.040), 70, reading(4)),
                     ("_3", (0.0, -0.20, 0.05), (0.0, 0.0, 0.040), 70, reading(7)),
                     ("_4", (-0.20, 0.30, 0.12), (0.0, 0.0, 0.012), 60, reading(0)),
