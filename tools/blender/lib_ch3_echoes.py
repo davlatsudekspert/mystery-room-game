@@ -250,6 +250,19 @@ def grip_wrist(centre, F, N, scale=1.0, along=0.083, out=0.026):
     return vec(centre) - F * along * scale - N * out * scale
 
 
+def flat_hand(prefix, palm_pt, F, N, right, scale=1.0, curl=1.0, spread=None, width=0.078, finger_r=0.0084):
+    """A hand lying flat with its palm centre on a surface point `palm_pt`; N = out of the palm (into the
+    surface), F = toward the fingertips. Returns (parts, wrist, info)."""
+    F = vec(F).normalized()
+    N = L.ortho(N, F)
+    wr = vec(palm_pt) - F * 0.050 * scale - N * 0.017 * scale
+    c = [(8 * curl, 12 * curl, 6 * curl), (8 * curl, 14 * curl, 6 * curl), (10 * curl, 16 * curl, 8 * curl),
+         (12 * curl, 18 * curl, 8 * curl)]
+    objs, info = hand(prefix, wr, F, N, right, c, spread=spread or [6, 1, -4, -10], scale=scale, width=width,
+                      finger_r=finger_r)
+    return objs, wr, info
+
+
 def relaxed_hand(prefix, el, wr, right, scale=1.0, pron=8.0, bend=(0.0, 0.10, -0.05), curl=1.0):
     F = (vec(wr) - vec(el)).normalized()
     F = (F + Vector(bend)).normalized()

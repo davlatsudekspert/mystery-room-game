@@ -7,12 +7,15 @@ code places him at `op_mount_<n>` (lever n) or `op_mount_knob` of control_desk.g
 deg about Y, so he faces the desk), and the contact points below meet lever n's grip or the knob.
 
 Output: game/assets/models/echo_operator.glb (Godot axes; the figure faces +Z, -X = his right)
-  pose_idle   standing a little back (feet centre 0.05 behind the origin), looking up and to his left at the
+  pose_idle   standing a little back (feet centre 0.10 behind the origin), looking up and to his left at the
               step globes (head yaw 38 deg left, pitch 22 deg up), arms relaxed.
-  pose_reach  right-hand grip on an upright lever's ball at (-0.15, 1.22, 0.50).
-  pose_pull   right-hand grip at (-0.15, 1.12, 0.29): the same lever pulled 50 deg toward him.
+  pose_reach  right-hand grip on an upright lever's ball at (-0.15, 1.22, 0.50); left palm on the desk top
+              (0.235, 0.872, 0.30), 0.08 behind the desk's front edge.
+  pose_pull   right-hand grip at (-0.15, 1.12, 0.29): the same lever pulled 50 deg toward him; left palm on the
+              desk top as in pose_reach.
   pose_knob   right hand on the master knob at (-0.15, 1.12, 0.40); hips back, leaning over the desk (feet
-              centre 0.10 behind the origin, so his toes stay out of the desk front 0.07 ahead at op_mount_knob).
+              centre 0.10 behind the origin, so his toes stay out of the desk front 0.07 ahead at op_mount_knob),
+              left palm on the desk top at (0.25, 0.872, 0.20).
   pose_done   a step back (feet centre 0.25 behind the origin), head turned over his right shoulder toward the
               Choir rack (yaw 75 deg right).
 Material: one slot, M_Echo. Budget: <= 6,000 tris per pose, <= 30,000 per file.
@@ -46,6 +49,10 @@ GRIP_REST = (-0.15, 1.22, 0.50)
 GRIP_PULLED = (-0.15, 1.12, 0.29)
 KNOB = (-0.15, 1.12, 0.40)
 LEVER_PIVOT = (-0.15, 0.95, 0.50)
+# left palm resting on the desk top (top y = 0.86): 0.07 behind its front edge at the lever mounts (edge 0.22 ahead),
+# 0.13 behind it at op_mount_knob (edge 0.07 ahead). Build space (x = his right, y forward, z up).
+DESK_LEFT = Vector((-0.235, 0.300, 0.872))
+DESK_LEFT_KNOB = Vector((-0.250, 0.200, 0.872))
 
 P_HEAD = dict(E.MALE, nose=1.12, brow=1.6, jaw=1.12, chin=1.1)
 
@@ -238,8 +245,8 @@ def fixed_hand(objs):
 
 def pose_idle():
     key = "pose_idle"
-    sp = spine(-0.055, 0.004, yaw_hip=6.0, yaw_chest=14.0)
-    feet = {1: (0.112, -0.050, -6.0), -1: (-0.108, -0.068, 16.0)}
+    sp = spine(-0.105, 0.004, yaw_hip=6.0, yaw_chest=14.0)
+    feet = {1: (0.112, -0.100, -6.0), -1: (-0.108, -0.118, 16.0)}
     sh = shoulders(sp)
     right = (sh[1] + Vector((0.065, 0.040, -0.535)), sh[1] + Vector((0.45, -0.35, -0.25)), relaxed(key, True))
     left = (sh[-1] + Vector((-0.060, 0.050, -0.530)), sh[-1] + Vector((-0.40, -0.40, -0.30)), relaxed(key, False))
@@ -254,8 +261,8 @@ def pose_reach():
     hp, wr, _ = grip_hand(key, H.g2b(GRIP_REST), F, N)
     sh = shoulders(sp)
     right = (wr, sh[1] + Vector((0.55, 0.05, -0.30)), fixed_hand(hp))
-    left = (sh[-1] + Vector((-0.050, 0.110, -0.520)), sh[-1] + Vector((-0.40, -0.35, -0.30)),
-            relaxed(key, False, bend=(0.0, 0.20, -0.02)))
+    lp, lw, _ = H.flat_hand(f"{key}_handL", DESK_LEFT, (0.15, 0.98, 0.0), (0, 0, -1), False, HAND_S)
+    left = (lw, sh[-1] + Vector((-0.45, -0.10, -0.30)), fixed_hand(lp))
     return build_standing(key, sp, feet, right, left, head_kw(sp, -10.0, -16.0, 0.0, tilt=22.0))
 
 
@@ -267,7 +274,8 @@ def pose_pull():
     hp, wr, _ = grip_hand(key, H.g2b(GRIP_PULLED), F, N)
     sh = shoulders(sp)
     right = (wr, sh[1] + Vector((0.50, -0.20, -0.35)), fixed_hand(hp))
-    left = (sh[-1] + Vector((-0.070, 0.030, -0.535)), sh[-1] + Vector((-0.40, -0.40, -0.30)), relaxed(key, False))
+    lp, lw, _ = H.flat_hand(f"{key}_handL", DESK_LEFT, (0.15, 0.98, 0.0), (0, 0, -1), False, HAND_S)
+    left = (lw, sh[-1] + Vector((-0.45, -0.10, -0.30)), fixed_hand(lp))
     return build_standing(key, sp, feet, right, left, head_kw(sp, -8.0, -24.0, 0.0, tilt=16.0))
 
 
@@ -287,8 +295,8 @@ def pose_knob():
                        spread=[8, 2, -5, -12], thumb=thumb, scale=HAND_S, width=0.082, finger_r=0.0088)
     sh = shoulders(sp)
     right = (wr, sh[1] + Vector((0.50, 0.05, -0.35)), fixed_hand(hp))
-    left = (sh[-1] + Vector((-0.040, 0.120, -0.505)), sh[-1] + Vector((-0.40, -0.30, -0.30)),
-            relaxed(key, False, bend=(0.0, 0.25, 0.0)))
+    lp, lw, _ = H.flat_hand(f"{key}_handL", DESK_LEFT_KNOB, (0.20, 0.97, 0.0), (0, 0, -1), False, HAND_S)
+    left = (lw, sh[-1] + Vector((-0.45, -0.10, -0.30)), fixed_hand(lp))
     return build_standing(key, sp, feet, right, left, head_kw(sp, -6.0, -20.0, 0.0, tilt=26.0), legs_dy=-0.005)
 
 
