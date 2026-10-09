@@ -26,6 +26,7 @@ func _run() -> void:
 	var calls: PackedStringArray = []
 	var lens := "leave"
 	var until := ""
+	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)

@@ -28,6 +28,7 @@ func _log(line: String) -> void:
 	print(line)
 
 func _ready() -> void:
+	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)

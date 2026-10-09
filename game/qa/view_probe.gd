@@ -16,6 +16,7 @@ func _run() -> void:
 	var cams: Array[String] = []
 	var from := 1
 	var select := ""
+	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
@@ -25,6 +26,8 @@ func _run() -> void:
 			cams.append(a.substr(6))
 		elif a.begins_with("--from=p"):
 			from = int(a.substr(8))
+		elif a.begins_with("--seed="):
+			GameState.variant_seed = int(a.substr(7))
 		elif a.begins_with("--select="):
 			select = a.substr(9)
 	DirAccess.make_dir_recursive_absolute(out_dir)

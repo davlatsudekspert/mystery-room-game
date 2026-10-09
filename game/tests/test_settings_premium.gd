@@ -53,6 +53,29 @@ func test_game_state_save_continue_cycle() -> void:
 	SaveSystem.save_path = SaveSystem.SAVE_PATH
 
 
+## Players get their own answers per game (docs/VARIANTS.md); Continue keeps them.
+func test_new_games_draw_their_own_variant() -> void:
+	SaveSystem.save_path = "user://test_variant.json"
+	var keep: int = GameState.variant_seed
+	GameState.variant_seed = -1
+	var fresh: Node = load("res://src/autoload/game_state.gd").new()
+	eq(fresh.get("variant_seed"), -1, "players' default is a random seed")
+	fresh.free()
+	for id: String in ["ch1", "ch2"]:
+		var seeds := {}
+		for _i in 6:
+			check(GameState.start_new(id), "start " + id)
+			seeds[int(GameState.logic.state["seed"])] = true
+		check(seeds.size() >= 5 and not seeds.has(0), "%s: every new game draws a new seed (%d distinct of 6)" % [id,
+			seeds.size()])
+		var snapshot := JSON.stringify(GameState.logic.to_dict())
+		check(GameState.continue_saved(), "continue " + id)
+		eq(JSON.stringify(GameState.logic.to_dict()), snapshot, id + ": continue keeps the same answers")
+	GameState.variant_seed = keep
+	SaveSystem.delete_game()
+	SaveSystem.save_path = SaveSystem.SAVE_PATH
+
+
 func test_premium_rules() -> void:
 	var p: Node = Premium
 	p.path = "user://test_ent.cfg"

@@ -2,6 +2,11 @@
 
 **Goal.** A player who copies the numbers from a YouTube walkthrough finds that they do not work. Every new game draws its own answers from the in-world evidence; the logic of each puzzle stays the same. Watching a video can still teach *how* a puzzle works, which is fine. Copying the *answer* cannot replace playing.
 
+**Status (2026-10-09): on for players.** `GameState.variant_seed = -1`, so every new game draws its own seed. QA scripts and tests use seed 0 (the canonical answers) unless they are given `--seed=N`.
+- Chapter 1 varies the gear box, the safe cipher, the beacon and the book order.
+- Chapter 2 varies the valves, the punch card, the tape clicks/dial, the splice order, the focus and the vault overlay.
+- Both chapters have been played to the end through the real 3D scene on a non-canonical seed: Ch1 seed 4242 (safe 1204, books IV-II-VIII, 100 taps, 0 fallbacks) and Ch2 seed 777 (94 taps, 0 fallbacks). The on-screen evidence matches the answers, for example `docs/previews/variants/ch1_seed4242_safe_evidence.jpg`.
+
 **Rules.**
 - **Story anchors never change.** These are 03:17, 14 November 1979, Leyla's staff number 0417, "41 staff" and the symbols ✦ ☾. They are the lore; changing them would break the story and the other chapters.
 - **One seed per game.** It is drawn when a chapter starts, saved with the game, and identical after Continue. The QA solver and the tests read every answer from the logic state, never from constants.

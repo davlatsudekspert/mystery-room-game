@@ -25,11 +25,14 @@ var _only: PackedStringArray = [] # --only=explore,mistakes runs just those sect
 
 
 func _ready() -> void:
+	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
 		if a.begins_with("--lang="):
 			lang = a.substr(7)
+		if a.begins_with("--seed="):
+			GameState.variant_seed = int(a.substr(7))
 		if a.begins_with("--only="):
 			_only = a.substr(7).split(",")
 	DirAccess.make_dir_recursive_absolute(out_dir)
