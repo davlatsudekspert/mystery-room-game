@@ -245,6 +245,7 @@ func _build_lights() -> void:
 	fill.light_color = Color("ffe2c2")
 	fill.light_energy = 0.0
 	fill.omni_range = 2.4
+	fill.light_specular = 0.0 # a helper light: lift the shadows, never paint a hot spot on glossy enamel or glass
 	fill.omni_attenuation = 1.3
 	add_child(fill)
 	lights["focus_fill"] = fill

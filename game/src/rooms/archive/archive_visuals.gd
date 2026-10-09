@@ -443,7 +443,10 @@ func _apply_splicer(animated: bool) -> void:
 		elif held_frame == k:
 			target = Transform3D(base.basis, base.origin + Vector3(0, 0.025, 0))
 		_to(strip, target, animated, 0.3)
-	_lamp(part("film_splicer", "light_box_glass"), s["booth_open"], Color("fff4dc"))
+	# a large backlit panel: at the small-lamp energy it blooms into a white blank and drowns the film strips
+	var box := part("film_splicer", "light_box_glass") as MeshInstance3D
+	if box:
+		ModelUtil.set_emission(box, s["booth_open"], Color("fff4dc"), 1.1)
 
 
 func _apply_screen() -> void:
@@ -513,7 +516,7 @@ func _set_beam(key: String, on: bool, lens: Node3D) -> void:
 		var m := ShaderMaterial.new()
 		m.shader = load("res://src/fx/lumen_beam.gdshader")
 		m.set_shader_parameter("color", Color(1.0, 0.96, 0.86, 1.0))
-		m.set_shader_parameter("energy", 0.22)
+		m.set_shader_parameter("energy", 0.16) # a soft shaft: the picture on the screen must stay the brightest thing
 		b.material_override = m
 		b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		room.add_child(b)
