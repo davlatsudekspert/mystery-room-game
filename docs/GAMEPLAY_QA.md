@@ -56,15 +56,44 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 
 ## Chapter 2 — The Missing Scientist (the Archive)
 
+### Tools
+| Check | Command | What it does |
+|---|---|---|
+| Solver playthrough | `tools/qa_run.sh -- res://qa/playthrough_ch2.tscn -- --out=<dir> --lens=take` (and `--lens=leave`) | Plays P1–P12, the finale and the optional echoes by real taps through the room's raycast. It aims where a part is actually visible, like a player. Every logic fallback is reported with what the tap hit instead |
+| Tap map | `tools/qa_run.sh -- res://qa/tap_map.tscn -- --chapter=ch2 --views=… [--until=booth_open] [--do=open_cat_drawer:4,…]` | Marks every tappable part in a view: green = reachable, orange = small, red = covered; it names what a tap hits instead |
+| Logic tests | `tools/run_tests.sh` | Puzzle rules, both lens paths, the no-softlock fuzz |
+
+### What the 3D QA found and fixed (2026-10-09)
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| `ItemDB.is_tool()` clashed with Godot's `Script.is_tool()` | **Every "use item on …" tap crashed**: card into the punch, card into the canister, key on locker 9, reels on the deck. Chapter 2 could not be finished by tapping | Renamed to `is_tool_item` |
+| Catalogue: padded box colliders on cards and dividers | Tapping a card's tab hit a divider in front | Exact colliders for cards and dividers only |
+| Catalogue: back sections inside the carcass, small tabs | The cards behind dividers 0–2 could not be seen. Tabs were about 3 mm on a phone | The drawer pulls fully out. Picking a divider moves to a close-up of the raised section, where the tabs are large. The tray view keeps every divider reachable |
+| A global "exact collider for thin parts" rule (made during this pass) | The rotary dial's finger holes became untappable (P8 blocked) | Reverted to opt-in. Caught by the tap map before it shipped |
+| Compressor piping diagram: polished brass on black | The P2 evidence read as an empty black panel | Satin brass inlay with a faint glow; now legible |
+| Projector beam scaled in world axes | The film's WOW moment was hidden by a floor-to-ceiling white slab | The beam now stretches along its own axis |
+| Projector view too low | The run lever, focus ring and frame keys were out of frame | The camera now looks at the control side |
+| Locker 9 view off-centre; the open locker door covered the floor hatch | The hidden 1998 reel was blocked, and taps went to the locker | Views re-aimed |
+| Vault overlay and slide rotation turned counter-clockwise | At the logic's solution the sign did not match the engraving | The shader turns the images clockwise |
+| English words baked into decals (badge, cards, rules, tape labels) | RU/UZ players saw English text | EN/RU/UZ variants, swapped at runtime |
+
 ### Status
 | Area | Level | Evidence |
 |---|---|---|
-| Puzzle logic P1–P12 + both Chapter 1 lens paths | AUTOMATED TESTED (logic) | `test_archive_puzzles.gd`, `test_archive_no_softlock.gd` and the archive solver run in `tools/run_tests.sh` |
-| Room scene (`archive.tscn`: views, every interaction, film, canister and vault sequences) | IMPLEMENTED | Scripts parse (`qa/check_scripts.tscn`: 0 broken) |
-| 3D models (41) | IMPLEMENTED, partly | `docs/models/CH2_MANIFEST.md`: 19 ready, 1 slightly over budget, 21 still being built |
-| Audio (42 sounds, ambience, 2 music cues) | IMPLEMENTED | Rendered and imported in Godot; loop flags confirmed on the 4 looping effects. Checked by measurement and spectrogram only, not by ear |
-| 3D playthrough, both lens paths (`qa/playthrough_ch2.tscn --lens=take` / `--lens=leave`) | not yet run | Waits for the remaining models |
+| Logic P1–P12, both lens paths, softlock fuzz | AUTOMATED TESTED (logic) | `tools/run_tests.sh` |
+| 41 models in the room, every puzzle interaction | INTEGRATED | `docs/models/CH2_MANIFEST.md` (41/41) |
+| Full chapter by real 3D taps, both lens paths | AUTOMATED TESTED (3D taps) | `playthrough_ch2` on 2026-10-09:<br>• leave path: P1–P12, P11b and the finale, **86 taps, 0 logic fallbacks**;<br>• take path: P1–P12 and the finale, **78 taps, 0 logic fallbacks**.<br>Screenshots are in `docs/previews/ch2/`, with phone frames in `docs/previews/ch2/phone/` |
+| Every main view and the booth views | VISUALLY VERIFIED | Tap maps and playthrough screenshots (software renderer) |
+| Audio | IMPLEMENTED | Not listened to on a device |
+| Performance | **Over budget** | Hall view: ~222 draw calls and ~239k primitives (budget 150 and 150k). Two dual-paraboloid shadow lights double the shadow geometry. A performance pass is needed before release |
 
-The estimated duration is 30–40 minutes for a first-time player. That is the design target, not a measurement.
+### Estimated duration
+30–40 minutes for a first-time player. This is the design target, not a measurement. The solver needs about 4 minutes.
 
-The real-scene results, the screenshots and the list of things that need human testing will be added here once the 3D playthrough runs.
+### Still needs human testing
+1. **The catalogue.** Do players read the badge number 0417 as drawer 04 / divider 1– / card 17 without the hints?
+2. **The receiver hunt.** Is the bar meter alone enough to find the three reels?
+3. **The tape voice and click counts (2, 8, 5).** Are they clear on a phone speaker? The VU needle and caption dots are the visual backup.
+4. **The film and recording.** Do players understand that the crystal must sit in the screen socket while only the sharp sign is shown?
+5. **The vault overlay.** Is "on its side, smaller" in the engraving clear enough?
+6. **Pacing.** Is the stretch from the booth to the vault too long without a hint of progress?
