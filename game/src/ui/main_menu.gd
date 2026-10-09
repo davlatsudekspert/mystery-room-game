@@ -1,6 +1,9 @@
 extends Control
-## Main menu: animated 3D background, Continue / New Game / Chapters / Settings, store notices.
-## Text and buttons follow UITheme's screen-based sizing; the logo gives way when the buttons need the height.
+## Main menu: the 3D gear box backdrop (MenuBackground), the logo with a warm glow, Continue / New Game / Chapters /
+## Settings as serif text items (MenuItem), store notices. A vignette and a dark gradient behind the column keep the
+## text readable (menu_atmosphere.gdshader). The logo fades in, then the items one after another (none of that with
+## Settings "reduce_motion"). Text and touch targets follow UITheme's screen-based sizing; the logo gives way when
+## the items need the height.
 
 var _menu: VBoxContainer
 var _left: VBoxContainer
@@ -9,8 +12,13 @@ var _dim: ColorRect # darkens the menu behind an open panel
 var _logo: TextureRect
 var _gap: Control
 var _ver: Label
+var _bg: MenuBackground
+var _atmo: ColorRect # vignette, column gradient and logo glow (canvas shader)
+var _cover: ColorRect # black over the 3D at first, faded out by the entrance
 
-const LOGO_SIZE := Vector2(620, 465)
+const LOGO_SIZE := Vector2(760, 570)
+const MENU_SEP := 6.0
+const VER_GAP := 10.0 # between the version line and the column above it
 
 var _safe_seen := Vector4.ZERO
 var _safe_poll := 0.0
@@ -27,12 +35,21 @@ func _ready() -> void:
 	var vp := SubViewport.new()
 	vp.own_world_3d = true
 	svc.add_child(vp)
-	vp.add_child(MenuBackground.new())
-	var shade := ColorRect.new()
-	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	shade.color = Color(0, 0, 0, 0.25)
-	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(shade)
+	_bg = MenuBackground.new()
+	vp.add_child(_bg)
+	_cover = ColorRect.new()
+	_cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_cover.color = Color(0, 0, 0, 0)
+	_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_cover)
+	_atmo = ColorRect.new()
+	_atmo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_atmo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sm := ShaderMaterial.new()
+	sm.shader = load("res://src/ui/menu_atmosphere.gdshader")
+	sm.set_shader_parameter("glow", 1.0)
+	_atmo.material = sm
+	add_child(_atmo)
 	_left = VBoxContainer.new()
 	_left.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	_left.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -44,13 +61,14 @@ func _ready() -> void:
 	_logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_logo.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_logo.item_rect_changed.connect(_update_atmosphere)
 	_left.add_child(_logo)
 	_update_logo()
 	_gap = Control.new()
 	_gap.custom_minimum_size = Vector2(0, 18)
 	_left.add_child(_gap)
 	_menu = VBoxContainer.new()
-	_menu.add_theme_constant_override("separation", 14)
+	_menu.add_theme_constant_override("separation", int(MENU_SEP))
 	_left.add_child(_menu)
 	_dim = ColorRect.new()
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -70,14 +88,17 @@ func _ready() -> void:
 			ver += "  ·  last stop: " + CrashGuard.previous # where the previous session ended without a clean pause
 		if bool(Settings.get_value("safe_graphics")):
 			ver += "  ·  safe"
+	# the small-caps line under the menu (where a title screen puts its copyright line)
 	_ver = UITheme.label(ver, 20, UITheme.MUTED)
-	_ver.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_ver.add_theme_font_override("font", _caps_font())
+	_ver.uppercase = true
+	_ver.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_ver.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_ver.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_ver.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_ver)
 	_build_menu()
+	_entrance()
 	CrashGuard.mark("menu")
 	if CrashGuard.switched_to_safe:
 		CrashGuard.switched_to_safe = false
@@ -86,6 +107,35 @@ func _ready() -> void:
 	Loc.language_changed.connect(_on_language_changed)
 	Settings.changed.connect(_on_setting_changed)
 	get_viewport().size_changed.connect(_layout)
+
+
+## Display serif with a little letter spacing, for the version line (shown in capitals).
+func _caps_font() -> Font:
+	var fv := FontVariation.new()
+	fv.base_font = UITheme.display_font(false)
+	fv.spacing_glyph = 2
+	return fv
+
+
+## The logo fades in (with its glow), the 3D scene comes up out of black, then the items rise in one after another
+## (80 ms apart, all done in about a second). With Settings "reduce_motion" everything is simply there.
+func _entrance() -> void:
+	if bool(Settings.get_value("reduce_motion")):
+		return
+	var sm := _atmo.material as ShaderMaterial
+	_cover.color.a = 1.0
+	_logo.modulate.a = 0.0
+	_ver.modulate.a = 0.0
+	sm.set_shader_parameter("glow", 0.0)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_cover, "color:a", 0.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(_logo, "modulate:a", 1.0, 0.5).set_delay(0.05).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_method(func(v: float) -> void: sm.set_shader_parameter("glow", v), 0.0, 1.0, 0.7).set_delay(0.05)
+	var i := 0
+	for c in _menu.get_children():
+		(c as MenuItem).appear(0.3 + 0.08 * i)
+		i += 1
+	tw.tween_property(_ver, "modulate:a", 1.0, 0.4).set_delay(0.3 + 0.08 * i)
 
 
 func _on_language_changed(_code: String) -> void:
@@ -117,35 +167,61 @@ func _process(delta: float) -> void:
 			_layout()
 
 
-## Places the menu column inside the safe area and sizes the logo to the height the buttons leave.
+## Places the menu column inside the safe area, sizes the logo to the height the items leave, puts the version
+## line under the column, and frames the 3D box in the space right of the column.
 func _layout() -> void:
 	var safe := UITheme.safe_margins()
 	_safe_seen = safe
 	var u := UITheme.usable_rect()
+	var canvas: Vector2 = UITheme.metrics()["canvas"]
 	_left.offset_left = maxf(100.0, safe.x + 60.0)
 	_left.offset_right = _left.offset_left + maxf(800.0, 520.0 * UITheme.wscale() + 40.0)
+	_ver.offset_left = _left.offset_left + MenuItem.INDENT
+	_ver.offset_right = _ver.offset_left
+	_ver.offset_bottom = -(safe.w + 14.0)
+	_ver.offset_top = _ver.offset_bottom
+	var col_bottom := minf(u.end.y, canvas.y - safe.w - 14.0 - _ver.get_combined_minimum_size().y - VER_GAP)
 	_left.offset_top = u.position.y
-	_left.offset_bottom = -((UITheme.metrics()["canvas"] as Vector2).y - u.end.y)
+	_left.offset_bottom = -(canvas.y - col_bottom)
+	var avail := col_bottom - u.position.y
 	var n := _menu.get_child_count()
 	var btn_h := UITheme.target(78)
 	for b: Control in _menu.get_children():
 		b.custom_minimum_size.y = btn_h
 		btn_h = maxf(btn_h, b.get_combined_minimum_size().y)
-	var buttons := n * btn_h + maxf(0, n - 1) * 14.0
-	var logo_h := minf(u.size.y - buttons - 18.0 - 2 * 16.0, LOGO_SIZE.y)
-	# a short screen with large text: the logo gives way first, then the buttons' extra height (never below 7 mm)
+	var buttons := n * btn_h + maxf(0, n - 1) * MENU_SEP
+	var logo_h := minf(avail - buttons - 18.0 - 2 * 16.0, LOGO_SIZE.y)
+	# a short screen with large text: the logo gives way first, then the items' extra height (never below 7 mm)
 	_logo.visible = logo_h >= 150.0
 	_gap.visible = _logo.visible
 	if _logo.visible:
 		_logo.custom_minimum_size = Vector2(logo_h * LOGO_SIZE.x / LOGO_SIZE.y, logo_h)
-	elif buttons > u.size.y:
-		var fit_h := maxf((u.size.y - maxf(0, n - 1) * 14.0) / maxf(1, n), UITheme.px_for_mm(7.0))
+	elif buttons > avail:
+		var fit_h := maxf((avail - maxf(0, n - 1) * MENU_SEP) / maxf(1, n), UITheme.px_for_mm(7.0))
 		for b: Control in _menu.get_children():
 			b.custom_minimum_size.y = fit_h
-	_ver.offset_right = -(safe.z + 30.0)
-	_ver.offset_bottom = -(safe.w + 14.0)
-	_ver.offset_left = _ver.offset_right
-	_ver.offset_top = _ver.offset_bottom
+	# the hero box: centred in the free space right of the column, about 60 % of its width
+	var free_l := _left.offset_right
+	var free_r := canvas.x - safe.z
+	_bg.set_frame(Vector2((free_l + free_r) * 0.5 / canvas.x, 0.54), (free_r - free_l) / canvas.x * 0.6)
+	_update_atmosphere()
+
+
+## Points the overlay shader at the current layout: vignette on the box, gradient behind the column, glow behind
+## the logo.
+func _update_atmosphere() -> void:
+	var canvas: Vector2 = UITheme.metrics()["canvas"]
+	if _atmo == null or canvas.x <= 0.0:
+		return
+	var sm := _atmo.material as ShaderMaterial
+	var free_l := _left.offset_right
+	var free_r := canvas.x - UITheme.safe_margins().z
+	sm.set_shader_parameter("canvas", canvas)
+	sm.set_shader_parameter("focus", Vector2((free_l + free_r) * 0.5 / canvas.x, 0.54))
+	sm.set_shader_parameter("column_end", free_l / canvas.x + 0.05)
+	var r := _logo.get_global_rect() if _logo.visible else Rect2(-canvas, Vector2.ONE)
+	sm.set_shader_parameter("glow_center", r.get_center() / canvas)
+	sm.set_shader_parameter("glow_radius", r.size * 0.62 / canvas)
 
 
 func _build_menu() -> void:
@@ -170,8 +246,7 @@ func _build_menu() -> void:
 
 
 func _add(key: String, cb: Callable) -> void:
-	var b := UITheme.button(key, 520)
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var b := MenuItem.new(key, key == "ui.continue") # Continue is the most prominent item
 	b.pressed.connect(cb)
 	_menu.add_child(b)
 
