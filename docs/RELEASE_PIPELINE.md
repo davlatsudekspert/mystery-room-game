@@ -17,7 +17,7 @@ All workflows are **manual** (`workflow_dispatch`). Actions minutes in a private
 |---|---|---|
 | `tests.yml` | ubuntu | Headless test suite (`tools/run_tests.sh`) |
 | `android.yml` (debug) | ubuntu | Tests, then a debug APK signed with a throw-away debug key, uploaded as an artifact |
-| `android.yml` (release) | ubuntu | Tests, then a Gradle **AAB** signed with the upload key from secrets. Optionally uploaded to **Google Play → Internal testing** as a draft |
+| `android.yml` (release) | ubuntu | A preflight names any missing secret. Then tests and a Gradle **AAB** signed with the upload key from secrets. The AAB is verified: package, versionCode = run number, targetSdk ≥ 36, permissions, arm64, not debuggable, signer = upload-key SHA-256, `beta_unlock` as requested. Optional upload (off by default) to **Internal testing** or **Closed testing (`alpha`)**, as a draft or rolled out, with EN/RU notes from `docs/release/whatsnew/`. `beta_unlock` input for tester builds. Owner checklist: [`docs/release/GOOGLE_PLAY_TESTING.md`](release/GOOGLE_PLAY_TESTING.md) |
 | `ios-check.yml` | ubuntu | Read-only App Store Connect check (GET requests only): the MYSTERY ROOM app record, bundle id, localizations, builds and key-role probes |
 | `ios.yml` | ubuntu, then macOS 15 | ubuntu: read-only App Store Connect gate, tests, Godot export of the Xcode project and its static checks. macOS (only if those pass): Xcode 26, unsigned archive, IPA signed at export with cloud signing. Optional **TestFlight** upload (off by default); `beta_unlock` input for tester builds |
 
@@ -35,13 +35,17 @@ The upload key was created on 2026-10-08 and handed to the owner.
 | `ANDROID_KEYSTORE_BASE64` | Base64 of `mystery-room-upload.keystore` (given to the owner) |
 | `ANDROID_KEYSTORE_PASSWORD` | Keystore password (given to the owner). A PKCS12 key uses the same password |
 | `ANDROID_KEY_ALIAS` | `mysteryroom-upload` |
-| `PLAY_SERVICE_ACCOUNT_JSON` | Optional, only for automatic uploads: Play Console → Setup → API access. Create a service account with the "Release manager" role for this app only, and download its JSON key |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Optional, only for automatic test-track uploads. It is the JSON key of a Google Cloud service account, invited in Play Console → Users and permissions with the app permission **"Release apps to testing tracks"** for MYSTERY ROOM only and no account permissions. Linking a Cloud project under "API access" is no longer needed. Steps: `docs/release/GOOGLE_PLAY_TESTING.md` §7 |
 
 Prerequisites:
 1. A Google Play developer account (the owner has one).
 2. The app is created in the Play Console with the package name above.
 3. Play App Signing is enabled.
 4. The first AAB is uploaded manually once. After that, the API can upload.
+
+`beta_unlock` (default **true**) adds the custom feature `beta_unlock` to the Android presets on the runner only, so testers can open paid chapters while real payments stay disabled (`Premium.tester_build()`).
+- **A Play production build must use `beta_unlock=false`.** Build it fresh; never use "Promote release" from a test track to production.
+- `android.yml` cannot target the production track.
 
 ### Apple App Store / TestFlight (Xcode cloud signing: no Mac or .p12 needed)
 Full details, record facts and the owner checklist: [`docs/release/IOS_TESTFLIGHT.md`](release/IOS_TESTFLIGHT.md).
@@ -74,11 +78,19 @@ App Store Connect (checked read-only on 2026-10-09):
 4. `beta_unlock` (default **true** for TestFlight builds) adds the custom feature `beta_unlock` to the iOS preset on the runner only. **An App Store release build must use `beta_unlock=false`.**
 
 ## Status (verified in the dev container)
-- ✅ Debug APK builds locally:
-  - signed (`apksigner verify` OK)
-  - arm64-v8a
-  - **123 MB** after the mobile texture policy (`tools/build/texture_imports.py`)
-- ⏳ Release AAB via Gradle: configured, not yet run, because it needs the Gradle download and the owner's upload key.
+- ✅ Debug APK builds locally (2026-10-09, commit `02e5776`):
+  - signed v2 + v3 (`apksigner verify` OK);
+  - arm64-v8a only;
+  - targetSdk 36, minSdk 24;
+  - `VIBRATE` is the only permission;
+  - 16 KB aligned;
+  - **192 MB**. It grew with the Chapter 2 content; run #5 on 2026-10-08 was 133 MB.
+- ✅ Release AAB via Gradle builds locally (2026-10-09, signed with a throw-away test key, not the upload key):
+  - **182 MB**;
+  - estimated arm64 download ≈ 156 MB (bundletool);
+  - `PAGE_ALIGNMENT_16K`;
+  - the CI verify step ran on it and correctly rejected the non-upload-key signature.
+- ⏳ Release AAB on GitHub Actions: **not run yet**. Run #5 (`37856877382`, a debug build) showed `ANDROID_KEYSTORE_BASE64` empty. It waits for the owner's 3 `ANDROID_*` secrets. Uploads to Play wait for the owner's approval.
 - 🔶 iOS:
   - The App Store Connect record and bundle id match, verified on an ubuntu runner (read-only).
   - The Xcode project export and its static checks pass on Linux and on an ubuntu runner.

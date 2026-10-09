@@ -1,4 +1,4 @@
-# MYSTERY ROOM — Android build (debug APK / release AAB) and optional Google Play internal-testing upload.
+# MYSTERY ROOM — Android build (debug APK / release AAB) and optional Google Play test-track upload.
 # Manual trigger only: private-repo Actions minutes are metered, so runs happen only when the owner starts them.
 # Required secrets for release/upload (never commit keys):
 #   ANDROID_KEYSTORE_BASE64   base64 of the MYSTERY ROOM upload keystore (PKCS12)
@@ -7,6 +7,8 @@
 #   PLAY_SERVICE_ACCOUNT_JSON only for the optional Play upload. The very first AAB of a new app must be
 #                             uploaded by hand in Play Console; API uploads work after that.
 # versionCode = the workflow run number, so every build Play receives is higher than the last.
+# Never use "Re-run" on a run that already uploaded to Play: the re-run keeps the same versionCode and Play rejects it.
+# Owner checklist and the update procedure: docs/release/GOOGLE_PLAY_TESTING.md
 name: Android build
 
 on:
@@ -18,19 +20,75 @@ on:
         options: [debug, release]
         default: debug
       upload_to_play:
-        description: "Upload the release AAB to Google Play internal testing"
+        description: "Upload the release AAB to Google Play (needs the owner's approval)"
         type: boolean
         default: false
+      play_track:
+        description: "Play track: internal (Internal testing) or alpha (Closed testing - Alpha)"
+        type: choice
+        options: [internal, alpha]
+        default: internal
+      play_status:
+        description: "draft = the owner presses Roll out in Play Console; completed = roll out to testers now"
+        type: choice
+        options: [draft, completed]
+        default: draft
+      version_name:
+        description: "versionName shown to players, e.g. 0.1.1 (empty = keep export_presets.cfg)"
+        type: string
+        default: ""
+      beta_unlock:
+        description: "Test build: testers can play paid chapters (custom feature beta_unlock). MUST be false for a store production build"
+        type: boolean
+        default: true
 
 env:
   GODOT_VERSION: "4.7.2"
   PACKAGE_NAME: com.mysteryroom.forgotteninstitute
+  # Public SHA-256 fingerprint of the MYSTERY ROOM upload certificate (docs/RELEASE_PIPELINE.md). Not a secret.
+  UPLOAD_CERT_SHA256: "E5:D8:42:A6:B8:0E:D2:50:FD:DD:EE:CA:92:64:ED:D7:A6:8B:E1:59:70:A3:AD:8C:06:A7:EC:9C:E8:37:D1:3E"
+  # Google Play target API requirement for new apps and updates since 2026-08-31.
+  MIN_TARGET_SDK: "36"
+  BUNDLETOOL_VERSION: "1.18.2"
+  BUNDLETOOL_SHA256: "378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584"
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
+      # Fail in seconds, before any minutes are spent, when a release or an upload cannot succeed.
+      # Prints only secret NAMES, never values.
+      - name: Preflight (inputs and required secrets)
+        env:
+          BUILD_TYPE: ${{ inputs.build_type }}
+          UPLOAD: ${{ inputs.upload_to_play }}
+          VERSION_NAME: ${{ inputs.version_name }}
+          HAS_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+          HAS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
+          HAS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS != '' }}
+          HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        run: |
+          missing=""
+          if [ "$VERSION_NAME" != "" ] && ! [[ "$VERSION_NAME" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
+            echo "::error::version_name must look like 0.1.1"; exit 1
+          fi
+          if [ "$UPLOAD" = "true" ] && [ "$BUILD_TYPE" != "release" ]; then
+            echo "::error::upload_to_play needs build_type = release"; exit 1
+          fi
+          if [ "$BUILD_TYPE" = "release" ]; then
+            [ "$HAS_KS" = "true" ]    || missing="$missing ANDROID_KEYSTORE_BASE64"
+            [ "$HAS_PASS" = "true" ]  || missing="$missing ANDROID_KEYSTORE_PASSWORD"
+            [ "$HAS_ALIAS" = "true" ] || missing="$missing ANDROID_KEY_ALIAS"
+          fi
+          if [ "$UPLOAD" = "true" ]; then
+            [ "$HAS_PLAY" = "true" ] || missing="$missing PLAY_SERVICE_ACCOUNT_JSON"
+          fi
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing"; exit 1
+          fi
+          echo "build_type=$BUILD_TYPE upload_to_play=$UPLOAD secrets: keystore=$HAS_KS password=$HAS_PASS alias=$HAS_ALIAS play=$HAS_PLAY"
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-java@v4
@@ -82,8 +140,32 @@ jobs:
           EOT
           if [ -n "$KS_B64" ]; then echo "$KS_B64" | base64 -d > ~/release.keystore; fi
 
-      - name: Version code from the run number
-        run: sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" game/export_presets.cfg
+      - name: Version code from the run number (and optional version name)
+        env:
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: |
+          sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" game/export_presets.cfg
+          if [ -n "$VERSION_NAME" ]; then
+            sed -i "s/^version\/name=.*/version\/name=\"$VERSION_NAME\"/" game/export_presets.cfg
+          fi
+          grep -E "^version/(code|name)=" game/export_presets.cfg | sort -u
+
+      # Premium.tester_build(): OS.has_feature("beta_unlock") opens the paid chapters without any payment code.
+      # Only this runner's copy of export_presets.cfg changes; the repository preset never carries the feature.
+      - name: Test-build feature beta_unlock (Android presets only)
+        if: inputs.beta_unlock
+        run: |
+          awk '
+            /^\[preset\.[0-9]+\]$/ { plat = "" }
+            /^platform=/ { plat = $0 }
+            /^custom_features=/ && plat == "platform=\"Android\"" {
+              v = $0; sub(/^custom_features="/, "", v); sub(/"$/, "", v)
+              $0 = "custom_features=\"" (v == "" ? "" : v ",") "beta_unlock\""
+            }
+            { print }
+          ' game/export_presets.cfg > /tmp/presets.cfg
+          mv /tmp/presets.cfg game/export_presets.cfg
+          grep -n -E '^(name|custom_features)=' game/export_presets.cfg
 
       - name: Android SDK 36 (Play requires target API 36 since 2026-08-31)
         if: inputs.build_type == 'release'
@@ -98,6 +180,8 @@ jobs:
           mkdir -p build/android
           cd game && godot --headless --export-debug "Android" ../build/android/mystery-room-debug.apk
           ls -la ../build/android
+          n=$(unzip -p ../build/android/mystery-room-debug.apk assets/project.binary | grep -a -c beta_unlock || true)
+          echo "beta_unlock feature in the APK: $([ "${n:-0}" -gt 0 ] && echo present || echo absent)"
 
       - name: Export release AAB (Gradle build)
         if: inputs.build_type == 'release'
@@ -112,9 +196,56 @@ jobs:
           # the template flag only works together with an export (on its own it starts the editor and waits)
           godot --headless --install-android-build-template --export-release "Android AAB" ../build/android/mystery-room-release.aab
           ls -la ../build/android
-          # the bundle must carry the upload key's signature
-          jarsigner -verify ../build/android/mystery-room-release.aab | tail -1
-          keytool -printcert -jarfile ../build/android/mystery-room-release.aab | grep -E "Owner|SHA256:"
+          test -s ../build/android/mystery-room-release.aab || { echo "::error::no AAB was produced"; exit 1; }
+
+      # Stops the run before any upload unless the bundle is exactly what Play should receive.
+      - name: Verify the AAB (package, versionCode, SDK, permissions, ABI, upload-key signature)
+        if: inputs.build_type == 'release'
+        env:
+          AAB: build/android/mystery-room-release.aab
+          EXPECTED_VERSION_CODE: ${{ github.run_number }}
+          BETA_UNLOCK: ${{ inputs.beta_unlock }}
+        run: |
+          set -euo pipefail
+          BT=/tmp/bundletool.jar
+          curl -sSL -o "$BT" "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar"
+          echo "${BUNDLETOOL_SHA256}  $BT" | sha256sum -c -
+          # every tool's output is captured first, so pipefail never trips on a closed pipe
+          M=$(java -jar "$BT" dump manifest --bundle "$AAB" 2>/dev/null)
+          L=$(unzip -l "$AAB")
+          JV=$(jarsigner -verify "$AAB" 2>&1 || true)
+          C=$(keytool -printcert -jarfile "$AAB" 2>&1 || true)
+          attr() { { grep -o "$1=\"[^\"]*\"" <<<"$M" || true; } | head -n1 | cut -d'"' -f2; }
+          pkg=$(attr 'package'); vc=$(attr 'android:versionCode'); vn=$(attr 'android:versionName')
+          tsdk=$(attr 'android:targetSdkVersion'); msdk=$(attr 'android:minSdkVersion')
+          echo "package=$pkg versionCode=$vc versionName=$vn minSdk=$msdk targetSdk=$tsdk"
+          fail=0
+          [ "$pkg" = "$PACKAGE_NAME" ] || { echo "::error::package is '$pkg'"; fail=1; }
+          [ "$vc" = "$EXPECTED_VERSION_CODE" ] || { echo "::error::versionCode is '$vc', expected $EXPECTED_VERSION_CODE"; fail=1; }
+          [ "${tsdk:-0}" -ge "$MIN_TARGET_SDK" ] || { echo "::error::targetSdk '$tsdk' < $MIN_TARGET_SDK"; fail=1; }
+          if grep -q 'android:debuggable="true"' <<<"$M"; then echo "::error::the bundle is debuggable"; fail=1; fi
+          perms=$({ grep -o '<uses-permission[^>]*android:name="[^"]*"' <<<"$M" || true; } | sed 's/.*android:name="//; s/"$//' | sort -u)
+          echo "permissions: $(echo $perms)"
+          for p in $perms; do
+            case "$p" in
+              android.permission.VIBRATE|"$PACKAGE_NAME".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION) ;;
+              *) echo "::error::unexpected permission $p"; fail=1 ;;
+            esac
+          done
+          grep -q " base/lib/arm64-v8a/libgodot_android.so$" <<<"$L" || { echo "::error::no arm64-v8a library"; fail=1; }
+          echo "ABIs: $({ grep -o ' base/lib/[^/]*/' <<<"$L" || true; } | sort -u | sed 's# base/lib/##; s#/##' | tr '\n' ' ')"
+          grep -q "jar verified" <<<"$JV" || { echo "::error::the AAB signature does not verify"; fail=1; }
+          signer=$({ grep -o "SHA256: .*" <<<"$C" || true; } | head -n1 | cut -d' ' -f2)
+          echo "signer SHA-256: $signer"
+          [ "$signer" = "$UPLOAD_CERT_SHA256" ] || { echo "::error::the AAB is not signed with the MYSTERY ROOM upload key"; fail=1; }
+          # the exported project.binary lists the preset's custom features
+          PB=$({ grep -o '[^ ]*assets/project\.binary$' <<<"$L" || true; } | head -n1)
+          bu=$({ unzip -p "$AAB" "$PB" 2>/dev/null || true; } | { grep -a -c "beta_unlock" || true; })
+          if [ "${bu:-0}" -gt 0 ]; then has_bu=true; else has_bu=false; fi
+          echo "beta_unlock feature in $PB: $has_bu (requested: $BETA_UNLOCK)"
+          [ -n "$PB" ] && [ "$has_bu" = "$BETA_UNLOCK" ] || { echo "::error::beta_unlock is $has_bu, requested $BETA_UNLOCK"; fail=1; }
+          echo "size: $(stat -c %s "$AAB") bytes"
+          exit $fail
 
       - uses: actions/upload-artifact@v4
         with:
@@ -122,12 +253,22 @@ jobs:
           path: build/android/*
           retention-days: 7
 
-      - name: Upload to Google Play (internal testing, draft)
+      - name: Release name
+        id: rel
         if: inputs.build_type == 'release' && inputs.upload_to_play
-        uses: r0adkll/upload-google-play@v1
+        run: |
+          vn=$(grep -m1 -E '^version/name=' game/export_presets.cfg | cut -d'"' -f2)
+          echo "name=$vn (${{ github.run_number }})" >> "$GITHUB_OUTPUT"
+
+      # Pinned to the commit of r0adkll/upload-google-play v1.1.5 (the v1 tag on 2026-10-09): this step holds the Play credentials.
+      - name: Upload to Google Play (${{ inputs.play_track }}, ${{ inputs.play_status }})
+        if: inputs.build_type == 'release' && inputs.upload_to_play
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: ${{ env.PACKAGE_NAME }}
           releaseFiles: build/android/mystery-room-release.aab
-          track: internal
-          status: draft
+          releaseName: ${{ steps.rel.outputs.name }}
+          track: ${{ inputs.play_track }}
+          status: ${{ inputs.play_status }}
+          whatsNewDirectory: docs/release/whatsnew
