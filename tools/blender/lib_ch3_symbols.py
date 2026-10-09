@@ -255,7 +255,7 @@ def ring_icon(i: int, d: float, line: float = 0.06, bold: float = 0.16, n: int =
 SLOTS = {
     "M_Tile_Glazed": ("D9D6CB", 0.25, 0.0, 1.0, "tile_glazed", 0.6),
     "M_Rock": ("2B2926", 0.85, 0.0, 1.0, "rock", 2.4),
-    "M_Chequer": ("5E605B", 0.45, 0.85, 1.0, "chequer", 0.36),
+    "M_Chequer": ("5E605B", 0.45, 0.85, 1.0, "chequer", 0.30),
     "M_Porcelain": ("5A3320", 0.15, 0.0, 1.0, None, 1.0),
     "M_Shader_Quad": ("1A1F1E", 0.3, 0.0, 1.0, None, 1.0),
     "M_Decal_InterlockPlate": ("E6DDC6", 0.3, 0.0, 1.0, "decals/ch3/interlock_plate.png", 1.0),
