@@ -42,7 +42,7 @@ static func step(l: Lab7Logic, choice: String) -> void:
 		return
 	if not s["safe_open"]:
 		l.safe_press("C")
-		for c in Lab7Logic.SAFE_CODE:
+		for c in l.safe_code():
 			l.safe_press(c)
 		l.safe_press("E")
 		return
@@ -82,7 +82,7 @@ static func step(l: Lab7Logic, choice: String) -> void:
 		l.set_dial(Lab7Logic.RADIO_TARGET)
 		return
 	if not s["shelf_open"]:
-		for n in Lab7Logic.BEACON_PULSES:
+		for n in l.beacon():
 			l.pull_book(n)
 		return
 	if not s["cabinet_open"] or not s["emblem_recorded"]:

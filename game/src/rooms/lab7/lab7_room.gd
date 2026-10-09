@@ -1158,7 +1158,8 @@ func _feedback(e: String) -> void:
 			visuals.radio_tick()
 		"radio_signal":
 			hud.call("message", tr("msg.radio_signal"))
-			hud.call("caption", tr("cap.beacon"))
+			var groups: Array = logic.beacon().map(func(n: Variant) -> String: return "•".repeat(int(n)))
+			hud.call("caption", tr("cap.beacon") % " — ".join(groups))
 			_array_answers()
 		"book_pulled":
 			AudioManager.sfx("rosette_press", -2.0, 0.85)

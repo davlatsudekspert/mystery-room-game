@@ -20,7 +20,7 @@ H = {
 "gearbox": [
     ("Strand's box: each knob drags a neighbour along.", "Шкатулка Странда: каждая ручка тянет за собой соседа.", "Strandning qutichasi: har bir murvat qoʻshnisini ham aylantiradi."),
     ("Bring every gear's pointer to the mark at the back. Count how far each one is.", "Наведите стрелки всех шестерней на метку сзади. Посчитайте, сколько шагов до неё.", "Har bir gʻildirak koʻrsatkichini orqadagi belgiga keltiring. Har biri necha qadam uzoqligini sanang."),
-    ("Press the left knob 2 times, the middle knob 1 time, the right knob 3 times.", "Нажмите левую ручку 2 раза, среднюю — 1 раз, правую — 3 раза.", "Chap murvatni 2 marta, oʻrtadagini 1 marta, oʻngdagini 3 marta bosing."),
+    ("Press the knobs: left ×%d, middle ×%d, right ×%d.", "Нажмите ручки: левую ×%d, среднюю ×%d, правую ×%d.", "Murvatlarni bosing: chap ×%d, oʻrta ×%d, oʻng ×%d."),
 ],
 "take_cell": [
     ("The gear box is open.", "Шкатулка открыта.", "Quticha ochiq."),
@@ -40,7 +40,7 @@ H = {
 "safe": [
     ("The symbols on the page stand for numbers.", "Символы на странице означают числа.", "Sahifadagi belgilar sonlarni bildiradi."),
     ("The poster on the wall counts dots beside each symbol.", "Плакат на стене показывает число точек рядом с каждым символом.", "Devordagi plakat har bir belgi yonida nuqtalar sonini koʻrsatadi."),
-    ("Enter 7-2-9-4 on the safe keypad, then press the enter key (bottom right).", "Введите на сейфе 7-2-9-4 и нажмите клавишу ввода (внизу справа).", "Seyf tugmalarida 7-2-9-4 ni tering va kiritish tugmasini bosing (pastki oʻngda)."),
+    ("Enter %s-%s-%s-%s on the safe keypad, then press the enter key (bottom right).", "Введите на сейфе %s-%s-%s-%s и нажмите клавишу ввода (внизу справа).", "Seyf tugmalarida %s-%s-%s-%s ni tering va kiritish tugmasini bosing (pastki oʻngda)."),
 ],
 "take_safe": [
     ("The safe is open.", "Сейф открыт.", "Seyf ochiq."),
@@ -84,8 +84,8 @@ H = {
 ],
 "books": [
     ("The beacon repeats three numbers.", "Маяк повторяет три числа.", "Mayoq uchta sonni takrorlaydi."),
-    ("Count its pulses: 2, 6, 3. Leyla's encyclopedia “remembers them”.", "Посчитайте импульсы: 2, 6, 3. Энциклопедия Лейлы «их помнит».", "Impulslarni sanang: 2, 6, 3. Leylaning ensiklopediyasi «ularni eslaydi»."),
-    ("Pull volumes II, VI, then III.", "Потяните тома II, VI, затем III.", "II, VI, soʻng III jildlarni torting."),
+    ("Count its pulses: %d, %d, %d. Leyla's encyclopedia “remembers them”.", "Посчитайте импульсы: %d, %d, %d. Энциклопедия Лейлы «их помнит».", "Impulslarni sanang: %d, %d, %d. Leylaning ensiklopediyasi «ularni eslaydi»."),
+    ("Pull volumes %s, %s, then %s.", "Потяните тома %s, %s, затем %s.", "%s, %s, soʻng %s jildlarni torting."),
 ],
 "shadow": [
     ("The wall shows the Institute's mark.", "На стене — знак института.", "Devorda institut belgisi bor."),

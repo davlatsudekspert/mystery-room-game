@@ -613,7 +613,7 @@ func _show_notebook(page: int) -> void:
 		var glyphs := HBoxContainer.new()
 		glyphs.alignment = BoxContainer.ALIGNMENT_CENTER
 		glyphs.add_theme_constant_override("separation", 40)
-		for gid in ["sun", "wave", "spiral", "delta"]:
+		for gid: Variant in l7.safe_glyphs(): # this game's cipher (docs/VARIANTS.md)
 			var tr_ := TextureRect.new()
 			tr_.texture = load("res://assets/ui/glyphs/%s.png" % gid)
 			tr_.custom_minimum_size = Vector2(130, 130)

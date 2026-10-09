@@ -217,7 +217,7 @@ msg.lens_removed,You take the crystal lens back.,Вы забираете лин�
 msg.book_pulled,"Volume %s tilts out, then springs back.",Том %s наклоняется и возвращается на место.,%s-jild egilib chiqdi va joyiga qaytdi.
 msg.needs_uv,Something here might show under the right light.,Здесь что-то может проявиться при нужном свете.,Bu yerda toʻgʻri yorugʻlikda nimadir koʻrinishi mumkin.
 cap.maglock,[Magnetic lock clicks shut],[Щелчок магнитного замка],[Magnit qulf chiqillab yopildi]
-cap.beacon,[Radio beacon: •• — •••••• — •••],[Радиомаяк: •• — •••••• — •••],[Radiomayoq: •• — •••••• — •••]
+cap.beacon,[Radio beacon: %s],[Радиомаяк: %s],[Radiomayoq: %s]
 cap.static,[Radio static],[Радиопомехи],[Radio shovqini]
 cap.hum,[The projector hums],[Проектор гудит],[Proyektor gʻuvillaydi]
 cap.sparks,[Sparks crackle],[Треск искр],[Uchqunlar chirsillaydi]
@@ -478,7 +478,7 @@ hint.take_lamp.2,Something is lying inside the drawer.,В ящике что-то
 hint.take_lamp.3,Tap the lamp inside the drawer to take it.,"Нажмите на лампу в ящике, чтобы взять её.",Olish uchun tortmadagi chiroqqa bosing.
 hint.gearbox.1,Strand's box: each knob drags a neighbour along.,Шкатулка Странда: каждая ручка тянет за собой соседа.,Strandning qutichasi: har bir murvat qoʻshnisini ham aylantiradi.
 hint.gearbox.2,Bring every gear's pointer to the mark at the back. Count how far each one is.,"Наведите стрелки всех шестерней на метку сзади. Посчитайте, сколько шагов до неё.",Har bir gʻildirak koʻrsatkichini orqadagi belgiga keltiring. Har biri necha qadam uzoqligini sanang.
-hint.gearbox.3,"Press the left knob 2 times, the middle knob 1 time, the right knob 3 times.","Нажмите левую ручку 2 раза, среднюю — 1 раз, правую — 3 раза.","Chap murvatni 2 marta, oʻrtadagini 1 marta, oʻngdagini 3 marta bosing."
+hint.gearbox.3,"Press the knobs: left ×%d, middle ×%d, right ×%d.","Нажмите ручки: левую ×%d, среднюю ×%d, правую ×%d.","Murvatlarni bosing: chap ×%d, oʻrta ×%d, oʻng ×%d."
 hint.take_cell.1,The gear box is open.,Шкатулка открыта.,Quticha ochiq.
 hint.take_cell.2,Leyla kept something for her lamp inside it.,Лейла хранила в ней кое-что для лампы.,Leyla uning ichida chirogʻi uchun nimanidir saqlagan.
 hint.take_cell.3,Tap the battery cell inside the box.,Нажмите на батарею в шкатулке.,Quticha ichidagi batareyaga bosing.
@@ -490,7 +490,7 @@ hint.cipher.2,Some inks only show under ultraviolet light.,Некоторые ч
 hint.cipher.3,Open the notebook at the blank page and press the UV button.,Откройте блокнот на пустой странице и нажмите кнопку УФ.,Daftarni boʻsh sahifada oching va UB tugmasini bosing.
 hint.safe.1,The symbols on the page stand for numbers.,Символы на странице означают числа.,Sahifadagi belgilar sonlarni bildiradi.
 hint.safe.2,The poster on the wall counts dots beside each symbol.,Плакат на стене показывает число точек рядом с каждым символом.,Devordagi plakat har bir belgi yonida nuqtalar sonini koʻrsatadi.
-hint.safe.3,"Enter 7-2-9-4 on the safe keypad, then press the enter key (bottom right).",Введите на сейфе 7-2-9-4 и нажмите клавишу ввода (внизу справа).,Seyf tugmalarida 7-2-9-4 ni tering va kiritish tugmasini bosing (pastki oʻngda).
+hint.safe.3,"Enter %s-%s-%s-%s on the safe keypad, then press the enter key (bottom right).",Введите на сейфе %s-%s-%s-%s и нажмите клавишу ввода (внизу справа).,Seyf tugmalarida %s-%s-%s-%s ni tering va kiritish tugmasini bosing (pastki oʻngda).
 hint.take_safe.1,The safe is open.,Сейф открыт.,Seyf ochiq.
 hint.take_safe.2,Everything inside will be useful.,"Всё, что внутри, пригодится.",Ichidagi hamma narsa asqotadi.
 hint.take_safe.3,"Take the key, the lens, the letter and the valve from the safe.","Возьмите из сейфа ключ, линзу, письмо и лампу.","Seyfdan kalit, linza, maktub va radiolampani oling."
@@ -516,8 +516,8 @@ hint.tune.1,Strand left his beacon's band on his board.,Странд остав�
 hint.tune.2,The chalkboard says λ = 41 m. The radio dial is marked in metres too.,На доске написано λ = 41 м. Шкала радио тоже размечена в метрах.,Dokada λ = 41 m deb yozilgan. Radio shkalasi ham metrlarda belgilangan.
 hint.tune.3,Drag the knob (or tap its left side) until the needle sits on 41 m.,"Крутите ручку пальцем (или нажимайте её левую сторону), пока стрелка не встанет на 41 м.","Murvatni barmoq bilan buring (yoki chap tomoniga bosing), koʻrsatkich 41 m ga kelsin."
 hint.books.1,The beacon repeats three numbers.,Маяк повторяет три числа.,Mayoq uchta sonni takrorlaydi.
-hint.books.2,"Count its pulses: 2, 6, 3. Leyla's encyclopedia “remembers them”.","Посчитайте импульсы: 2, 6, 3. Энциклопедия Лейлы «их помнит».","Impulslarni sanang: 2, 6, 3. Leylaning ensiklopediyasi «ularni eslaydi»."
-hint.books.3,"Pull volumes II, VI, then III.","Потяните тома II, VI, затем III.","II, VI, soʻng III jildlarni torting."
+hint.books.2,"Count its pulses: %d, %d, %d. Leyla's encyclopedia “remembers them”.","Посчитайте импульсы: %d, %d, %d. Энциклопедия Лейлы «их помнит».","Impulslarni sanang: %d, %d, %d. Leylaning ensiklopediyasi «ularni eslaydi»."
+hint.books.3,"Pull volumes %s, %s, then %s.","Потяните тома %s, %s, затем %s.","%s, %s, soʻng %s jildlarni torting."
 hint.shadow.1,The wall shows the Institute's mark.,На стене — знак института.,Devorda institut belgisi bor.
 hint.shadow.2,Make the sculpture's shadow draw it: a full ring and a straight line.,"Сделайте так, чтобы тень скульптуры нарисовала его: полное кольцо и прямую линию.",Haykalcha soyasi uni chizsin: toʻliq halqa va toʻgʻri chiziq.
 hint.shadow.3,"Turn the ring until it faces the lamp, and the rod until it stands upright.","Поворачивайте кольцо, пока оно не встанет к лампе, а стержень — пока не станет вертикальным.","Halqani chiroqqa yuzlanguncha, sterjenni esa tik turguncha buring."

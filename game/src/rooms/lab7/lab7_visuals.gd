@@ -390,9 +390,10 @@ func _radio_audio() -> void:
 	if not _static_player.playing:
 		_static_player.play()
 	_static_player.volume_db = linear_to_db(maxf(0.0001, (1.0 - clarity) * (0.5 if near_radio else 0.12)))
-	# beacon pulses 2-6-3, generated as short beeps on a 7.2 s cycle
-	var t := fmod(Time.get_ticks_msec() / 1000.0, 7.2)
-	var on := _beacon_on(t)
+	# this game's beacon pulses (canonical 2-6-3), short beeps in three groups on a repeating cycle
+	var groups := _beacon_groups()
+	var t := fmod(Time.get_ticks_msec() / 1000.0, float(groups[groups.size() - 1]))
+	var on := _beacon_on(t, groups)
 	var eye := part("radio", "magic_eye") as MeshInstance3D
 	if clarity > 0.0 and eye:
 		ModelUtil.set_emission(eye, true, Color(0.4, 1.0, 0.55), (0.6 + 3.0 * clarity) * (1.6 if on else 0.6))
@@ -404,10 +405,21 @@ func _radio_audio() -> void:
 var _beep_playing := false
 
 
-static func _beacon_on(t: float) -> bool:
-	# groups: 2 pulses @0.0, 6 pulses @1.4, 3 pulses @4.6 ; pulse 0.18 s on, 0.17 off
-	var groups := [[0.0, 2], [1.4, 6], [4.6, 3]]
-	for g: Array in groups:
+## [[start, pulses], …, cycle_length]: pulses 0.35 s apart, a 0.7 s gap between groups and 1.5 s before repeating
+## (2-6-3 gives the original 0.0 / 1.4 / 4.6 starts).
+func _beacon_groups() -> Array:
+	var out: Array = []
+	var t := 0.0
+	for n: Variant in logic.beacon():
+		out.append([t, int(n)])
+		t += int(n) * 0.35 + 0.7
+	out.append(t + 0.8)
+	return out
+
+
+static func _beacon_on(t: float, groups: Array) -> bool:
+	for i in groups.size() - 1:
+		var g: Array = groups[i]
 		var start: float = g[0]
 		var n: int = g[1]
 		if t >= start and t < start + n * 0.35:

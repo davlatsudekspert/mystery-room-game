@@ -2,7 +2,7 @@ extends Node
 ## Runtime QA: loads the real Lab 7 scene and plays Chapter 1 through simulated taps on the 3D parts
 ## (raycast → hotspot → logic), falling back to direct logic calls only for models that are still
 ## placeholders. Saves a screenshot per step and a report. Exit code 0 = chapter completed.
-## Run: xvfb-run godot --path game res://qa/playthrough.tscn -- --out=<dir> [--lang=ru] [--from=p7] [--to=p9]
+## Run: xvfb-run godot --path game res://qa/playthrough.tscn -- --out=<dir> [--lang=ru] [--from=p7] [--to=p9] [--seed=N]
 
 var out_dir := "/tmp"
 var room: Node3D
@@ -33,6 +33,8 @@ func _ready() -> void:
 			out_dir = a.substr(6)
 		if a.begins_with("--lang="):
 			TranslationServer.set_locale(a.substr(7))
+		if a.begins_with("--seed="):
+			GameState.variant_seed = int(a.substr(7)) # this game's own answers (docs/VARIANTS.md)
 		if a.begins_with("--from=p"):
 			_from = int(a.substr(8))
 		if a.begins_with("--to=p"):
@@ -329,7 +331,7 @@ func run() -> void:
 		await shot("poster_resonances")
 		await view("safe")
 		await shot("safe_keypad")
-		for c in "7294":
+		for c in L.safe_code():
 			var n0 := str(s["safe_input"]).length()
 			await act("wall_safe", "IA_key_" + c, func() -> bool: return str(s["safe_input"]).length() > n0, func() -> void: L.safe_press(c), "key " + c)
 		await act("wall_safe", "IA_key_enter", func() -> bool: return s["safe_open"], func() -> void: L.safe_press("E"), "enter")
@@ -338,7 +340,7 @@ func run() -> void:
 		for spot in ["safe_key", "safe_lens", "safe_letter", "safe_valve"]:
 			var item: String = Lab7Logic.SPOTS[spot]["item"]
 			await act("wall_safe", "Item_" + spot, func() -> bool: return L.has_item(item), func() -> void: L.take(spot), spot)
-		step("P4 safe 7294 → key, lens, letter, valve", func() -> bool: return s["safe_open"] and L.has_item("crystal_lens"))
+		step("P4 safe %s → key, lens, letter, valve" % L.safe_code(), func() -> bool: return s["safe_open"] and L.has_item("crystal_lens"))
 	# --- compartment (P5)
 	if _from <= 5 and 5 <= _to:
 		await view("desk")
@@ -391,7 +393,7 @@ func run() -> void:
 		await _settle(0.8)
 		await view("books")
 		await shot("encyclopedia")
-		for n in Lab7Logic.BEACON_PULSES:
+		for n in L.beacon():
 			var b0 := str(s["books"])
 			await act("bookshelf", "IA_book_%d" % n, func() -> bool: return str(s["books"]) != b0 or s["shelf_open"], func() -> void: L.pull_book(n), "book %d" % n)
 			await _settle(0.6)
@@ -400,7 +402,7 @@ func run() -> void:
 		await _settle(1.0)
 		await view("bookshelf")
 		await shot("bookcase_open")
-		step("P9 books II-VI-III → darkroom", func() -> bool: return s["shelf_open"])
+		step("P9 books %s → darkroom" % "-".join(L.beacon().map(func(n: Variant) -> String: return Lab7Logic.roman(int(n)))), func() -> bool: return s["shelf_open"])
 		await shard("bookshelf_top", "bookshelf_top") # rides on the swung bookcase
 	# --- darkroom shadow + recording (P10)
 	if _from <= 10 and 10 <= _to:

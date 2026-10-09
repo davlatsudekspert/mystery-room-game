@@ -15,7 +15,7 @@ extends Node
 
 const LAB7_SCENE := "res://src/rooms/lab7/lab7.tscn"
 const BOOTH_VIEWS := ["booth", "projector", "splicer", "slides", "slide_projector", "lens_case"]
-const STALL_LIMIT_MS := 240000 # no report line for this long: the review itself is stuck
+const STALL_LIMIT_MS := 270000 # no report line for this long: the review itself is stuck (qa_run.sh kills at 300 s)
 
 var out_dir := "/tmp/player_review_ch2"
 var room: Node3D
@@ -417,17 +417,19 @@ func _blocked(p: Vector2, rects: Array[Rect2]) -> bool:
 	return false
 
 
-func _resolves(sp: Vector2, model_id: String, part_name: String) -> bool:
+func _resolves(sp: Vector2, model_id: String, part_name: String, accept: Array = []) -> bool:
 	var h: Dictionary = room.call("raycast", sp)
 	if h.is_empty():
 		return false
 	var r: Dictionary = room.call("resolve", h)
+	if not accept.is_empty():
+		return accept.has(str(r["part"]))
 	return str(r["part"]) == part_name if part_name != "" else str(r["model"]) == model_id
 
 
 ## Where a player would tap to hit this part (or, with part "", any part of the model): the point nearest the
 ## middle where it is actually visible and not under a HUD button.
-func _aim(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO) -> Vector2:
+func _aim(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO, accept: Array = []) -> Vector2:
 	var n := node_of(model_id, part_name)
 	if n == null:
 		return Vector2(-1, -1)
@@ -442,7 +444,7 @@ func _aim(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO) -> 
 	var c := r.get_center() + frac * r.size * 0.5
 	if frac != Vector2.ZERO:
 		return c if screen.has_point(c) and not _blocked(c, blockers) else Vector2(-1, -1)
-	if screen.has_point(c) and not _blocked(c, blockers) and _resolves(c, model_id, part_name):
+	if screen.has_point(c) and not _blocked(c, blockers) and _resolves(c, model_id, part_name, accept):
 		return c
 	var best := Vector2(-1, -1)
 	var best_d := INF
@@ -452,7 +454,7 @@ func _aim(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO) -> 
 			if not screen.has_point(p) or _blocked(p, blockers):
 				continue
 			var d := p.distance_to(r.get_center())
-			if d < best_d and _resolves(p, model_id, part_name):
+			if d < best_d and _resolves(p, model_id, part_name, accept):
 				best = p
 				best_d = d
 	return best
@@ -466,10 +468,10 @@ func _hit_at(sp: Vector2) -> String:
 	return "%s/%s/%s" % [r["model"], r["hotspot"], r["part"]]
 
 
-func _hit(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO) -> String:
+func _hit(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO, accept: Array = []) -> String:
 	if node_of(model_id, part_name) == null:
 		return "part missing"
-	var sp := _aim(model_id, part_name, frac)
+	var sp := _aim(model_id, part_name, frac, accept)
 	if sp.x < 0:
 		return "not visible from here (or only under the HUD)"
 	return _hit_at(sp)
@@ -492,8 +494,8 @@ func tap_screen(sp: Vector2) -> bool:
 	return _taps_seen > before
 
 
-func tap(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO) -> bool:
-	var sp := _aim(model_id, part_name, frac)
+func tap(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO, accept: Array = []) -> bool:
+	var sp := _aim(model_id, part_name, frac, accept)
 	if sp.x < 0:
 		note("    (cannot see %s%s from view %s)" % [model_id, "/" + part_name if part_name != "" else "", view_id()])
 		return false
@@ -505,14 +507,15 @@ func tap(model_id: String, part_name: String, frac: Vector2 = Vector2.ZERO) -> b
 
 ## Tap a part; it must make `cond` true. Otherwise the step is applied by a logic call (so the review goes on)
 ## and reported as ✗: a player tapping there would be stuck.
-func act(label: String, model_id: String, part_name: String, cond: Callable, fallback: Callable, frac: Vector2 = Vector2.ZERO) -> bool:
+func act(label: String, model_id: String, part_name: String, cond: Callable, fallback: Callable, frac: Vector2 = Vector2.ZERO,
+		accept: Array = []) -> bool:
 	if not cond.call():
-		await tap(model_id, part_name, frac)
+		await tap(model_id, part_name, frac, accept)
 		await _settle(0.3)
 	if cond.call():
 		taps_ok += 1
 		return true
-	var why := _hit(model_id, part_name, frac)
+	var why := _hit(model_id, part_name, frac, accept)
 	fallback.call()
 	taps_failed += 1
 	note("✗ tapping does not do it: %s (%s/%s in view %s; the tap hits %s) — applied by a logic call to go on" % [label,
@@ -654,7 +657,7 @@ func _on_screen(p: Vector3) -> bool:
 
 ## From a root view: look at the object and tap it; it must open `expect`. If its middle does not, tap the other
 ## parts of it a player can see. Returns false (and reports ✗) when no visible part of it opens the view.
-func open_from(root_view: String, model_id: String, expect: String) -> bool:
+func open_from(root_view: String, model_id: String, expect: String, report_fail: bool = true) -> bool:
 	await to_root(root_view)
 	var n := model(model_id)
 	if n == null:
@@ -687,7 +690,10 @@ func open_from(root_view: String, model_id: String, expect: String) -> bool:
 		if cam().current() == expect:
 			note("    (the first tap on %s went to «%s»; another visible part of it opens «%s»)" % [model_id, went, expect])
 	if cam().current() != expect:
-		note("✗ tapping %s from the %s does not open its view «%s» (camera at «%s»)" % [model_id, root_view, expect, cam().current()])
+		if report_fail:
+			note("✗ tapping %s from the %s does not open its view «%s» (camera at «%s»)" % [model_id, root_view, expect, cam().current()])
+		else:
+			note("    (no visible part of %s opens «%s»; the camera is at «%s»)" % [model_id, expect, cam().current()])
 		cam().go(expect)
 		await _settle(0.9)
 		return false
@@ -777,7 +783,7 @@ func _layout_walk(n: Node, vr: Rect2, issues: Array[String]) -> void:
 				var sb := b.get_theme_stylebox("normal")
 				var pad := (sb.get_content_margin(SIDE_LEFT) + sb.get_content_margin(SIDE_RIGHT)) if sb else 0.0
 				var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + pad
-				if w > r.size.x + 2.0:
+				if w > r.size.x + 2.0 and b.autowrap_mode == TextServer.AUTOWRAP_OFF:
 					issues.append("button «%s»: the text is wider than the button (%d > %d px)" % [short, int(w), int(r.size.x)])
 			var panel := _panel_of(c)
 			if panel != null and not panel.get_global_rect().grow(1.0).encloses(r):
@@ -833,7 +839,7 @@ func ch1_to_ch2() -> void:
 	await shot("ch1_finale_choice")
 	var take := _find_button(_overlay(), "ui.take_lens")
 	check("Chapter 1 finale offers «take the lens»", take != null)
-	if not await press(take, "take the lens"):
+	if not press(take, "take the lens"):
 		l1.choose_ending("take_lens")
 	await _settle(3.0)
 	await shot("ch1_chapter_complete")
@@ -851,7 +857,7 @@ func ch1_to_ch2() -> void:
 	else:
 		note("! the Chapter 1 complete screen has no «Play» for Chapter 2; it says «%s» (Premium.can_play(\"ch2\") = %s, Chapters ch2 released = %s)" % [
 			tr("ui.to_be_continued"), Premium.can_play("ch2"), Chapters.get_chapter("ch2").get("released", false)])
-		await press(_find_button(o, "ui.main_menu"), "Main menu")
+		press(_find_button(o, "ui.main_menu"), "Main menu")
 		var mm := await _wait_scene(_is_main_menu)
 		hud = null
 		if mm == null:
@@ -860,7 +866,7 @@ func ch1_to_ch2() -> void:
 			await _settle(1.0)
 			await shot("main_menu_after_ch1")
 			note("  main menu: " + _overlay_texts(mm))
-			if await press(_find_button(mm, "ui.chapters"), "Chapters"):
+			if press(_find_button(mm, "ui.chapters"), "Chapters"):
 				await _settle(0.8)
 				await shot("chapters_menu")
 				for id in ["ch1", "ch2"]:
@@ -870,7 +876,7 @@ func ch1_to_ch2() -> void:
 				if b2 != null and not b2.disabled:
 					b2.emit_signal("pressed")
 				else:
-					await press(_find_button(mm, "ui.close"), "Close")
+					press(_find_button(mm, "ui.close"), "Close")
 		if not (get_tree().current_scene is ArchiveRoom):
 			note("  → no button leads to Chapter 2 yet; starting it with the same two calls the «Play» button makes (hud.gd show_chapter_complete): GameState.start_new(\"ch2\") + SceneManager.goto(scene)")
 			if GameState.start_new("ch2"):
@@ -980,7 +986,7 @@ func hints_start() -> void:
 	var goal := logic.hint_goal()
 	note("== Hint ladder at the start (goal %s)" % goal)
 	var hb := hud.get("_hint_btn") as Button
-	if not await press(hb, "hint"):
+	if not press(hb, "hint"):
 		return
 	await _settle(0.6)
 	var o := _overlay()
@@ -1006,7 +1012,7 @@ func hint_after_booth() -> void:
 	var goal := logic.hint_goal()
 	note("== One hint later in the chapter (after the booth opened; goal %s)" % goal)
 	await to_booth()
-	if not await press(hud.get("_hint_btn") as Button, "hint"):
+	if not press(hud.get("_hint_btn") as Button, "hint"):
 		return
 	await _settle(0.6)
 	var o := _overlay()
@@ -1014,7 +1020,7 @@ func hint_after_booth() -> void:
 	var txt := _overlay_texts(o)
 	note("  level 1: " + txt)
 	check("the hint is about the splicer (goal %s, text hint.%s.1)" % [goal, goal], goal == "c2_splice" and txt.contains(tr("hint.c2_splice.1")))
-	await press(_find_button(o, "ui.close"), "Close")
+	press(_find_button(o, "ui.close"), "Close")
 	await _settle(0.4)
 	check("«Close» closes the hint panel", _overlay() == null)
 
@@ -1036,7 +1042,7 @@ func read_doc(id: String, tag: String, expect_tex: String = "") -> void:
 	check("tapping the selected %s opens the inspect view" % id, o != null)
 	await shot("inspect_%s_%s" % [id, tag])
 	note("  inspect: " + _overlay_texts(o))
-	if not await press(_find_button(o, "ui.read"), "Read"):
+	if not press(_find_button(o, "ui.read"), "Read"):
 		await unpick()
 		return
 	await _settle(0.8)
@@ -1080,7 +1086,7 @@ func explore() -> void:
 		var area := _target_area(id)
 		await shot("look_" + expect)
 		var since := mark()
-		var ok := await open_from("hall", id, expect)
+		var ok := await open_from("hall", id, expect, false)
 		await _settle(0.3)
 		await shot("view_" + expect)
 		var side := sqrt(float(area["area"]))
@@ -1293,25 +1299,25 @@ func p5_locker() -> void:
 # ====================================================================== 6. language
 func _choose_language(code: String) -> void:
 	await to_hall()
-	if not await press(hud.get("_pause_btn") as Button, "pause"):
+	if not press(hud.get("_pause_btn") as Button, "pause"):
 		return
 	await _settle(0.5)
-	if not await press(_find_button(_overlay(), "ui.settings"), "Settings"):
+	if not press(_find_button(_overlay(), "ui.settings"), "Settings"):
 		return
 	await _settle(0.7)
 	var o := _overlay()
-	await press(_find_button(o, str(Loc.NATIVE_NAMES[code])), str(Loc.NATIVE_NAMES[code]))
+	press(_find_button(o, str(Loc.NATIVE_NAMES[code])), str(Loc.NATIVE_NAMES[code]))
 	await _settle(0.7)
 	await shot("settings_" + code)
 	await layout_check(o, "settings panel " + code)
-	await press(_find_button(o, "ui.close"), "Close")
+	press(_find_button(o, "ui.close"), "Close")
 	await _settle(0.7)
 	o = _overlay()
 	await shot("pause_" + code)
 	note("  pause menu: " + _overlay_texts(o))
 	check("the pause menu is in %s" % code, _overlay_texts(o).contains(_csv("ui.resume", code)))
 	await layout_check(o, "pause menu " + code)
-	await press(_find_button(o, "ui.resume"), "Resume")
+	press(_find_button(o, "ui.resume"), "Resume")
 	await _settle(0.4)
 
 
@@ -1323,7 +1329,6 @@ func _title_ok(code: String, where: String) -> void:
 
 func language_switch() -> void:
 	note("== Language: switch to RU, then UZ, then back to EN (pause → Settings → language)")
-	var s := logic.state
 	for code: String in ["ru", "uz", "en"]:
 		await _choose_language(code)
 		check("the game language is now %s" % code, Loc.current() == code)
@@ -1356,7 +1361,7 @@ func language_switch() -> void:
 		await to_hall()
 		await read_doc("leyla_badge", code, "badge_%s.png" % code)
 		# the hint panel
-		if await press(hud.get("_hint_btn") as Button, "hint"):
+		if press(hud.get("_hint_btn") as Button, "hint"):
 			await _settle(0.6)
 			var o := _overlay()
 			await shot("lang_%s_hint" % code)
@@ -1364,9 +1369,8 @@ func language_switch() -> void:
 			note("  hint panel: " + txt)
 			check("the hint panel is in %s" % code, txt.contains(_csv("ui.hint", code)) and txt.contains(_csv("ui.close", code)))
 			await layout_check(o, "hint panel " + code)
-			await press(_find_button(o, "ui.close"), "Close")
+			press(_find_button(o, "ui.close"), "Close")
 			await _settle(0.4)
-		var _unused := s
 	await shot("lang_back_en")
 
 
@@ -1378,12 +1382,12 @@ func save_quit_continue() -> void:
 	var before := JSON.stringify(logic.to_dict())
 	var play_before := GameState.play_time
 	var hints_before := GameState.hints_used
-	if not await press(hud.get("_pause_btn") as Button, "pause"):
+	if not press(hud.get("_pause_btn") as Button, "pause"):
 		return
 	await _settle(0.5)
 	await shot("pause_before_quit")
 	var menu := _find_button(_overlay(), "ui.main_menu")
-	if not await press(menu, "Main menu"):
+	if not press(menu, "Main menu"):
 		return
 	var mm := await _wait_scene(_is_main_menu)
 	hud = null
@@ -1393,7 +1397,7 @@ func save_quit_continue() -> void:
 	await _settle(1.0)
 	await shot("main_menu_after_quit")
 	note("  main menu: " + _overlay_texts(mm))
-	if not await press(_find_button(mm, "ui.continue"), "Continue"):
+	if not press(_find_button(mm, "ui.continue"), "Continue"):
 		return
 	var ar := await _wait_scene(_is_archive, 40.0)
 	if ar == null:
@@ -1622,7 +1626,7 @@ func p11_record() -> void:
 	await did("record the sign", since, false)
 	await shot("socket_recorded")
 	await act("take the sign crystal", "projection_screen", "IA_screen_socket", func() -> bool: return logic.has_item("crystal_sign"),
-		func() -> void: logic.take_from_socket())
+		func() -> void: logic.take_from_socket(), Vector2.ZERO, ["IA_screen_socket", "Item_socket", "socket_ring"])
 	check("P11 → crystal with Leyla's sign", logic.has_item("crystal_sign"))
 
 
@@ -1685,20 +1689,8 @@ func p12_vault() -> void:
 	await pick("crystal_blank_2")
 	await attempt("seat a blank crystal in the left port", "vault_door", "IA_port_left")
 	await shot("vault_blank_port")
-	var took := false
-	for p in ["IA_port_left", "Item_port_left", "port_left_mount"]:
-		if s["port_left"] == "":
-			break
-		if _aim("vault_door", p).x >= 0:
-			await tap("vault_door", p)
-			await _settle(0.5)
-	took = s["port_left"] == ""
-	if took:
-		taps_ok += 1
-	else:
-		taps_failed += 1
-		note("✗ tapping does not take the blank crystal back out of the left port — applied by a logic call to go on")
-		logic.take_from_port("left")
+	await act("take the blank crystal back out", "vault_door", "IA_port_left", func() -> bool: return s["port_left"] == "",
+		func() -> void: logic.take_from_port("left"), Vector2.ZERO, ["IA_port_left", "Item_port_left"])
 	check("the blank crystal is back in the inventory", logic.has_item("crystal_blank_2"))
 	var mark_crystal := "crystal_lens" if s["has_lens"] else "crystal_mark"
 	await pick(mark_crystal)
@@ -1764,7 +1756,7 @@ func finale() -> void:
 	await layout_check(o, "finale choice EN")
 	await press_escape()
 	check("Back does not dismiss the finale choice", _overlay() != null)
-	if not await press(strand, "Strand's key"):
+	if not press(strand, "Strand's key"):
 		logic.choose_ending("strand_key")
 	await _settle(3.0)
 	await shot("chapter_complete")

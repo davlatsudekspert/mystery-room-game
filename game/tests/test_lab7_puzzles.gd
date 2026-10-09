@@ -263,3 +263,28 @@ func test_shards_need_uv_and_darkroom_access() -> void:
 	for id in Lab7Logic.SHARDS:
 		l.collect_shard(id)
 	eq((l.state["shards"] as Array).size(), 5)
+
+
+# ------------------------------------------------------------------ per-game variants (docs/VARIANTS.md)
+func test_variants_are_solvable_and_saved() -> void:
+	var codes := {}
+	for seed in range(1, 61):
+		var l := Lab7Logic.new()
+		l.apply_seed(seed)
+		var g: Array = l.state["gears"]
+		check(not (int(g[0]) == 0 and int(g[1]) == 0 and int(g[2]) == 0), "seed %d: the gear box is not open at the start" % seed)
+		var glyphs: Array = l.safe_glyphs()
+		check(glyphs.size() == 4, "seed %d: four cipher glyphs" % seed)
+		var uniq := {}
+		for x: Variant in glyphs:
+			uniq[str(x)] = true
+			check(ResourceLoader.exists("res://assets/ui/glyphs/%s.png" % str(x)), "seed %d: glyph art %s exists" % [seed, str(x)])
+		check(uniq.size() == 4, "seed %d: the glyphs differ" % seed)
+		check(l.beacon().size() == 3, "seed %d: three beacon numbers" % seed)
+		codes[l.safe_code()] = true
+		var loaded := Lab7Logic.new()
+		loaded.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
+		check(loaded.safe_code() == l.safe_code() and loaded.beacon() == l.beacon() and loaded.state["gears"] == l.state["gears"],
+			"seed %d survives save and load" % seed)
+		check(Lab7Solver.solve(l, "leave_lens" if seed % 2 == 0 else "take_lens"), "seed %d: the solver finishes" % seed)
+	check(codes.size() > 40, "safe codes really vary (%d distinct in 60)" % codes.size())

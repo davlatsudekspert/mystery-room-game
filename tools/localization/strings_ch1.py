@@ -120,7 +120,7 @@ S = [
 
 # ---------------------------------------------------------------- captions (sound → text, accessibility)
 ("cap.maglock", "[Magnetic lock clicks shut]", "[Щелчок магнитного замка]", "[Magnit qulf chiqillab yopildi]"),
-("cap.beacon", "[Radio beacon: •• — •••••• — •••]", "[Радиомаяк: •• — •••••• — •••]", "[Radiomayoq: •• — •••••• — •••]"),
+("cap.beacon", "[Radio beacon: %s]", "[Радиомаяк: %s]", "[Radiomayoq: %s]"),
 ("cap.static", "[Radio static]", "[Радиопомехи]", "[Radio shovqini]"),
 ("cap.hum", "[The projector hums]", "[Проектор гудит]", "[Proyektor gʻuvillaydi]"),
 ("cap.sparks", "[Sparks crackle]", "[Треск искр]", "[Uchqunlar chirsillaydi]"),

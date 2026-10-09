@@ -57,6 +57,10 @@ func default_state() -> Dictionary:
 		"drawer": [0, 0, 0, 0],
 		"drawer_open": false,
 		"gears": GEAR_START.duplicate(),
+		# this game's own answers (docs/VARIANTS.md); seed 0 = the canonical ones
+		"seed": 0,
+		"v_safe_glyphs": ["sun", "wave", "spiral", "delta"], # Leyla's UV cipher -> 7 2 9 4
+		"v_beacon": [2, 6, 3], # Strand's beacon pulses = the encyclopedia volumes
 		"box_open": false,
 		"uv_page": false,
 		"uv_desk": false,
@@ -138,6 +142,92 @@ func collect_shard(id: String) -> Array[String]:
 	return _end()
 
 
+# ================================================================== variants (docs/VARIANTS.md)
+## The poster "Tabula Resonantiarum": each glyph's dot count (docs/PUZZLE_DESIGN.md, P4).
+const GLYPH_DOTS := {"sun": 7, "crescent": 3, "wave": 2, "spiral": 9, "delta": 4, "eye": 0, "cross": 5,
+	"diamond": 1, "fork": 8, "hourglass": 6}
+
+
+func apply_seed(seed: int) -> void:
+	state["seed"] = seed
+	if seed == 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	# gear box: start from the open position and turn the knobs backwards, so a solution always exists
+	var presses: Array = [0, 0, 0]
+	while presses == [0, 0, 0]:
+		presses = [rng.randi_range(0, 5), rng.randi_range(0, 5), rng.randi_range(0, 5)]
+	state["gears"] = [posmod(-(presses[0] + presses[2]), GEAR_POSITIONS), posmod(-(presses[0] + presses[1]), GEAR_POSITIONS),
+		posmod(-(presses[1] + presses[2]), GEAR_POSITIONS)]
+	# safe: four different glyphs from the poster (the code is their dot counts)
+	var glyphs: Array = GLYPH_DOTS.keys()
+	_shuffle(glyphs, rng)
+	state["v_safe_glyphs"] = glyphs.slice(0, 4)
+	# beacon: three different volume numbers 1..9
+	var vols: Array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+	_shuffle(vols, rng)
+	state["v_beacon"] = vols.slice(0, 3)
+
+
+static func _shuffle(a: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(a.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t: Variant = a[i]
+		a[i] = a[j]
+		a[j] = t
+
+
+func safe_code() -> String:
+	var code := ""
+	for g: Variant in state["v_safe_glyphs"]:
+		code += str(int(GLYPH_DOTS[str(g)]))
+	return code
+
+
+func safe_glyphs() -> Array:
+	return state["v_safe_glyphs"]
+
+
+func beacon() -> Array:
+	return state["v_beacon"]
+
+
+## The fewest knob presses that bring every gear to the back mark.
+func gear_presses() -> Array:
+	var g: Array = state["gears"]
+	var best: Array = [0, 0, 0]
+	var best_n := 999
+	for a in GEAR_POSITIONS:
+		for b in GEAR_POSITIONS:
+			for c in GEAR_POSITIONS:
+				if (int(g[0]) + a + c) % GEAR_POSITIONS == 0 and (int(g[1]) + a + b) % GEAR_POSITIONS == 0 \
+						and (int(g[2]) + b + c) % GEAR_POSITIONS == 0 and a + b + c < best_n:
+					best = [a, b, c]
+					best_n = a + b + c
+	return best
+
+
+static func roman(n: int) -> String:
+	return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"][clampi(n, 0, 9)]
+
+
+func hint_args(goal: String, level: int) -> Array:
+	match goal:
+		"gearbox":
+			return gear_presses() if level == 3 else []
+		"safe":
+			if level == 3:
+				var c := safe_code()
+				return [c[0], c[1], c[2], c[3]]
+		"books":
+			if level == 2:
+				return beacon().duplicate()
+			if level == 3:
+				return beacon().map(func(n: Variant) -> String: return roman(int(n)))
+	return []
+
+
 # ================================================================== P1 drawer
 func step_drawer_wheel(i: int, delta: int) -> Array[String]:
 	_begin()
@@ -210,7 +300,7 @@ func safe_press(key: String) -> Array[String]:
 			state["safe_input"] = ""
 			_emit("safe_cleared")
 		"E":
-			if inp == SAFE_CODE:
+			if inp == safe_code():
 				state["safe_open"] = true
 				state["safe_input"] = ""
 				_emit("safe_opened")
@@ -355,10 +445,10 @@ func pull_book(n: int) -> Array[String]:
 		return _end()
 	var b: Array = state["books"]
 	b.append(n)
-	while b.size() > BEACON_PULSES.size():
+	while b.size() > beacon().size():
 		b.pop_front()
 	_emit("book_pulled:%d" % n)
-	if _arr_eq(b, BEACON_PULSES):
+	if _arr_eq(b, beacon()):
 		state["shelf_open"] = true
 		_emit("shelf_opened")
 		_emit("solved:books")
