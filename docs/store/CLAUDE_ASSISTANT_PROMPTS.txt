@@ -1,0 +1,242 @@
+===============================================================================
+ BRAUZERDAGI CLAUDE YORDAMCHISI UCHUN 2 TA PROMPT
+ (Claude in Chrome yoki brauzerni boshqaradigan boshqa Claude)
+===============================================================================
+Qanday ishlatiladi:
+1) Brauzerda Google Play Console'ga (yoki App Store Connect'ga) OʻZINGIZ kiring:
+   login, parol va SMS kodini faqat siz kiritasiz.
+2) Kerakli fayllarni kompyuteringizga yuklab oling (pastda roʻyxati bor).
+3) Claude yordamchisiga quyidagi promptlardan birini toʻliq nusxa qilib bering.
+   1-PROMPT → Google Play Console, 2-PROMPT → App Store Connect.
+   Ularni alohida-alohida, ketma-ket bering.
+4) Yordamchi biror narsani tasdiqlashingizni soʻrasa, oʻqib chiqib javob bering.
+
+Yuklab olinadigan fayllar (GitHub: davlatsudekspert/mystery-room-game, papka
+docs/store/graphics/):
+   icon_512.png, feature_1024x500.png, screenshot_1.png … screenshot_8.png
+.aab fayl (ichki test uchun) — ANDROID secretlar qoʻshilgandan keyin men
+beraman. Ungacha yordamchi bu qadamni oʻtkazib yuboradi.
+
+
+###############################################################################
+ 1-PROMPT — GOOGLE PLAY CONSOLE  (shu chiziqdan pastini nusxa oling)
+###############################################################################
+You are helping me set up my Android game in Google Play Console in this browser. I am already logged in. Talk to me in Uzbek. The Play Console interface may be in Russian.
+
+SAFETY RULES — follow them strictly:
+- Work ONLY on the new game below (package com.mysteryroom.forgotteninstitute). Do NOT open, edit, publish, pause or delete any other app in this developer account. Other apps there are a separate live business and must stay untouched.
+- Never type, read aloud or store passwords, 2-step codes, keystore files or keystore passwords. If a login or verification code is needed, stop and ask me to do it.
+- Do NOT release anything to Production, Open testing or Closed testing, do NOT send the app for review, and do NOT make anything public. Internal testing only, and only when I give you the .aab file.
+- Do NOT create in-app products, subscriptions or prices. Do NOT change the payments profile, account details, users and permissions, API access or any account-level settings.
+- Legal checkboxes (Developer Program Policies, US export laws, any terms) — show them to me and let ME tick them.
+- Before any step that cannot be undone, stop and ask me "Davom etaymi?". Examples: registering the package name, creating the app, choosing the app signing option, submitting the content-rating questionnaire, starting a rollout.
+- If something on the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- At the end, give me a short report in Uzbek: what was done, what is left, and anything that needs my action.
+
+FIXED VALUES (copy exactly):
+- Package name: com.mysteryroom.forgotteninstitute
+- Friendly name (package registration dialog): MYSTERY ROOM: The Forgotten Institute
+- App name in the store (max 30 chars): Mystery Room: Lost Institute
+- Upload key certificate SHA-256 (only if a page asks for it):
+  E5:D8:42:A6:B8:0E:D2:50:FD:DD:EE:CA:92:64:ED:D7:A6:8B:E1:59:70:A3:AD:8C:06:A7:EC:9C:E8:37:D1:3E
+- Default language: English (United States) – en-US
+- App or game: Game. Free or paid: Free.
+- Category: Puzzle. Tags (if offered): Puzzle, Escape room, Mystery, Adventure.
+- Contact email: ask me which email to use.
+
+TASKS, in this order:
+
+1. Package name registration dialog ("Сначала укажите название пакета"): enter the package name and the friendly name above, then ask me before pressing "Далее". If it asks for a key fingerprint, use the SHA-256 above. If it asks to upload a signed APK or a verification file, stop and tell me exactly what file it wants (I will get it from my developer).
+
+2. Create the app ("Создать приложение") with the fixed values above. Show me the declaration checkboxes and let me tick them.
+
+3. Privacy policy page (needed by Play and Apple):
+   - Open sites.google.com in a new tab.
+   - Create a blank site titled "Mystery Room — Privacy Policy".
+   - Paste the PRIVACY POLICY TEXT below. Replace [email] with the contact email I give you.
+   - Ask me before publishing.
+   - Publish with a simple address like "mysteryroom-privacy", visible to everyone on the web.
+   - Give me the public URL.
+
+4. App content ("Контент приложения" / Policy → App content):
+   - Privacy policy: the URL from step 3.
+   - App access: all functionality is available without special access.
+   - Ads: No, the app has no ads.
+   - Content rating (IARC questionnaire), category Game:
+     - Violence: No.
+     - Content that may frighten young children: Yes. It has dark rooms and ghost-like "echo" figures; no blood, no gore, no jump scares.
+     - Sexual content: No. Profanity: No. Drugs/alcohol/tobacco: No.
+     - Gambling or simulated gambling: No. Users can interact or communicate: No. Shares location: No.
+     - Purchase of digital goods: No (payments are disabled for now). Unrestricted internet access: No.
+     - Show me the summary before submitting.
+   - Target audience: ages 13–15, 16–17, 18+. Do NOT select any age under 13. Appeals to children: No.
+   - News app: No. COVID-19 app: No. Government app: No.
+   - Data safety: the app does NOT collect or share any user data. No accounts, no ads, no analytics, works fully offline, progress is saved only on the device.
+   - Advertising ID: No, not used. Financial features: none. Health features: none.
+
+5. Main store listing ("Основная страница"), language en-US:
+   - Upload graphics from my computer (ask me where I saved them): app icon icon_512.png, feature graphic feature_1024x500.png, phone screenshots screenshot_1.png … screenshot_8.png.
+   - Fill in the texts below.
+   - Then add translations ru-RU and, if available, uz (Uzbek) with the texts below.
+
+6. Store settings: category Puzzle, tags as above, contact email from me.
+
+7. Pricing and distribution: Free, all countries. Ask me before saving.
+
+8. Internal testing — ONLY if I give you an .aab file:
+   - Testing → Internal testing → Create new release.
+   - App signing: "Use a key generated by Google" (Play App Signing).
+   - Upload the .aab.
+   - Release notes: en-US "First test build: Chapter 1 "The Locked Laboratory"."; ru-RU "Первая тестовая сборка: Глава 1 «Запертая лаборатория»."
+   - Save, then review.
+   - Ask me before "Start rollout".
+   - Then: Testers → create an email list "MysteryRoom testers" with the email(s) I give you → save → give me the tester opt-in link.
+   - If I have not given you an .aab yet, skip this step and tell me it is waiting for the build.
+
+STORE TEXTS
+
+[en-US]
+Title: Mystery Room: Lost Institute
+Short description: A 3D mystery escape room. Light remembers. Find out what it kept.
+Full description:
+On 14 November 1979 every clock in the Meridian Institute stopped at 03:17 — and forty-one scientists were never seen again.
+
+Decades later, a parcel arrives for you with an old lab badge and a single line: "Laboratory 7. Please finish what I could not."
+
+• Hand-crafted 3D rooms full of tactile brass mechanisms
+• Fair, logical puzzles with a three-step hint system and no random guessing
+• Signature Lumen mechanics: record light in a crystal and project it as a key, steer a living beam with mirrors
+• UV ink, radio beacons, electrical circuits, shadows and hidden rooms
+• A haunting original story told through objects, handwriting and light
+• Choices that carry into later chapters
+• Fully playable in English, Russian and Uzbek, and offline
+• No ads, no energy, no subscriptions
+
+Chapter 1 is free. More chapters are coming.
+
+[ru-RU]
+Title: Mystery Room: Забытый институт
+Short description: 3D-головоломка-побег. Свет помнит. Узнайте, что он сохранил.
+Full description:
+14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез.
+
+Спустя десятилетия вам приходит посылка: старый пропуск лаборатории и одна строка: «Лаборатория 7. Пожалуйста, закончи то, что не смогла я».
+
+• Атмосферные 3D-комнаты с латунными механизмами, которые приятно трогать
+• Честные логичные головоломки и трёхступенчатые подсказки, без угадывания
+• Фирменные механики Люмена: запишите свет в кристалл и спроецируйте его как ключ, управляйте живым лучом с помощью зеркал
+• Невидимые чернила, радиомаяки, электрические цепи, тени и тайные комнаты
+• Оригинальная история, рассказанная через предметы, почерк и свет
+• Решения, которые влияют на следующие главы
+• Полностью на английском, русском и узбекском, работает без интернета
+• Без рекламы, энергии и подписок
+
+Первая глава бесплатна. Новые главы уже в работе.
+
+[uz] (only if Play offers Uzbek)
+Title: Mystery Room: Sirli institut
+Short description: 3D sirli qochish oʻyini. Yorugʻlik eslaydi. U nimani saqlaganini biling.
+Full description:
+1979-yil 14-noyabrda «Meridian» institutidagi barcha soatlar 03:17 da toʻxtadi va qirq bir olim izsiz gʻoyib boʻldi.
+
+Oradan oʻn yillar oʻtib, sizga posilka keladi: eski laboratoriya guvohnomasi va bir qator yozuv: «7-laboratoriya. Iltimos, men tugata olmagan ishni tugating».
+
+• Qoʻl bilan ushlab koʻrgingiz keladigan jez mexanizmlarga toʻla 3D xonalar
+• Adolatli, mantiqiy jumboqlar va uch bosqichli maslahat tizimi, taxmin qilish shart emas
+• Oʻziga xos Lumen mexanikalari: yorugʻlikni billurga yozib oling, uni kalit sifatida proyeksiya qiling, tirik nurni koʻzgular bilan boshqaring
+• Koʻrinmas siyoh, radiomayoqlar, elektr zanjirlari, soyalar va maxfiy xonalar
+• Buyumlar, qoʻlyozmalar va yorugʻlik orqali hikoya qilinadigan original syujet
+• Keyingi boblarga taʼsir qiladigan tanlovlar
+• Ingliz, rus va oʻzbek tillarida toʻliq, internetsiz ishlaydi
+• Reklama, energiya va obuna yoʻq
+
+Birinchi bob bepul. Yangi boblar tayyorlanmoqda.
+
+PRIVACY POLICY TEXT (for the Google Site)
+Privacy Policy — Mystery Room: The Forgotten Institute
+Last updated: 9 October 2026
+
+Mystery Room: The Forgotten Institute ("the game") is developed by an independent developer.
+
+1. Data we collect: none. The game does not collect, store on any server, sell or share any personal information. It has no user accounts, no advertising, no analytics and no third-party tracking SDKs.
+2. Data stored on your device: your game progress and settings (language, volume, etc.) are saved only on your own device. Uninstalling the game deletes them.
+3. Internet: the game works fully offline and does not send data over the internet.
+4. Permissions: the game only uses vibration for haptic feedback.
+5. Children: the game is not directed at children under 13 and does not knowingly collect any data from anyone.
+6. Purchases: if optional in-app purchases are added in the future, payments are processed entirely by Google Play or the Apple App Store. We never see your payment details. This policy will be updated before such a change.
+7. Contact: [email]
+
+Политика конфиденциальности (RU): Игра не собирает, не передаёт и не продаёт персональные данные. Нет аккаунтов, рекламы, аналитики и сторонних трекеров. Прогресс и настройки хранятся только на вашем устройстве и удаляются вместе с игрой. Игра работает без интернета. Используется только вибрация. Если в будущем появятся покупки, оплату полностью обрабатывают Google Play или Apple App Store, а политика будет обновлена заранее. Связь: [email]
+
+Maxfiylik siyosati (UZ): Oʻyin hech qanday shaxsiy maʼlumot toʻplamaydi, uzatmaydi va sotmaydi. Hisob, reklama, analitika va begona kuzatuv vositalari yoʻq. Oʻyin jarayoni va sozlamalar faqat sizning qurilmangizda saqlanadi va oʻyin oʻchirilganda oʻchib ketadi. Oʻyin internetsiz ishlaydi. Faqat tebranish (vibratsiya) ishlatiladi. Kelajakda xaridlar qoʻshilsa, toʻlovni toʻliq Google Play yoki Apple App Store amalga oshiradi va siyosat oldindan yangilanadi. Aloqa: [email]
+###############################################################################
+ 1-PROMPT TUGADI
+###############################################################################
+
+
+###############################################################################
+ 2-PROMPT — APPLE (developer.apple.com + App Store Connect)
+ (shu chiziqdan pastini nusxa oling)
+###############################################################################
+You are helping me set up my iOS game on Apple's developer websites in this browser. I am already logged in to developer.apple.com and appstoreconnect.apple.com. Talk to me in Uzbek.
+
+SAFETY RULES — follow them strictly:
+- Work ONLY on the new game below (bundle ID com.mysteryroom.forgotteninstitute). Do NOT open, edit, submit, remove or transfer any other app, identifier, certificate or profile in this account. Other apps are a separate live business and must stay untouched.
+- Never type, read aloud or store passwords, 2-factor codes or private keys.
+- Do NOT create, download, revoke or delete API keys, certificates or provisioning profiles. Only READ the API key list as described in task 3.
+- Do NOT accept any agreement, and do NOT fill in banking or tax forms. Tell me what is pending and I will do it myself.
+- Do NOT submit anything for App Review and do NOT release anything. Do NOT create in-app purchases or set prices.
+- Before any step that cannot be undone, stop and ask me "Davom etaymi?". Examples: registering the bundle ID, creating the app record.
+- If the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- At the end, give me a short report in Uzbek: what was done, what is left, and anything that needs my action.
+
+FIXED VALUES (copy exactly):
+- Bundle ID: com.mysteryroom.forgotteninstitute
+- Bundle ID description: Mystery Room
+- App name (max 30 chars, must be unique on the App Store): Mystery Room: Lost Institute
+  - If Apple says the name is taken, try: Mystery Room: The Institute
+  - If both are taken, ask me.
+- Primary language: English (U.S.)
+- SKU: MYSTERYROOM-FI-001
+- User access: Full Access
+- Category: Games → Puzzle. Secondary category: Games → Adventure.
+
+TASKS, in this order:
+
+1. developer.apple.com → Account → Certificates, IDs & Profiles → Identifiers.
+   - If com.mysteryroom.forgotteninstitute is already listed, do nothing and tell me.
+   - Otherwise: "+" → App IDs → App → Description "Mystery Room", Bundle ID "Explicit" com.mysteryroom.forgotteninstitute. Do not add any extra capabilities.
+   - Ask me before "Register".
+
+2. appstoreconnect.apple.com → Apps → "+" → New App:
+   - Platform iOS, then the name, language, bundle ID, SKU and user access above.
+   - Ask me before "Create".
+
+3. Users and Access → Integrations → App Store Connect API → Team Keys.
+   - Tell me the name and the Access (role) of each key.
+   - Do not create or change anything here.
+   - I need one key with the role "Admin". If none is Admin, tell me that, and I will create one myself.
+
+4. Business (Agreements, Tax, and Banking): tell me the status of the "Free Apps" agreement (Apple Developer Program License Agreement). If it needs acceptance, tell me; do not accept it yourself.
+
+5. In the new app → App Information:
+   - Category: Games → Puzzle, secondary Games → Adventure.
+   - Privacy Policy URL: ask me for it (I have a Google Sites page from the Play setup).
+   - Save.
+
+6. App Privacy:
+   - Ask me before publishing.
+   - Answer "Data Not Collected": no data is collected, no tracking, no accounts, no ads, no analytics; the game works offline and saves progress only on the device.
+
+7. Do NOT fill in the version page, screenshots or the review submission yet. Tell me the app record is ready for TestFlight builds.
+###############################################################################
+ 2-PROMPT TUGADI
+###############################################################################
+
+Yordamchi ishni tugatgandan keyin menga (oʻyin ustida ishlayotgan Claude'ga)
+uning hisobotini yuboring:
+- Play: qaysi qadamlar bajarildi; .aab kerak boʻlsa, ANDROID secretlar
+  qoʻshildimi.
+- Apple: Bundle ID va ilova yozuvi yaratildimi; API kalitining roli Admin
+  ekanmi.
+Shundan keyin build'larni men yigʻaman va telefonda sinash uchun beraman.
