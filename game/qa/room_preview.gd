@@ -15,6 +15,7 @@ func _ready() -> void:
 			out_dir = a.substr(6)
 		if a == "--powered":
 			powered = true
+	DirAccess.make_dir_recursive_absolute(out_dir)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color("0b0d10")
@@ -137,7 +138,7 @@ func _placeholders(missing: Array[String]) -> void:
 		"mirror_stand_b": ["MIRROR STAND B (empty)", Vector3(0.25, 1.15, 0.25), Vector3(1.6, 0.6, 0.12), Color("b08d57")],
 		"light_sensor": ["LIGHT LOCK", Vector3(0.06, 0.26, 0.26), Vector3(2.97, 1.15, 0.12), Color("e3c27a")],
 		"filing_cabinet": ["FILING CABINET", Vector3(0.5, 1.32, 0.6), Vector3(-2.6, 0.66, -2.2), Color("4f5d55")],
-		"coat_rack": ["COAT RACK", Vector3(0.45, 1.85, 0.45), Vector3(2.6, 0.92, -2.15), Color("3b2416")],
+		"coat_rack": ["COAT RACK", Vector3(0.45, 1.85, 0.45), Vector3(2.35, 0.92, -2.25), Color("3b2416")],
 		"chair": ["CHAIR", Vector3(0.48, 0.9, 0.48), Vector3(-0.35, 0.45, -1.3), Color("3b2416")],
 		"desk_lamp": ["DESK LAMP", Vector3(0.18, 0.42, 0.18), Vector3(-1.18, 0.99, -2.32), Color("2f5a3a")],
 		"notebook": ["NOTEBOOK", Vector3(0.17, 0.03, 0.23), Vector3(-0.28, 0.795, -1.98), Color("3a2418")],

@@ -39,6 +39,7 @@ func _ready() -> void:
 			_from = int(a.substr(8))
 		if a.begins_with("--to=p"):
 			_to = int(a.substr(6))
+	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_save.json"
 	GameState.start_new("ch1")
 	logic = GameState.logic

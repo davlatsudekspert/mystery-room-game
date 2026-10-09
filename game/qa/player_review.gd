@@ -21,6 +21,7 @@ var report: Array[String] = []
 var shot_n := 0
 var _last_msg := ""
 var _last_cap := ""
+var _only: PackedStringArray = [] # --only=explore,mistakes runs just those sections (quick checks; headless works)
 
 
 func _ready() -> void:
@@ -29,6 +30,8 @@ func _ready() -> void:
 			out_dir = a.substr(6)
 		if a.begins_with("--lang="):
 			lang = a.substr(7)
+		if a.begins_with("--only="):
+			_only = a.substr(7).split(",")
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_review_save.json"
 	SaveSystem.profile_path = "user://qa_review_profile.json"
@@ -39,13 +42,23 @@ func _ready() -> void:
 	logic = GameState.logic
 	await _load_room()
 	await intro()
-	await explore_dark()
-	await mistakes()
-	await hints_and_documents()
-	await language_switch()
-	await save_quit_continue()
-	await finale()
+	if _runs("explore"):
+		await explore_dark()
+	if _runs("mistakes"):
+		await mistakes()
+	if _runs("hints"):
+		await hints_and_documents()
+	if _runs("language"):
+		await language_switch()
+	if _runs("save"):
+		await save_quit_continue()
+	if _runs("finale"):
+		await finale()
 	_finish()
+
+
+func _runs(section: String) -> bool:
+	return _only.is_empty() or section in _only
 
 
 # ====================================================================== helpers
@@ -67,8 +80,10 @@ func _settle(seconds: float) -> void:
 
 func shot(name: String) -> void:
 	await _settle(0.25)
-	await RenderingServer.frame_post_draw
 	shot_n += 1
+	if DisplayServer.get_name() == "headless":
+		return
+	await RenderingServer.frame_post_draw
 	var p := "%s/%02d_%s.png" % [out_dir, shot_n, name]
 	get_viewport().get_texture().get_image().save_png(p)
 	report.append("    [shot %s]" % p.get_file())
@@ -184,6 +199,47 @@ func look_toward(p: Vector3) -> void:
 		c.yaw = best_yaw
 		c.call("_apply_free_look")
 	await _settle(0.3)
+	if not _on_screen(p):
+		note("  (aim failed: view %s, yaw %.0f, pitch %.0f, transitioning %s, target %s)" % [c.current(), c.yaw,
+			c.pitch, c.transitioning, p])
+
+
+var _visible_share := 0
+
+
+## Screen points (nearest the middle first) where a tap lands on model `id`, sampled on a 9×9 grid over its
+## on-screen bounds through the room's own raycast. Sets _visible_share to the share of samples that hit it.
+func _visible_points(id: String, n: Node3D) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var vr := get_viewport().get_visible_rect().grow(-30.0)
+	var r := _rect_of(n).intersection(vr)
+	_visible_share = 0
+	if r.size.x < 2.0 or r.size.y < 2.0:
+		return out
+	var total := 0
+	for iy in 9:
+		for ix in 9:
+			var sp := r.position + r.size * Vector2((ix + 0.5) / 9.0, (iy + 0.5) / 9.0)
+			total += 1
+			var h: Dictionary = room.call("_raycast", sp)
+			if h.is_empty():
+				continue
+			var res: Dictionary = room.call("_resolve", h)
+			if str(res["model"]) == id:
+				out.append(sp)
+	_visible_share = roundi(100.0 * out.size() / maxf(1.0, float(total)))
+	var mid := r.get_center()
+	out.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.distance_to(mid) < b.distance_to(mid))
+	return out
+
+
+func _tap_screen(sp: Vector2) -> void:
+	var t := 0.0
+	while cam().transitioning and t < 3.0: # a tap during a camera move is ignored by the room, as on a phone
+		await _settle(0.1)
+		t += 0.1
+	room.call("_on_tap", sp)
+	await _settle(0.95)
 
 
 func _on_screen(p: Vector3) -> bool:
@@ -195,8 +251,7 @@ func tap_at(p: Vector3) -> void:
 	if cam().is_position_behind(p):
 		note("  (target behind the camera)")
 		return
-	room.call("_on_tap", cam().unproject_position(p))
-	await _settle(0.95)
+	await _tap_screen(cam().unproject_position(p))
 
 
 func tap_part(model_id: String, part: String) -> void:
@@ -272,25 +327,24 @@ func explore_dark() -> void:
 			await to_root()
 			await look_toward(_centre_of(n))
 		if cam().current() == before or (expected != "" and cam().current() != expected):
-			# the middle of a model's bounds can be empty space (a mirror on a thin stand): a player taps the
-			# part they can see, so try each of the object's tap areas before calling it unreachable
-			var reached := ""
-			for body in n.find_children("*", "StaticBody3D", true, false):
-				var cs := body.get_child(0) as Node3D
-				var p := cs.global_position if cs else (body as Node3D).global_position
-				if cam().is_position_behind(p) or not get_viewport().get_visible_rect().has_point(cam().unproject_position(p)):
-					continue
-				await tap_at(p)
-				if cam().current() != before and (expected == "" or cam().current() == expected):
-					reached = str(body.get_meta("part", body.name))
-					break
-				if not cam().is_root():
-					await to_root()
-					await look_toward(_centre_of(n))
-			if reached != "":
-				note("  (tapping the %s of %s reaches it)" % [reached, id])
+			# the middle of a model's bounds can be empty space (a mirror on a thin stand) or covered: a player taps
+			# the part they can see, so tap a screen point where the object itself is hit
+			var pts := _visible_points(id, n)
+			var reached := false
+			if not pts.is_empty():
+				await _tap_screen(pts[0])
+				reached = cam().current() != before and (expected == "" or cam().current() == expected)
+			if reached:
+				note("  (the middle of %s is empty or covered; tapping its visible part reaches it, %d%% of it visible)" % [
+					id, _visible_share])
+			elif pts.is_empty():
+				var c0 := _centre_of(n)
+				var r: Dictionary = {} if cam().is_position_behind(c0) else room.call("_resolve", room.call("_raycast",
+					cam().unproject_position(c0)))
+				note("  ! %s cannot be tapped from the room: no visible part (its centre hits %s/%s)" % [id,
+					r.get("model", "-"), r.get("part", "-")])
 			else:
-				note("  ! tapping %s from the room did not move the camera (blocked by something in front?)" % id)
+				note("  ! tapping the visible part of %s did not open «%s» (view %s)" % [id, expected, cam().current()])
 		await shot("look_" + id)
 	await to_root()
 
@@ -313,7 +367,8 @@ func mistakes() -> void:
 	var drawer := ModelUtil.find(model("desk"), "IA_drawer_top") as MeshInstance3D
 	if drawer:
 		var ab := drawer.get_aabb()
-		await tap_at(drawer.global_transform * (ab.position + ab.size * Vector3(0.12, 0.5, 0.5)))
+		# the front face (+Z) at the left edge of the drawer
+		await tap_at(drawer.global_transform * (ab.position + ab.size * Vector3(0.12, 0.5, 1.0)))
 	await did("pull the locked drawer", true)
 	await shot("drawer_locked_message")
 	# safe: a wrong code

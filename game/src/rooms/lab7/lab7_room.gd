@@ -24,7 +24,7 @@ const LAYOUT := {
 	"poster_frame": [Vector3(-0.3, 1.9, 2.5), 180.0, "poster", "parts"],
 	"wall_safe": [Vector3(2.2, 1.25, 2.5), 180.0, "safe", "parts"],
 	"panel7": [Vector3(3.0, 1.45, -1.3), -90.0, "panel", "parts"],
-	"coat_rack": [Vector3(2.6, 0, -2.15), -30.0, "coat", "parts"],
+	"coat_rack": [Vector3(2.35, 0, -2.25), -30.0, "coat", "parts"], # clear of Panel 7's open door as seen from the room
 	"pendant_lamp": [Vector3(-0.6, 3.4, -0.6), 0.0, "", "none"],
 	"mirror_stand": [Vector3(1.6, 0, 1.6), 0.0, "mirror_a", "parts"],
 	"light_sensor": [Vector3(3.0, 1.15, 0.12), -90.0, "lock", "parts"],
@@ -46,7 +46,7 @@ const EXTRA := {
 	"cc_kettle": ["cc0/vintage_electric_kettle/vintage_electric_kettle", Vector3(1.05, 1.47, -2.45), 30.0, "window"],
 	"cc_compass": ["cc0/seadogs_compass/seadogs_compass", Vector3(1.85, 1.47, -2.42), -40.0, "window"],
 	"cc_stool": ["cc0/metal_stool_02/metal_stool_02", Vector3(0.25, 0, 1.45), 20.0, ""],
-	"cc_gasmask": ["cc0/old_gas_mask/old_gas_mask", Vector3(2.45, 1.7, -2.3), 0.0, "coat"],
+	"cc_gasmask": ["cc0/old_gas_mask/old_gas_mask", Vector3(2.2, 1.7, -2.4), 0.0, "coat"],
 	"cc_drawer": ["cc0/vintage_wooden_drawer_01/vintage_wooden_drawer_01", Vector3(-1.85, 0, -2.25), 0.0, ""],
 }
 
@@ -73,7 +73,7 @@ const HOTSPOT_CAPTION := {
 const BOOKCASE_HINGE := Vector3(-2.74, 0.0, -1.15)
 const SHARD_SPOTS := {
 	"under_desk": Vector3(-0.7, 0.011, -2.22), "bookshelf_top": Vector3(-2.85, 2.16, -0.3),
-	"radiator": Vector3(1.78, 0.05, -2.33), "coat_pocket": Vector3(2.37, 1.07, -1.98),
+	"radiator": Vector3(1.78, 0.05, -2.33), "coat_pocket": Vector3(2.12, 1.07, -2.08),
 	"darkroom": Vector3(-4.55, 0.011, 0.15),
 }
 
@@ -496,7 +496,7 @@ func _build_views() -> void:
 	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
 	V.call("safe", Vector3(2.2, 1.32, 1.72), Vector3(2.2, 1.25, 2.5), 40.0)
 	V.call("panel", Vector3(2.12, 1.5, -1.3), Vector3(3.0, 1.45, -1.3), 50.0)
-	V.call("coat", Vector3(1.7, 1.35, -2.05), Vector3(2.37, 1.07, -1.98), 46.0) # north of Panel 7's open door
+	V.call("coat", Vector3(1.5, 1.38, -1.7), Vector3(2.12, 1.07, -2.08), 52.0) # west of Panel 7's open door
 	V.call("mirror_a", Vector3(0.95, 1.5, 1.05), Vector3(1.6, 1.15, 1.6), 46.0)
 	V.call("mirror_b", Vector3(0.85, 1.45, 0.4), Vector3(1.6, 1.15, 0.12), 46.0)
 	V.call("window", Vector3(1.5, 1.85, -1.55), Vector3(1.5, 2.0, -2.7), 56.0)
@@ -817,6 +817,10 @@ func _interact_desk(part: String, r: Dictionary) -> void:
 			cam.go("under_desk")
 		elif p.y < 0.76 and absf(p.x + 0.5) < 0.35:
 			cam.go("drawer")
+	elif cur == "drawer" and not s["drawer_open"]:
+		# the desk around the locked drawer: answer instead of ignoring the tap
+		hud.call("message", tr("msg.drawer_locked"))
+		AudioManager.sfx("drawer_locked")
 
 
 func _interact_bookshelf(part: String, _r: Dictionary) -> void:
