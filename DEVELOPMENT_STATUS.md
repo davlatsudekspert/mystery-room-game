@@ -5,7 +5,7 @@ _Last updated: 2026-10-09_
 | Phase | Status | Verified evidence |
 |---|---|---|
 | 0 — Audit, architecture, story, art direction, puzzle graph | ✅ Done | `docs/` (STORY, PUZZLE_DESIGN, DESIGN_PILLARS, ART_DIRECTION, ARCHITECTURE, ROOM_LAYOUT) |
-| 1 — Godot project + core logic + tests | ✅ Done | `tools/run_tests.sh`: **41 tests, 2494 checks, 0 failures** (locally and on GitHub Actions). The 300-seed random-play fuzz finds no softlock or lost item |
+| 1 — Godot project + core logic + tests | ✅ Done | `tools/run_tests.sh`: **92 tests, 8120 checks, 0 failures** (locally, 2026-10-09). The 300-seed random-play fuzz finds no softlock or lost item |
 | 2 — Assets: textures, fonts, audio, models | ✅ Done for Chapter 1 | 36 procedural Blender models (room shell, door, furniture, devices, items, two light-echo figures) · 14 CC0 Poly Haven props · 20 texture sets / 71 materials · 3 OFL fonts (coverage checked) · 40 original synthesized sounds + 1 CC0 sound. GLB node names are checked against Godot import hints (`tools/blender/check_glb_names.py`) |
 | 3 — Interactive room & puzzles | ✅ Chapter 1 playable end to end | `lab7.tscn` with HUD (inventory with 3D icons, inspect, notebook with UV page, hints, pause, choice, chapter complete) and a touch camera. **`qa/playthrough.tscn` completes Chapter 1 entirely through taps on the real 3D scene: 13/13 steps plus 5/5 optional Lumen shards, 0 logic fallbacks** (see "QA playthrough" below) |
 | 4 — Polish, UI, sound | 🔶 In progress | State-aware captions, drag-to-tune radio, soft dust motes, 1979 flashback staging, bookcase reveal camera. **2026-10-09:**<br>• the owner's logo is integrated: EN/RU/UZ subtitle on the main menu, app icons (adaptive, monochrome, iOS, store 512), home-screen previews in `docs/previews/logo/`;<br>• the unpowered Chapter 1 lab gets a moonlight bounce, so its dark corners are readable (`docs/previews/ch1_dark_state_before_after.jpg`);<br>• a Brightness setting;<br>• a privacy-policy link in Settings |
@@ -16,19 +16,30 @@ _Last updated: 2026-10-09_
 
 ## Chapter 2 (in progress)
 - **Logic:** P1–P12, both Chapter 1 lens paths, and the solver and no-softlock tests in `tools/run_tests.sh`.
-- **Room scene:** `archive.tscn`. A headless logic-flow run (`qa/playthrough_ch2.tscn`) got from the start to P11 with the models available at the time. Fallbacks came from models still missing and from three tap problems now under investigation: catalogue cards vs. dividers, splicer framing, slide drawers.
-- **Models:** see `docs/models/CH2_MANIFEST.md` (34 of 41 ready on 2026-10-09).
+- **Room scene:** `archive.tscn` with 41/41 models (`docs/models/CH2_MANIFEST.md`).
+- **Real 3D playthroughs** (`qa/playthrough_ch2.tscn`, taps through the room's raycast):
+  - leave path: 86 taps, 0 fallbacks;
+  - take path: 78 taps, 0 fallbacks;
+  - variant seed 777: 94 taps, 0 fallbacks.
+  Screenshots are in `docs/previews/ch2/`.
 - **Audio:** 42 sounds, the ambience and 2 music cues.
 - **Decals:** 28 decals; the ones with words exist in EN, RU and UZ and are swapped at runtime by `DecalLoc`.
-- **Not yet done:** the full 3D playthrough on both lens paths, and real Godot screenshots. Per-chapter status levels are in `docs/GAMEPLAY_QA.md`.
+- **Not yet done:** the player-style review (an agent is running it); then `released: true`.
+- **Performance:** the hall view measured 213 draw calls / 152k primitives (budget 150 / 150k). The shadowed pendant now uses a downward spot cone (one shadow pass) instead of a dual-paraboloid omni (re-measure pending).
 
 ## Per-game puzzle variants (anti-walkthrough)
-`docs/VARIANTS.md`. Every new game draws its own answers; the evidence on screen follows them, and story anchors (03:17, 1979, 0417) stay fixed. The seed is saved with the game.
-- **Chapter 1:** the gear-box start, the safe cipher glyphs (code = the poster's dots) and the beacon numbers (= the encyclopedia volumes).
-- **Chapter 2:** the gauge marks (valve answer), index-card notches (8 card arts × 3 languages), tape clicks and booth dial, splice order, focus mark and vault engraving (drawn in the shader).
+`docs/VARIANTS.md`. **On for players since 2026-10-09** (`GameState.variant_seed = -1`). Every new game draws its own answers, the evidence on screen follows them, and story anchors (03:17, 1979, 0417) stay fixed. The seed is saved with the game, and Continue keeps it (tested).
+- **Chapter 1:** the gear-box start, the safe cipher glyphs (code = the poster's dots), the beacon numbers and the book order. Real-scene playthrough on seed 4242: safe 1204, books IV-II-VIII, 100 taps, 0 fallbacks; the evidence was checked on screen (`docs/previews/variants/`).
+- **Chapter 2:** the gauge marks (valve answer), index-card notches (8 card arts × 3 languages), tape clicks and booth dial, splice order, focus mark and vault engraving (drawn in the shader). Real-scene playthrough on seed 777: 94 taps, 0 fallbacks.
 - **Hints:** level-3 hints name the player's own answer.
-- **Tests:** 60-seed tests (solvable, unique, saved, reproducible) plus a real-scene Chapter 2 playthrough on seed 777 (94 taps, 0 fallbacks).
-- **Off for now:** players still get the canonical answers (`GameState.variant_seed = 0`) until the Chapter 1 seeded run and the Chapter 2 player review finish.
+- **Tests:** 60-seed tests (solvable, unique, saved, reproducible).
+- **QA scripts** use seed 0 (canonical) unless given `--seed=N`.
+
+## Tester builds
+Exports with the custom feature `beta_unlock` open every released chapter without a purchase (`Premium.tester_build()`), so internal/closed testers and TestFlight testers can play Chapter 2+ while real payments stay disabled. Store releases never carry the feature.
+
+## Organisation
+The director plus parallel agents: Android/Google Play, iOS/TestFlight, QA and visual/UI. See `NEXT_STEPS.md`. Nothing is uploaded to a store and no tester is invited without the owner's approval.
 
 ## Chapter 3
 Design draft: `docs/CHAPTER3_DESIGN.md`.
