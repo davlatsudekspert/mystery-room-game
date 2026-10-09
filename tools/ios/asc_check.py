@@ -54,8 +54,8 @@ def is_ours_bundle(identifier: str | None, bundle_id: str) -> bool:
 
 
 class Asc:
-	def __init__(self, key_id: str, issuer: str, pem: bytes) -> None:
-		self._key_id, self._issuer, self._pem = key_id, issuer, pem
+	def __init__(self, key_id: str, issuer: str, key) -> None:
+		self._key_id, self._issuer, self._key = key_id, issuer, key
 		self._token, self._token_at = "", 0.0
 
 	def _jwt(self) -> str:
@@ -63,7 +63,7 @@ class Asc:
 		now = time.time()
 		if not self._token or now - self._token_at > 600:
 			payload = {"iss": self._issuer, "iat": int(now), "exp": int(now) + 900, "aud": "appstoreconnect-v1"}
-			self._token = jwt.encode(payload, self._pem, algorithm="ES256", headers={"kid": self._key_id, "typ": "JWT"})
+			self._token = jwt.encode(payload, self._key, algorithm="ES256", headers={"kid": self._key_id, "typ": "JWT"})
 			self._token_at = now
 		return self._token
 
@@ -111,20 +111,58 @@ def err(body: dict) -> str:
 	return " / ".join(str(e.get(k)) for k in ("code", "title", "detail") if e.get(k)) or "no error body"
 
 
-def load_pem(raw: str) -> bytes:
-	raw = raw.strip()
-	if raw.startswith("-----BEGIN"):
-		return raw.encode()
-	return base64.b64decode("".join(raw.split()), validate=False)
+B64_RE = re.compile(rb"[A-Za-z0-9+/=_-]+")
 
 
-def check_key(pem: bytes) -> str:
+def _parse_key(b: bytes, how: str, depth: int, diag: list[str]):
+	"""Accepts the forms owners paste: base64 of the .p8, the raw .p8 PEM, the .p8 body without its
+	BEGIN/END lines (base64 DER), double base64, a UTF-8 BOM or UTF-16 text (PowerShell). Never logs key bytes."""
 	from cryptography.hazmat.primitives import serialization
+	if b.startswith(b"\xef\xbb\xbf"):
+		b, how = b[3:], how + " + BOM removed"
+	if b[:2] in (b"\xff\xfe", b"\xfe\xff") or (len(b) > 8 and b[1:2] == b"\x00" and b[3:4] == b"\x00"):
+		try:
+			b, how = b.decode("utf-16").encode(), how + " + UTF-16 text"
+		except UnicodeDecodeError:
+			pass
+	s = b.strip()
+	diag.append(f"{how}: {len(s)} bytes, PEM header {'present' if b'-----BEGIN' in s else 'absent'}")
+	if b"-----BEGIN" in s:
+		return serialization.load_pem_private_key(s[s.index(b"-----BEGIN"):].replace(b"\r", b""), password=None), how + " -> PEM"
+	try:
+		return serialization.load_der_private_key(s, password=None), how + " -> DER (the .p8 body without BEGIN/END lines)"
+	except ValueError:
+		pass
+	compact = b"".join(s.split())
+	if depth < 3 and compact and B64_RE.fullmatch(compact):
+		compact += b"=" * (-len(compact) % 4)
+		dec = base64.urlsafe_b64decode(compact) if (b"-" in compact or b"_" in compact) else base64.b64decode(compact)
+		return _parse_key(dec, how + " -> base64-decoded", depth + 1, diag)
+	raise ValueError("unrecognised key encoding")
+
+
+def load_key(raw: str):
+	"""Returns (private key object, how it was decoded). Raises ValueError with a non-secret diagnosis."""
+	diag: list[str] = []
+	try:
+		return _parse_key(raw.encode("utf-8"), "secret", 0, diag)
+	except Exception as e:  # noqa: BLE001 - only the class name and lengths are reported
+		raise ValueError(f"{type(e).__name__}; steps: " + " | ".join(diag)) from None
+
+
+def check_key(key) -> str:
 	from cryptography.hazmat.primitives.asymmetric import ec
-	key = serialization.load_pem_private_key(pem, password=None)
 	if not isinstance(key, ec.EllipticCurvePrivateKey) or key.curve.name != "secp256r1":
 		return "not an EC P-256 key (an App Store Connect .p8 must be)"
 	return "EC P-256 private key (format OK)"
+
+
+def write_p8(key, path: str) -> None:
+	from cryptography.hazmat.primitives import serialization
+	pem = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
+	fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+	with os.fdopen(fd, "wb") as f:
+		f.write(pem)
 
 
 def short(s: str | None, n: int = 90) -> str:
@@ -215,6 +253,7 @@ def main() -> int:
 	ap.add_argument("--bundle-id", default="com.mysteryroom.forgotteninstitute")
 	ap.add_argument("--gate", action="store_true", help="preflight mode for ios.yml (exit 3 unless record + bundle id exist)")
 	ap.add_argument("--min-build", type=int, default=1, help="gate mode: next_build is at least this")
+	ap.add_argument("--write-p8", metavar="PATH", help="only write the normalised .p8 (PKCS#8 PEM, mode 600) for xcodebuild")
 	args = ap.parse_args()
 	bundle_id = args.bundle_id
 
@@ -227,12 +266,17 @@ def main() -> int:
 		return 2
 	out(f"- IOS_TEAM_ID secret present: {'yes' if team else 'no'}")
 	try:
-		pem = load_pem(p8)
-		out(f"- API key: {check_key(pem)}")
-	except Exception as e:  # noqa: BLE001 - report the class only, never the key material
-		out(f"- API key: cannot be read as a PEM private key ({type(e).__name__}); re-check ASC_KEY_P8_BASE64")
+		key, how = load_key(p8)
+	except ValueError as e:
+		out(f"- API key: ASC_KEY_P8_BASE64 is not a readable .p8 private key ({e})")
+		out("  Expected: base64 of the downloaded AuthKey_XXXX.p8 file (or the file's text itself).")
 		return 2
-	asc = Asc(key_id, issuer, pem)
+	out(f"- API key: {check_key(key)}; decoded as {how}")
+	if args.write_p8:
+		write_p8(key, args.write_p8)
+		out("- normalised .p8 written for xcodebuild")
+		return 0
+	asc = Asc(key_id, issuer, key)
 
 	st, body = asc.get("/v1/apps", {"limit": "1", "fields[apps]": "bundleId"})
 	if st != 200:
