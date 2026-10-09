@@ -38,7 +38,7 @@ down the +axis).
 | `freight_lift` | 6,597 (7,000) | 10 (10) | 4 | `game/assets/models/freight_lift.glb` | `freight_lift.png`, `_2` … `_4` |
 | `shell_lift` | 5,404 (7,000) | **9 (8)** | 4 | `game/assets/models/shell_lift.glb` | `shell_lift.png`, `_2` … `_4` |
 | `shell_choir` | 11,552 (18,000) | 14 (14) | 4 | `game/assets/models/shell_choir.glb` | `shell_choir.png`, `_2` … `_7` |
-| `shell_nursery` | NURSERY_TRIS (14,000) | 12 (12) | 4 | `game/assets/models/shell_nursery.glb` | `shell_nursery.png`, `_2` … `_6` |
+| `shell_nursery` | 6,895 (14,000) | 12 (12) | 4 | `game/assets/models/shell_nursery.glb` | `shell_nursery.png`, `_2` … `_6` |
 
 Surfaces = mesh nodes × primitives in the GLB (draw calls before shadows). The three over-cap counts are explained
 under Deviations; each is the smallest count that keeps every named object of §3.
@@ -256,9 +256,30 @@ QA (`shell_choir*.png`, the west blast door, `shell_lift` and `freight_lift` imp
 
 ---
 
-## shell_nursery.glb (NURSERY_TRIS tris, 12 surfaces)
+## shell_nursery.glb (6,895 tris, 12 surfaces)
 
-NURSERY_SECTION
+**Shape.** Cream-white glazed tiles to the ceiling on a coved skirting tile with a moulded tile course at
+1.2 m; tile-clad pilasters 0.40 × 0.12 on the east wall (z −2.6, 1.4) and the south wall (x 8.5, 11.0); the
+linoleum floor; cream steel ceiling panels in a T-bar grid (1.2 × 0.6) with five fluorescent fittings (housing,
+end caps, suspension rods) and opal diffusers; three frosted, lagged mains along the north wall (y 2.66 / 2.92 /
+3.14) with frost bands, dropping (with a flange and a frozen hand valve each) to the dome of each autoclave at
+x 8.4, 9.65, 10.9, 12.15 (z −3.5, top y 2.13), hung from the ceiling; a riser in the north-east corner and a run
+along the east wall at y 3.30 above the seed library, down in the south-east corner. The camp is a cream steel
+box with riveted ribs, a kick rail and a doorway reveal.
+
+| Node | Materials | Notes |
+|---|---|---|
+| `nursery_walls` | Tile_Glazed | open sweep from the camp's east wall (x 7.75) round the north, east, south and west walls to the camp's south wall (z −1.05); openings: west wall |z| < 0.8, y < 2.4 (tunnel mouth); south wall x 4.8 … 6.3, y < 2.6 |
+| `nursery_floor` | Linoleum | the room minus the camp (and its walls) |
+| `nursery_ceiling` | Steel_Cream | y 4.0; grid bars 18 mm deep; fittings y 3.935 … 3.985; pipe hangers and straps |
+| `nursery_pipes` | Glass_Frosted | x 7.75 … 13.0, y 0 … 3.36 |
+| `camp_walls` | Steel_Cream, Linoleum, Tile_Glazed | south partition z −1.2 … −1.05 with the doorway x 5.6 … 6.6, y < 2.12; east partition x 7.6 … 7.75; roof slab y 2.9 … 3.0 over x 4.5 … 7.75, z −4.0 … −1.05; the camp's floor patch; the tiled camp-side faces of the north wall (x 4.5 … 7.6) and the west wall (z −4.0 … −1.2) with the shutter opening z −3.15 … −2.05, y 0.30 … 2.10. Ribs on the east face avoid the growth chart (z −2.78 … −2.12) |
+| `lamp_glass_0..4` | Glass_Frosted | 1.2 × 0.2 prismatic diffusers centred at y 3.9 |
+| `light_nursery_0..4` | — | (9.3, 3.9, −2.2), (12.0, 3.9, −2.2), (6.0, 3.9, 1.6), (9.3, 3.9, 1.6), (12.0, 3.9, 1.6) |
+| `portal_e_n` | — | (3.75, 1.2, 0), yaw −90 (+Z toward −X) |
+
+QA (`shell_nursery*.png`, the east blast door, `shell_lift`, `shell_gallery` and `freight_lift` imported):
+`nursery`, `nursery_w`, `seal` (through the camp doorway), `camp`, `shutter`, the chart wall.
 
 ---
 
