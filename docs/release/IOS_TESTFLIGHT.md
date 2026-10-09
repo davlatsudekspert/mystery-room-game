@@ -100,6 +100,11 @@ Inputs:
   - The profile's expiry is not one year from this run. It follows the certificate's expiry, so the Apple Distribution certificate already existed (from 2026-10-08) and was reused. This is an inference; no certificate list was printed.
 - **Not yet run on macOS:** the step that prints the bundle's `.lproj` folders. It was added after this run.
 
+**Known issue found by the export (not iOS-specific, not fixed here):**
+- The export logs `ERROR: Failed loading resource: res://assets/textures/decals/ch2/tape_label_1996.png`, in the dev container and on the runner.
+- The committed `tape_label_1996.png.import` says `valid=false`, so that Chapter 2 decal (`M_Decal_TapeLabel_1996.tres`) is probably missing from exported builds.
+- The owner of the Ch2 assets should re-import the file and commit the `.import`.
+
 **Unverified:**
 - the TestFlight upload itself;
 - Apple's server-side binary validation (it runs only on upload);
