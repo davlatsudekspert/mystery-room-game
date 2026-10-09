@@ -21,6 +21,12 @@ const FROM_READY := {
 }
 
 
+
+## Report line, also printed at once (tools/qa_run.sh treats a silent log as a stalled run).
+func _log(line: String) -> void:
+	report.append(line)
+	print(line)
+
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
@@ -41,7 +47,7 @@ func _ready() -> void:
 	get_tree().root.add_child.call_deferred(room)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	report.append("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
+	_log("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
 	await _settle(1.0)
 	await _perf("lab_root")
 	await run()
@@ -71,13 +77,13 @@ func _advance_to(k: int) -> void:
 		guard += 1
 		Lab7Solver.step(logic, "leave_lens")
 	logic.select_item("")
-	report.append("start: puzzle %d (solver played the earlier ones in %d steps)" % [k, guard])
+	_log("start: puzzle %d (solver played the earlier ones in %d steps)" % [k, guard])
 
 
 func _perf(label: String) -> void:
 	await _settle(0.5)
 	var rs := RenderingServer
-	report.append("perf[%s]: draw calls %d, primitives %d, objects %d, video mem %.0f MB, texture mem %.0f MB" % [label,
+	_log("perf[%s]: draw calls %d, primitives %d, objects %d, video mem %.0f MB, texture mem %.0f MB" % [label,
 		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
 		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
 		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME),
@@ -98,7 +104,7 @@ func shot(name: String) -> void:
 	shot_n += 1
 	var p := "%s/%02d_%s.png" % [out_dir, shot_n, name]
 	get_viewport().get_texture().get_image().save_png(p)
-	report.append("shot %s" % p.get_file())
+	_log("shot %s" % p.get_file())
 
 
 func cam() -> RoomCamera:
@@ -199,7 +205,7 @@ func shard(id: String, view_id: String) -> void:
 	else:
 		logic.collect_shard(id)
 		taps_fallback += 1
-		report.append("  fallback: shard %s (view %s)" % [id, cam().current()])
+		_log("  fallback: shard %s (view %s)" % [id, cam().current()])
 	logic.select_item("")
 
 
@@ -207,12 +213,12 @@ func check_hidden(id: String) -> void:
 	await get_tree().process_frame
 	var n: Node3D = (room.get("_shard_nodes") as Dictionary).get(id)
 	if n != null and n.visible:
-		report.append("✗ shard %s still visible after it was collected" % id)
+		_log("✗ shard %s still visible after it was collected" % id)
 
 
 func step(label: String, cond: Callable) -> void:
 	var ok: bool = cond.call()
-	report.append(("✓ " if ok else "✗ ") + label)
+	_log(("✓ " if ok else "✗ ") + label)
 
 
 ## Tap a 3D part; succeed only if `cond` becomes true. Otherwise apply `fallback` (logic call).
@@ -226,7 +232,7 @@ func act(model: String, part: String, cond: Callable, fallback: Callable, label:
 		var why := _what_was_hit(model, part, frac)
 		fallback.call()
 		taps_fallback += 1
-		report.append("  fallback: %s %s (view %s, hit %s)" % [label if label != "" else part, model, cam().current(), why])
+		_log("  fallback: %s %s (view %s, hit %s)" % [label if label != "" else part, model, cam().current(), why])
 
 
 func run() -> void:
@@ -297,7 +303,7 @@ func run() -> void:
 		if s["uv_desk"]:
 			taps_ok += 1
 		else:
-			L.uv_reveal("desk_mark"); taps_fallback += 1; report.append("  fallback: uv desk dwell")
+			L.uv_reveal("desk_mark"); taps_fallback += 1; _log("  fallback: uv desk dwell")
 		hud.call("_show_notebook", 4)
 		await _settle(0.3)
 		L.uv_reveal("notebook_page")
@@ -466,7 +472,7 @@ func run() -> void:
 			m += 1
 			var b1 := int(s["mirrors"][1])
 			await act("mirror_stand_b", "IA_mirror_mount", func() -> bool: return int(s["mirrors"][1]) == (b1 + 1) % 8 or s["door_open"], func() -> void: L.rotate_mirror(1, 1), "mirror B")
-		report.append("  P12 state: mirrors %s, B mounted %s, beam %s, trace %s, emblem %s" % [str(s["mirrors"]),
+		_log("  P12 state: mirrors %s, B mounted %s, beam %s, trace %s, emblem %s" % [str(s["mirrors"]),
 			s["mirror_b_mounted"], s["beam_on"], L.trace_beam()["end"], s["emblem_recorded"]])
 		await _settle(2.5)
 		await shot("finale_echo_1979")
@@ -489,10 +495,9 @@ func run() -> void:
 
 
 func _finish() -> void:
-	report.append("taps through 3D scene: %d, logic fallbacks (missing models/placeholders): %d" % [taps_ok, taps_fallback])
+	_log("taps through 3D scene: %d, logic fallbacks (missing models/placeholders): %d" % [taps_ok, taps_fallback])
 	var f := FileAccess.open(out_dir + "/playthrough_report.txt", FileAccess.WRITE)
 	f.store_string("\n".join(report) + "\n")
-	print("\n".join(report))
 	SaveSystem.delete_game()
 	var ok: bool = logic.state["complete"] if _to >= 12 else not report.any(func(l: String) -> bool: return l.begins_with("✗"))
 	var qa_exit: int = 0 if ok and taps_fallback == 0 else 1
