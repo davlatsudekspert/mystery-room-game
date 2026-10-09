@@ -1,0 +1,334 @@
+===============================================================================
+ MYSTERY ROOM — GOOGLE PLAY CONSOLE VA APP STORE CONNECT QOʻLLANMASI
+ (nusxa olib qoʻyiladigan tayyor qiymatlar)                 Sana: 2026-10-09
+===============================================================================
+
+MUHIM:
+- Bu faylda parol yoki maxfiy kalit YOʻQ. Parollarni hech qayerga yozmang,
+  faqat GitHub Secrets'ga va oʻzingiz saqlaydigan joyga qoʻying.
+- Hamma identifikatorlar faqat MYSTERY ROOM uchun. NFCSTORE bilan aloqasi yoʻq.
+- «...» ichidagi matnni qavslarsiz nusxa oling.
+
+-------------------------------------------------------------------------------
+ ASOSIY MAʼLUMOTLAR (ikkala doʻkon uchun bir xil)
+-------------------------------------------------------------------------------
+Paket nomi / Bundle ID .......... com.mysteryroom.forgotteninstitute
+Oʻyin ichidagi nomi ............. MYSTERY ROOM: The Forgotten Institute
+Doʻkondagi nomi (30 belgi max) .. Mystery Room: Lost Institute
+   (Toʻliq nomi 37 belgi, ikkala doʻkonda chegara 30 belgi. Shuning uchun
+    doʻkon nomi qisqartirilgan. Oʻyin ichida toʻliq nom qoladi.)
+Versiya ......................... 0.1.0
+Kategoriya ...................... Oʻyin → Puzzle (Головоломки)
+Yuklash kaliti SHA-256 barmoq izi:
+E5:D8:42:A6:B8:0E:D2:50:FD:DD:EE:CA:92:64:ED:D7:A6:8B:E1:59:70:A3:AD:8C:06:A7:EC:9C:E8:37:D1:3E
+
+
+###############################################################################
+ 1-QISM. GOOGLE PLAY CONSOLE
+###############################################################################
+
+1.1 «Сначала укажите название пакета» oynasi (siz yuborgan skrinshot)
+-------------------------------------------------------------------------------
+Название пакета ....... com.mysteryroom.forgotteninstitute
+Понятное название ..... MYSTERY ROOM: The Forgotten Institute
+→ «Далее».
+Agar keyingi qadamda kalit / sertifikat SHA-256 soʻralsa, yuqoridagi barmoq
+izini qoʻying. Agar «imzolangan APK yuklang» deb soʻralsa, oʻsha oynaning
+skrinshotini menga yuboring: kerakli faylni tayyorlab beraman.
+
+1.2 Ilova yaratish («Создать приложение»)
+-------------------------------------------------------------------------------
+Название приложения ........... Mystery Room: Lost Institute
+Язык по умолчанию ............. English (United States) – en-US
+Приложение или игра ........... Игра
+Бесплатное или платное ........ Бесплатное
+   (1-bob bepul. Keyingi boblar ilova ichidagi xarid bilan ochiladi.
+    «Платное» tanlanmaydi.)
+Ikkala «Декларации» katagiga ✓ qoʻying (Program Policies, US export laws).
+→ «Создать приложение».
+
+1.3 Asosiy sahifa («Основная страница в Google Play»)
+-------------------------------------------------------------------------------
+Til: English (en-US). Keyin «Переводы» orqali Русский (ru-RU) qoʻshing.
+Oʻzbek tili Play roʻyxatida «Uzbek – uz» boʻlsa, uni ham qoʻshing.
+
+[EN] Название (≤30):
+Mystery Room: Lost Institute
+
+[EN] Краткое описание (≤80):
+A 3D mystery escape room. Light remembers. Find out what it kept.
+
+[EN] Полное описание (≤4000):
+On 14 November 1979 every clock in the Meridian Institute stopped at 03:17 — and forty-one scientists were never seen again.
+
+Decades later, a parcel arrives for you with an old lab badge and a single line: "Laboratory 7. Please finish what I could not."
+
+• Hand-crafted 3D rooms full of tactile brass mechanisms
+• Fair, logical puzzles with a three-step hint system and no random guessing
+• Signature Lumen mechanics: record light in a crystal and project it as a key, steer a living beam with mirrors
+• UV ink, radio beacons, electrical circuits, shadows and hidden rooms
+• A haunting original story told through objects, handwriting and light
+• Choices that carry into later chapters
+• Fully playable in English, Russian and Uzbek, and offline
+• No ads, no energy, no subscriptions
+
+Chapter 1 is free. More chapters are coming.
+
+[RU] Название (≤30):
+Mystery Room: Забытый институт
+
+[RU] Краткое описание:
+3D-головоломка-побег. Свет помнит. Узнайте, что он сохранил.
+
+[RU] Полное описание:
+14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез.
+
+Спустя десятилетия вам приходит посылка: старый пропуск лаборатории и одна строка: «Лаборатория 7. Пожалуйста, закончи то, что не смогла я».
+
+• Атмосферные 3D-комнаты с латунными механизмами, которые приятно трогать
+• Честные логичные головоломки и трёхступенчатые подсказки, без угадывания
+• Фирменные механики Люмена: запишите свет в кристалл и спроецируйте его как ключ, управляйте живым лучом с помощью зеркал
+• Невидимые чернила, радиомаяки, электрические цепи, тени и тайные комнаты
+• Оригинальная история, рассказанная через предметы, почерк и свет
+• Решения, которые влияют на следующие главы
+• Полностью на английском, русском и узбекском, работает без интернета
+• Без рекламы, энергии и подписок
+
+Первая глава бесплатна. Новые главы уже в работе.
+
+[UZ] Nomi (≤30):
+Mystery Room: Sirli institut
+
+[UZ] Qisqa tavsif:
+3D sirli qochish oʻyini. Yorugʻlik eslaydi. U nimani saqlaganini biling.
+
+[UZ] Toʻliq tavsif:
+1979-yil 14-noyabrda «Meridian» institutidagi barcha soatlar 03:17 da toʻxtadi va qirq bir olim izsiz gʻoyib boʻldi.
+
+Oradan oʻn yillar oʻtib, sizga posilka keladi: eski laboratoriya guvohnomasi va bir qator yozuv: «7-laboratoriya. Iltimos, men tugata olmagan ishni tugating».
+
+• Qoʻl bilan ushlab koʻrgingiz keladigan jez mexanizmlarga toʻla 3D xonalar
+• Adolatli, mantiqiy jumboqlar va uch bosqichli maslahat tizimi, taxmin qilish shart emas
+• Oʻziga xos Lumen mexanikalari: yorugʻlikni billurga yozib oling, uni kalit sifatida proyeksiya qiling, tirik nurni koʻzgular bilan boshqaring
+• Koʻrinmas siyoh, radiomayoqlar, elektr zanjirlari, soyalar va maxfiy xonalar
+• Buyumlar, qoʻlyozmalar va yorugʻlik orqali hikoya qilinadigan original syujet
+• Keyingi boblarga taʼsir qiladigan tanlovlar
+• Ingliz, rus va oʻzbek tillarida toʻliq, internetsiz ishlaydi
+• Reklama, energiya va obuna yoʻq
+
+Birinchi bob bepul. Yangi boblar tayyorlanmoqda.
+
+Grafika (fayllar docs/store/graphics/ papkasida tayyor):
+- Значок приложения ...... icon_512.png (512×512)
+- Графический баннер ..... feature_1024x500.png (1024×500)
+- Скриншоты телефона ..... screenshot_*.png (kamida 4 tasini yuklang)
+
+1.4 «Контент приложения» (Policy → App content)
+-------------------------------------------------------------------------------
+Политика конфиденциальности:
+   Pastdagi 3-QISM matnini sites.google.com da bepul sahifa qilib eʼlon
+   qiling (Blank site → matnni qoʻying → Publish). Hosil boʻlgan URL'ni
+   shu yerga qoʻying. Xuddi shu URL App Store uchun ham kerak.
+Доступ к приложению ...... Все функции доступны без ограничений
+Реклама .................. Нет, в приложении нет рекламы
+Возрастные ограничения (IARC анкета):
+   E-mail .................. oʻzingizning Gmail manzilingiz
+   Категория ............... Игра (Game)
+   Насилие ................. Нет
+   Страх (sahnalar kichik bolalarni qoʻrqitishi mumkinmi) ... Да
+      (qorongʻi xonalar va «aks-sado» arvoh siymolari bor; qon va zoʻravonlik
+       yoʻq → odatda PEGI 7 / 7+ chiqadi)
+   Сексуальный контент ..... Нет
+   Нецензурная лексика ..... Нет
+   Наркотики/алкоголь/табак  Нет
+   Азартные игры ........... Нет
+   Пользователи общаются ... Нет
+   Передача местоположения . Нет
+   Покупка цифровых товаров  Нет   (hozircha toʻlovlar oʻchiq. Yoqilganda
+                                    «Да» ga oʻzgartiramiz)
+   Неограниченный интернет . Нет
+Целевая аудитория:
+   Возраст ................. 13–15, 16–17, 18 и старше
+   (13 yoshdan kichiklarni belgilamang: «Families» qoidalari ancha
+    qattiq.)
+   Привлекает детей? ....... Нет
+Новостное приложение ..... Нет
+Приложения для COVID-19 .. Нет
+Безопасность данных (Data safety):
+   Собирает или передаёт данные пользователей? ... Нет
+   (Oʻyin internetga ulanmaydi, hisob, reklama va analitika yoʻq.
+    Saqlash faqat telefonning oʻzida.)
+Рекламный идентификатор .. Нет, не используется
+Государственное приложение  Нет
+Финансовые функции ....... Нет
+Здоровье ................. Нет
+
+1.5 «Настройки магазина»
+-------------------------------------------------------------------------------
+Приложение или игра ...... Игра
+Категория ................ Головоломки (Puzzle)
+Теги ..................... Puzzle, Escape room, Mystery, Adventure (roʻyxatda borlari)
+Эл. почта ................ oʻzingizning Gmail manzilingiz
+Сайт / телефон ........... ixtiyoriy, boʻsh qoldirsa ham boʻladi
+
+1.6 «Цены и распространение»
+-------------------------------------------------------------------------------
+Бесплатно. Страны: hammasi (yoki xohlaganlaringiz).
+
+1.7 Ichki test (telefonda sinash) — eng muhim qadam
+-------------------------------------------------------------------------------
+A) GitHub → davlatsudekspert/mystery-room-game → Settings → Secrets and
+   variables → Actions → «New repository secret». Uchta secret qoʻshing:
+     ANDROID_KEYSTORE_BASE64   = sizga berilgan keystore'ning base64 matni
+     ANDROID_KEYSTORE_PASSWORD = sizga berilgan parol
+     ANDROID_KEY_ALIAS         = mysteryroom-upload
+B) Menga «secretlar qoʻshildi» deb yozing. «Android build» release'ni men
+   ishga tushiraman (bepul kvota ichida) va tayyor .aab faylni beraman.
+C) Play Console → Тестирование → Внутреннее тестирование →
+   «Создать новый выпуск»:
+   - Подписание приложений Google Play: «Использовать ключ, созданный Google»
+     (tavsiya etiladi. Bizdagi kalit faqat yuklash kaliti.)
+   - .aab faylni yuklang.
+   - Название выпуска: 0.1.0 (avtomatik chiqadi)
+   - Примечания к выпуску:
+<en-US>
+First test build: Chapter 1 "The Locked Laboratory".
+</en-US>
+<ru-RU>
+Первая тестовая сборка: Глава 1 «Запертая лаборатория».
+</ru-RU>
+   - «Сохранить» → «Проверить выпуск» → «Начать развертывание».
+D) «Тестировщики» bandi → «Создать список» → nomi: MysteryRoom testers →
+   oʻzingizning Gmail'ingizni (va sinovchilarnikini) qoʻshing → saqlang.
+E) «Ссылка для тестировщиков»ni nusxa oling → telefonda oʻsha Gmail bilan
+   oching → «Принять» → Google Play'dan oʻrnating.
+   (Birinchi marta 10–60 daqiqa kutish kerak boʻlishi mumkin.)
+
+Eslatma: ichki test uchun hamma boʻlim shart boʻlmasligi mumkin. Lekin
+ommaga chiqarish (Production) uchun 1.3–1.6 boʻlimlarning hammasi shart.
+Yangi shaxsiy akkauntlarda Production'dan oldin «yopiq test» (12 sinovchi,
+14 kun) talab qilinadi. Buni keyin birga qilamiz.
+
+
+###############################################################################
+ 2-QISM. APP STORE CONNECT (iPhone)
+###############################################################################
+Kerak: Apple Developer Program aʼzoligi (yiliga $99). IOS_TEAM_ID borligi
+aʼzoligingiz borligini koʻrsatadi. Mac kerak emas: build GitHub Actions'da
+yigʻiladi.
+
+2.1 Bundle ID roʻyxatdan oʻtkazish
+-------------------------------------------------------------------------------
+developer.apple.com → Account → Certificates, IDs & Profiles → Identifiers →
+«+» → App IDs → Continue → App → Continue:
+   Description ....... Mystery Room
+   Bundle ID ......... Explicit → com.mysteryroom.forgotteninstitute
+   Capabilities ...... hech narsa qoʻshmang (In-App Purchase oʻzi yoqilgan)
+→ Continue → Register.
+
+2.2 Ilova yozuvini yaratish
+-------------------------------------------------------------------------------
+appstoreconnect.apple.com → Apps (Приложения) → «+» → New App:
+   Platforms ......... iOS
+   Name (≤30) ........ Mystery Room: Lost Institute
+      (Agar «nom band» desa: Mystery Room: The Institute)
+   Primary Language .. English (U.S.)
+   Bundle ID ......... com.mysteryroom.forgotteninstitute (roʻyxatdan tanlang)
+   SKU ............... MYSTERYROOM-FI-001
+   User Access ....... Full Access
+→ Create.
+
+2.3 API kaliti: rol ADMIN boʻlishi shart
+-------------------------------------------------------------------------------
+Siz ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8_BASE64 secretlarini qoʻshgansiz.
+Faqat kalit rolini tekshiring:
+App Store Connect → Users and Access → Integrations → App Store Connect API →
+Team Keys → kalitingiz qatoridagi «Access» ustuni.
+   - «Admin» boʻlsa → hech narsa qilmang.
+   - Boshqa rol boʻlsa (App Manager, Developer...) → «+» bilan yangi kalit
+     yarating: Name: MysteryRoom CI, Access: Admin → Generate → .p8 faylni
+     yuklab oling (faqat 1 marta beriladi) → GitHub secretlarini yangilang:
+       ASC_KEY_ID        = yangi Key ID
+       ASC_ISSUER_ID     = sahifa tepasidagi Issuer ID (oʻzgarmaydi)
+       ASC_KEY_P8_BASE64 = .p8 faylning base64 matni
+     Windows PowerShell'da base64 olish:
+       [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\yol\AuthKey_XXXX.p8"))
+     Mac'da: base64 -i AuthKey_XXXX.p8
+
+2.4 Shartnomalar
+-------------------------------------------------------------------------------
+App Store Connect → Business (Agreements) → «Free Apps» shartnomasi faol
+boʻlishi kerak (Apple Developer Program License Agreement'ni qabul qiling).
+«Paid Apps» (bank / soliq) faqat pullik xarid yoqilganda kerak boʻladi.
+
+2.5 Build yigʻish va TestFlight'ga yuklash
+-------------------------------------------------------------------------------
+Menga «App Store tayyor» deb yozing. «iOS build» workflow'ini men ishga
+tushiraman. U macOS'da ~30–40 daqiqa ishlaydi. macOS daqiqalari bepul
+kvotadan 10 baravar hisoblanadi: bir yigʻish ~300–400 daqiqa (bepul oylik
+kvota 2000 daqiqa). Shuning uchun faqat kerak boʻlganda yigʻamiz.
+
+2.6 iPhone'da sinash (TestFlight)
+-------------------------------------------------------------------------------
+- Yuklangandan keyin build 10–30 daqiqa «Processing» holatida boʻladi.
+- App Store Connect → ilova → TestFlight → buildni tanlang.
+- «Missing Compliance» (shifrlash) soʻralsa → «None of the algorithms
+  mentioned above» / «Нет»: oʻyin maxsus shifrlash ishlatmaydi.
+- Internal Testing → «+» guruh: MysteryRoom testers → oʻzingizni qoʻshing.
+- iPhone'ga «TestFlight» ilovasini App Store'dan oʻrnating → taklif
+  xatidagi havola orqali oʻyinni oʻrnating.
+
+2.7 Keyinchalik, App Store'ga chiqarishda
+-------------------------------------------------------------------------------
+Subtitle (≤30) ........ A 3D escape-room mystery
+Keywords (≤100) ....... escape,room,puzzle,mystery,adventure,riddle,lab,story,offline,detective
+Promotional text ...... Light remembers. Find out what it kept.
+Description ........... 1.3 dagi [EN] toʻliq tavsif
+Category .............. Games → Puzzle; ikkinchisi: Games → Adventure
+Privacy Policy URL .... 1.4 dagi URL
+Support URL ........... oʻsha Google Sites sahifasi
+App Privacy ........... «Data Not Collected»
+Age Rating ............ Horror/Fear Themes: Infrequent/Mild; qolganlari: None
+                        (natija odatda 9+)
+Export compliance ..... No encryption
+
+
+###############################################################################
+ 3-QISM. MAXFIYLIK SIYOSATI (Google Sites'ga qoʻyiladigan matn)
+###############################################################################
+Privacy Policy — Mystery Room: The Forgotten Institute
+Last updated: 9 October 2026
+
+Mystery Room: The Forgotten Institute ("the game") is developed by an independent developer.
+
+1. Data we collect: none. The game does not collect, store on any server, sell or share any personal information. It has no user accounts, no advertising, no analytics and no third-party tracking SDKs.
+
+2. Data stored on your device: your game progress and settings (language, volume, etc.) are saved only on your own device. Uninstalling the game deletes them.
+
+3. Internet: the game works fully offline and does not send data over the internet.
+
+4. Permissions: the game only uses vibration for haptic feedback.
+
+5. Children: the game is not directed at children under 13 and does not knowingly collect any data from anyone.
+
+6. Purchases: if optional in-app purchases are added in the future, payments are processed entirely by Google Play or the Apple App Store. We never see your payment details. This policy will be updated before such a change.
+
+7. Contact: [sizning e-mail manzilingiz]
+
+--- Русский ---
+Политика конфиденциальности — Mystery Room: The Forgotten Institute
+Игра не собирает, не передаёт и не продаёт персональные данные. Нет аккаунтов, рекламы, аналитики и сторонних трекеров. Прогресс и настройки хранятся только на вашем устройстве и удаляются вместе с игрой. Игра работает без интернета. Используется только вибрация. Если в будущем появятся покупки, оплату полностью обрабатывают Google Play или Apple App Store, а политика будет обновлена заранее. Связь: [ваш e-mail]
+
+--- Oʻzbekcha ---
+Maxfiylik siyosati — Mystery Room: The Forgotten Institute
+Oʻyin hech qanday shaxsiy maʼlumot toʻplamaydi, uzatmaydi va sotmaydi. Hisob, reklama, analitika va begona kuzatuv vositalari yoʻq. Oʻyin jarayoni va sozlamalar faqat sizning qurilmangizda saqlanadi va oʻyin oʻchirilganda oʻchib ketadi. Oʻyin internetsiz ishlaydi. Faqat tebranish (vibratsiya) ishlatiladi. Kelajakda xaridlar qoʻshilsa, toʻlovni toʻliq Google Play yoki Apple App Store amalga oshiradi va siyosat oldindan yangilanadi. Aloqa: [e-mail manzilingiz]
+
+
+###############################################################################
+ 4-QISM. QISQA TARTIB (nima, qachon)
+###############################################################################
+1) Play: 1.1 → 1.2 → 1.4 (siyosat URL + anketalar) → 1.3 → 1.5 → 1.6
+2) GitHub: 3 ta ANDROID_* secret → menga yozing → .aab ni beraman →
+   1.7 (ichki test) → telefonda oʻrnatib oʻynash
+3) Apple: 2.1 → 2.2 → 2.3 (rol Admin) → 2.4 → menga yozing → 2.5 → 2.6
+Qaysidir oynada tushunmasangiz, skrinshot yuboring: aniq nima yozishni aytaman.
