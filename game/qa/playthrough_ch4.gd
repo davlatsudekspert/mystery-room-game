@@ -39,7 +39,6 @@ const EVIDENCE := {
 const LANDMARK := {
 	"lift": ["bridge", "stairs"],
 	"catwalk": ["catwalk", "catwalk"],
-	"island": ["glass_tower", "island"],
 	"apse": ["sun_lamp", "apse"],
 	"booth": ["booth", "booth"],
 	"watch": ["watch_room", "watch"],
@@ -173,6 +172,7 @@ var _walks := 0
 var _solved: Array[String] = []
 var _early_done := false
 var screen_spec := ""
+var walk_only := false
 
 
 func _ready() -> void:
@@ -200,6 +200,8 @@ func _ready() -> void:
 			intro_check = true
 		elif a == "--no-continue":
 			do_continue = false
+		elif a == "--walk":
+			walk_only = true
 		elif a.begins_with("--reload-every="):
 			reload_every = int(a.substr(15))
 		elif a.begins_with("--screen="):
@@ -442,6 +444,23 @@ func _hit(model: String, part: String) -> String:
 		return "part missing"
 	var sp := _tap_point(model, part)
 	if sp.x < 0:
+		if OS.get_environment("CH4_DBG") != "":
+			var n := node_of(model, part)
+			var r := _rect(n, part != "" and not part.begins_with("Item_"))
+			var seen := {}
+			for gy in 11:
+				for gx in 11:
+					var p := r.position + r.size * Vector2(gx / 10.0, gy / 10.0)
+					var h: Dictionary = room.call("raycast", p)
+					var k := "(none)"
+					if not h.is_empty():
+						var rr: Dictionary = room.call("resolve", h)
+						k = "%s/%s/%s" % [rr["model"], rr["hotspot"], rr["part"]]
+						var col := h.get("collider") as Node
+						if col:
+							k += " <%s/%s at %s>" % [col.get_parent().name, col.name, str(h.get("position", Vector3.ZERO))]
+					seen[k] = int(seen.get(k, 0)) + 1
+			_log("  DBG %s/%s rect %s visible %s present %s: %s" % [model, part, str(r), str(n.is_visible_in_tree()), str(n.get_meta("present", "-")), str(seen)])
 		return "not visible / off-screen"
 	var h: Dictionary = room.call("raycast", sp)
 	if h.is_empty():
@@ -541,8 +560,7 @@ func _zone_root() -> String:
 ## Taps a landmark of the hall: the first visible spot of the model whose hotspot is `hotspot`. A root view allows free
 ## look, so a player who does not see the landmark turns the view (to the left, to the right, behind) until it is there.
 func _tap_landmark(model: String, hotspot: String) -> bool:
-	var root: Node3D = (room.get("models") as Dictionary).get(model)
-	if root == null:
+	if not (room.get("models") as Dictionary).has(model):
 		return false
 	var yaws: Array[float] = [0.0]
 	if cam().is_root():
@@ -552,45 +570,58 @@ func _tap_landmark(model: String, hotspot: String) -> bool:
 			cam().yaw = yaw
 			cam().call("_apply_free_look")
 			await _settle(0.35)
-		var best := _landmark_point(root, hotspot)
+		var best := _landmark_point(model, hotspot)
 		if best.x >= 0:
 			room.call("_on_tap", best)
 			await _settle(0.5)
 			return true
+		if OS.get_environment("CH4_DBG") != "":
+			_dbg_hist("%s/%s" % [model, hotspot])
 	if cam().is_root():
 		cam().yaw = 0.0
 		cam().call("_apply_free_look")
 	return false
 
 
-## The visible spot of `root` nearest the screen's middle that answers with `hotspot`, clear of the HUD's controls.
-func _landmark_point(root: Node3D, hotspot: String) -> Vector2:
+## The spot nearest the screen's middle where a tap answers with `hotspot` of the model `model` (a scan of the whole
+## screen, clear of the HUD's controls and the edges).
+func _landmark_point(model: String, hotspot: String) -> Vector2:
 	var vs := get_viewport().get_visible_rect().size
 	var best := Vector2(-1, -1)
 	var best_d := INF
 	var centre := vs * 0.5
-	for mi in ModelUtil.find_meshes(root):
-		if not mi.is_visible_in_tree() or mi.mesh == null:
-			continue
-		var r := _rect(mi, true)
-		if r.size == Vector2.ZERO:
-			continue
-		for gy in 13:
-			for gx in 13:
-				var p := r.position + r.size * Vector2(0.03 + 0.94 * gx / 12.0, 0.03 + 0.94 * gy / 12.0)
-				if p.x < 200 or p.y < 130 or p.x > vs.x - 200 or p.y > vs.y - 160:
-					continue # clear of the HUD's controls and the edges
-				var d := p.distance_to(centre)
-				if d >= best_d:
-					continue
+	var y := 150.0
+	while y < vs.y - 170.0:
+		var x := 220.0
+		while x < vs.x - 220.0:
+			var p := Vector2(x, y)
+			var d := p.distance_to(centre)
+			if d < best_d:
 				var h: Dictionary = room.call("raycast", p)
-				if h.is_empty():
-					continue
-				var rr: Dictionary = room.call("resolve", h)
-				if str(rr["hotspot"]) == hotspot:
-					best = p
-					best_d = d
+				if not h.is_empty():
+					var rr: Dictionary = room.call("resolve", h)
+					if str(rr["hotspot"]) == hotspot and str(rr["model"]) == model:
+						best = p
+						best_d = d
+			x += 30.0
+		y += 30.0
 	return best
+
+
+## QA debugging (CH4_DBG=1): what a 21x21 grid of taps resolves to in the current view.
+func _dbg_hist(tag: String) -> void:
+	var vs := get_viewport().get_visible_rect().size
+	var seen := {}
+	for gy in 21:
+		for gx in 21:
+			var p2 := Vector2(vs.x * gx / 20.0, vs.y * gy / 20.0)
+			var h2: Dictionary = room.call("raycast", p2)
+			var k := "(none)"
+			if not h2.is_empty():
+				var r2: Dictionary = room.call("resolve", h2)
+				k = "%s/%s" % [r2["model"], r2["hotspot"]]
+			seen[k] = int(seen.get(k, 0)) + 1
+	_log("  DBG %s view %s yaw %.0f pitch %.0f: %s" % [tag, cam().current(), cam().yaw, cam().pitch, str(seen)])
 
 
 ## Pressing Back, as the HUD's button does.
@@ -611,6 +642,20 @@ func _walk_to_root(root: String) -> void:
 		if root == "bridge":
 			return
 		await wait_idle()
+		if root == "island":
+			# the island is reached from the catwalk: the glass tower stands at its end
+			await _walk_to_root("catwalk")
+			var ok2 := await _tap_landmark("glass_tower", "island")
+			await _settle(0.8)
+			if ok2 and _zone_root() == "island":
+				taps_ok += 1
+				_walks += 1
+			else:
+				taps_fallback += 1
+				_log("  fallback: walk catwalk -> island (no spot of glass_tower answers as «island» in the catwalk view)")
+				cam().go("island")
+				await _settle(0.9)
+			return
 		var lm: Array = LANDMARK[root]
 		var ok := false
 		if lm[1] == "stairs":
@@ -635,28 +680,33 @@ func _walk_to_root(root: String) -> void:
 		await _settle(0.9)
 
 
-## The stairs down to the lift bay: the tap area on the stair flight, in the bridge view looking back (free look).
+## The stairs down to the lift bay: the tap area on the stair flights at the bridge's back corners. A player turns round
+## (free look) and looks down at them, to the left and to the right.
 func _tap_stairs() -> bool:
-	# turn around: the bay and the stairs are behind the bridge view's camera
 	var c := cam()
-	c.yaw = 180.0
-	c.pitch = -30.0 # look down at the stairs
-	c.call("_apply_free_look")
-	await _settle(0.6)
-	var ok := false
 	var vs := get_viewport().get_visible_rect().size
-	for gy in 9:
-		for gx in 9:
-			if ok:
-				break
-			var p := Vector2(vs.x * (0.15 + 0.7 * gx / 8.0), vs.y * (0.2 + 0.7 * gy / 8.0))
-			var h: Dictionary = room.call("raycast", p)
-			if h.is_empty():
-				continue
-			var rr: Dictionary = room.call("resolve", h)
-			if str(rr["hotspot"]) == "stairs":
-				room.call("_on_tap", p)
-				ok = true
+	var ok := false
+	for look: Vector2 in [Vector2(90, -30), Vector2(-90, -30), Vector2(130, -35), Vector2(-130, -35), Vector2(60, -35), Vector2(-60, -35), Vector2(180, -35)]:
+		c.yaw = look.x
+		c.pitch = look.y
+		c.call("_apply_free_look")
+		await _settle(0.5)
+		for gy in 11:
+			for gx in 13:
+				if ok:
+					break
+				var p := Vector2(vs.x * (0.12 + 0.76 * gx / 12.0), vs.y * (0.18 + 0.64 * gy / 10.0))
+				var h: Dictionary = room.call("raycast", p)
+				if h.is_empty():
+					continue
+				var rr: Dictionary = room.call("resolve", h)
+				if str(rr["hotspot"]) == "stairs":
+					room.call("_on_tap", p)
+					ok = true
+		if ok:
+			break
+		if OS.get_environment("CH4_DBG") != "":
+			_dbg_hist("stairs")
 	await _settle(0.5)
 	if cam().current() == "bridge":
 		c.yaw = 0.0
@@ -726,6 +776,9 @@ func run() -> void:
 	# a new game begins in the lift (capture mode skips the intro: the room opens at the bridge)
 	if intro_check and not quick:
 		await _opening()
+	if walk_only:
+		await _walk_test()
+		return
 	cam().go("lift", true)
 	await _settle(0.6)
 	await shot("lift_arrival")
@@ -770,6 +823,32 @@ func run() -> void:
 				s = logic.state
 	if not logic.is_complete() and not s["night_undone"]:
 		_log("✗ chapter not completed (stopped after %d planning rounds)" % guard)
+	_finish()
+
+
+## --walk: the zone changes alone (every root view and Panel 0 from the bridge, by taps), twice, in an odd order. Needs power
+## for the catwalk and the island (the hall is powered by the solver's first steps).
+func _walk_test() -> void:
+	var s := logic.state
+	for step in 3:
+		ArrayHallSolver.step(logic, "leave_lens")
+	await _settle(0.5)
+	_log("power %s" % ["on" if s["power"] else "OFF"])
+	if OS.get_environment("CH4_DBG") != "":
+		var vs := get_viewport().get_visible_rect().size
+		for gx in [0.3, 0.45, 0.5, 0.55, 0.7]:
+			for gy in [0.2, 0.4, 0.6, 0.8]:
+				var p2 := Vector2(vs.x * gx, vs.y * gy)
+				var h2: Dictionary = room.call("raycast", p2)
+				if h2.is_empty():
+					continue
+				var r2: Dictionary = room.call("resolve", h2)
+				_log("  DBG centre-ish %s -> %s/%s/%s" % [str(p2), r2["model"], r2["hotspot"], r2.get("part", "")])
+	for id in ["lift", "panel0", "apse", "booth", "watch", "catwalk", "island", "bridge", "island", "watch", "panel0", "bridge"]:
+		var before := taps_fallback
+		await goto(id)
+		await wait_idle()
+		_log("%s walk to %s: now at %s" % ["✓" if cam().current() == id and taps_fallback == before else "✗", id, cam().current()])
 	_finish()
 
 

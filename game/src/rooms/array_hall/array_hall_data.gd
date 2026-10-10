@@ -11,7 +11,7 @@ extends RefCounted
 const LAYOUT := {
 	"shell_hall": ["shell_hall", Vector3.ZERO, 0.0, "", "static", "H"],
 	"shell_lift4": ["shell_lift4", Vector3.ZERO, 0.0, "", "static", "BH"],
-	"freight_lift": ["freight_lift", Vector3(0.0, 0.0, 16.4), 0.0, "lift", "parts", "B"],
+	"freight_lift": ["freight_lift", Vector3(0.0, 0.0, 16.4), 0.0, "lift", "parts", "l"],
 	"bridge": ["bridge", Vector3.ZERO, 0.0, "bridge", "static", "B"],
 	"catwalk": ["catwalk", Vector3.ZERO, 0.0, "catwalk", "parts", "K"],
 	"master_desk": ["master_desk", Vector3(0.0, 2.5, 13.15), 0.0, "desk", "parts", "B"],
@@ -64,7 +64,7 @@ const PART_HOTSPOT := {
 ## Models whose own mesh takes no tap: the booth's and the watch room's glass must let a tap reach the box, the lockers
 ## and the post station behind it (they get a few opaque tap strips instead, see ArrayHallRoom._enclosure_taps), and the
 ## cage lattice must not hide the Core. model -> [mesh names].
-const NO_COLLIDER := {"booth": ["booth"], "watch_room": ["watch_room"], "cage": ["cage"]}
+const NO_COLLIDER := {"booth": ["booth"], "watch_room": ["watch_room"], "cage": ["cage"], "glass_tower": ["tower_glass"]}
 ## The model that owns each group's walls, ceilings and trim: these never cast shadows.
 const NO_SHADOW_PREFIX := ["hall_", "bay_", "oculus_shutter", "bridge_deck", "bridge_frame", "bridge_rail", "bridge_paint",
 	"catwalk_", "ring_rails", "booth", "watch_room", "cage", "sun_lamp", "iris_frame", "lamp_proto", "tag_proto"]
@@ -85,15 +85,15 @@ const CROWD_FREE_ARCS: Array = [[180.0, 38.0], [270.0, 15.0], [90.0, 17.0], [0.0
 const VIEWS := {
 	# the lift bay and the bridge
 	"lift_in": [Vector3(-0.15, 1.55, 17.15), Vector3(1.1, 1.3, 16.3), 70.0, false, "Bl", "", ""],
-	"lift": [Vector3(1.55, 1.6, 16.5), Vector3(5.0, 2.2, 12.5), 64.0, true, "HBRIl", "", ""],
+	"lift": [Vector3(1.6, 1.65, 17.0), Vector3(5.4, 2.5, 15.3), 62.0, true, "HBRIl", "", ""],
 	"lift_chalk": [Vector3(-2.9, 1.55, 15.4), Vector3(-3.0, 1.5, 18.18), 46.0, false, "Bl", "", ""],
 	"bay_hero": [Vector3(0.0, 1.7, 7.5), Vector3(0.0, 2.6, 15.5), 60.0, false, "HBRl", "", ""],
 	"bridge_up": [Vector3(0.0, 4.4, 14.6), Vector3(0.0, 8.8, 0.0), 74.0, false, "HBKRIS", "", ""],
-	"bridge": [Vector3(0.0, 4.4, 14.6), Vector3(0.0, 3.4, 0.0), 66.0, true, "HBKRISTW", "", ""],
+	"bridge": [Vector3(0.0, 4.9, 16.8), Vector3(0.0, 3.3, 0.0), 62.0, true, "HBKRISTW", "", ""],
 	"desk": [Vector3(0.0, 4.35, 14.5), Vector3(0.0, 3.5, 13.1), 58.0, false, "B", "", ""],
-	"chronometer": [Vector3(0.0, 4.5, 14.3), Vector3(0.0, 3.75, 13.2), 40.0, false, "B", "", ""],
-	"handwheels": [Vector3(0.0, 4.9, 15.2), Vector3(0.0, 3.3, 9.0), 84.0, false, "HBKR", "", ""],
-	"panel0": [Vector3(0.0, 1.2, 12.3), Vector3(0.0, 1.15, 14.0), 62.0, false, "PB", "", ""],
+	"chronometer": [Vector3(0.0, 4.55, 14.3), Vector3(0.0, 3.62, 13.28), 42.0, false, "B", "", ""],
+	"handwheels": [Vector3(0.0, 4.6, 16.2), Vector3(0.0, 3.1, 9.5), 80.0, false, "HBKR", "", ""],
+	"panel0": [Vector3(0.0, 1.15, 12.1), Vector3(0.0, 1.15, 14.0), 76.0, false, "PB", "", ""],
 	# the catwalk and the hatches
 	"catwalk": [Vector3(0.0, 3.9, 11.6), Vector3(0.0, 3.0, 3.0), 64.0, true, "HKRI", "", ""],
 	"hatch_1": [Vector3(0.0, 3.35, 10.85), Vector3(0.0, 0.65, 10.45), 50.0, false, "KR", "", ""],
@@ -108,7 +108,9 @@ const VIEWS := {
 	"gate_4": [Vector3(4.18, 3.9, -0.40), Vector3(2.38, 3.62, -0.40), 46.0, false, "RI", "", ""],
 	"collar": [Vector3(0.0, 3.85, 2.7), Vector3(0.0, 3.7, 1.22), 40.0, false, "I", "", ""],
 	"core": [Vector3(0.0, 4.9, 2.7), Vector3(0.0, 3.95, 0.3), 52.0, false, "I", "", ""],
-	"drawer": [Vector3(0.5, 3.75, 2.4), Vector3(0.0, 3.15, 0.7), 46.0, false, "I", "", ""],
+	# the open drawer's pads lie behind its front panel and under the collar's digit housing: only a camera high above sees them
+	"drawer": [Vector3(0.45, 6.4, 1.8), Vector3(0.0, 3.1, 0.95), 34.0, false, "I", "", ""],
+	"drawer_mark": [Vector3(0.5, 3.75, 2.4), Vector3(0.0, 3.15, 0.7), 46.0, false, "I", "", ""],
 	# the Sun apse
 	"apse": [Vector3(-5.5, 1.7, 0.3), Vector3(-12.5, 1.8, 0.0), 62.0, true, "HSR", "", ""],
 	"sun_pedestal": [Vector3(-10.2, 1.5, 2.8), Vector3(-12.0, 1.1, 2.4), 46.0, false, "HS", "", ""],
@@ -116,11 +118,11 @@ const VIEWS := {
 	# Strand's booth
 	"booth": [Vector3(0.0, 1.7, -6.5), Vector3(0.0, 3.2, -13.0), 62.0, true, "HTt", "", ""],
 	"booth_gate": [Vector3(-2.2, 1.55, -8.9), Vector3(0.4, 1.25, -11.3), 48.0, false, "HTt", "", ""],
-	"gear_box": [Vector3(0.0, 3.6, -11.2), Vector3(0.0, 2.95, -13.4), 44.0, false, "Tt", "", ""],
+	"gear_box": [Vector3(0.0, 3.62, -12.85), Vector3(0.0, 2.84, -13.3), 36.0, false, "Tt", "", ""],
 	# the watch room
 	"watch": [Vector3(6.5, 1.7, 0.0), Vector3(12.7, 1.5, 0.0), 64.0, true, "HWw", "", ""],
-	"locker_17": [Vector3(9.8, 1.6, 2.0), Vector3(13.45, 0.6, 1.64), 40.0, false, "Ww", "", ""],
-	"post_station": [Vector3(9.8, 1.5, -1.5), Vector3(13.5, 1.0, -2.95), 44.0, false, "Ww", "", ""],
+	"locker_17": [Vector3(12.15, 1.0, 1.75), Vector3(13.45, 0.55, 1.64), 40.0, false, "Ww", "", ""],
+	"post_station": [Vector3(12.5, 1.28, -2.45), Vector3(13.5, 0.82, -2.95), 46.0, false, "Ww", "", ""],
 	# cinematic only
 	"rise_core": [Vector3(0.0, 2.9, 5.2), Vector3(0.0, 6.2, 0.0), 70.0, false, "HKRI", "", ""],
 	"rise_up": [Vector3(0.0, 4.4, 2.4), Vector3(0.0, 12.4, 0.0), 72.0, false, "HKRI", "", ""],
@@ -142,7 +144,7 @@ static func zone_of(view: String) -> String:
 			return "booth"
 		"watch", "locker_17", "post_station":
 			return "watch"
-		"island", "collar", "core", "drawer", "gate_1", "gate_2", "gate_3", "gate_4", "rise_core", "rise_up", "finale":
+		"island", "collar", "core", "drawer", "drawer_mark", "gate_1", "gate_2", "gate_3", "gate_4", "rise_core", "rise_up", "finale":
 			return "island"
 		"catwalk", "hatch_1", "hatch_2", "hatch_3", "hatch_4":
 			return "catwalk"
@@ -162,7 +164,7 @@ const HOTSPOT_VIEW := {
 const DEEPER := {
 	"desk": ["chronometer"],
 	"catwalk": ["hatch_1", "hatch_2", "hatch_3", "hatch_4"],
-	"island": ["collar", "core", "drawer"],
+	"island": ["collar", "core", "drawer", "drawer_mark"],
 	"booth": ["booth_gate"],
 }
 const CAPTION := {
@@ -171,17 +173,19 @@ const CAPTION := {
 	"panel0": "obj4.panel0", "catwalk": "obj4.catwalk", "hatch_1": "obj4.hatch_1", "hatch_2": "obj4.hatch_2",
 	"hatch_3": "obj4.hatch_3", "hatch_4": "obj4.hatch_4", "island": "obj4.island", "gate_1": "obj4.gate_1",
 	"gate_2": "obj4.gate_2", "gate_3": "obj4.gate_3", "gate_4": "obj4.gate_4", "collar": "obj4.collar",
-	"core": "obj4.core", "drawer": "obj4.core", "apse": "obj4.apse", "sun_pedestal": "obj4.sun_pedestal",
+	"core": "obj4.core", "drawer": "obj4.core", "drawer_mark": "obj4.core", "apse": "obj4.apse", "sun_pedestal": "obj4.sun_pedestal",
 	"iris": "obj4.iris", "booth": "obj4.booth", "booth_gate": "obj4.booth", "gear_box": "obj4.gear_box",
 	"watch": "obj4.watch", "locker_17": "obj4.locker", "post_station": "obj4.post_station",
 	"rise_core": "obj4.oculus", "rise_up": "obj4.oculus", "finale": "obj4.core",
 }
 
-## Echo mounts: id -> [model with the mount empty, empty name, culling group, fallback position, fallback yaw degrees].
+## Echo mounts: id -> [model with the mount empty, empty name, culling group, fallback position, fallback yaw degrees, optional: true
+## = stand at the fallback position instead of the model's mount].
 const ECHO_MOUNTS := {
 	"tech_panel": ["panel0", "echo_mount_tech_panel", "P", Vector3(0.8, 0.0, 13.0), 0.0],
-	"tech_wheels_a": ["bridge", "echo_mount_wheels_1", "B", Vector3(-2.9, 2.5, 13.3), 180.0],
-	"tech_wheels_b": ["bridge", "echo_mount_wheels_2", "B", Vector3(2.9, 2.5, 13.3), 180.0],
+	# the technicians stand beyond the outer wheels (a figure between the wheels would hide wheel I and IV from the bridge)
+	"tech_wheels_a": ["bridge", "echo_mount_wheels_1", "B", Vector3(-4.5, 2.5, 13.2), 180.0, true],
+	"tech_wheels_b": ["bridge", "echo_mount_wheels_2", "B", Vector3(4.5, 2.5, 13.2), 180.0, true],
 	"clerk_post": ["watch_room", "echo_mount_clerk_post", "W", Vector3(13.55, 0.03, -2.95), 90.0],
 	"leyla_lift": ["shell_lift4", "echo_mount_leyla_lift", "B", Vector3(-3.4, 0.0, 17.0), 0.0],
 	"strand_desk": ["master_desk", "echo_mount_strand", "B", Vector3(1.12, 2.5, 13.93), 180.0],
@@ -203,12 +207,17 @@ const ECHO_MODELS: Array[String] = ["echo_crowd", "echo_named", "echo_strand_des
 	"echo_leyla_1998_lens", "echo_tech_panel", "echo_tech_wheels", "echo_clerk_post"]
 
 ## An extra tap area around a small part that is hard to hit (phone61: a part under 9 mm is a trip hazard):
-## model id -> {part -> [size, offset]} (see ArrayHallRoom._tap_pads).
+## model id -> {part -> [size, offset]} (see ArrayHallRoom._tap_pads). The pad belongs to the part (it turns with it).
 const TAP_PADS := {
 	"mirror_tower_1": {"IA_key": [Vector3(0.34, 0.28, 0.42), Vector3(0, 0, 0.0)]},
 	"mirror_tower_2": {"IA_key": [Vector3(0.34, 0.28, 0.42), Vector3(0, 0, 0.0)]},
 	"mirror_tower_3": {"IA_key": [Vector3(0.34, 0.28, 0.42), Vector3(0, 0, 0.0)]},
 	"mirror_tower_4": {"IA_key": [Vector3(0.34, 0.28, 0.42), Vector3(0, 0, 0.0)]},
+	"strand_box4": {"IA_knob_1": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)], "IA_knob_2": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)],
+		"IA_knob_3": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)], "IA_knob_4": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)]},
+	"panel0": {"IA_switch_1": [Vector3(0.40, 0.19, 0.12), Vector3(0.1, 0, 0.05)], "IA_switch_2": [Vector3(0.40, 0.19, 0.12), Vector3(0.1, 0, 0.05)],
+		"IA_switch_3": [Vector3(0.40, 0.19, 0.12), Vector3(0.1, 0, 0.05)], "IA_switch_4": [Vector3(0.40, 0.19, 0.12), Vector3(0.1, 0, 0.05)],
+		"IA_switch_5": [Vector3(0.40, 0.19, 0.12), Vector3(0.1, 0, 0.05)]},
 }
 
 ## Tower heads (docs/models/ch4_c.md): ring radius per tower, the beam axis and the Core.

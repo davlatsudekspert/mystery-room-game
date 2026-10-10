@@ -70,7 +70,7 @@ var _held: Dictionary = {} # key -> [item id, Node3D]
 var _mats: Dictionary = {}
 var _textures: Dictionary = {}
 var _wheel_deg: Array[float] = [0.0, 0.0, 0.0, 0.0] # the four handwheels' unwrapped angles (derived from the rings)
-var _knob_turns: Array[int] = [0, 0, 0, 0] # Strand's box: presses seen by this session
+var _knob_deg: Array[float] = [0.0, 0.0, 0.0, 0.0] # Strand's box: the four knobs' unwrapped angles (derived from the gears)
 var _scrub_deg := 0.0
 var _hand_deg := 0.0
 var _ring_dur := 0.9
@@ -112,7 +112,13 @@ var _mark: MeshInstance3D
 var _mark_beam: MeshInstance3D
 var _sun_flare := 0.0
 var _frame := 0
+var _wave: MeshInstance3D
+var _wave_t := -1.0
+var _wave_strength := 1.0
 var _waking := false
+## The room holds the lens and the drawer back for a moment while a cinematic stages them (Leyla's walk, the drawer view).
+var defer_lens := false
+var defer_drawer := false
 var _fin_on := false
 var _fin_t := 0.0
 var _lamp_anim := false
@@ -135,6 +141,7 @@ func _ready() -> void:
 	_build_board()
 	_build_shaft()
 	_build_mark()
+	_build_wave()
 	_init_wheel_angles()
 
 
@@ -548,7 +555,7 @@ func _pick_model(cands: Array, wanted: String) -> Array:
 func _echo_mount(fid: String) -> Transform3D:
 	var e: Array = ArrayHallData.ECHO_MOUNTS.get(fid, ["", "", "B", Vector3.ZERO, 0.0])
 	var mount: Node3D = part(e[0], e[1])
-	if mount and mount.is_inside_tree():
+	if mount and mount.is_inside_tree() and not (e.size() > 5 and bool(e[5])):
 		return mount.global_transform
 	return Transform3D(Basis(Vector3.UP, deg_to_rad(float(e[4]))), e[3])
 
@@ -742,12 +749,69 @@ func _build_mark() -> void:
 	_mark_beam.set_meta("present", false)
 
 
+## A ring of light that runs out across the floor from the Core: every minute the chronometer winds back, and the flash.
+func _build_wave() -> void:
+	_wave = MeshInstance3D.new()
+	_wave.name = "time_wave"
+	var q := QuadMesh.new()
+	q.size = Vector2(2.0, 2.0)
+	q.orientation = PlaneMesh.FACE_Y
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 0.80, 0.93, 0.975, 1.0])
+	g.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0.55), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0)])
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5)
+	t.fill_to = Vector2(1.0, 0.5)
+	t.width = 256
+	t.height = 256
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.vertex_color_use_as_albedo = false
+	m.albedo_texture = t
+	m.albedo_color = Color(0.6, 0.9, 1.0, 1.0)
+	q.material = m
+	_wave.mesh = q
+	_wave.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_wave.position = Vector3(0.0, 0.22, 0.0)
+	room.add_child(_wave)
+	_cull_tag(_wave, "R")
+	_wave.visible = false
+	_wave.set_meta("present", false)
+
+
+## Sends a ring of light out from the Core across the floor (about 1.6 s).
+func time_wave(strength: float = 1.0) -> void:
+	_wave_t = 0.0
+	_wave_strength = strength
+	room.call("set_present", _wave, true)
+
+
 func _init_wheel_angles() -> void:
 	var w := _wheel_turns()
 	for i in 4:
 		_wheel_deg[i] = float(w[i]) * WHEEL_STEP_DEG
+	var kn := _knob_presses()
+	for i in 4:
+		_knob_deg[i] = float(kn[i]) * KNOB_STEP_DEG
 	_scrub_deg = SCRUB_STEP_DEG * float(logic.state["wheel"])
 	_hand_deg = HAND_BASE_DEG + HAND_STEP_DEG * float(logic.state["wheel"])
+
+
+## Knob i's presses (mod 6), derived from the gears: gear i = start + knob i + knob i-1 (a knob turns its gear and the next).
+func _knob_presses() -> Array[int]:
+	var out: Array[int] = [0, 0, 0, 0]
+	var start: Array = logic.state["v_box"]
+	var box: Array = logic.state["box"]
+	var prev := 0
+	for i in 4:
+		out[i] = posmod(int(box[i]) - int(start[i]) - prev, ArrayHallLogic.GEAR_STEPS)
+		prev = out[i]
+	return out
 
 
 ## Wheel i's own turn count (mod 8), derived from the rings: ring i = start + wheel i + wheel i-1.
@@ -829,7 +893,7 @@ func refresh_presence() -> void:
 	if _orbs:
 		room.call("set_present", _orbs, true)
 	if _mark:
-		var on: bool = s["lens_seated"]
+		var on: bool = s["lens_seated"] and not defer_lens
 		room.call("set_present", _mark, on)
 		room.call("set_present", _mark_beam, on)
 	_crowd_visibility()
@@ -939,13 +1003,14 @@ func _apply_island(animated: bool) -> void:
 		_rot(part("glass_tower", "IA_collar_digit_%d" % (d + 1)), Vector3.RIGHT, COLLAR_STEP_DEG * int(s["collar"][d]), animated, 0.25)
 	var glass := part("glass_tower", "tower_glass")
 	_slide(glass, Vector3(0, GLASS_SINK if s["tower_open"] else 0.0, 0), animated, 3.2)
-	_lamp(part("cradle", "cradle_ring"), s["lens_seated"], LUMEN, 2.4)
+	var lens_shown: bool = s["lens_seated"] and not defer_lens
+	_lamp(part("cradle", "cradle_ring"), lens_shown, LUMEN, 2.4)
 	# the lens in its socket (Euler of the contract's lens_mount)
-	_held_item("lens", "crystal_lens", part("cradle", "lens_mount"), s["lens_seated"], "Item_lens")
+	_held_item("lens", "crystal_lens", part("cradle", "lens_mount"), lens_shown, "Item_lens")
 	# the heart drawer
-	_slide(part("heart_drawer", "IA_heart_drawer"), Vector3(0, 0, DRAWER_TRAVEL if s["heart_open"] else 0.0), animated, 1.1)
+	var hopen: bool = s["heart_open"] and not defer_drawer
+	_slide(part("heart_drawer", "IA_heart_drawer"), Vector3(0, 0, DRAWER_TRAVEL if hopen else 0.0), animated, 1.1)
 	var taken: Dictionary = s["taken"]
-	var hopen: bool = s["heart_open"]
 	_held_item("heart_watch", "pocket_watch", part("heart_drawer", "watch_mount"), hopen and not taken.get("heart_watch", false),
 		"Item_heart_watch", Vector3(-90, 0, 0), 0.0077)
 	_held_item("heart_letter", "strand_last_letter", part("heart_drawer", "letter_mount"), hopen and not taken.get("heart_letter", false),
@@ -1011,9 +1076,12 @@ func _apply_booth(animated: bool) -> void:
 	_held_item("booth_key", "strand_key", part("booth", "booth_key_mount"), s["booth_gate"] and not s["power"])
 	# Strand's box: the gears hold the pointers, the lid rises when the box is solved
 	var box: Array = s["box"]
+	var kn := _knob_presses()
 	for k in 4:
 		_rot(part("strand_box4", "gear_pointer_%d" % (k + 1)), Vector3.UP, GEAR_STEP_DEG * int(box[k]), animated, 0.3)
-		_rot(part("strand_box4", "IA_knob_%d" % (k + 1)), Vector3.BACK, KNOB_STEP_DEG * _knob_turns[k], animated, 0.2)
+		var kt := float(kn[k]) * KNOB_STEP_DEG
+		_knob_deg[k] = kt + 360.0 * roundf((_knob_deg[k] - kt) / 360.0)
+		_rot(part("strand_box4", "IA_knob_%d" % (k + 1)), Vector3.BACK, _knob_deg[k], animated, 0.2)
 	_rot(part("strand_box4", "IA_box_lid"), Vector3.RIGHT, LID_OPEN_DEG if s["box_open"] else 0.0, animated, 1.2)
 	var orrery := part("orrery", "orrery") as Node3D
 	var taken: Dictionary = s["taken"]
@@ -1219,6 +1287,10 @@ func _apply_lights(animated: bool) -> void:
 			_light_to("work_%d" % (n + 1), f if s["power"] else 0.0, dur)
 	_light_to("shaft", (3.8 if s["night_undone"] else 2.6) if s["power"] else 0.0, dur * 2.0)
 	_light_to("bridge_lamp", 1.7 if s["power"] else 0.7, dur)
+	# the zone lamps of the apse, the booth and the watch room: dim until they have current (power, or the right key)
+	_light_to("apse_lamp", 1.3 if s["power"] else 0.3, dur)
+	_light_to("booth_lamp", 1.2 if (s["power"] or s["booth_gate"]) else 0.35, dur)
+	_light_to("watch_lamp", 1.2 if (s["power"] or s["watch_gate"]) else 0.35, dur)
 	var arc := int(s["arc"])
 	var sun := 0.0
 	match arc:
@@ -1263,6 +1335,17 @@ func _lamp(n: Node3D, on: bool, color: Color, energy: float = 3.0) -> void:
 # ====================================================================== per frame
 func _process(delta: float) -> void:
 	_frame += 1
+	if _wave_t >= 0.0:
+		_wave_t += delta
+		var u := _wave_t / 1.7
+		if u >= 1.0:
+			_wave_t = -1.0
+			room.call("set_present", _wave, false)
+		else:
+			var r := lerpf(1.5, 25.0, 1.0 - pow(1.0 - u, 2.0))
+			_wave.scale = Vector3(r, 1.0, r)
+			var mat := (_wave.mesh as QuadMesh).material as StandardMaterial3D
+			mat.albedo_color = Color(0.6, 0.9, 1.0, _wave_strength * (1.0 - u) * 0.55)
 	_orb_t += delta
 	_animate_orbs(delta)
 	_update_beams(delta)
@@ -1486,6 +1569,7 @@ func leyla_seats_lens(seconds: float) -> void:
 		if is_instance_valid(n):
 			n.global_transform = from.interpolate_with(to, t), 0.0, 1.0, seconds * 0.55)
 	await get_tree().create_timer(seconds * 0.6).timeout
+	defer_lens = false
 	apply_state(true) # the lens appears in its socket as her hand reaches it
 	await get_tree().create_timer(seconds * 0.15).timeout
 	_fade(n, 0.9, 0.0, seconds * 0.25)
@@ -1613,9 +1697,17 @@ func pull(model_id: String, part_name: String, deg: float, axis: Vector3 = Vecto
 	get_tree().create_timer(hold).timeout.connect(func() -> void: _rot(p, axis, 0.0, true, 0.3))
 
 
+## A knob dips when pressed (its turn itself follows the box's state, see _knob_presses); the turn tween that follows the
+## logic's answer brings it back.
 func knob_turn(i: int) -> void:
-	_knob_turns[i] += 1
-	_rot(part("strand_box4", "IA_knob_%d" % (i + 1)), Vector3.BACK, KNOB_STEP_DEG * _knob_turns[i], true, 0.2)
+	var p := part("strand_box4", "IA_knob_%d" % (i + 1))
+	if p == null or not rest.has(p):
+		return
+	var home: Vector3 = (rest[p] as Transform3D).origin
+	p.position = home + p.basis * Vector3(0, 0, -0.012)
+	get_tree().create_timer(0.4).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.position = home)
 
 
 func lamp_cage_shake() -> void:

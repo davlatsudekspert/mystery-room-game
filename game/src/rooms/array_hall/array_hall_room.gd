@@ -296,10 +296,12 @@ func _build_lights() -> void:
 	_spot("shaft", Vector3(0.0, 12.2, 0.0), Vector3(0.0, 0.0, 0.0), 30.0, Color("d6e6ff"), 2.6 if powered else 0.0, 17.0, "HKRI", true)
 	_spot("bridge_lamp", Vector3(0.0, 5.9, 13.5), Vector3(0.0, 3.5, 13.1), 70.0, warm, 1.7 if powered else 0.8, 7.0, "B", false)
 	_light("panel_lamp", "omni", Vector3(0.0, 2.0, 12.6), Color("ffd29a"), 1.3, 3.2, "P")
+	_light("apse_lamp", "omni", Vector3(-10.4, 3.1, 2.3), Color("ffd29a"), 0.3, 6.5, "S")
 	_light("sun_arc", "omni", Vector3(-12.4, 1.8, 0.0), Color("f2f8ff"), 0.0, 12.0, "S")
 	_light("booth_lamp", "omni", _at("booth", "booth_lamp", Vector3(0.0, 4.25, -12.9)), Color("ffd7a0"), 1.1, 4.5, "t")
 	_light("watch_lamp", "omni", _at("watch_room", "watch_lamp", Vector3(12.6, 2.95, 0.0)), Color("ffe0b4"), 1.1, 4.5, "w")
 	_light("lift_lamp", "omni", _at("shell_lift4", "lift_light", Vector3(0.0, 5.8, 16.4)), Color("ffd29a"), 0.9, 8.0, "l")
+	_light("lift_spill", "omni", Vector3(4.6, 3.8, 13.6), Color("9fd8ff"), 1.6, 8.0, "l") # the hall's cold glow over the bridge
 	_light("lift_pass", "omni", Vector3(3.2, -3.0, 16.4), Color("ffcf8a"), 0.0, 6.0, "l")
 	# a camera-following fill for close-ups (never shadowed, no hot spots on glass)
 	var fill := OmniLight3D.new()
@@ -795,6 +797,11 @@ func _on_events(ev: Array[String]) -> void:
 		visuals.begin_wake()
 	if ev.has("snap_back"):
 		visuals.snap_durations(true)
+	if ev.has("leyla_echo_lens"):
+		visuals.defer_lens = true
+		visuals.defer_drawer = true
+	elif ev.has("heart_open"):
+		visuals.defer_drawer = true
 	for e in ev:
 		_feedback(e)
 	visuals.apply_state(true)
@@ -941,6 +948,7 @@ func _feedback(e: String) -> void:
 		"replay_keeper_on":
 			tones.chord(-16.0)
 		"replay_flash":
+			visuals.time_wave(1.0)
 			visuals.core_pulse(1.6)
 			AudioManager.sfx("projector_fire", -4.0, 0.7)
 			AudioManager.haptic(60)
@@ -963,6 +971,7 @@ func _feedback(e: String) -> void:
 		"beat":
 			_say("msg.c4_beat_far" if int(arg) >= 4 else "msg.c4_beat_near")
 		"wound":
+			visuals.time_wave(1.0)
 			hud.call("message", tr("msg.c4_wound") % int(arg))
 			tones.ratchet(5, true, -6.0)
 			AudioManager.sfx("wheel_tick", -3.0, 0.6)
@@ -1165,6 +1174,9 @@ func _tower_sequence(ev: Array[String]) -> void:
 
 func _drawer_sequence() -> void:
 	if _cinematic:
+		visuals.defer_lens = false
+		visuals.defer_drawer = false
+		visuals.apply_state(true)
 		return
 	_busy(true)
 	await _drawer_sequence_inner()
@@ -1174,13 +1186,18 @@ func _drawer_sequence() -> void:
 ## The Core's light passes through the lens and the recorded mark falls on the drawer's face: it slides open.
 func _drawer_sequence_inner() -> void:
 	var back := cam.current()
-	cam.go("drawer")
+	cam.go("drawer_mark")
 	visuals.core_pulse(1.0)
 	AudioManager.sfx("crystal_record", -4.0, 1.1)
 	await get_tree().create_timer(1.8).timeout
+	visuals.defer_lens = false
+	visuals.defer_drawer = false
+	visuals.apply_state(true)
 	AudioManager.sfx("drawer_open", -2.0, 0.8)
-	await get_tree().create_timer(2.2).timeout
-	cam.go("core" if back == "" or not cam.views.has(back) else back)
+	await get_tree().create_timer(2.0).timeout
+	cam.go("drawer") # from above: the watch, the letter and the pawl on their velvet
+	await get_tree().create_timer(1.6).timeout
+	cam.go("core" if back == "" or not cam.views.has(back) or back.begins_with("drawer") else back)
 	await get_tree().create_timer(0.6).timeout
 
 
@@ -1208,6 +1225,7 @@ func _reversal_sequence() -> void:
 	AudioManager.haptic(200)
 	tones.swell(6.0, 98.0, -11.0)
 	visuals.core_pulse(1.8)
+	visuals.time_wave(1.5)
 	hud.call("caption", tr("msg.c4_reversal_begins"), 5.0)
 	await get_tree().create_timer(4.4).timeout
 	cam.go(back if cam.views.has(back) and not back.begins_with("lift") else "desk")
@@ -1251,6 +1269,7 @@ func _finale_rise() -> void:
 	hud.call("caption", tr("cap4.rise"), 4.0)
 	await get_tree().create_timer(1.2).timeout
 	visuals.start_rise(ending)
+	visuals.time_wave(1.6)
 	cam.go("rise_core")
 	tones.swell(8.0, 98.0, -9.0)
 	AudioManager.haptic(250)
