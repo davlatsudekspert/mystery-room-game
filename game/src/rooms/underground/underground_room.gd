@@ -121,6 +121,14 @@ func _build_models() -> void:
 			for prefix: String in UndergroundData.NO_SHADOW_PREFIX:
 				if str(mi.name).begins_with(prefix):
 					mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# a part drawn with more groups than its model (§1.2 "camp_walls also K"): it leaves the model's subtree,
+		# since a hidden parent would hide it, and carries its own tags
+		var own: Dictionary = UndergroundData.PART_CULL.get(id, {})
+		for p: String in own:
+			var pn := part(id, p)
+			if pn:
+				pn.reparent(self, true)
+				tag_cull(pn, own[p])
 	# the growth log hangs on the working autoclave (§6): it belongs to the autoclave's hotspot
 	var log_mount := part("autoclave", "log_mount")
 	if log_mount and ResourceLoader.exists("res://assets/models/growth_log.glb"):

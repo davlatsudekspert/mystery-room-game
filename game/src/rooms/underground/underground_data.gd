@@ -58,6 +58,9 @@ const PART_HOTSPOT := {
 	"shell_lift": {"IA_passage_w": "passage_w", "IA_passage_e": "passage_e"},
 	"strand_office": {"IA_office_door": "office_door", "IA_office_lock": "office_door"},
 }
+## Parts drawn with other groups than their model (§1.2): model -> {part -> groups}. The room moves them out of
+## the model's subtree so they can stay visible while the rest of the model is culled.
+const PART_CULL := {"shell_nursery": {"camp_walls": "NK"}}
 ## The model that owns each group's walls, ceilings and trim: these never cast shadows (§1.5).
 const NO_SHADOW_PREFIX := ["choir_walls", "choir_ceiling", "choir_trim", "gallery_drum", "gallery_ceiling",
 	"nursery_walls", "nursery_ceiling", "nursery_pipes", "camp_walls", "lobby_walls", "lobby_ceiling", "lift_shaft",

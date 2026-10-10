@@ -120,7 +120,7 @@ def lever_frame():
             xc = x + sx * CHEEK_X
             p.append(B.prism_x("cheek", prof, xc - CHEEK_T / 2, xc + CHEEK_T / 2, BRASS))
         # numeral on the plinth front, under the lever
-        p.append(B.text3d("lnum", str(n), 0.028, (x, (TOP + ty) / 2), z1, BRASS, depth=0.0015, font=B.FONT_COND_B, res=1))
+        p.append(B.text3d("lnum", str(n), 0.028, (x, (TOP + ty) / 2), z1 + 0.0004, BRASS, font=B.FONT_COND_B, res=1))
     # the axle through all cheeks, end nuts
     p.append(B.gcyl("axle", 0.007, x0 + 0.06, x1 - 0.06, base=(0.0, PIVOT_Y, PIVOT_Z), axis=(1, 0, 0), segments=8,
                     mat=BRASS))
@@ -194,9 +194,9 @@ def mast():
                           (mx, yc + 0.0175, mz), (0, 1, 0), 12, BRASS, smooth=50.0, cap_bottom=False, cap_top=False))
         # the numeral k on the four faces, painted into the brass
         for f in range(4):
-            t = B.text3d("cnum", str(k), 0.022, (0.0, 0.0), 0.0, PAINT, depth=0.0008, font=B.FONT_COND_B, res=1)
+            t = B.text3d("cnum", str(k), 0.022, (0.0, 0.0), 0.0, PAINT, font=B.FONT_COND_B, res=1)
             t.data.transform(Matrix.Translation((mx, yc, mz)) @ Matrix.Rotation(math.radians(90 * f), 4, "Y") @
-                             Matrix.Translation((0.0, 0.0, 0.025)))
+                             Matrix.Translation((0.0, 0.0, 0.0254)))
             p.append(t)
     return p
 
@@ -215,12 +215,12 @@ def static():
 # ====================================================================== parts
 def lever(n):
     x = lever_x(n)
-    p = [B.gcyl("hub", 0.021, -0.020, 0.020, base=(x, PIVOT_Y, PIVOT_Z), axis=(1, 0, 0), segments=12, mat=BRASS,
+    p = [B.gcyl("hub", 0.021, -0.020, 0.020, base=(x, PIVOT_Y, PIVOT_Z), axis=(1, 0, 0), segments=10, mat=BRASS,
                 chamfer=0.003)]
     stem = [(0.0, 0.0), (0.012, 0.0), (0.012, 0.020), (0.010, 0.030), (0.0085, 0.205), (0.011, 0.212), (0.011, 0.226),
             (0.008, 0.232), (0.0, 0.234)]
-    p.append(B.glathe("stem", stem, (x, PIVOT_Y, PIVOT_Z), (0, 1, 0), 10, BRASS, smooth=50.0))
-    ball = M.sphere("ball", 0.025, loc=(x, PIVOT_Y + GRIP, PIVOT_Z), segments=14, rings=8, mat=BRASS)
+    p.append(B.glathe("stem", stem, (x, PIVOT_Y, PIVOT_Z), (0, 1, 0), 8, BRASS, smooth=50.0))
+    ball = M.sphere("ball", 0.025, loc=(x, PIVOT_Y + GRIP, PIVOT_Z), segments=12, rings=7, mat=BRASS)
     A.hint(ball, 80.0)
     p.append(ball)
     # spring catch (the latch handle railway levers have), on the operator side of the stem
@@ -247,7 +247,7 @@ def globes():
     out = []
     mx, mz = MAST
     for k in range(1, 6):
-        g = M.sphere(f"globe{k}", GLOBE_R, loc=(mx, globe_y(k), mz), segments=16, rings=10, mat=CREAM)
+        g = M.sphere(f"globe{k}", GLOBE_R, loc=(mx, globe_y(k), mz), segments=14, rings=8, mat=CREAM)
         M.apply_transform(g)
         A.hint(g, 80.0)
         B.vcolor(g, (0.2 * k, 0.0, 0.0, 1.0))

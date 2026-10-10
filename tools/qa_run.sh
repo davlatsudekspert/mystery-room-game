@@ -55,7 +55,8 @@ done
 for attempt in 1 2 3; do
 	: > "$LOG"
 	# 9>&-: only this script holds the slot lock; an Xvfb or Godot left behind by a killed run must not keep it
-	xvfb-run -a godot --path "$ROOT/game" "$@" > "$LOG" 2>&1 9>&- &
+	# QA_XVFB_ARGS (optional): Xvfb server args, e.g. "-screen 0 2600x1300x24" for previews wider than the default 1280 px
+	xvfb-run -a ${QA_XVFB_ARGS:+-s "$QA_XVFB_ARGS"} godot --path "$ROOT/game" "$@" > "$LOG" 2>&1 9>&- &
 	pid=$!
 	last_size=-1
 	still=0

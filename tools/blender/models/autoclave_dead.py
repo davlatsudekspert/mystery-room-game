@@ -29,7 +29,8 @@ NAME = "autoclave_dead"
 TRI_BUDGET, SURF_BUDGET = 3500, 3
 CHROME, STEEL, FROST = D.CHROME, D.STEEL, D.FROST
 
-ECHO_Z = 0.95                       # contract 0.62; moved out so tech_a / tech_b clear the vessel (see ch3_d.md)
+ECHO_Z = float(os.environ.get("MR_ECHO_Z", "0.95"))   # contract 0.62; moved out so tech_a / tech_b clear the
+#                                                        vessel (measured in ch3_d.md; MR_ECHO_Z overrides for tests)
 AJAR = -10.0                        # the door, baked ajar (negative = toward the viewer)
 # echo_technicians contact data (figure frame, docs/models/ch3_h.md): tech_b's hand-wheel centre, tech_a's gaze
 TECH_B_WHEEL = (-0.04, 0.40, 0.26)
@@ -53,9 +54,9 @@ def gauge():
     st.append(D.hexnut("gnut", 0.014, (gx, gy, zv + 0.012), (0, 0, 1), h=0.012))
     z0 = zv + 0.045
     st.append(K.glathe("gcase", [(0.058, 0.0), (0.064, 0.004), (0.064, 0.031), (0.0, 0.031)], (gx, gy, z0), (0, 0, 1),
-                       16, STEEL, smooth=45.0, cap_bottom=False))
-    ch.append(D.ring("gbezel", 0.054, 0.068, z0 + 0.029, z0 + 0.040, (gx, gy, 0.0), (0, 0, 1), 16, CHROME))
-    ch.append(D.disc("gface", 0.0585, (gx, gy, z0 + 0.0315), (0, 0, 1), CHROME, 16))
+                       12, STEEL, smooth=45.0, cap_bottom=False))
+    ch.append(D.ring("gbezel", 0.054, 0.068, z0 + 0.029, z0 + 0.040, (gx, gy, 0.0), (0, 0, 1), 12, CHROME))
+    ch.append(D.disc("gface", 0.0585, (gx, gy, z0 + 0.0315), (0, 0, 1), CHROME, 12))
     for k in range(6):
         a = math.radians(225 - 54 * k)
         t = D.quad01("gtick", (0.0, 0.046, 0.0), 0.0032, 0.012, STEEL)
@@ -65,7 +66,7 @@ def gauge():
                  z0=0.0, mat=STEEL, bevel=0.0)
     nd.data.transform(Matrix.Translation((gx, gy, z0 + 0.0322)) @ Matrix.Rotation(math.radians(135), 4, "Z"))
     st.append(nd)                                       # dead: the needle sits on the stop pin, below zero
-    fr.append(D.disc("gglass", 0.0555, (gx, gy, z0 + 0.0365), (0, 0, 1), FROST, 16))
+    fr.append(D.disc("gglass", 0.0555, (gx, gy, z0 + 0.0365), (0, 0, 1), FROST, 12))
     return ch, st, fr
 
 
@@ -87,7 +88,7 @@ def drain_valve():
     st.append(K.glathe("gully", [(0.05, 0.0), (0.05, 0.006), (0.035, 0.006), (0.0, 0.002)], (wx, 0.0, body_z),
                        (0, 1, 0), 8, STEEL, cap_bottom=False))
     # the hand-wheel: rim r 0.04 (tube r 0.005), four spokes, hub
-    rim = M.torus("vwheel", 0.035, 0.005, major_seg=14, minor_seg=4, mat=CHROME)
+    rim = M.torus("vwheel", 0.035, 0.005, major_seg=12, minor_seg=4, mat=CHROME)
     rim.data.transform(Matrix.Translation((wx, wy, wz)))
     ch.append(rim)
     for k in range(4):
@@ -103,7 +104,7 @@ def drain_valve():
 def frost():
     """Rime on the top nozzle (under the shell's frosted drop) and icicles under the girth flange."""
     out = [K.glathe("rime", [(0.064, 2.04), (0.080, 2.065), (0.094, 2.10), (0.092, 2.118), (0.060, 2.122)],
-                    (0, 0, 0), (0, 1, 0), 12, FROST, cap_bottom=False, cap_top=False, smooth=60.0)]
+                    (0, 0, 0), (0, 1, 0), 10, FROST, cap_bottom=False, cap_top=False, smooth=60.0)]
     import random
     rng = random.Random(7)
     for deg in (-150, -112, -70, 62, 96, 128, 160, 200):
@@ -116,9 +117,9 @@ def frost():
 
 
 def body():
-    shell = D.autoclave_shell(seg=28, lite=True)
+    shell = D.autoclave_shell(seg=24, lite=True)
     ch, st = shell[D.CHROME], shell[D.STEEL]
-    dparts, glass = D.ac_door(AJAR, seg=20, frost=True, lite=True)
+    dparts, glass = D.ac_door(AJAR, seg=16, frost=True, lite=True)
     ch += dparts
     fr = [glass]
     a, b, c = gauge()
@@ -136,6 +137,7 @@ def body():
     mk = S.inlay("nmark", "mark", 0.055, depth=0.0, mat=CHROME)
     mk.data.transform(Matrix.Translation((0.0, 0.66, 0.4313)))
     ch.append(mk)
+    D.tri_breakdown(ch + st + fr, NAME)
     return K.part(NAME, ch + st + fr)
 
 
@@ -191,7 +193,9 @@ def qa(parts, args):
     D.place(roots, D.DEAD_POS[0], 0.0, name="qa_place_dead0")
     # tech_a at this instance (dead_0); a second instance at dead_1 with tech_b
     _ha, fig_a = techs(mount, "tech_a", "qa_ta_")
-    D.room(extra=[("autoclave", D.AC_POS, 0.0, "qa_ac_"), ("autoclave_dead", D.DEAD_POS[1], 0.0, "qa_d1_"),
+    measure = "--measure" in args
+    D.room(shell=not measure,
+           extra=[("autoclave", D.AC_POS, 0.0, "qa_ac_"), ("autoclave_dead", D.DEAD_POS[1], 0.0, "qa_d1_"),
                   ("autoclave_dead", D.DEAD_POS[2], 0.0, "qa_d2_"), ("growth_log", D.world_point(D.AC_POS, 0.0,
                                                                                                 (0.30, 1.66, 0.40)),
                                                                      0.0, "qa_log_")])
@@ -207,6 +211,12 @@ def qa(parts, args):
     if fig_b and d1:
         n, d = D.mesh_clearance(fig_b, d1)
         print(f"{D.TAG} tech_b vs autoclave_dead: {n} intersecting triangle pairs, nearest vertex {d * 100:.1f} cm")
+    if measure:
+        for fig, nm in ((fig_a, "tech_a"), (fig_b, "tech_b")):
+            if fig:
+                lo, hi = K.V.mesh_bounds_godot(fig)
+                print(f"{D.TAG} {nm} world bounds z {lo.z:+.3f} .. {hi.z:+.3f} (vessel front z = {-3.5 + D.R_V:+.3f})")
+        return
     W0 = lambda p: D.world_point(D.DEAD_POS[0], 0.0, p)   # noqa: E731
 
     # 1 hero: the dead autoclave alone (figures hidden), three-quarter from the front left

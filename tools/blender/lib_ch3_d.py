@@ -244,7 +244,10 @@ DOOR_PIVOT = (-0.21, 1.20, 0.46)
 WIN_R = 0.122
 
 
-def vessel_profile():
+def vessel_profile(lite=False):
+    if lite:                       # the dead autoclaves: a coarser dome (3 rings fewer)
+        return [(0.0, 0.285), (0.20, 0.296), (0.36, 0.326), (R_V, Y_CYL0), (R_V, Y_CYL1), (0.420, 1.978),
+                (0.368, 2.037), (0.22, 2.084), (0.0, Y_TOP)]
     return [(0.0, 0.285), (0.20, 0.296), (0.36, 0.326), (R_V, Y_CYL0), (R_V, Y_CYL1), (0.420, 1.978),
             (0.402, 2.008), (0.368, 2.037), (0.31, 2.063), (0.22, 2.084), (0.11, 2.097), (0.0, Y_TOP)]
 
@@ -260,10 +263,11 @@ def autoclave_shell(seg=40, lite=False):
     segments and bolts."""
     out = {CHROME: [], STEEL: []}
     ch, st = out[CHROME], out[STEEL]
-    seg_s = 20 if lite else 24
-    seg_b = 24 if lite else 32
+    seg_s = 16 if lite else 24
+    seg_b = 16 if lite else 32
+    bev = 0.0 if lite else 0.003               # frame-box bevels (lite: sharp boxes, 12 tris each)
     # ---- vessel + door hole
-    ves = K.glathe("vessel", vessel_profile(), (0, 0, 0), (0, 1, 0), seg, CHROME, smooth=40.0, phase=math.pi / seg)
+    ves = K.glathe("vessel", vessel_profile(lite), (0, 0, 0), (0, 1, 0), seg, CHROME, smooth=40.0, phase=math.pi / seg)
     cutter = K.gcyl("cut_door", NECK_R_IN, 0.0, 0.6, base=(DOOR_C[0], DOOR_C[1], 0.0), axis=(0, 0, 1), segments=seg_s,
                     mat=CHROME)
     M.boolean(ves, cutter)
@@ -279,22 +283,24 @@ def autoclave_shell(seg=40, lite=False):
     st.append(cham)
     st.append(disc("chamber_back", NECK_R_IN + 0.002, (DOOR_C[0], DOOR_C[1], CHAMBER_BACK), (0, 0, 1), STEEL, seg_s))
     # flange bolts (visible ring r 0.21 .. 0.262)
-    for k in range(8):
-        a = math.radians(22.5 + 45 * k)
+    nfb = 4 if lite else 8
+    for k in range(nfb):
+        a = math.radians((45 if lite else 22.5) + 360 / nfb * k)
         p = (DOOR_C[0] + 0.238 * math.cos(a), DOOR_C[1] + 0.238 * math.sin(a), FLANGE_Z)
         if p[0] < -0.17 and abs(p[1] - DOOR_C[1]) < 0.11:
             continue                                         # hinge block
         st.append(hexnut("fb", 0.0085, p, (0, 0, 1)))
     # ---- static hinge block + knuckles (pivot axis vertical through DOOR_PIVOT)
     px, py, pz = DOOR_PIVOT
-    st.append(box("hblock", (-0.300, py - 0.075, 0.395), (-0.255, py + 0.075, 0.445), STEEL, 0.003))
+    st.append(box("hblock", (-0.300, py - 0.075, 0.395), (-0.255, py + 0.075, 0.445), STEEL, bev))
     for (y0, y1) in ((py - 0.072, py - 0.038), (py + 0.038, py + 0.072)):
         st.append(box("harm", (-0.262, y0, pz - 0.012), (px, y1, pz + 0.012), STEEL, 0.0))
-        ch.append(K.gcyl("hknuck", 0.0145, y0, y1, base=(px, 0, pz), axis=(0, 1, 0), segments=10, mat=CHROME))
+        ch.append(K.gcyl("hknuck", 0.0145, y0, y1, base=(px, 0, pz), axis=(0, 1, 0), segments=8 if lite else 10,
+                         mat=CHROME))
     # ---- girth flange near the top (bolted lid), bands
     gf = [(R_V - 0.002, 1.852), (0.458, 1.858), (0.458, 1.902), (R_V - 0.002, 1.908)]
     ch.append(K.glathe("gflange", gf, (0, 0, 0), (0, 1, 0), seg, CHROME, cap_bottom=False, cap_top=False, smooth=40.0))
-    nb = 8 if lite else 12
+    nb = 6 if lite else 12
     for k in range(nb):
         a = 2 * math.pi * (k + 0.5) / nb
         st.append(hexnut("gfb", 0.0095, (0.442 * math.sin(a), 1.902, 0.442 * math.cos(a)), (0, 1, 0)))
@@ -309,22 +315,25 @@ def autoclave_shell(seg=40, lite=False):
                        math.degrees(a), STEEL, 0.0))
     # ---- top nozzle (meets the shell's frosted drop at (0, 2.13, 0)), dome safety valve
     ch.append(K.glathe("nozzle", [(0.062, 2.06), (0.062, 2.112), (0.088, 2.112), (0.088, 2.140), (0.050, 2.140)],
-                       (0, 0, 0), (0, 1, 0), 16, CHROME, cap_bottom=False, cap_top=False, smooth=45.0))
-    for k in range(4 if lite else 6):
-        a = 2 * math.pi * k / (4 if lite else 6)
+                       (0, 0, 0), (0, 1, 0), 12 if lite else 16, CHROME, cap_bottom=False, cap_top=False, smooth=45.0))
+    for k in range(0 if lite else 6):
+        a = 2 * math.pi * k / 6
         st.append(hexnut("nb", 0.007, (0.075 * math.cos(a), 2.140, 0.075 * math.sin(a)), (0, 1, 0)))
     sv = (0.22, 2.068, -0.14)
     ch.append(K.glathe("svalve", [(0.034, 0.0), (0.034, 0.014), (0.024, 0.016), (0.024, 0.07), (0.030, 0.074),
-                                  (0.030, 0.088), (0.0, 0.098)], sv, (0, 1, 0), 10, CHROME, smooth=45.0, cap_bottom=False))
-    st.append(rod("svlever", (sv[0], sv[1] + 0.09, sv[2]), (sv[0] - 0.12, sv[1] + 0.075, sv[2] + 0.02), 0.005, 6, STEEL))
-    st.append(K.gcyl("svweight", 0.016, -0.018, 0.018, base=(sv[0] - 0.115, sv[1] + 0.076, sv[2] + 0.019),
-                     axis=(1, 0, 0), segments=8, mat=STEEL))
+                                  (0.030, 0.088), (0.0, 0.098)], sv, (0, 1, 0), 8 if lite else 10, CHROME, smooth=45.0,
+                       cap_bottom=False))
+    if not lite:
+        st.append(rod("svlever", (sv[0], sv[1] + 0.09, sv[2]), (sv[0] - 0.12, sv[1] + 0.075, sv[2] + 0.02), 0.005, 6,
+                      STEEL))
+        st.append(K.gcyl("svweight", 0.016, -0.018, 0.018, base=(sv[0] - 0.115, sv[1] + 0.076, sv[2] + 0.019),
+                         axis=(1, 0, 0), segments=8, mat=STEEL))
     # ---- frame: four square legs at the diagonals, lugs, ring girder, low rails, feet
     leg = 0.332
     for sx in (-1, 1):
         for sz in (-1, 1):
             cx, cz = sx * leg, sz * leg
-            st.append(box("leg", (cx - 0.024, 0.012, cz - 0.024), (cx + 0.024, 0.86, cz + 0.024), STEEL, 0.003))
+            st.append(box("leg", (cx - 0.024, 0.012, cz - 0.024), (cx + 0.024, 0.86, cz + 0.024), STEEL, bev))
             st.append(box("foot", (cx - 0.055, 0.0, cz - 0.055), (cx + 0.055, 0.014, cz + 0.055), STEEL, 0.0))
             if not lite:
                 for bx, bz in ((cx - 0.038, cz - 0.038), (cx + 0.038, cz + 0.038)):
@@ -344,12 +353,14 @@ def autoclave_shell(seg=40, lite=False):
         else:
             st.append(box("rail", (a[0], y0, a[1] - 0.018), (b[0], y1, a[1] + 0.018), STEEL, 0.0))
     # ---- pipes back to the wall (local z = -0.5)
+    sp = 8 if lite else 10
     st.append(tube("steam", [(-0.30, 1.72, -0.28), (-0.30, 1.72, -0.49)], 0.028, 8, STEEL))
-    st.append(ring("steam_fl", 0.0, 0.058, -0.50, -0.488, (-0.30, 1.72, 0.0), (0, 0, 1), 10, STEEL))
-    st.append(ring("steam_fl2", 0.026, 0.050, -0.33, -0.315, (-0.30, 1.72, 0.0), (0, 0, 1), 10, STEEL))
+    st.append(ring("steam_fl", 0.0, 0.058, -0.50, -0.488, (-0.30, 1.72, 0.0), (0, 0, 1), sp, STEEL))
+    st.append(ring("steam_fl2", 0.026, 0.050, -0.33, -0.315, (-0.30, 1.72, 0.0), (0, 0, 1), sp, STEEL))
     st.append(tube("vent", [(0.29, 1.32, -0.29), (0.29, 1.32, -0.49)], 0.020, 8, STEEL))
     st.append(ring("vent_fl", 0.0, 0.045, -0.50, -0.488, (0.29, 1.32, 0.0), (0, 0, 1), 8, STEEL))
-    st.append(tube("drain", [(0.0, 0.29, 0.0), (0.0, 0.16, 0.0), (0.0, 0.16, -0.49)], 0.024, 8, STEEL, fillet=0.06))
+    st.append(tube("drain", [(0.0, 0.29, 0.0), (0.0, 0.16, 0.0), (0.0, 0.16, -0.49)], 0.024, 8, STEEL,
+                   fillet=0.0 if lite else 0.06))
     st.append(ring("drain_fl", 0.0, 0.05, -0.50, -0.488, (0.0, 0.16, 0.0), (0, 0, 1), 8, STEEL))
     return out
 
@@ -359,8 +370,12 @@ def ac_door(ajar_deg=0.0, seg=28, frost=False, lite=False):
     glass. Built closed in model coords, then turned ajar_deg about +Y at DOOR_PIVOT (negative opens toward the
     viewer). Returns (door_parts, glass_obj)."""
     cx, cy = DOOR_C
-    prof = [(WIN_R + 0.002, 0.433), (0.205, 0.433), (DOOR_R, 0.440), (DOOR_R, 0.457), (0.200, 0.466),
-            (0.140, 0.472), (0.128, 0.474), (WIN_R, 0.469), (WIN_R + 0.002, 0.433)]
+    if lite:                       # the dead autoclaves: a 5-ring door section
+        prof = [(WIN_R + 0.002, 0.433), (DOOR_R, 0.440), (DOOR_R, 0.457), (0.140, 0.472), (WIN_R, 0.469),
+                (WIN_R + 0.002, 0.433)]
+    else:
+        prof = [(WIN_R + 0.002, 0.433), (0.205, 0.433), (DOOR_R, 0.440), (DOOR_R, 0.457), (0.200, 0.466),
+                (0.140, 0.472), (0.128, 0.474), (WIN_R, 0.469), (WIN_R + 0.002, 0.433)]
     ring_o = K.glathe("door_ring", prof, (cx, cy, 0.0), (0, 0, 1), seg, CHROME, cap_bottom=False, cap_top=False,
                       smooth=40.0)
     bm = bmesh.new()
@@ -370,17 +385,18 @@ def ac_door(ajar_deg=0.0, seg=28, frost=False, lite=False):
     bm.free()
     fix_normals(ring_o)
     parts = [ring_o]
-    for k in range(4 if lite else 6):
-        a = math.radians(30 + (90 if lite else 60) * k)
+    for k in range(0 if lite else 6):
+        a = math.radians(30 + 60 * k)
         parts.append(hexnut("dbolt", 0.0075, (cx + 0.180 * math.cos(a), cy + 0.180 * math.sin(a), 0.468), (0, 0, 1),
                             CHROME, h=0.005))
     px, py, pz = DOOR_PIVOT
     parts.append(box("darm", (px, py - 0.034, pz - 0.010), (-0.165, py + 0.034, pz + 0.012), CHROME, 0.0))
-    parts.append(K.gcyl("dknuck", 0.0145, py - 0.036, py + 0.036, base=(px, 0, pz), axis=(0, 1, 0), segments=10,
-                        mat=CHROME))
+    parts.append(K.gcyl("dknuck", 0.0145, py - 0.036, py + 0.036, base=(px, 0, pz), axis=(0, 1, 0),
+                        segments=8 if lite else 10, mat=CHROME))
     # latch: a boss on the free (right) edge and a lever handle hanging down-forward
     lb = (0.172, cy + 0.02, 0.468)
-    parts.append(K.gcyl("lboss", 0.020, 0.0, 0.016, base=lb, axis=(0, 0, 1), segments=10, mat=CHROME, chamfer=0.003))
+    parts.append(K.gcyl("lboss", 0.020, 0.0, 0.016, base=lb, axis=(0, 0, 1), segments=8 if lite else 10, mat=CHROME,
+                        chamfer=0.0 if lite else 0.003))
     parts.append(rod("lever", (lb[0], lb[1], lb[2] + 0.012), (lb[0] + 0.004, lb[1] - 0.115, lb[2] + 0.030), 0.0075, 8,
                      CHROME))
     parts.append(K.glathe("lgrip", [(0.0, -0.012), (0.012, -0.006), (0.013, 0.004), (0.0, 0.014)],
@@ -410,6 +426,24 @@ def verify(path, required=(), identity=(), expect=None, parents=None, rot_expect
 def bounds(names):
     lo, hi = K.V.mesh_bounds_godot([bpy.data.objects[n] for n in names])
     return tuple(round(c, 4) for c in lo), tuple(round(c, 4) for c in hi)
+
+
+def tri_breakdown(objs, label="", top=40):
+    """Print the triangle count per object-name family (before joining) so a model over budget shows where."""
+    import re
+    agg = {}
+    for o in objs:
+        if o is None or o.type != "MESH":
+            continue
+        M.apply_modifiers(o)
+        key = re.sub(r"\.\d+$", "", o.name)
+        t = sum(len(p.vertices) - 2 for p in o.data.polygons)
+        n, s = agg.get(key, (0, 0))
+        agg[key] = (n + 1, s + t)
+    total = sum(s for _, s in agg.values())
+    print(f"{TAG} tris {label}: total {total} in {sum(n for n, _ in agg.values())} objects")
+    for k, (n, s) in sorted(agg.items(), key=lambda kv: -kv[1][1])[:top]:
+        print(f"{TAG}   {k:14s} x{n:<3d} {s:6d}")
 
 
 # ====================================================================== QA

@@ -18,6 +18,8 @@ extends Node
 ##   --window=WxH           render window (default: the emulated screen). Same aspect = same canvas layout. Use one
 ##                          that fits the Xvfb screen (1280x1024) for builds that read DisplayServer's safe area
 ##                          directly: a window larger than the X screen makes it report bogus insets.
+##   --shots=a,b            save and measure only the shots whose name contains one of these (e.g. settings,hud_item);
+##                          the screens are still walked through, so a shot sees the same state as in a full run
 ## Exit code 0 = no measured layout issue (clipped label, text wider than its button, element off-screen or under
 ## the emulated cutout). The window is resized to the emulated screen. If the X server cannot fit it, it renders at the same aspect ratio
 ## (identical canvas layout, lower pixel count) and says so. The emulated screen also drives the game's automatic
@@ -38,6 +40,7 @@ var text_scale := 1.0
 var window_size := Vector2i.ZERO
 var report: Dictionary = {}
 var clean := false # --clean: no cutout zones drawn on the screenshots
+var shots_filter: PackedStringArray = [] # --shots=: only these are saved and measured
 var _cutout_layer: CanvasLayer
 
 
@@ -67,6 +70,8 @@ func _run() -> void:
 			highlight = int(a.substr(12))
 		elif a == "--clean":
 			clean = true
+		elif a.begins_with("--shots="):
+			shots_filter = a.substr(8).split(",", false)
 		elif a.begins_with("--device="):
 			device = a.substr(9)
 	if device != "":
@@ -160,6 +165,13 @@ func _run() -> void:
 		hud.call("_refresh_inventory")
 		await _settle(1.0)
 		await _shot("%s_hud_bare" % lang, hud) # the 3D frame behind captions (contrast is measured on it)
+		# "item found": the same call the rooms make when an item is picked up (room_base _feedback)
+		var found_id := "notebook" if l.has_item("notebook") else str(l.inventory[0])
+		hud.call("message", tr("ui.item_added") % tr(ItemDB.name_key(found_id)), 30.0)
+		await _settle(0.8)
+		await _shot("%s_hud_item_found" % lang, hud)
+		hud.call("message", "", 0.01)
+		await _settle(0.6)
 		l.select_item("uv_lamp" if l.has_item("uv_lamp") else str(l.inventory[0]))
 		hud.call("_refresh_inventory")
 		hud.call("set_meter", 3) # Chapter 2 receiver meter (top right)
@@ -175,6 +187,12 @@ func _run() -> void:
 		await _settle(0.8)
 		await _overlay_shot(hud, "show_hint", [], "%s_hint" % lang)
 		await _overlay_shot(hud, "show_pause", [], "%s_pause" % lang)
+		# the settings panel as the pause menu opens it (over the 3D room, not the main menu)
+		var settings_btn := _find_button(hud.get("_overlay"), "ui.settings")
+		if settings_btn != null:
+			settings_btn.emit_signal("pressed")
+			await _settle(0.8)
+			await _shot("%s_pause_settings" % lang, hud.get("_overlay"))
 		await _overlay_shot(hud, "show_inspect", ["crystal_lens"], "%s_inspect" % lang, 1.0)
 		await _overlay_shot(hud, "_show_notebook", [7], "%s_notebook" % lang) # the longest page
 		await _overlay_shot(hud, "show_document", ["letter"], "%s_letter" % lang)
@@ -204,6 +222,18 @@ func _save_report() -> void:
 	var f := FileAccess.open(out_dir + "/measure.json", FileAccess.WRITE)
 	f.store_string(JSON.stringify(report, "\t"))
 	f.close()
+
+
+func _find_button(root: Node, text_key: String) -> Button:
+	if root == null or not is_instance_valid(root):
+		return null
+	if root is Button and ((root as Button).text == text_key or (root as Button).text == tr(text_key)):
+		return root
+	for c in root.get_children():
+		var b := _find_button(c, text_key)
+		if b:
+			return b
+	return null
 
 
 func _overlay_shot(hud: Node, method: String, args: Array, name: String, wait: float = 0.5) -> void:
@@ -378,6 +408,14 @@ func _settle(seconds: float) -> void:
 
 
 func _shot(name: String, scope: Node = null) -> void:
+	if not shots_filter.is_empty():
+		var wanted := false
+		for f in shots_filter:
+			if name.contains(f):
+				wanted = true
+		if not wanted:
+			print("skip " + name) # the log keeps growing for tools/qa_run.sh's stall watchdog
+			return
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out_dir, name])
 	if scope != null:

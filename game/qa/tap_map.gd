@@ -5,11 +5,15 @@ extends Node
 ##   orange = only 1–2 do (a small or mostly covered target);
 ##   red    = none do; the part most often hit instead is named.
 ## Run: xvfb-run -a godot --path game res://qa/tap_map.tscn -- --chapter=ch2 --views=cat_drawer,splicer --out=<dir>
-##        [--steps=N] (solver steps first) [--do=open_cat_drawer:4,pick_divider:1] (logic calls with int args)
-##        [--until=booth_open] (solver steps until that state key is true) [--lens=take|leave]
+##        [--steps=N] (solver steps first) [--do=open_cat_drawer:4,pick_divider:1] (logic calls; an argument that
+##        is not an int is passed as a string, e.g. turn_freq:x:1) [--until=booth_open] (solver steps until that
+##        state key is true) [--lens=take|leave] [--key=strand|leyla] (ch3: the Chapter 2 key path)
 ##        [--perf] (no tap marks: log draw calls / primitives / objects per view instead)
 ##        [--breakdown] (with --perf: the draw calls each model, effect node and light shadow adds to the view)
 ## Writes <view>.png and tap_map.txt (one line per orange or red part).
+
+const SCENES := {"ch1": "res://src/rooms/lab7/lab7.tscn", "ch2": "res://src/rooms/archive/archive.tscn",
+	"ch3": "res://src/rooms/underground/underground.tscn"}
 
 var out_dir := "/tmp/tap_map"
 var room: Node3D
@@ -26,6 +30,7 @@ func _run() -> void:
 	var steps := 0
 	var calls: PackedStringArray = []
 	var lens := "leave"
+	var key := "strand"
 	var until := ""
 	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
@@ -41,6 +46,8 @@ func _run() -> void:
 			calls = a.substr(5).split(",", false)
 		elif a.begins_with("--lens="):
 			lens = a.substr(7)
+		elif a.begins_with("--key="):
+			key = a.substr(6)
 		elif a.begins_with("--until="):
 			until = a.substr(8)
 		elif a.begins_with("--seed="):
@@ -48,28 +55,23 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_tapmap_save.json"
 	SaveSystem.profile_path = "user://qa_tapmap_profile.json"
-	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens == "take" else "leave_lens", "ch1_shards": 5}}
+	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens == "take" else "leave_lens", "ch1_shards": 5,
+		"ch2_key": key + "_key", "ch2_echoes": 3}}
 	GameState.start_new(chapter)
 	var logic := GameState.logic
-	for i in steps:
-		if chapter == "ch2":
-			ArchiveSolver.step(logic as ArchiveLogic, "leyla_key")
-		else:
-			Lab7Solver.step(logic as Lab7Logic, "leave_lens")
+	for _i in steps:
+		_solve_step(chapter, logic)
 	var guard := 0
 	while until != "" and not bool(logic.state.get(until, false)) and guard < 600:
 		guard += 1
-		if chapter == "ch2":
-			ArchiveSolver.step(logic as ArchiveLogic, "leyla_key")
-		else:
-			Lab7Solver.step(logic as Lab7Logic, "leave_lens")
+		_solve_step(chapter, logic)
 	for c in calls:
 		var parts := c.split(":")
 		var args: Array = []
 		for k in range(1, parts.size()):
-			args.append(int(parts[k]))
+			args.append(int(parts[k]) if parts[k].is_valid_int() else parts[k])
 		logic.callv(parts[0], args)
-	var scene := "res://src/rooms/archive/archive.tscn" if chapter == "ch2" else "res://src/rooms/lab7/lab7.tscn"
+	var scene: String = SCENES.get(chapter, SCENES["ch1"])
 	room = (load(scene) as PackedScene).instantiate()
 	room.set("capture_mode", true)
 	get_tree().root.add_child(room)
@@ -101,6 +103,17 @@ func _run() -> void:
 	SaveSystem.delete_game()
 	print("QA_DONE exit=0") # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit()
+
+
+## One solver step of the chapter's scripted solver (the same ones the no-softlock tests use).
+static func _solve_step(chapter: String, logic: RoomLogic) -> void:
+	match chapter:
+		"ch3":
+			UndergroundSolver.step(logic as UndergroundLogic, "leyla")
+		"ch2":
+			ArchiveSolver.step(logic as ArchiveLogic, "leyla_key")
+		_:
+			Lab7Solver.step(logic as Lab7Logic, "leave_lens")
 
 
 ## The draw calls each part of the room adds to this view: hide it (or switch its light's shadow off), measure,
