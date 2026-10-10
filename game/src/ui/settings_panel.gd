@@ -20,7 +20,7 @@ const LABEL_SIZE := 26
 const HEADER_SIZE := 22
 const DESC_SIZE := 20
 const STATE_SIZE := 20
-const FADE_H := 44.0
+const FADE_H := 34.0
 
 var _scroll: ScrollContainer
 var _scroll_host: Control
@@ -96,7 +96,10 @@ func _build() -> void:
 	pad.add_theme_constant_override("margin_right", 10)
 	pad.add_theme_constant_override("margin_left", 2)
 	_scroll.add_child(pad)
-	_content = _columns()
+	_content = VBoxContainer.new() # the columns, then (on a small phone) the Restore / Privacy links
+	_content.add_theme_constant_override("separation", 0)
+	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content.add_child(_columns())
 	pad.add_child(_content)
 	_fade_top = _fade(true)
 	_fade_bottom = _fade(false)
@@ -117,12 +120,22 @@ func _build() -> void:
 	restore.pressed.connect(func() -> void:
 		Premium.restore_purchases()
 		SceneManager.toast(tr("ui.restored")))
-	actions.add_child(restore)
 	var privacy := UITheme.text_button("ui.privacy", UITheme.MUTED)
 	privacy.pressed.connect(func() -> void: OS.shell_open(PRIVACY_URL))
-	actions.add_child(privacy)
 	var close := UITheme.button("ui.close", 260)
 	close.pressed.connect(func() -> void: closed.emit())
+	# the three on one line when they fit (large text on a small phone: Restore and Privacy become the last rows
+	# of the body, so the footer stays one touch target tall and the body keeps its room)
+	var inner_w := custom_minimum_size.x - 48.0
+	var need := restore.get_combined_minimum_size().x + privacy.get_combined_minimum_size().x + close.get_combined_minimum_size().x + 2.0 * 28.0
+	if need <= inner_w:
+		actions.add_child(restore)
+		actions.add_child(privacy)
+	else:
+		var links := UITheme.button_row(28)
+		links.add_child(restore)
+		links.add_child(privacy)
+		_content.add_child(links) # after the last section
 	actions.add_child(close)
 	foot.add_child(actions)
 	_footer = foot

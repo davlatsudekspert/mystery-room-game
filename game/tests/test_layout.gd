@@ -202,11 +202,16 @@ func test_settings_panel_fits_the_screen() -> void:
 				var canvas: Vector2 = UITheme.metrics()["canvas"]
 				var host := Control.new()
 				host.size = canvas
-				tree.root.add_child(host)
+				tree.root.add_child.call_deferred(host) # the runner itself is still inside the root's _ready
+				await tree.process_frame
 				var sp := SettingsPanel.new()
 				UITheme.safe_center(host).add_child(sp)
-				await tree.process_frame
-				await tree.process_frame
+				for i in 3: # build, the deferred body fit, the scroll container's layout
+					await tree.process_frame
+				if sp.get("_footer") == null or not sp.is_inside_tree():
+					check(false, "%s: the panel did not build" % tag)
+					host.queue_free()
+					continue
 				var usable := UITheme.usable_rect()
 				var r := sp.get_global_rect()
 				check(usable.grow(1.0).encloses(r), "%s: panel %s outside the usable rect %s" % [tag, r, usable])

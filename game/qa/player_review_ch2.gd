@@ -587,7 +587,7 @@ func unpick() -> void:
 
 
 func _slot_button(id: String) -> Button:
-	var box := hud.get("_inv_box") as HBoxContainer
+	var box := hud.get("_inv_box") as BoxContainer # a vertical column since the HUD redesign
 	var idx := logic.inventory.find(id)
 	if box == null or idx < 0:
 		return null

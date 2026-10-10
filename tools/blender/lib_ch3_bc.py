@@ -55,6 +55,10 @@ FONT_SERIF_B = V.FONT_SERIF_B
 FONT_SANS_B = V.FONT_SANS_B
 FONT_COND_B = V.FONT_COND_B
 
+# Strand's coat stand at (-10.55, 0, 3.7): strand_office builds the stand (wood + brass hooks), office_desk hangs the
+# lab coat on it (M_Paper; strand_office has no cream slot). docs/models/ch3_b.md.
+COAT_STAND = {"pos": (-10.55, 0.0, 3.7), "hook_y": 1.70, "hook_r": 0.16}
+
 # §1.5 Choir work lamps (light_choir_<k> in shell_choir.glb, docs/models/ch3_a.md)
 CHOIR_LAMPS = [(-12.3, 3.4, -3.88), (-7.4, 3.4, -3.88), (-11.6, 3.4, 3.88), (-7.4, 3.4, 3.88), (-4.62, 3.4, -2.8),
                (-4.62, 3.4, 2.2)]

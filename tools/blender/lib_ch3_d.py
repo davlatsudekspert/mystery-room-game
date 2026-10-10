@@ -639,10 +639,10 @@ def flat_poly_y(name, pts_xz, y, mat):
     bm = bmesh.new()
     vs = [bm.verts.new((x, y, z)) for (x, z) in pts_xz]
     f = bm.faces.new(vs)
-    if f.normal_update() is None and f.normal.y < 0:
+    f.normal_update()
+    if f.normal.y < 0:
         f.normal_flip()
-    o = K.obj_from_bm(name, bm, mat)
-    return o
+    return K.obj_from_bm(name, bm, mat)
 
 
 def beam_material(name, hex_colour, alpha=0.35, strength=3.0):

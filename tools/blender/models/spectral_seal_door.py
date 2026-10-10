@@ -86,7 +86,7 @@ def frame():
         st += [D.hexnut("brb", 0.007, (x, 2.185, 0.012), (0, 0, 1)), D.hexnut("brb", 0.007, (x, 2.375, 0.012), (0, 0, 1))]
     # floor guide bracket west of the opening (bears on the leaf's back face in both states)
     st.append(D.box("guide", (-0.70, 0.0, 0.0), (-0.60, 0.05, 0.018), STEEL, 0.0))
-    st.append(K.gcyl("groller", 0.012, 0.012, 0.038, base=(-0.65, 0.0, 0.0), axis=(0, 1, 0), segments=8, mat=STEEL))
+    st.append(K.gcyl("groller", 0.012, 0.012, 0.038, base=(-0.65, 0.0, 0.008), axis=(0, 1, 0), segments=8, mat=STEEL))
     return K.part("door_frame", st + pt)
 
 
@@ -136,11 +136,10 @@ def leaf():
                       loc=(0.0, REC_Y, 0.0)))
     for (sx, sy) in ((-0.44, -0.10), (0.44, -0.10), (-0.44, 0.10), (0.44, 0.10)):
         br.append(K.rivet("rps", 0.0045, (sx, REC_Y + sy, SLAB_Z1 + 0.006), segs=6, mat=BRASS))
-    for x in REC_X:
-        br.append(D.ring("bezel", REC_R, REC_R + 0.018, SLAB_Z1 + 0.006, 0.090, (x, REC_Y, 0.0), (0, 0, 1), 24, BRASS,
-                         chamfer=0.003))
-        br.append(D.ring("bezel_in", REC_R - 0.004, REC_R + 0.0005, REC_Z - 0.0015, 0.090, (x, REC_Y, 0.0), (0, 0, 1),
-                         24, BRASS))
+    for x in REC_X:                                               # the bezel's bore meets the disc edge (0.8 mm overlap)
+        br.append(D.ring("bezel", REC_R - 0.0008, REC_R + 0.018, SLAB_Z1 + 0.006, 0.090, (x, REC_Y, 0.0), (0, 0, 1), 24,
+                         BRASS, chamfer=0.003))
+        br.append(D.disc("bezel_seat", REC_R, (x, REC_Y, REC_Z - 0.001), (0, 0, 1), BRASS, 24))
     return K.part("IA_camp_door", pt + br, pivot=LEAF_PIVOT)
 
 

@@ -1,7 +1,8 @@
 class_name IconButton
 extends Button
-## Round brass line-icon button drawn in code (crisp at any DPI, no texture assets).
-## icons: back, hint, pause, inspect, combine, uv, close, next, prev, gear
+## Round brass line-icon button drawn in code (crisp at any DPI, no texture assets): a dark translucent disc
+## inside a hairline gold bezel (two rings), the icon in cream. Pressed or active, the disc fills with brass.
+## icons: back, hint, pause (a roman-numeral "II"), inspect, combine, uv, close, next, prev, book
 ## The tappable rect is at least UITheme.TOUCH_MM on the physical screen; the drawn disc can be smaller
 ## (`visual`), so phones get thumb-sized targets without oversized icons.
 
@@ -43,16 +44,20 @@ func _ready() -> void:
 func _draw() -> void:
 	var r := minf(size.x, size.y) * 0.5 * visual
 	var c := size * 0.5
-	var col := UITheme.INK if button_pressed or active else UITheme.CREAM
-	var bg := Color(UITheme.BRASS, 0.9) if (button_pressed or active) else Color(0.06, 0.065, 0.075, 0.82)
-	if is_hovered() and not active:
-		bg = Color(0.12, 0.11, 0.09, 0.92)
+	var lit := button_pressed or active
+	var col := UITheme.INK if lit else UITheme.CREAM
+	var bg := Color(UITheme.BRASS, 0.88) if lit else Color(0.025, 0.027, 0.033, 0.66)
+	if is_hovered() and not lit:
+		bg = Color(0.10, 0.09, 0.075, 0.82)
+	var ring := Color(UITheme.BRASS, 0.85)
 	if disabled:
 		col = UITheme.MUTED
-	draw_circle(c, r - 2, bg)
-	draw_arc(c, r - 2, 0, TAU, 48, Color(UITheme.BRASS, 0.8), 2.5, true)
+		ring = Color(UITheme.MUTED, 0.35)
+	draw_circle(c, r - 2.0, bg)
+	draw_arc(c, r - 2.0, 0.0, TAU, 64, ring, 1.5, true)
+	draw_arc(c, r - 7.0, 0.0, TAU, 64, Color(ring, ring.a * 0.32), 1.0, true) # the bezel's inner ring
 	var s := r * 0.42
-	var w := maxf(3.0, r * 0.075)
+	var w := maxf(2.5, r * 0.065)
 	match icon_id:
 		"back":
 			draw_polyline(PackedVector2Array([c + Vector2(s * 0.35, -s), c + Vector2(-s * 0.55, 0), c + Vector2(s * 0.35, s)]), col, w, true)
@@ -61,8 +66,13 @@ func _draw() -> void:
 		"prev":
 			draw_polyline(PackedVector2Array([c + Vector2(s * 0.35, -s), c + Vector2(-s * 0.55, 0), c + Vector2(s * 0.35, s)]), col, w, true)
 		"pause":
-			draw_line(c + Vector2(-s * 0.4, -s * 0.8), c + Vector2(-s * 0.4, s * 0.8), col, w * 1.3)
-			draw_line(c + Vector2(s * 0.4, -s * 0.8), c + Vector2(s * 0.4, s * 0.8), col, w * 1.3)
+			# a roman numeral II: two bars with serifs
+			var bw := w * 1.25
+			var sw := w * 0.85
+			for x in [-s * 0.36, s * 0.36]:
+				draw_line(c + Vector2(x, -s * 0.78), c + Vector2(x, s * 0.78), col, bw)
+				draw_line(c + Vector2(x - s * 0.2, -s * 0.78), c + Vector2(x + s * 0.2, -s * 0.78), col, sw)
+				draw_line(c + Vector2(x - s * 0.2, s * 0.78), c + Vector2(x + s * 0.2, s * 0.78), col, sw)
 		"hint":
 			draw_arc(c + Vector2(0, -s * 0.25), s * 0.62, deg_to_rad(140), deg_to_rad(400), 32, col, w, true)
 			draw_line(c + Vector2(-s * 0.3, s * 0.45), c + Vector2(s * 0.3, s * 0.45), col, w)
@@ -87,4 +97,7 @@ func _draw() -> void:
 			draw_rect(Rect2(c - Vector2(s * 0.7, s * 0.85), Vector2(s * 1.4, s * 1.7)), col, false, w)
 			draw_line(c + Vector2(-s * 0.35, -s * 0.85), c + Vector2(-s * 0.35, s * 0.85), col, w)
 	if badge != "":
-		draw_circle(c + Vector2(r * 0.68, -r * 0.68), r * 0.28, UITheme.DANGER)
+		# a small gold dot on the bezel (the hint nudge)
+		var bc := c + Vector2(r * 0.66, -r * 0.66)
+		draw_circle(bc, r * 0.17, UITheme.INK)
+		draw_circle(bc, r * 0.13, UITheme.BRASS_HI)

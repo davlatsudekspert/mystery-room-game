@@ -73,9 +73,9 @@ def carcass():
     # raised fields on the sides (seen in the room views)
     for sx in (-1, 1):
         for (ya, yb) in ((0.16, 0.78), (0.90, 1.62)):
-            xs = sx * (W / 2 + 0.004) - (0.004 if sx > 0 else -0.004)
+            xs = sx * (W / 2 + 0.004)                       # 4 mm proud of the side
             wd.append(D.box("sfield", (min(xs, sx * W / 2), ya, 0.07), (max(xs, sx * W / 2), yb, FRONT - 0.07), WALNUT,
-                            0.003))
+                            0.002))
     # cornice (stepped) and top
     wd.append(D.box("cor0", (x0 - 0.008, 1.70, -0.0), (x1 + 0.008, 1.72, FRONT + 0.012), WALNUT, 0.004))
     wd.append(D.box("cor1", (x0 - 0.016, 1.72, -0.0), (x1 + 0.016, 1.75, FRONT + 0.022), WALNUT, 0.005))

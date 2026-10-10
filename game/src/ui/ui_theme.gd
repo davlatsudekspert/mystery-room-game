@@ -158,15 +158,26 @@ static func panel_width(design_w: float) -> float:
 ## HUD geometry shared by the HUD and the layout test.
 const HUD_PAD := 16.0
 const HUD_BACK_PX := 104.0
+const HUD_BTN_PX := 92.0
+const HUD_SLOT_PX := 112.0
+const HUD_COL_GAP := 8.0 # between the inventory slots and their vertical rule
+const HUD_RULE_W := 14.0
 const HUD_TEXT_W := 1440.0
 
 
-## Width available to the HUD's message and prompt lines: centred, clear of the back button on both sides.
+## Width of the inventory column on the left (a slot, the gap and the vertical rule).
+static func hud_column_width() -> float:
+	return target(HUD_SLOT_PX, SLOT_MM) + HUD_COL_GAP + HUD_RULE_W
+
+
+## Width available to the HUD's message and prompt banners at the bottom: centred, clear of the inventory column
+## on the left and the pause button on the right (symmetric, so the banners stay centred on the screen).
 static func hud_text_width() -> float:
 	var canvas: Vector2 = metrics()["canvas"]
 	var safe := safe_margins()
 	var side := maxf(safe.x, safe.z)
-	var bottom_w := canvas.x - 2.0 * (side + HUD_PAD + target(HUD_BACK_PX) + 20.0)
+	var obstacle := maxf(hud_column_width(), target(HUD_BTN_PX))
+	var bottom_w := canvas.x - 2.0 * (side + HUD_PAD + obstacle + 20.0)
 	return minf(bottom_w, HUD_TEXT_W * wscale())
 
 
@@ -257,13 +268,15 @@ static func text_button(text: String, color: Color = BRASS_HI) -> Button:
 
 
 ## Dark plate behind HUD captions/messages: keeps ≥ 4.5:1 contrast for CREAM text even over a white 3D frame.
+## UIBanner draws its own band; it takes its horizontal padding from these margins (so the layout test and the
+## banner agree on the text width).
 static func caption_plate() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.03, 0.035, 0.72)
-	sb.set_corner_radius_all(12)
-	sb.content_margin_left = 22
-	sb.content_margin_right = 22
-	sb.content_margin_top = 6
+	sb.bg_color = Color(0.02, 0.022, 0.028, 0.74)
+	sb.set_corner_radius_all(4)
+	sb.content_margin_left = 32
+	sb.content_margin_right = 32
+	sb.content_margin_top = 8
 	sb.content_margin_bottom = 8
 	return sb
 

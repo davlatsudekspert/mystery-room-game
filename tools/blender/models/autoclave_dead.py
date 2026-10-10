@@ -43,16 +43,25 @@ def fig_to_model(p):
 
 
 WHEEL = fig_to_model(TECH_B_WHEEL)                     # (0.04, 0.40, ECHO_Z - 0.26)
-GAUGE = (0.10, 1.53)                                    # on the vessel front, ahead of tech_a and slightly to her right
+# tech_a's gaze line (ch3_h.md: eyes ~1.55, through (-0.05, 1.45, 0.20) in her frame, i.e. 26° down) meets the
+# vessel far below a gauge on its shell once she stands at ECHO_Z, so the dead gauge sits on a siphon stand-off
+# stub, its face GAUGE_Z0 + 0.04 ahead of the vessel: centre (0.08, 1.45), 0.26 m in front of her origin.
+GAUGE = (0.08, 1.45)
+GAUGE_Z0 = ECHO_Z - 0.30                                 # the gauge case's back (0.65 at ECHO_Z 0.95)
 
 
 def gauge():
     gx, gy = GAUGE
     zv = math.sqrt(D.R_V ** 2 - gx ** 2)
     ch, st, fr = [], [], []
-    ch.append(D.rod("gstub", (gx, gy, zv - 0.02), (gx, gy, zv + 0.045), 0.010, 6, CHROME))
+    ch.append(D.rod("gstub", (gx, gy, zv - 0.02), (gx, gy, GAUGE_Z0 + 0.004), 0.010, 6, CHROME))
     st.append(D.hexnut("gnut", 0.014, (gx, gy, zv + 0.012), (0, 0, 1), h=0.012))
-    z0 = zv + 0.045
+    st.append(D.hexnut("gnut2", 0.013, (gx, gy, GAUGE_Z0 - 0.018), (0, 0, 1), h=0.012))
+    # a strut from the stub down-back to the vessel shell (the siphon bracket)
+    st.append(D.rod("gstrut", (gx, gy - 0.012, GAUGE_Z0 - 0.03), (gx, gy - 0.22, math.sqrt(D.R_V ** 2 - gx ** 2) - 0.01),
+                    0.005, 6, STEEL))
+    st.append(D.hexnut("gnut3", 0.009, (gx, gy - 0.22, zv), (0, 0, 1), h=0.008))
+    z0 = GAUGE_Z0
     st.append(K.glathe("gcase", [(0.058, 0.0), (0.064, 0.004), (0.064, 0.031), (0.0, 0.031)], (gx, gy, z0), (0, 0, 1),
                        12, STEEL, smooth=45.0, cap_bottom=False))
     ch.append(D.ring("gbezel", 0.054, 0.068, z0 + 0.029, z0 + 0.040, (gx, gy, 0.0), (0, 0, 1), 12, CHROME))
@@ -205,6 +214,10 @@ def qa(parts, args):
     gm = D.ghost_material()
     for f in fig_a + fig_b:
         K.override(f, gm)
+    sk = next((o for o in bpy.data.objects if o.name.startswith("qa_log_log_sketch")), None)
+    sk_mat = D.preview_material("qa_log_sketch", "log_sketch.png", rough=0.8)
+    if sk is not None and sk_mat is not None:
+        K.override(sk, sk_mat)
     if fig_a:
         n, d = D.mesh_clearance(fig_a, [parts["body"]])
         print(f"{D.TAG} tech_a vs autoclave_dead: {n} intersecting triangle pairs, nearest vertex {d * 100:.1f} cm")

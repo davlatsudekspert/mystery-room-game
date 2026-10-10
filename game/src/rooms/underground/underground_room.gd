@@ -249,6 +249,9 @@ func _build_lights() -> void:
 	# Leyla's camp and the lift
 	_light("camp_lamp", "omni", _at("leyla_camp", "camp_light", Vector3(6.2, 2.45, -2.6)), Color("ffc27a"), 1.0, 3.0, "K")
 	_light("cage_lamp", "omni", _at("freight_lift", "cage_light", Vector3(0.0, 2.36, 6.0)), Color("ffd29a"), 1.0, 3.0, "L")
+	# the lobby beyond the cage: a lamp over each passage mouth, or the way out of the lift is a black hole
+	_light("lobby_w", "omni", Vector3(-4.6, 2.8, 5.3), warm, 1.1, 6.0, "L")
+	_light("lobby_e", "omni", Vector3(4.6, 2.8, 5.3), warm, 1.1, 6.0, "L")
 	# a camera-following fill for close-ups (never shadowed, no hot spots on glass)
 	var fill := OmniLight3D.new()
 	fill.light_color = Color("ffe8cc")
