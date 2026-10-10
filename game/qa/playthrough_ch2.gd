@@ -487,18 +487,46 @@ func run() -> void:
 	await shot("vault_opening")
 	var hud: Node = room.get("hud")
 	var w := 0
-	while w < 120 and hud.get("_overlay") == null:
+	while w < 160 and hud.get("_overlay") == null:
 		w += 1
 		await _settle(0.25)
-		if w == 20:
+		if w == 18:
 			await shot("vault_reel")
+		if w == 38:
+			await shot("vault_reel_42nd")
 	await shot("finale_choice")
+	# both keys get played across the two paths: Strand's on the take path, Leyla's on the leave path
+	var key := "strand_key" if lens_path == "take" else "leyla_key"
 	hud.call("_close_overlay")
-	L.choose_ending("leyla_key")
+	L.choose_ending(key)
+	step("Finale: %s → chapter complete" % key, s["complete"] and s["choice"] == key)
+	# the cliffhanger (ArchiveTeaser): the lift shaft, the recorder on black, the Chapter 3 card
+	var teaser: ArchiveTeaser = room.get("teaser")
+	var saw_shaft := false
+	w = 0
+	while w < 240 and not (teaser.card_open() and teaser.running and _card_ready(teaser)):
+		w += 1
+		await _settle(0.25)
+		if cam().current() == "shaft" and not saw_shaft:
+			saw_shaft = true
+			await _settle(2.6)
+			await shot("cliffhanger_shaft")
+		if w == 110:
+			await shot("cliffhanger_recorder")
+	await _settle(2.4)
+	await shot("cliffhanger_ch3_card")
+	step("Cliffhanger: lift shaft, recorder, Chapter 3 card (%s)" % ArchiveTeaser.card_state(), saw_shaft and teaser.card_open())
+	teaser.leave()
 	await _settle(2.5)
 	await shot("chapter_complete")
-	step("Finale → chapter complete", s["complete"])
+	step("Chapter 3 card → chapter card", hud.get("_overlay") != null)
 	_finish()
+
+
+## The Chapter 3 card has its buttons (the cliffhanger's last beat).
+func _card_ready(teaser: ArchiveTeaser) -> bool:
+	var root: Variant = teaser.get("_root")
+	return root is Control and is_instance_valid(root) and not (root as Control).find_children("*", "Button", true, false).is_empty()
 
 
 func _finish() -> void:

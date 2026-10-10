@@ -131,6 +131,8 @@ func _ready() -> void:
 		AudioManager.ambience("amb_power_hum", true, -8.0)
 	if not capture_mode and logic.state["taken"].is_empty() and logic.inventory.is_empty():
 		hud.call("play_intro")
+	elif not capture_mode and logic.is_complete():
+		_resume_completed()
 	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
 
 
@@ -1404,6 +1406,7 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("door_open", -6.0, 1.3)
 			hud.call("message", tr("msg.shelf_opened"))
 			AudioManager.haptic(80)
+			_stage_bookcase_reveal()
 		"shadow":
 			AudioManager.sfx("ring_turn", -2.0, 0.8)
 		"cabinet_opened":
@@ -1563,6 +1566,7 @@ func _play_ending() -> void:
 	visuals.open_door()
 	AudioManager.sfx("door_open")
 	hud.call("caption", tr("cap.door"))
+	_wake_corridor()
 	await get_tree().create_timer(2.4).timeout
 	hud.call("set_busy", false)
 	hud.call("show_choice")
@@ -1572,3 +1576,205 @@ func _play_ending() -> void:
 func _apply_brightness(key: String) -> void:
 	if key == "brightness" and env != null:
 		env.tonemap_exposure = float(Settings.get_value("brightness"))
+
+
+# ====================================================================== reveals and the hand-off (docs/ENGAGEMENT.md)
+## The bookcase swings: the darkroom's safelight flares red through the gap, a breath of dust rolls out into the lab
+## and a draught is heard, so the chapter's mid-point reveal lands with light and sound, not only a line of text.
+func _stage_bookcase_reveal() -> void:
+	var red: OmniLight3D = lights["safelight"]
+	var base := red.light_energy
+	var tw := create_tween()
+	tw.tween_property(red, "light_energy", 2.6, 0.45)
+	tw.tween_property(red, "light_energy", maxf(base, 0.7), 1.6)
+	var puff := DustMotes.create(Vector3(0.08, 0.9, 0.45), 90)
+	puff.one_shot = true
+	puff.explosiveness = 0.8
+	puff.lifetime = 2.6
+	puff.preprocess = 0.0
+	var m := (puff.process_material as ParticleProcessMaterial).duplicate() as ParticleProcessMaterial
+	m.direction = Vector3(1.0, 0.15, 0.1)
+	m.spread = 35.0
+	m.initial_velocity_min = 0.2
+	m.initial_velocity_max = 0.55
+	m.damping_min = 0.15
+	m.damping_max = 0.3
+	m.gravity = Vector3(0, -0.02, 0)
+	puff.process_material = m
+	add_child(puff)
+	puff.global_position = Vector3(-2.95, 1.15, -0.6)
+	puff.emitting = true
+	get_tree().create_timer(3.5).timeout.connect(puff.queue_free)
+	AudioManager.sfx("reveal", -6.0, 0.7)
+	get_tree().create_timer(0.7).timeout.connect(func() -> void: hud.call("caption", tr("cap1.draught"), 3.5))
+
+
+## A save made after the finale choice (the player quit on the chapter card): show the open door and the chapter
+## card again, with its Play button for Chapter 2, instead of a finished room with nothing left to do.
+func _resume_completed() -> void:
+	_ending = true
+	_build_corridor()
+	_corridor_lit(true)
+	cam.go("door", true)
+	await get_tree().create_timer(0.6).timeout
+	hud.call("show_chapter_complete")
+
+
+## Beyond Lab 7's door: the corridor to Records Archive B (Chapter 2 starts at its far end). Built from primitives and
+## the shared materials only when the door opens; until then the opening showed the flat fog colour.
+const CORRIDOR_X0 := 3.2
+const CORRIDOR_X1 := 12.0
+const CORRIDOR_Z0 := -0.1
+const CORRIDOR_Z1 := 1.9
+const CORRIDOR_H := 2.7
+const CORRIDOR_LAMPS := [5.0, 7.6, 10.2]
+var _corridor: Node3D
+var _corridor_bulbs: Array[StandardMaterial3D] = []
+var _corridor_lights: Array[OmniLight3D] = []
+
+
+func _cbox(size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var b := BoxMesh.new()
+	b.size = size
+	mi.mesh = b
+	mi.material_override = mat
+	mi.position = pos
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_corridor.add_child(mi)
+	return mi
+
+
+func _tiled(path: String, scale: float) -> Material:
+	var m := (load("res://assets/materials/%s.tres" % path) as BaseMaterial3D).duplicate() as BaseMaterial3D
+	m.uv1_triplanar = true
+	m.uv1_scale = Vector3.ONE * scale
+	return m
+
+
+func _build_corridor() -> void:
+	if _corridor != null:
+		return
+	_corridor = Node3D.new()
+	_corridor.name = "corridor"
+	add_child(_corridor)
+	var L := CORRIDOR_X1 - CORRIDOR_X0
+	var cx := (CORRIDOR_X0 + CORRIDOR_X1) * 0.5
+	var cz := (CORRIDOR_Z0 + CORRIDOR_Z1) * 0.5
+	var W := CORRIDOR_Z1 - CORRIDOR_Z0
+	var plaster := _tiled("M_Plaster_Wall", 0.8)
+	var green := _tiled("M_Paint_Green", 0.8)
+	_cbox(Vector3(L, 0.05, W), Vector3(cx, -0.025, cz), _tiled("M_Linoleum", 0.9))
+	_cbox(Vector3(L, 0.05, W), Vector3(cx, CORRIDOR_H + 0.025, cz), _tiled("M_Ceiling", 0.8))
+	for side in [-1.0, 1.0]:
+		var z: float = cz + side * (W * 0.5 + 0.05)
+		_cbox(Vector3(L, CORRIDOR_H, 0.1), Vector3(cx, CORRIDOR_H * 0.5, z), plaster)
+		_cbox(Vector3(L, 1.25, 0.02), Vector3(cx, 0.625, z - side * 0.06), green) # institutional green to the dado
+		_cbox(Vector3(L, 0.12, 0.03), Vector3(cx, 0.06, z - side * 0.075), load("res://assets/materials/M_Wood_Walnut.tres"))
+	# the far end: double doors under an enamel sign and an amber emergency lamp
+	_cbox(Vector3(0.1, CORRIDOR_H, W), Vector3(CORRIDOR_X1 + 0.05, CORRIDOR_H * 0.5, cz), plaster)
+	var wood: Material = load("res://assets/materials/M_Wood_Panel.tres")
+	var brass: Material = load("res://assets/materials/M_Brass_Aged.tres")
+	for side in [-1.0, 1.0]:
+		_cbox(Vector3(0.05, 2.1, 0.66), Vector3(CORRIDOR_X1 - 0.03, 1.05, cz + side * 0.34), wood)
+		_cbox(Vector3(0.04, 0.03, 0.12), Vector3(CORRIDOR_X1 - 0.07, 1.05, cz + side * 0.08), brass)
+	_cbox(Vector3(0.06, 0.08, 1.48), Vector3(CORRIDOR_X1 - 0.03, 2.14, cz), wood)
+	var sign := _cbox(Vector3(0.02, 0.22, 0.96), Vector3(CORRIDOR_X1 - 0.07, 2.42, cz), load("res://assets/materials/M_Enamel_Green.tres"))
+	sign.name = "archive_sign"
+	var text := Label3D.new()
+	text.text = "obj2.hall" # "Records Archive B": the sign translates with the language
+	text.font = load(UITheme.FONT_DISPLAY_BOLD)
+	text.font_size = 72
+	text.pixel_size = 0.0011
+	text.modulate = Color("efe6cf")
+	text.outline_size = 0
+	text.double_sided = false
+	text.position = Vector3(CORRIDOR_X1 - 0.085, 2.42, cz)
+	text.rotation.y = deg_to_rad(-90.0)
+	_corridor.add_child(text)
+	var amber := StandardMaterial3D.new()
+	amber.albedo_color = Color(0.4, 0.25, 0.1)
+	amber.emission_enabled = true
+	amber.emission = Color("ff9a3c")
+	amber.emission_energy_multiplier = 0.0
+	_cbox(Vector3(0.05, 0.08, 0.16), Vector3(CORRIDOR_X1 - 0.05, 2.6, cz), amber)
+	_corridor_bulbs.append(amber)
+	var em := OmniLight3D.new()
+	em.light_color = Color("ff9a3c")
+	em.light_energy = 0.0
+	em.omni_range = 3.2
+	em.position = Vector3(CORRIDOR_X1 - 0.4, 2.45, cz)
+	_corridor.add_child(em)
+	_corridor_lights.append(em)
+	# ceiling lamps, nearest first: enamel shade, bulb, and a light for the first and the last
+	var shade: Material = load("res://assets/materials/M_Enamel_White.tres")
+	for i in CORRIDOR_LAMPS.size():
+		var x: float = CORRIDOR_LAMPS[i]
+		var sh := MeshInstance3D.new()
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.05
+		cyl.bottom_radius = 0.17
+		cyl.height = 0.12
+		cyl.radial_segments = 16
+		sh.mesh = cyl
+		sh.material_override = shade
+		sh.position = Vector3(x, CORRIDOR_H - 0.32, cz)
+		sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_corridor.add_child(sh)
+		_cbox(Vector3(0.012, 0.26, 0.012), Vector3(x, CORRIDOR_H - 0.13, cz), load("res://assets/materials/M_Steel_Dark.tres"))
+		var bulb := MeshInstance3D.new()
+		var sp := SphereMesh.new()
+		sp.radius = 0.045
+		sp.height = 0.09
+		bulb.mesh = sp
+		var bm := StandardMaterial3D.new()
+		bm.albedo_color = Color(0.35, 0.3, 0.25)
+		bm.emission_enabled = true
+		bm.emission = Color("ffc58a")
+		bm.emission_energy_multiplier = 0.0
+		bulb.material_override = bm
+		bulb.position = Vector3(x, CORRIDOR_H - 0.4, cz)
+		bulb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_corridor.add_child(bulb)
+		_corridor_bulbs.append(bm)
+		if i != 1:
+			var p := OmniLight3D.new()
+			p.light_color = Color("ffc58a")
+			p.light_energy = 0.0
+			p.omni_range = 4.2
+			p.omni_attenuation = 1.3
+			p.position = Vector3(x, CORRIDOR_H - 0.55, cz)
+			_corridor.add_child(p)
+			_corridor_lights.append(p)
+
+
+## Lamps on (a loaded save) or off.
+func _corridor_lit(on: bool) -> void:
+	for m in _corridor_bulbs:
+		m.emission_energy_multiplier = 2.0 if on else 0.0
+	for l in _corridor_lights:
+		l.light_energy = (0.9 if l.light_color.r8 == 0xff and l.light_color.g8 == 0x9a else 1.3) if on else 0.0
+
+
+## The door swings open and the corridor lamps flicker on one by one, toward the archive's sign at the far end.
+func _wake_corridor() -> void:
+	_build_corridor()
+	var order := [1, 2, 3, 0] # bulbs: the three ceiling lamps nearest first, then the amber lamp over the sign
+	var light_of := {1: 1, 3: 2, 0: 0} # bulb index -> light index (the middle lamp has no light of its own)
+	await get_tree().create_timer(0.5).timeout
+	for k in order.size():
+		var b: int = order[k]
+		var m := _corridor_bulbs[b]
+		var target := 2.0 if b != 0 else 1.6
+		var tw := create_tween()
+		tw.tween_property(m, "emission_energy_multiplier", target * 0.8, 0.05)
+		tw.tween_property(m, "emission_energy_multiplier", 0.1, 0.07)
+		tw.tween_property(m, "emission_energy_multiplier", target, 0.25)
+		if light_of.has(b):
+			var l := _corridor_lights[light_of[b]]
+			create_tween().tween_property(l, "light_energy", 0.9 if b == 0 else 1.3, 0.35)
+		AudioManager.sfx("switch_toggle", -10.0 - 2.0 * k, 0.8 - 0.05 * k)
+		if k == 1:
+			hud.call("caption", tr("cap1.corridor"), 3.2)
+		await get_tree().create_timer(0.45).timeout
+

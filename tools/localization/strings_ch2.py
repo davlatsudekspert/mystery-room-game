@@ -161,6 +161,27 @@ S = [
 ("epi2.echoes", "Three kept echoes walk free tonight.", "Этой ночью три сохранённых эха обрели свободу.", "Bu tun uchta saqlangan aks-sado ozod boʻldi."),
 ("epi2.recorder", "Somewhere below, a recorder clicks on.", "Где-то внизу щёлкает и включается магнитофон.", "Pastda qayerdadir magnitofon chiq etib yoqildi."),
 ("achv.echoes_of_the_archive", "Echoes of the Archive", "Эхо архива", "Arxiv aks-sadolari"),
+# ---------------------------------------------------------------- engagement pass (docs/ENGAGEMENT.md): reveals, secret, cliffhanger
+("cap2.reel_41", "The Array Hall, 1979. Forty-one silhouettes in the light.", "Зал Решётки, 1979. Сорок один силуэт в свете.", "Panjara zali, 1979. Yorugʻlikda qirq bitta siluet."),
+("cap2.reel_42", "And a forty-second, at the edge of the frame. Leyla, 1998.", "И сорок второй — на краю кадра. Лейла, 1998.", "Kadr chetida esa qirq ikkinchisi. Leyla, 1998."),
+("cap2.vault_answers", "[Across the hall, the vault door answers with a dull clunk]", "[Через зал дверь хранилища отвечает глухим лязгом]", "[Zalning narigi tomonida seyfxona eshigi boʻgʻiq taqillab javob berdi]"),
+("cap2.whisper", "[Under the static, a voice counts, very far away: …forty… forty-one… forty-two]", "[Сквозь помехи, очень далеко, чей-то голос считает: …сорок… сорок один… сорок два]", "[Shovqin ostida, juda uzoqda, kimdir sanayapti: …qirq… qirq bir… qirq ikki]"),
+("achv.forty_two", "Forty-Two", "Сорок два", "Qirq ikki"),
+("cap2.rumble", "[Under the floor, something old and heavy wakes: a lift motor]", "[Под полом просыпается что-то старое и тяжёлое: мотор лифта]", "[Pol ostida eski va ogʻir bir narsa uygʻondi: lift motori]"),
+("cap2.shaft_lamps", "[Floor by floor, the lamps of the lift shaft wake]", "[Этаж за этажом просыпаются лампы шахты лифта]", "[Qavatma-qavat lift shaxtasining chiroqlari uygʻonmoqda]"),
+("cap2.shaft_hum", "[Far below: the hum of the transformer halls]", "[Глубоко внизу гудят трансформаторные залы]", "[Juda pastda transformator zallari gʻuvillaydi]"),
+("tease2.voice_1", "“If you hear this, the lift still works.”", "«Если ты это слышишь, лифт ещё работает».", "«Agar buni eshitayotgan boʻlsang, lift hali ishlaydi»."),
+("tease2.voice_2", "“The Choir and the Nursery must sing together, or the Array stays deaf.”", "«Хор и Питомник должны петь вместе, иначе Решётка останется глухой».", "«Xor va Koʻchatxona birga kuylashi kerak, aks holda Panjara kar boʻlib qoladi»."),
+("tease2.voice_3", "“I am going down to them.”", "«Я спускаюсь к ним».", "«Men ularning oldiga tushyapman»."),
+("tease2.voice_who", "Leyla Rahimova · a recorder on Level −2 · 1998", "Лейла Рахимова · магнитофон на уровне −2 · 1998", "Leyla Rahimova · −2-qavatdagi magnitofon · 1998"),
+("tease2.second_cap", "[Under the hiss, a second voice. An old man's. Very close.]", "[Сквозь шипение — второй голос. Старческий. Совсем близко.]", "[Shitirlash ostida ikkinchi ovoz. Keksa kishiniki. Juda yaqinda.]"),
+("tease2.second_voice", "“Leyla?… Who is that with you?”", "«Лейла?… Кто это с тобой?»", "«Leyla?… Yoningdagi kim?»"),
+("tease2.tag_strand_key", "Strand's key opens the Choir Hall: the transformers, the singing tubes, and the office where he kept his last secret.", "Ключ Странда открывает Зал Хора: трансформаторы, поющие трубы и кабинет, где он хранил свою последнюю тайну.", "Strandning kaliti Xor zalini ochadi: transformatorlar, kuylovchi quvurlar va u soʻnggi sirini saqlagan xona."),
+("tease2.tag_leyla_key", "Leyla's key opens the Nursery: the crystal vaults, her last camp, and a recorder that is still turning.", "Ключ Лейлы открывает Питомник: хранилища кристаллов, её последний лагерь и магнитофон, который всё ещё крутится.", "Leylaning kaliti Koʻchatxonani ochadi: billur omborlari, uning soʻnggi qarorgohi va hamon aylanayotgan magnitofon."),
+("tease2.coming_soon", "Chapters 3 and 4 are on their way. Your key and your choices are saved for them.", "Главы 3 и 4 уже в пути. Ваш ключ и ваши решения сохранены для них.", "3- va 4-boblar yoʻlda. Kalitingiz va tanlovlaringiz ular uchun saqlangan."),
+("tease2.unlock_line", "Chapters 3 and 4 finish the story. One purchase unlocks both; no ads, ever.", "Главы 3 и 4 завершают историю. Одна покупка открывает обе; никакой рекламы.", "3- va 4-boblar hikoyani yakunlaydi. Bitta xarid ikkalasini ochadi; hech qanday reklama yoʻq."),
+("tease2.continue_story", "Continue the story", "Продолжить историю", "Hikoyani davom ettirish"),
+("tease2.not_now", "Not now", "Не сейчас", "Hozir emas"),
 ]
 
 H = {

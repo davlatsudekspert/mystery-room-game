@@ -1864,6 +1864,18 @@ func finale() -> void:
 	check("Back does not dismiss the finale choice", _overlay() != null)
 	if not press(strand, "Strand's key"):
 		logic.choose_ending("strand_key")
+	# the cliffhanger plays (the lift shaft, the recorder), then the Chapter 3 card waits for the player
+	var teaser: ArchiveTeaser = room.get("teaser")
+	var tw := 0.0
+	while tw < 80.0 and not (teaser.card_open() and not (teaser.get("_root") as Control).find_children("*", "Button", true, false).is_empty()):
+		await _settle(0.25)
+		tw += 0.25
+	await _settle(2.0)
+	await shot("ch3_card")
+	check("the cliffhanger ends on the Chapter 3 card (%s)" % ArchiveTeaser.card_state(), teaser.card_open())
+	await press_escape()
+	check("Back does not dismiss the Chapter 3 card", teaser.card_open())
+	teaser.leave()
 	await _settle(3.0)
 	await shot("chapter_complete")
 	check("the choice sets state.choice = strand_key and completes the chapter", s["choice"] == "strand_key" and s["complete"])

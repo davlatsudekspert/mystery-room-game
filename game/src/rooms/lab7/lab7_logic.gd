@@ -883,7 +883,7 @@ func epilogue_keys() -> Array[String]:
 	var out: Array[String] = ["outro.listening", "epi.take" if state["choice"] == "take_lens" else "epi.leave"]
 	if (state["shards"] as Array).size() == SHARDS.size():
 		out.append("epi.shards")
-	out.append("epi.postmark")
+	out.append("epi1.postmark") # read under the corridor lamp: Chapter 2 continues beyond this door (not on a train home)
 	return out
 
 

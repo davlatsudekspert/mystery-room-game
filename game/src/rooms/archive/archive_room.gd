@@ -80,17 +80,25 @@ const CAPTION := {
 	"projector": "obj2.projector", "slides": "obj2.slides", "slide_projector": "obj2.slide_projector",
 	"lens_case": "obj2.booth", "screen": "obj2.screen", "socket": "obj2.screen", "vault": "obj2.vault",
 	"vault_ports": "obj2.vault", "vault_inside": "obj2.vault_open", "shutter": "obj2.shutter",
+	"vault_reel": "obj2.vault_open", "vault_cradle": "obj2.vault_open",
 }
 ## Views that are inside the projection booth (the booth interior is only drawn while one is active).
 const CAT_VIEWS := ["catalogue", "cat_drawer", "cat_section"]
+## The vault reel close-up ([pos, target, fov]) and where the push toward the 42nd silhouette ends.
+const REEL_FROM := [Vector3(1.52, 1.84, -4.0), Vector3(1.52, 1.85, -5.17), 38.0]
+const REEL_TO := [Vector3(1.8, 1.76, -4.55), Vector3(1.9, 1.75, -5.17), 30.0]
 const BOOTH_VIEWS := ["booth", "projector", "splicer", "slides", "slide_projector", "lens_case"]
 const VAULT_VIEWS := ["vault", "vault_ports", "vault_inside", "vault_mouth"]
 
 var visuals: ArchiveVisuals
+var teaser: ArchiveTeaser # the cliffhanger after the key choice and the Chapter 3 card
 var _held_frame := -1 # splicer: the loose film strip the player picked up
 var _cinematic := false
 var _knob_acc := 0.0
 var _drag_kind := ""
+var _card_pending := false # the HUD's chapter card waits until the cliffhanger and the Chapter 3 card are done
+var _answered: Dictionary = {} # "sign" / "mark": the vault has answered that recording once
+var _whisper_heard := false
 
 
 func _ready() -> void:
@@ -113,6 +121,9 @@ func _ready() -> void:
 	_build_views()
 	visuals = ArchiveVisuals.new(self)
 	add_child(visuals)
+	teaser = ArchiveTeaser.new(self)
+	add_child(teaser)
+	teaser.finished.connect(_on_teaser_finished)
 	build_input()
 	build_hud()
 	add_child(PerfGuard.new())
@@ -125,7 +136,20 @@ func _ready() -> void:
 	AudioManager.ambience("amb_archive", true, -4.0)
 	if not capture_mode and _fresh_start():
 		hud.call("play_intro")
+	elif not capture_mode and logic.is_complete():
+		_resume_completed()
 	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
+
+
+## A save made after the key was chosen (the player quit on the Chapter 3 card or the chapter card): open the vault
+## view and the Chapter 3 card again, instead of leaving them in a finished room with nothing to do.
+func _resume_completed() -> void:
+	_ending = true
+	cam.go("vault_inside", true)
+	visuals.vault_reel(true)
+	_card_pending = true
+	await get_tree().create_timer(0.6).timeout
+	teaser.show_card(str(logic.state["choice"]), true)
 
 
 func _exit_tree() -> void:
@@ -406,6 +430,11 @@ func _build_views() -> void:
 	V.call("film", Vector3(-2.15, 1.6, 1.05), Vector3(-2.5, 1.9, -3.45), 58.0)
 	V.call("vault_mouth", Vector3(1.5, 1.6, -1.6), Vector3(1.5, 1.4, -4.6), 58.0)
 	V.call("shutter", Vector3(3.3, 1.6, 1.2), Vector3(3.5, 1.2, 3.5), 56.0)
+	# the finale (docs/ENGAGEMENT.md): the reel close up, then the push toward the 42nd figure at its right edge;
+	# the key cradle for the choice; the freight-lift shaft under the vault for the cliffhanger
+	V.call("vault_reel", REEL_FROM[0], REEL_FROM[1], REEL_FROM[2])
+	V.call("vault_cradle", Vector3(1.5, 1.42, -4.02), Vector3(1.5, 1.2, -5.15), 36.0)
+	V.call("shaft", ArchiveTeaser.VIEW_POS, ArchiveTeaser.VIEW_TARGET, 64.0)
 
 
 # ====================================================================== hooks
@@ -998,6 +1027,28 @@ func view_changed_hook(id: String) -> void:
 		visuals.apply_state(true) # the picked section rises in the close-up and settles back in the tray view
 	visuals.update_visibility(id)
 	visuals.receiver_view(id)
+	_maybe_whisper(id)
+
+
+## Optional secret (docs/ENGAGEMENT.md): with Leyla's receiver in hand at the shut vault door, once her three reels
+## are found, the needle twitches one last time and a far voice counts to forty-two under the static: the vault
+## reel's twist, heard before it is seen. Purely a reward for curiosity (an achievement, no puzzle depends on it).
+func _maybe_whisper(id: String) -> void:
+	var l := logic as ArchiveLogic
+	if _whisper_heard or l.selected != "pocket_receiver" or id not in ["vault", "vault_ports"] or l.state["vault_open"]:
+		return
+	for spot in ["grille_reel", "ledger_reel", "hatch_reel"]:
+		if not bool(l.state["taken"].get(spot, false)):
+			return
+	_whisper_heard = true
+	hud.call("set_meter", 1)
+	AudioManager.sfx("receiver_beep", -14.0, 0.7)
+	AudioManager.sfx("tape_voice", -17.0, 0.62)
+	hud.call("caption", tr("cap2.whisper"), 6.0)
+	GameState.unlock_achievement("forty_two")
+	await get_tree().create_timer(6.0).timeout
+	if is_instance_valid(visuals):
+		visuals.receiver_view(cam.current())
 
 
 func _on_events(ev: Array[String]) -> void:
@@ -1163,6 +1214,7 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("crystal_record")
 			SceneManager.flash(Color(0.8, 0.96, 1.0, 0.45), 0.05, 0.9)
 			hud.call("message", tr("msg.c2_recorded_sign" if arg == "sign" else "msg.c2_recorded_mark"))
+			_vault_answers(arg)
 		"slide_drawer":
 			AudioManager.sfx("drawer_card_slide", -4.0, 1.2)
 			if int(arg) == ArchiveLogic.SLIDE_MARK_DRAWER:
@@ -1201,10 +1253,20 @@ func _feedback(e: String) -> void:
 			GameState.unlock_achievement("echoes_of_the_archive")
 		"selected":
 			visuals.selection_changed(arg)
+			if arg == "pocket_receiver":
+				_maybe_whisper(cam.current())
 		"solved":
 			AudioManager.sfx("puzzle_solved", -5.0)
+		"choice":
+			# the chosen key comes off its hook; the cliffhanger follows (ArchiveTeaser)
+			visuals.lift_key(arg)
+			_card_pending = true
+			teaser.play(arg)
 		"chapter_complete":
-			hud.call("show_chapter_complete")
+			if _card_pending or teaser.running:
+				_card_pending = true # shown when the player leaves the Chapter 3 card
+			else:
+				hud.call("show_chapter_complete")
 		"nothing_happens":
 			pass
 
@@ -1309,8 +1371,59 @@ func _play_finale() -> void:
 	await get_tree().create_timer(3.2).timeout
 	cam.go("vault_inside")
 	await get_tree().create_timer(1.4).timeout
+	# the reel: the whole staff first, close enough to read the faces in the light...
 	visuals.vault_reel(true)
-	hud.call("caption", tr("cap2.vault_reel"), 7.5)
-	await get_tree().create_timer(7.8).timeout
+	AudioManager.sfx("film_projector_start", -6.0, 1.2)
+	cam.go("vault_reel")
+	hud.call("caption", tr("cap2.reel_41"), 4.0)
+	await get_tree().create_timer(4.2).timeout
+	# ...then the sting: the frame dims around the figure at its right edge, the camera leans in, a cold halo grows
+	AudioManager.sfx("reveal", 0.0, 0.62)
+	AudioManager.sfx("projector_charge", -10.0, 0.5)
+	AudioManager.haptic(90)
+	visuals.reel_reveal(2.6)
+	_lean_in_reel(4.5)
+	hud.call("caption", tr("cap2.reel_42"), 5.5)
+	await get_tree().create_timer(5.6).timeout
+	cam.go("vault_cradle")
+	_reset_reel_view()
+	await get_tree().create_timer(1.2).timeout
 	hud.call("set_busy", false)
 	hud.call("show_choice")
+
+
+## A slow push from the reel close-up toward the 42nd figure (the view's own pose is moved; reduce motion skips it).
+func _lean_in_reel(seconds: float) -> void:
+	if bool(Settings.get_value("reduce_motion")):
+		return
+	var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(func(k: float) -> void:
+		cam.views["vault_reel"]["pos"] = (REEL_FROM[0] as Vector3).lerp(REEL_TO[0], k)
+		cam.views["vault_reel"]["target"] = (REEL_FROM[1] as Vector3).lerp(REEL_TO[1], k)
+		cam.views["vault_reel"]["fov"] = lerpf(REEL_FROM[2], REEL_TO[2], k), 0.0, 1.0, seconds)
+
+
+## Puts the reel close-up back where it starts (after the camera has left it: no jump on screen).
+func _reset_reel_view() -> void:
+	cam.views["vault_reel"]["pos"] = REEL_FROM[0]
+	cam.views["vault_reel"]["target"] = REEL_FROM[1]
+	cam.views["vault_reel"]["fov"] = REEL_FROM[2]
+
+
+## A freshly recorded crystal: across the hall the vault door answers (a far clunk, its port's light pipe flares),
+## so the next goal announces itself. Once per kind of image.
+func _vault_answers(image: String) -> void:
+	if _answered.has(image):
+		return
+	_answered[image] = true
+	await get_tree().create_timer(1.3).timeout
+	AudioManager.sfx("vault_bolts", -15.0, 0.6)
+	visuals.vault_answer("right" if image == "sign" else "left")
+	hud.call("caption", tr("cap2.vault_answers"), 4.0)
+
+
+## The player left the Chapter 3 card: the HUD's chapter card (time, puzzles, echoes, the next chapter) follows.
+func _on_teaser_finished() -> void:
+	if _card_pending:
+		_card_pending = false
+		hud.call("show_chapter_complete")

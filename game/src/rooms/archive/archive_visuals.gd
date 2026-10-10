@@ -982,15 +982,60 @@ func open_vault() -> void:
 		room.create_tween().tween_property(v, "light_energy", 1.8, 2.4)
 
 
+var _reel_mat: ShaderMaterial
+
+
 func vault_reel(on: bool) -> void:
 	var scr := part("vault_interior", "vault_reel_screen") as MeshInstance3D
 	if scr:
-		var m := StandardMaterial3D.new()
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		m.albedo_texture = _tex(DECALS + "vault_reel.jpg")
-		m.albedo_color = Color(1.0, 0.97, 0.9) if on else Color(0.1, 0.1, 0.1)
-		scr.material_override = m
+		if _reel_mat == null:
+			_reel_mat = ShaderMaterial.new()
+			_reel_mat.shader = load("res://src/rooms/archive/vault_reel.gdshader")
+			_reel_mat.set_shader_parameter("reel", _tex(DECALS + "vault_reel.jpg"))
+		_reel_mat.set_shader_parameter("on", 1.0 if on else 0.0)
+		scr.material_override = _reel_mat
 	_lamp(part("vault_interior", "vault_lamp_glow"), on, Color("fff1d6"))
+
+
+## The 42nd silhouette: the frame dims around her and a cold halo grows (docs/ENGAGEMENT.md, the Chapter 2 reveal).
+func reel_reveal(seconds: float) -> void:
+	if _reel_mat == null:
+		return
+	var tw := room.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(func(v: float) -> void: _reel_mat.set_shader_parameter("reveal", v), 0.0, 1.0, seconds)
+
+
+## The chosen key leaves its hook toward the player before it goes into the bag (the clamp drops on the other).
+func lift_key(item: String) -> void:
+	var key := "key_" + item.trim_suffix("_key")
+	var cur: Array = _held.get(key, [])
+	if cur.is_empty():
+		return
+	_held.erase(key) # apply_state no longer owns it: it flies, then frees itself
+	var n := cur[1] as Node3D
+	var gt := n.global_transform
+	n.get_parent().remove_child(n)
+	room.add_child(n)
+	n.global_transform = gt
+	var cam_pos := (room.get("cam") as Camera3D).global_position
+	AudioManager.sfx("key_lift", -2.0)
+	var tw := room.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(n, "global_position", gt.origin + Vector3(0, 0.035, 0.05), 0.35)
+	tw.tween_property(n, "global_position", gt.origin.lerp(cam_pos, 0.6), 0.75)
+	tw.parallel().tween_property(n, "scale", Vector3.ONE * 0.4, 0.75)
+	tw.tween_callback(n.queue_free)
+	room.get_tree().create_timer(0.4).timeout.connect(func() -> void: AudioManager.sfx("collar_click", -4.0, 0.7))
+
+
+## The vault door answers a freshly recorded crystal across the hall: the port's light pipe flares and fades.
+func vault_answer(side: String) -> void:
+	var pipe := part("vault_door", "light_pipe_" + side) as MeshInstance3D
+	if pipe == null:
+		return
+	var tw := room.create_tween()
+	tw.tween_callback(func() -> void: ModelUtil.set_emission(pipe, true, Color("cff6ff"), 2.4))
+	tw.tween_interval(1.6)
+	tw.tween_callback(func() -> void: ModelUtil.set_emission(pipe, logic.crystal_image(str(logic.state["port_" + side])) != "", Color("cff6ff"), 2.0))
 
 
 # ====================================================================== helpers
