@@ -65,26 +65,22 @@ def skid_and_tank():
         p.append(B.hexbolt("sbolt", 0.011, (x, SEAM_Y - 0.035, Z2 + 0.005), normal=(0, 0, 1), h=0.012, mat=PAINT,
                            washer=False))
     for sx in (-1, 1):
-        for z in (-0.33, -0.11, 0.11, 0.33):
+        for z in (-0.25, 0.25):
             p.append(B.hexbolt("sbolt", 0.011, (sx * (X2 + 0.005), SEAM_Y - 0.035, z), normal=(sx, 0, 0), h=0.012,
                                mat=PAINT, washer=False))
     # the tank, its lid flange and the lid
     p.append(B.gbox("tank", (-X2, SEAM_Y, -Z2), (X2, TANK_TOP - 0.03, Z2), PAINT, 0.014, 2))
     p.append(B.gbox("lidfl", (-X2 - 0.025, TANK_TOP - 0.03, -Z2 - 0.025), (X2 + 0.025, TANK_TOP, Z2 + 0.025), PAINT, 0.004))
     p.append(B.gbox("lid", (-X2 + 0.02, TANK_TOP, -Z2 + 0.02), (X2 - 0.02, TANK_TOP + 0.02, Z2 - 0.02), PAINT, 0.005))
-    for x in (-0.50, -0.25, 0.0, 0.25, 0.50):
-        p.append(B.hexbolt("lbolt", 0.010, (x, TANK_TOP, Z2 + 0.012), normal=(0, 1, 0), h=0.010, mat=PAINT, washer=False))
-    # rivet rows down the tank's four vertical corner seams (front and sides)
+    # rivet rows down the tank's two front corner seams
     for y in [SEAM_Y + 0.10 + 0.155 * k for k in range(7)]:
         for sx in (-1, 1):
             p.append(B.rivet("rv", 0.009, (sx * (X2 - 0.035), y, Z2), normal=(0, 0, 1), mat=PAINT, segs=6))
-            p.append(B.rivet("rv", 0.009, (sx * X2, y, Z2 - 0.035), normal=(sx, 0, 0), mat=PAINT, segs=6))
-            p.append(B.rivet("rv", 0.009, (sx * X2, y, -Z2 + 0.035), normal=(sx, 0, 0), mat=PAINT, segs=6))
     # lifting lugs on the lid flange corners
     for sx in (-1, 1):
         for sz in (-1, 1):
-            lug = B.plate("lug", [L.rounded_rect(0.07, 0.06, 0.012, 2), list(reversed(L.circle(0.012, 10, cy=0.012)))],
-                          0.012, mat=PAINT, bevel=0.0, loc=(sx * 0.46, TANK_TOP + 0.03, sz * (Z2 + 0.012)), drop_bottom=False)
+            lug = B.plate("lug", [L.rounded_rect(0.07, 0.06, 0.012, 1)], 0.012, mat=PAINT, bevel=0.0,
+                          loc=(sx * 0.46, TANK_TOP + 0.03, sz * (Z2 + 0.012)), drop_bottom=False)
             p.append(lug)
     # drain valve at the bottom front-left: a boss and a square-headed plug
     p.append(B.glathe("drain", [(0.0, 0.0), (0.028, 0.0), (0.028, 0.025), (0.020, 0.030), (0.020, 0.050), (0.0, 0.050)],
@@ -114,13 +110,10 @@ def conservator():
     r, z, y = DRUM
     p = []
     prof = [(0.0, -0.52), (r * 0.72, -0.52), (r, -0.47), (r, 0.47), (r * 0.72, 0.52), (0.0, 0.52)]
-    p.append(B.glathe("drum", prof, (0.0, y, z), (1, 0, 0), 18, PAINT, smooth=45.0))
-    # hoops, filler cap on top, oil level pipe, saddles down to the lid, the down pipe into the tank
-    for x in (-0.30, 0.30):
-        p.append(B.glathe("hoop", [(r + 0.006, -0.012), (r + 0.006, 0.012)], (x, y, z), (1, 0, 0), 18, PAINT, smooth=45.0,
-                          cap_bottom=False, cap_top=False))
+    p.append(B.glathe("drum", prof, (0.0, y, z), (1, 0, 0), 14, PAINT, smooth=45.0))
+    # filler cap on top, saddles down to the lid, the down pipe into the tank
     p.append(B.glathe("cap", [(0.0, 0.0), (0.035, 0.0), (0.035, 0.03), (0.03, 0.04), (0.0, 0.04)], (0.0, y + r - 0.004, z),
-                      (0, 1, 0), 10, PAINT, smooth=45.0))
+                      (0, 1, 0), 8, PAINT, smooth=45.0))
     for x in (-0.38, 0.38):
         # saddle block from the lid up into the drum (the top is hidden inside it)
         p.append(B.gbox("saddle", (x - 0.03, TANK_TOP + 0.02, z - 0.14), (x + 0.03, y - r + 0.05, z + 0.14), PAINT, 0.003))
@@ -133,14 +126,10 @@ def bushing_flanges_and_lamp_housing():
     p = []
     for x, top in zip(BUSH_X, BUSH_TOP):
         p.append(B.glathe("bflange", [(0.0, 0.0), (0.105, 0.0), (0.105, 0.012), (0.085, 0.020), (0.0, 0.020)],
-                          (x, TANK_TOP + 0.02, BUSH_Z), (0, 1, 0), 16, PAINT, smooth=45.0))
-        for k in range(4):
-            a = math.radians(45 + 90 * k)
-            p.append(B.hexbolt("fbolt", 0.007, (x + 0.092 * math.cos(a), TANK_TOP + 0.032, BUSH_Z + 0.092 * math.sin(a)),
-                               normal=(0, 1, 0), h=0.008, mat=PAINT, washer=False))
+                          (x, TANK_TOP + 0.02, BUSH_Z), (0, 1, 0), 12, PAINT, smooth=45.0))
     lx, ly, lz = LAMP
     p.append(B.glathe("lhouse", [(0.0, 0.0), (0.034, 0.0), (0.034, 0.008), (0.026, 0.012), (0.022, 0.012), (0.0, 0.012)],
-                      (lx, ly, Z2), (0, 0, 1), 14, PAINT, smooth=45.0))
+                      (lx, ly, Z2), (0, 0, 1), 12, PAINT, smooth=45.0))
     return p
 
 
@@ -152,11 +141,11 @@ def bushing(x, top):
     y = y0 + 0.03
     n = 0
     while y + 0.075 < top - 0.04:
-        prof += [(0.098, y + 0.012), (0.098, y + 0.022), (0.072, y + 0.034), (0.072, y + 0.055)]
+        prof += [(0.098, y + 0.016), (0.072, y + 0.032), (0.072, y + 0.055)]
         y += 0.075
         n += 1
     prof += [(0.058, top - 0.02), (0.040, top - 0.006), (0.0, top - 0.006)]
-    return B.glathe("bush", prof, (x, 0.0, BUSH_Z), (0, 1, 0), 16, PORC, smooth=50.0)
+    return B.glathe("bush", prof, (x, 0.0, BUSH_Z), (0, 1, 0), 12, PORC, smooth=50.0)
 
 
 def porcelain():
@@ -168,7 +157,7 @@ def copper():
     # terminal caps on the bushings
     for x, top in zip(BUSH_X, BUSH_TOP):
         p.append(B.glathe("term", [(0.0, -0.006), (0.030, -0.006), (0.030, 0.012), (0.024, 0.018), (0.018, 0.018),
-                                   (0.018, 0.0), (0.0, 0.0)], (x, top, BUSH_Z), (0, 1, 0), 12, COPPER, smooth=50.0))
+                                   (0.018, 0.0), (0.0, 0.0)], (x, top, BUSH_Z), (0, 1, 0), 10, COPPER, smooth=50.0))
     # the ladder: ball terminals 0.03 apart at the base, rods diverging to 0.36 at the top, ball tips
     bx, by = ROD_BASE
     tx, ty = ROD_TOP
@@ -178,7 +167,7 @@ def copper():
         d = tip - base
         p.append(B.gcyl("rod", 0.0075, 0.0, d.length, base=tuple(base), axis=tuple(d), segments=8, mat=COPPER))
         for c, r in ((base, 0.013), (tip, 0.011)):
-            s = M.sphere("ball", r, loc=tuple(c), segments=10, rings=6, mat=COPPER)
+            s = M.sphere("ball", r, loc=tuple(c), segments=8, rings=5, mat=COPPER)
             M.apply_transform(s)
             A.hint(s, 80.0)
             p.append(s)
