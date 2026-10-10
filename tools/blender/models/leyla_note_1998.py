@@ -54,7 +54,7 @@ def build():
     yr = D.hand("year", "1998", 0.0190, ratio=0.7, mat=INK, loc=(0.020, 0.0045, T + 0.0003), rot=(0.0, 0.0, math.radians(3.0)))
     ink.append(yr)
     for k, (y, length, ang) in enumerate(((-0.020, 0.062, 1.0), (-0.032, 0.054, -1.5), (-0.044, 0.060, 0.8), (-0.056, 0.036, -0.6))):
-        pts = [(x * length - length / 2.0, 0.0012 * math.sin(x * 9.0 + k) ) for x in [i / 14.0 for i in range(15)]]
+        pts = [(x * length - length / 2.0, 0.00055 * math.sin(x * 7.0 + k) ) for x in [i / 14.0 for i in range(15)]]
         strip = [(px, py + 0.0006) for (px, py) in pts] + [(px, py - 0.0006) for (px, py) in reversed(pts)]
         o = L.flat_shape(f"line{k}", [strip], mat=INK, loc=(0.0, y, T + 0.0003), rot=(0.0, 0.0, math.radians(ang)))
         ink.append(o)

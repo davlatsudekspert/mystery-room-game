@@ -234,6 +234,7 @@ def qa(args, parts):
             h.parent = root
             h.location = K.G(*mount)
     key = C.qa_import("key_leyla", (0, 0, 0), 0.0, prefix="qa_key_")
+    C.qa_floor_nonormal("watch_room")
     M.refresh()
     S = int(os.environ.get("MR_S", "24"))
     RES = (int(os.environ.get("MR_W", "960")), int(os.environ.get("MR_H", "640")))

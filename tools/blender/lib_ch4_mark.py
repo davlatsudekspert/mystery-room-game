@@ -18,12 +18,13 @@ import lib_mech as L  # noqa: E402
 RING_R, RING_W, BAR_W, BAR_HALF = 0.384, 0.032, 0.030, 0.484
 
 
-def mark_solids(h: float, depth: float, mat: str, loc=(0.0, 0.0), z0: float = 0.0, n: int = 36, name: str = "mark"):
-    """The mark as [ring, bar] objects in local XY facing +Z, extruded z0 .. z0 + depth, centred on loc = (x, y); h = the glyph height (the meridian's length)."""
+def mark_solids(h: float, depth: float, mat: str, loc=(0.0, 0.0), z0: float = 0.0, n: int = 36, name: str = "mark", bold: float = 1.0):
+    """The mark as [ring, bar] objects in local XY facing +Z, extruded z0 .. z0 + depth, centred on loc = (x, y); h = the glyph height (the meridian's length); bold > 1 thickens the ring and the bar (small reliefs read better)."""
     s = h / (2.0 * BAR_HALF)
-    ro, ri = (RING_R + RING_W / 2.0) * s, (RING_R - RING_W / 2.0) * s
+    rw = RING_W * bold
+    ro, ri = (RING_R + rw / 2.0) * s, (RING_R - rw / 2.0) * s
     ring = L.curve_solid(f"{name}_ring", [L.circle(ro, n), list(reversed(L.circle(ri, n)))], depth, bevel=0.0, bevel_res=0, mat=mat, drop_bottom=True)
-    hw, half = BAR_W / 2.0 * s, BAR_HALF * s
+    hw, half = BAR_W * bold / 2.0 * s, BAR_HALF * s
     bar = L.curve_solid(f"{name}_bar", [[(-hw, -half), (hw, -half), (hw, half), (-hw, half)]], depth, bevel=0.0, bevel_res=0, mat=mat, drop_bottom=True)
     out = []
     for o in (ring, bar):

@@ -75,9 +75,11 @@ class MB:
         bmesh.ops.recalc_face_normals(self.bm, faces=list(self.bm.faces))
 
     def obj(self, name, fix=True):
+        """The object. The bmesh is NOT welded (`X.bm_obj` merges doubles): welding the coincident corners of overlapping boxes made non-manifold edges and
+        smooth-shaded dark top faces (a black rim round the strand box's opening)."""
         if fix:
             self.fix()
-        return X.bm_obj(name, self.bm, self.mat)
+        return K.obj_from_bm(name, self.bm, self.mat)
 
 
 def cyl_bm(bm, c, axis, r, h, segs=12, r2=None, caps=True, phase=0.0):

@@ -60,7 +60,7 @@ def build():
             v.co.y *= f
     seal.location = (0.0, 0.0, zs)
     M.apply_transform(seal)
-    mark = MK.mark_solids(0.0145, 0.0012, WAX, loc=(0.0, 0.0), z0=zs + 0.0020, name="sealmark")
+    mark = MK.mark_solids(0.0150, 0.0012, WAX, loc=(0.0, 0.0), z0=zs + 0.0020, name="sealmark", bold=1.5)
     rb += [seal] + mark
     ribbon = M.join(rb, "ribbon")
     M.set_parent(ribbon, root)

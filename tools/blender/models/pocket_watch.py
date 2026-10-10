@@ -1,7 +1,7 @@
 """pocket_watch.glb — Strand's pocket watch: a brass hunter-case watch, stopped (Chapter 4, group H; the heart drawer's `heart_watch`, puzzle P10 `lens`/story).
 
 A closed (hunter) brass case O 50 mm x 15 mm: a reeded edge, a stepped bezel, a flat lid with two engraved rings and the Institute's mark (a ring crossed by one meridian) in polished relief,
-two hinge knuckles on the left, a pendant with a fluted crown, a bow (a ring in the face plane) and the first two links of a short chain. Standing, the face toward Godot +Z (Blender -Y), the
+two hinge knuckles on the left, a pendant with a fluted crown, a bow (a ring in the face plane) and the first link of a chain. Standing, the face toward Godot +Z (Blender -Y), the
 pendant up. About 50 x 15 x 62 mm. Origin at the centre of mass. Slots: M_Brass_Aged + M_Brass_Polished.
     blender -b --factory-startup -P tools/blender/models/pocket_watch.py [-- --no-render]
 """
@@ -39,7 +39,7 @@ def build():
         rg.location = (0, 0, ZF)
         M.apply_transform(rg)
         parts.append(rg)
-    parts += MK.mark_solids(0.0235, 0.0009, POL, loc=(0.0, 0.0), z0=ZF, name="mark")
+    parts += MK.mark_solids(0.0250, 0.0010, POL, loc=(0.0, 0.0), z0=ZF, name="mark", bold=1.7)
     # hinge knuckles (left) and the thumb-catch at the pendant
     for z in (-0.0035, 0.0035):
         k = L.lathe2("knuckle", [(0.0, -0.0060), (0.0033, -0.0060), (0.0033, 0.0060), (0.0, 0.0060)], segments=10, mat=BRASS)
@@ -54,9 +54,9 @@ def build():
     parts.append(crown)
     bow = M.torus("bow", 0.0090, 0.0017, loc=(0.0, R + 0.0143 + 0.0070, 0.0), major_seg=18, minor_seg=5, mat=BRASS)
     parts.append(bow)
-    # the first two chain links: an oval ring in the face plane, then one turned 90 deg (an edge view), hanging from the bow
+    # the first chain link: an oval ring in the face plane hanging from the bow
     y1 = R + 0.0143 + 0.0070 + 0.0090 + 0.0050
-    for k, (rot, dy) in enumerate(((0.0, 0.0), (90.0, 0.0098))):
+    for k, (rot, dy) in enumerate(((0.0, 0.0),)):
         lk = M.torus(f"link{k}", 0.0040, 0.0010, loc=(0.0, y1 + dy, 0.0), major_seg=10, minor_seg=4, mat=BRASS)
         lk.scale = (1.0, 1.55, 1.0)
         lk.rotation_euler = (0.0, math.radians(rot), 0.0)

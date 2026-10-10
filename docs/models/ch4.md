@@ -657,3 +657,20 @@ Order: A first (everything else is QA-rendered inside `shell_hall`); then B, C, 
    - **Group E.** `sun_iris` has six guide rails and end stops out to r 1.94 (the leaves slide 0.95 out, so the frame is Ø 2.4 at the ring and Ø 3.9 over the rails).
      `sun_pedestal` uses `M_Paint_Green` for `ammeter_band` (five slots) and its feed scale numerals read the GAP g (9 at the top, clockwise to 0).
      `rod_a` and `rod_b` lie on the lamp's X axis, their tips touching at x = −0.25 (local); the arc light sits there.
+10. **Built-model changes found while modelling** (groups F–H; the measured pages `ch4_f.md`, `ch4_g.md` and `ch4_h.md` have the numbers):
+    - **Group F.** `booth`: the front glass is at world z = −11.9, so the `gear_box` camera (0, 3.7, −11.9) of §2 stands ON the glass: use (0, 3.6, −11.2). The stair is 11 steps in a lane 0.8 wide (world
+      z −11.5 … −10.7) with a 0.4 service gap to the glass wall, and the door is in the FRONT wall at the east end (x 2.4 … 3.2) beside a landing (x 2.42 … 3.4), not in the east wall. `IA_booth_gate`'s leaf runs
+      along +Z from its post at (0, 0, −11.5) ("scale local Z to 0.15" as contracted), so the contract `booth` camera (x = 0) sees it edge-on: the lock box (Strand's mark on its +Z face, a key slot on top, on the
+      origin plane so it squashes flat instead of moving) is the target, or use a view such as (−2.2, 1.55, −8.9) → (0.4, 1.25, −11.3). `strand_box4` is 0.48 × 0.34 × 0.19 (contract 0.42 × 0.30 × 0.18: the orrery
+      is Ø 0.26 and needs a body 0.30 deep); the four `gear_pointer_n` are CHILDREN of `IA_box_lid` (they travel with it), the gears zig-zag so neighbours mesh, the rule pictogram ("a wheel with an arrow to its
+      neighbour") is on the lid's rear strip (visible from the start; "under the lid" would only show once the box is open) and `IA_box_log` is a paper pad (`M_Paper`; `log_mount` is identity: the log is
+      0.14 wide x 0.20 high). `orrery`: tower n stands on ring n's radius (I outer 0.098 … IV inner 0.042), not at "0.04 n" (the hall's ring I is the outer one); the base is Ø 0.262 with the numerals 1–8 on the rim.
+    - **Group G.** The bank of lockers is **`lockers4.glb`** (script `lockers4.py`): `lockers.glb` is the Chapter 2 archive's bank and must not be overwritten. It has 24 brass doors 0.24 wide (top row 1–12, bottom
+      row 13–24; locker 17 = bottom row, 5th from the left), 2.88 wide in all. `watch_room` is built by group G (§12 lists it; the task split had left it out): `IA_watch_gate` folds along local **X**
+      ("scale local X to 0.15": the grille is in the room's front plane, facing the `watch` camera), its lock box with Leyla's sign sits on the hinge post. The fixtures stand along the back wall: the post station
+      (north), the board, the lockers (south), at the mounts given in `ch4_g.md`. `roll_board`'s two prototypes share one origin (the first slot), so one instance transform (0.16 col, −0.30 row, 0) places
+      the tag and the lamp of a slot.
+    - **Group H.** `strand_last_letter` is its own model (a folded, ribbon-bound, sealed letter), not `letter.glb` (Strand's Chapter 2 envelope); `leyla_note_1998` too. `strand_log` and `leyla_parcel` use three slots
+      (leather / paper / brass; kraft / paper / ink), the documented exception to "≤ 2 materials" (3 surfaces). `ItemDB` must point `tower_key_1..4` at `tower_key_1` … `tower_key_4` (there is no
+      `tower_key.glb`) and list `reverse_pawl` and `leyla_parcel` as FLAT; the standing `pocket_watch` needs Euler (−90°, 0, 0) on the heart drawer's flat `watch_mount` (see `ch4_h.md`).
+    - **Marks.** Extruding `lib_ch3_symbols.loops("mark")` makes Blender fill half of the ring's hole; every Chapter 4 relief mark of groups F–H is built by `lib_ch4_mark.mark_solids` (an annulus and a bar).

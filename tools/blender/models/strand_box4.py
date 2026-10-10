@@ -56,20 +56,19 @@ FLUTES = 12
 
 
 def body_walnut():
+    """The hollow walnut body. No two boxes overlap (stacked and abutting only): overlapping boxes merged by the builder's vertex weld gave dark top faces."""
     w = F.MB(WALNUT)
     t = 0.014
-    w.box((-BW, 0.0, -BD), (BW, t, BD))                                      # floor
-    w.box((-BW, 0.0, BD - t), (BW, BH, BD))                                  # front
-    w.box((-BW, 0.0, -BD), (BW, BH, -BD + t))                                # back
-    w.box((-BW, 0.0, -BD + t), (-BW + t, BH, BD - t))                        # left
-    w.box((BW - t, 0.0, -BD + t), (BW, BH, BD - t))                          # right
-    # base moulding and a top moulding that the lid closes on; a raised panel on the front between the escutcheons' row and the lid
-    w.box((-BW - 0.008, 0.0, -BD - 0.008), (BW + 0.008, 0.016, BD + 0.008))
-    for (y0, y1, ex, wd) in ((0.016, 0.024, 0.004, 0.012), (BH - 0.012, BH, 0.005, 0.016)):      # a lower and a top moulding: frames round the walls (the box stays hollow)
-        w.box((-BW - ex, y0, -BD - ex), (BW + ex, y1, -BD + wd))
-        w.box((-BW - ex, y0, BD - wd), (BW + ex, y1, BD + ex))
-        w.box((-BW - ex, y0, -BD + wd), (-BW + wd, y1, BD - wd))
-        w.box((BW - wd, y0, -BD + wd), (BW + ex, y1, BD - wd))
+    y_w0, y_w1 = 0.016, BH - 0.012                                           # the walls stand on the base slab and carry the top moulding
+    w.box((-BW - 0.008, 0.0, -BD - 0.008), (BW + 0.008, y_w0, BD + 0.008))   # the floor, a base slab wider than the walls
+    for (x0, z0, x1, z1) in ((-BW, BD - t, BW, BD), (-BW, -BD, BW, -BD + t), (-BW, -BD + t, -BW + t, BD - t), (BW - t, -BD + t, BW, BD - t)):
+        w.box((x0, y_w0, z0), (x1, y_w1, z1))                                # front, back, left, right walls
+    ex = 0.004
+    for (x0, z0, x1, z1) in ((-BW - ex, BD, BW + ex, BD + ex), (-BW - ex, -BD - ex, BW + ex, -BD), (-BW - ex, -BD, -BW, BD), (BW, -BD, BW + ex, BD)):
+        w.box((x0, y_w0, z0), (x1, y_w0 + 0.008, z1))                        # a lower trim ring round the walls
+    ex = 0.005
+    for (x0, z0, x1, z1) in ((-BW - ex, BD - t, BW + ex, BD + ex), (-BW - ex, -BD - ex, BW + ex, -BD + t), (-BW - ex, -BD + t, -BW + t, BD - t), (BW - t, -BD + t, BW + ex, BD - t)):
+        w.box((x0, y_w1, z0), (x1, BH, z1))                                  # the top moulding: a frame, so the box stays hollow
     w.box((-BW + 0.03, 0.036, BD), (BW - 0.03, 0.040, BD + 0.004))
     w.box((-BW + 0.03, 0.112, BD), (BW - 0.03, 0.116, BD + 0.004))
     return w.obj("box_walnut")

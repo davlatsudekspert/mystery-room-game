@@ -26,34 +26,38 @@ PX = -0.034                                      # the pivot boss centre (x)
 
 
 def arm_outline():
-    """The pawl's arm, CCW: a broad pivot end, a tapered arm, a barbed hook (tip down, toward -Y) at +X."""
+    """The pawl's arm, CCW: a broad pivot end, a tapered arm, a barbed hook (tip down, toward -Y) at +X (stretched 1.3 x across: a bolder silhouette)."""
+    return [(x, y * 1.3) for (x, y) in _arm()]
+
+
+def _arm():
     return [(PX - 0.004, 0.0105), (0.000, 0.0085), (0.026, 0.0060), (0.038, 0.0052), (0.0455, 0.0030), (0.0475, -0.0020), (0.0445, -0.0125), (0.0400, -0.0090), (0.0385, -0.0035),
             (0.0300, -0.0030), (0.000, -0.0050), (PX + 0.002, -0.0110), (PX - 0.006, -0.0112), (PX - 0.0105, -0.0060), (PX - 0.0115, 0.0030)]
 
 
 def build():
     parts = []
-    arm = G.plate_xy("pawl", [arm_outline()], 0.0050, 0.0, BRASS, bevel=0.0007)
+    arm = G.plate_xy("pawl", [arm_outline()], 0.0060, 0.0, BRASS, bevel=0.0008)
     parts.append(arm)
     # the pivot boss: a ring (hole through) standing higher
-    boss = G.plate_xy("boss", [L.circle(0.0100, 28, cx=PX, cy=0.0), list(reversed(L.circle(0.0040, 16, cx=PX, cy=0.0)))], 0.0072, 0.0, BRASS, bevel=0.0007)
+    boss = G.plate_xy("boss", [L.circle(0.0125, 28, cx=PX, cy=0.0), list(reversed(L.circle(0.0045, 16, cx=PX, cy=0.0)))], 0.0080, 0.0, BRASS, bevel=0.0007)
     parts.append(boss)
-    rim = G.plate_xy("bossrim", [L.circle(0.0078, 28, cx=PX, cy=0.0), list(reversed(L.circle(0.0050, 16, cx=PX, cy=0.0)))], 0.0010, 0.0072, BRASS, bevel=0.0002)
+    rim = G.plate_xy("bossrim", [L.circle(0.0098, 28, cx=PX, cy=0.0), list(reversed(L.circle(0.0058, 16, cx=PX, cy=0.0)))], 0.0010, 0.0080, BRASS, bevel=0.0002)
     parts.append(rim)
     # the engraved arrow: pointing toward the pivot (-X), raised 0.8 mm on the arm
     # (a left-pointing arrow: shaft from +X to -X, head at -X)
     arrow = [(-0.0160, 0.0007), (-0.0070, 0.0042), (-0.0070, 0.0017), (0.0150, 0.0017), (0.0150, -0.0003), (-0.0070, -0.0003), (-0.0070, -0.0028)]
-    parts.append(G.plate_xy("arrow", [arrow], 0.0008, 0.0050, BRASS, bevel=0.0001))
+    parts.append(G.plate_xy("arrow", [[(x, y * 1.35) for (x, y) in arrow]], 0.0009, 0.0060, BRASS, bevel=0.0001))
     # two rivets on the arm and a small tooth guard plate near the hook
     for x in (0.010, 0.026):
-        parts.append(M.cylinder("rv", 0.0018, 0.0010, loc=(x, 0.0, 0.0050 + 0.0005), mat=BRASS, verts=8, bevel=0.0))
+        parts.append(M.cylinder("rv", 0.0018, 0.0010, loc=(x, 0.0, 0.0060 + 0.0005), mat=BRASS, verts=8, bevel=0.0))
     # the steel return spring on a post at the tail: a post and four coils
-    sx, sy = PX - 0.0055, 0.0150
+    sx, sy = PX - 0.0055, 0.0195
     parts.append(M.cylinder("post", 0.0024, 0.0100, loc=(sx, sy, 0.0050), mat=STEEL, verts=8, bevel=0.0))
     for k in range(4):
         parts.append(M.torus(f"coil{k}", 0.0042, 0.0009, loc=(sx, sy, 0.0008 + 0.0019 * k), major_seg=12, minor_seg=4, mat=STEEL))
     # a leaf arm of the spring pressing on the pawl
-    parts.append(G.plate_xy("leaf", [[(sx - 0.0010, sy - 0.0040), (sx + 0.0010, sy - 0.0040), (PX + 0.004, 0.0085), (PX + 0.0020, 0.0095)]], 0.0010, 0.0050, STEEL, bevel=0.0001))
+    parts.append(G.plate_xy("leaf", [[(sx - 0.0010, sy - 0.0040), (sx + 0.0010, sy - 0.0040), (PX + 0.0070, 0.0135), (PX + 0.0050, 0.0150)]], 0.0010, 0.0060, STEEL, bevel=0.0001))
     main_parts = [p for p in parts if p.name.startswith(("pawl", "boss", "bossrim", "arrow", "rv"))]
     spring_parts = [p for p in parts if p.name.startswith(("post", "coil", "leaf"))]
     root = M.join(main_parts, NAME)
