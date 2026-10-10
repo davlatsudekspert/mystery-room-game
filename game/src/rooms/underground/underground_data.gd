@@ -103,8 +103,12 @@ const VIEWS := {
 	"cabinet_2": [Vector3(-9.2, 1.45, 2.75), Vector3(-9.2, 1.3, 3.55), 50.0, false, "C", "", ""],
 	"interlock_plate": [Vector3(-8.3, 2.05, 2.6), Vector3(-8.3, 2.3, 3.97), 40.0, false, "C", "", ""],
 	"desk": [Vector3(-7.8, 1.85, -1.6), Vector3(-7.75, 1.2, 0.35), 60.0, false, "CL", "", ""],
-	"rack": [Vector3(-9.6, 1.8, -1.25), Vector3(-9.6, 2.1, -3.65), 58.0, false, "C", "", ""],
-	"rack_close": [Vector3(-9.6, 1.75, -2.4), Vector3(-9.6, 1.75, -3.8), 54.0, false, "C", "", ""],
+	# hud-check at 19.5:9 (2026-10-10): the tube bench's three places sat 0.4 to 3 mm from the bottom edge (its table
+	# top is below the eye line) and the master hammer 5 mm from the right edge. `rack` stands 0.9 m to the east and
+	# looks level, so the whole rack and the bench places are on screen (bench places x 1600..1900, y 790..820 of 2340 x 1080);
+	# `rack_close` moves 0.2 m east for the hammer.
+	"rack": [Vector3(-8.7, 1.8, -1.0), Vector3(-8.7, 1.62, -3.65), 58.0, false, "C", "", ""],
+	"rack_close": [Vector3(-9.4, 1.75, -2.4), Vector3(-9.4, 1.75, -3.8), 54.0, false, "C", "", ""],
 	"bench": [Vector3(-7.35, 1.6, -2.35), Vector3(-7.35, 0.9, -3.7), 50.0, false, "C", "", ""],
 	"port_a": [Vector3(-4.8, 0.95, 2.5), Vector3(-7.4, 1.35, 0.5), 36.0, false, "C", "", ""],
 	"port_b": [Vector3(-11.75, 4.65, 1.75), Vector3(-8.2, 1.15, 0.45), 34.0, false, "C", "", ""],
@@ -137,7 +141,9 @@ const VIEWS := {
 	"chart": [Vector3(9.1, 1.6, -2.3), Vector3(7.8, 1.6, -2.45), 44.0, false, "N", "", ""],
 	"seed_library": [Vector3(11.25, 1.45, -0.6), Vector3(12.55, 1.24, -0.6), 50.0, false, "N", "", ""],
 	"seed_drawer": [Vector3(11.85, 1.6, -0.6), Vector3(12.25, 1.2, -0.6), 42.0, false, "N", "", ""], # framed per drawer
-	"prisms": [Vector3(6.1, 1.75, 1.65), Vector3(6.1, 1.0, -0.55), 56.0, false, "N", "camp_open", "K"],
+	# hud-check at 19.5:9: the four nudge buttons on the apron sat 2.6 mm from the bottom edge. Higher and further back,
+	# looking down at the bench: buttons, prisms and the seal's three receptors all sit between the title and the banner.
+	"prisms": [Vector3(6.1, 1.6, 2.1), Vector3(6.1, 0.75, 0.0), 56.0, false, "N", "camp_open", "K"],
 	"seal": [Vector3(6.1, 1.3, -0.3), Vector3(6.1, 1.15, -0.97), 44.0, false, "N", "camp_open", "K"],
 	"camp": [Vector3(7.25, 1.6, -1.5), Vector3(4.9, 1.2, -2.8), 62.0, false, "K", "shutter_open", "GS"],
 	"shutter": [Vector3(6.55, 1.55, -2.6), Vector3(4.66, 1.6, -2.6), 50.0, false, "K", "shutter_open", "GS"],

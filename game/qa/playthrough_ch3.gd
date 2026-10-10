@@ -9,12 +9,18 @@ extends Node
 ## continue_saved, the main menu's Continue) and must show the same state at the wing's hall.
 ## Run: xvfb-run -a godot --path game res://qa/playthrough_ch3.tscn -- --out=<dir> [--key=strand|leyla]
 ##        [--lens=take|leave] [--seed=N] [--secret] [--choice=strand|leyla] [--lang=ru] [--quick]
+##        [--reload-every=N] (also quit and Continue after every N-th solver step, mid-wing: the rebuilt scene must show
+##        the same state and the same tappable parts in all three zones)
+##        [--logic-sweep] [--sweep-seeds=N] (no scene: random take / return / use actions interleaved with solver steps,
+##        a save round trip after every step, and a completion check from each saved state, for both key paths)
 ## (through the render queue: tools/qa_run.sh --log=<file> -- res://qa/playthrough_ch3.tscn -- …)
 ## A quick logic-flow run without screenshots: godot --headless --path game res://qa/playthrough_ch3.tscn -- …
 ## Exit code 0 = chapter completed with no failed step and no fallback.
 
 const Plan := preload("res://qa/ch3_plan.gd")
 const SCENE := "res://src/rooms/underground/underground.tscn"
+const PHONE_MM_H := 68.6 ## the 19.5:9 test phone (phone61 in qa/tap_map.gd): 1080 px at 400 dpi
+const MIN_TAP_MM := 9.0 ## the smallest tap target a thumb can hit reliably
 ## The views measured for the per-view budget (docs/models/ch3.md §13.3), plus the zone roots.
 const PERF_VIEWS: Array[String] = ["choir", "choir_s", "port_b", "desk", "rack", "gallery", "gallery_w", "glass_floor",
 	"console", "nursery", "nursery_w", "autoclave", "seed_library", "prisms", "camp", "shutter", "lift_w", "lift_e"]
@@ -51,6 +57,14 @@ var _evidence_done: Dictionary = {}
 var _echoes_done := false
 var _perf_done := false
 var _continue_done := false
+var reload_every := 0
+var sweep := false
+var sweep_seeds := 12
+var _steps_done := 0
+var _reload_checks := 0
+var _reload_failed := 0
+var _sig_parts := 0
+var _sizes: Dictionary = {} # "view model/part" -> Vector2: the tapped part's visible size in mm at phone61 scale
 
 
 func _ready() -> void:
@@ -72,11 +86,21 @@ func _ready() -> void:
 			secret = true
 		elif a == "--quick":
 			quick = true
+		elif a.begins_with("--reload-every="):
+			reload_every = int(a.substr(15))
+		elif a == "--logic-sweep":
+			sweep = true
+		elif a.begins_with("--sweep-seeds="):
+			sweep_seeds = int(a.substr(14))
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if sweep:
+		_logic_sweep()
+		return
 	if DisplayServer.get_name() == "headless":
 		get_window().size = Vector2i(1920, 1080) # headless windows are square: frame the views like a phone
-	SaveSystem.save_path = "user://qa_ch3_save.json"
-	SaveSystem.profile_path = "user://qa_ch3_profile.json"
+	# one save file per process: runs in parallel (the render queue runs two, quick runs more) must not load each other's
+	SaveSystem.save_path = "user://qa_ch3_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_ch3_profile_%d.json" % OS.get_process_id()
 	GameState.profile = {"choices": {"ch2_key": key_path + "_key", "ch1_lens": lens_path + "_lens",
 		"ch1_shards": 5 if secret else 0, "ch2_echoes": 3 if secret else 0}}
 	GameState.start_new("ch3")
@@ -98,6 +122,94 @@ func _ready() -> void:
 		str(logic.freq_target())])
 	await _settle(1.2)
 	await run()
+
+
+# ====================================================================== logic sweep (no scene)
+const SoftlockTest := preload("res://tests/test_underground_no_softlock.gd")
+
+
+## --logic-sweep: the solver's own player actions (one at a time, from qa/ch3_plan.gd) interleaved with random
+## take / return / use actions, for both key paths and both lens paths with a per-game seed. After every action the
+## save round trip must reproduce the state exactly and the invariants must hold; from every 4th state a copy made
+## through the save must still be completable. Exit 0 = nothing failed.
+func _logic_sweep() -> void:
+	var helper := SoftlockTest.new()
+	var rng := RandomNumberGenerator.new()
+	var runs := 0
+	var actions := 0
+	var saves := 0
+	var solves := 0
+	var failures: Array[String] = []
+	for sd in sweep_seeds:
+		for pi in 4:
+			var path := "strand" if pi % 2 == 0 else "leyla"
+			var l := UndergroundLogic.new()
+			l.setup_from_profile({"ch2_key": path + "_key", "ch1_lens": ("take" if pi < 2 else "leave") + "_lens",
+				"ch1_shards": 5 if sd % 3 == 0 else 2, "ch2_echoes": 3})
+			l.apply_seed(0 if sd == 0 else 1000 + sd * 17 + pi)
+			rng.seed = 31000 + sd * 4 + pi
+			runs += 1
+			var tag := "%s/%s/seed %d" % [path, "take" if pi < 2 else "leave", int(l.state["seed"])]
+			var guard := 0
+			while not l.is_complete() and guard < 400 and failures.size() < 8:
+				guard += 1
+				var plan := Plan.new()
+				plan.from_dict(l.to_dict())
+				UndergroundSolver.step(plan, path)
+				var calls: Array = plan.calls
+				var take_n := rng.randi_range(1, maxi(1, calls.size()))
+				for i in mini(take_n, calls.size()):
+					if str(calls[i][0]) == "choose_ending":
+						continue
+					l.callv(str(calls[i][0]), calls[i][1])
+					actions += 1
+					var bad := _sweep_check(l, helper)
+					if bad == "":
+						saves += 1
+						if actions % 4 == 0:
+							var copy := UndergroundLogic.new()
+							copy.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
+							solves += 1
+							if not UndergroundSolver.solve(copy, path):
+								bad = "not completable from here; goal %s" % copy.hint_goal()
+					if bad != "":
+						failures.append("%s: %s after %s%s" % [tag, bad, str(calls[i][0]), str(calls[i][1])])
+						break
+				if failures.size() > 0 and failures[-1].begins_with(tag):
+					break
+				if rng.randi_range(0, 2) == 0: # an odd order: random takes, returns and uses, then the solver carries on
+					for _k in rng.randi_range(1, 10):
+						helper.random_action(l, rng)
+						actions += 1
+						var bad2 := _sweep_check(l, helper)
+						if bad2 != "":
+							failures.append("%s: %s after a random action" % [tag, bad2])
+							break
+					if failures.size() > 0 and failures[-1].begins_with(tag):
+						break
+			if not l.is_complete() and not (failures.size() > 0 and failures[-1].begins_with(tag)):
+				failures.append("%s: not complete after %d rounds; goal %s" % [tag, guard, l.hint_goal()])
+	_log("logic sweep: %d games, %d actions, %d save round trips, %d completion checks from saved states" % [
+		runs, actions, saves, solves])
+	for f in failures:
+		_log("✗ " + f)
+	var f2 := FileAccess.open(out_dir + "/playthrough_ch3_sweep_report.txt", FileAccess.WRITE)
+	f2.store_string("\n".join(report) + "\n")
+	var qa_exit := 0 if failures.is_empty() else 1
+	print("QA_DONE exit=%d" % qa_exit)
+	get_tree().quit(qa_exit)
+
+
+## The invariants of the softlock test plus the save round trip; "" = fine.
+func _sweep_check(l: UndergroundLogic, helper: Variant) -> String:
+	var bad: String = helper.invariants(l)
+	if bad != "":
+		return "invariant: " + bad
+	var copy := UndergroundLogic.new()
+	copy.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
+	if JSON.stringify(copy.to_dict()) != JSON.stringify(l.to_dict()):
+		return "save round trip differs"
+	return ""
 
 
 # ====================================================================== helpers
@@ -259,9 +371,22 @@ func tap(model: String, part: String) -> bool:
 	var sp := _tap_point(model, part)
 	if sp.x < 0:
 		return false
+	_note_size(model, part)
 	room.call("_on_tap", sp)
 	await _settle(0.4)
 	return true
+
+
+## The part's visible size as a phone61 player sees it (1080 px = 68.6 mm tall): a tap target under 9 mm is a trip hazard.
+func _note_size(model: String, part: String) -> void:
+	var n := node_of(model, part)
+	if n == null:
+		return
+	var r := _rect(n, part != "" and not part.begins_with("Item_"))
+	var mm := r.size * (PHONE_MM_H / get_viewport().get_visible_rect().size.y)
+	var key := "%s %s/%s" % [cam().current(), model, part]
+	if not _sizes.has(key) or maxf(mm.x, mm.y) > maxf((_sizes[key] as Vector2).x, (_sizes[key] as Vector2).y):
+		_sizes[key] = mm
 
 
 func _hit(model: String, part: String) -> String:
@@ -508,9 +633,13 @@ func run() -> void:
 			await _milestones()
 			if not ok or s["array_awake"]:
 				break
+			_steps_done += 1
 			if not _continue_done and UndergroundSolver.wing_done(logic, s["entry"]):
 				_continue_done = true
 				await _continue_check()
+				s = logic.state
+			elif reload_every > 0 and _steps_done % reload_every == 0:
+				await _continue_check("mid-wing after step %d (%s)" % [_steps_done, str(c[0])])
 				s = logic.state
 	if not logic.is_complete() and not s["array_awake"]:
 		_log("✗ chapter not completed (stopped after %d planning rounds)" % guard)
@@ -519,9 +648,14 @@ func run() -> void:
 
 ## A player quits here and taps Continue: the save is written, the scene freed and rebuilt from the save. The
 ## rebuilt scene must hold the same state, start at the wing's hall (not in the lift) and keep the gate open.
-func _continue_check() -> void:
+## `label` != "" is the periodic mid-wing check (--reload-every): it also compares every tappable part of the three
+## zones before and after, and only reports a failure.
+func _continue_check(label: String = "") -> void:
 	await wait_idle()
 	var before := _snap(logic)
+	var sig_before := ""
+	if label != "":
+		sig_before = await _scene_sig()
 	var saved := GameState.save_now()
 	room.queue_free()
 	await get_tree().process_frame
@@ -535,13 +669,66 @@ func _continue_check() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await _settle(1.2)
+	await wait_idle()
 	var start := cam().current()
 	var same := _snap(logic) == before
 	var gate: bool = (room.get("visuals") as Node).get("gate_open")
 	var ok := loaded and same and start == str(room.call("start_view")) and gate and not bool(room.call("_fresh_start"))
-	_log(("✓ " if ok else "✗ ") + "continue: scene rebuilt from the save (state %s, opens at %s, gate %s)" % [
-		"kept" if same else "DIFFERS", start, "open" if gate else "SHUT"])
-	await shot("continue_" + start)
+	if label == "":
+		_log(("✓ " if ok else "✗ ") + "continue: scene rebuilt from the save (state %s, opens at %s, gate %s)" % [
+			"kept" if same else "DIFFERS", start, "open" if gate else "SHUT"])
+		await shot("continue_" + start)
+		return
+	_reload_checks += 1
+	var diff := ""
+	if ok:
+		var sig_after := await _scene_sig()
+		if sig_after != sig_before:
+			ok = false
+			diff = _sig_diff(sig_before, sig_after)
+	if not ok:
+		_reload_failed += 1
+		_log("✗ continue %s: state %s, opens at %s, gate %s%s" % [label, "kept" if same else "DIFFERS", start,
+			"open" if gate else "SHUT", diff])
+
+
+## Every tappable part the player can see (own collider on, visible in the tree), with its position and orientation,
+## in each zone's root view (zone culling is per view, so the same views are used before and after a reload).
+func _scene_sig() -> String:
+	var here := cam().current()
+	var lines: Array[String] = []
+	for v: String in ["choir", "gallery", "nursery"]:
+		cam().go(v, true)
+		await _settle(0.35)
+		for n in room.find_children("*", "StaticBody3D", true, false):
+			var b := n as StaticBody3D
+			if b.collision_layer == 0 or not b.is_visible_in_tree() or str(b.get_meta("part", "")) == "":
+				continue
+			var o := b.global_position
+			var x := b.global_transform.basis.x
+			lines.append("%s|%s|%d,%d,%d|%d,%d,%d" % [v, str(b.get_meta("part")), roundi(o.x * 100.0), roundi(o.y * 100.0),
+				roundi(o.z * 100.0), roundi(x.x * 10.0), roundi(x.y * 10.0), roundi(x.z * 10.0)])
+	if here != "":
+		cam().go(here, true)
+		await _settle(0.2)
+	lines.sort()
+	_sig_parts = lines.size()
+	return "\n".join(lines)
+
+
+func _sig_diff(a: String, b: String) -> String:
+	var la := a.split("\n")
+	var lb := b.split("\n")
+	var only_a: Array[String] = []
+	var only_b: Array[String] = []
+	for l in la:
+		if not lb.has(l):
+			only_a.append(l)
+	for l in lb:
+		if not la.has(l):
+			only_b.append(l)
+	return " | parts changed by the reload: %d before-only %s, %d after-only %s" % [only_a.size(), str(only_a.slice(0, 3)),
+		only_b.size(), str(only_b.slice(0, 3))]
 
 
 func _plan() -> Array:
@@ -706,12 +893,25 @@ func _finale() -> void:
 func _finish() -> void:
 	_log("taps through the 3D scene: %d, logic fallbacks: %d (%d of them for models not built yet)" % [taps_ok,
 		taps_fallback, fallback_missing])
+	if reload_every > 0:
+		_log("%s reload checks (every %d steps, %d tappable parts compared each time): %d, failed: %d" % [
+			"✓" if _reload_failed == 0 else "✗", reload_every, _sig_parts, _reload_checks, _reload_failed])
+	var small: Array[String] = []
+	for k: String in _sizes:
+		var mm: Vector2 = _sizes[k]
+		if maxf(mm.x, mm.y) < MIN_TAP_MM:
+			small.append("%s %.1f x %.1f mm" % [k, mm.x, mm.y])
+	small.sort()
+	_log("tap targets (visible part, phone61 scale): %d, under %.0f mm on both sides: %d" % [_sizes.size(), MIN_TAP_MM, small.size()])
+	for k in small:
+		_log("  small: " + k)
 	for p: String in missing_by_puzzle:
 		var l: Array = missing_by_puzzle[p]
 		_log("  waiting for models: %s — %d actions (e.g. %s)" % [p, l.size(), l[0]])
 	var f := FileAccess.open(out_dir + "/playthrough_ch3_report.txt", FileAccess.WRITE)
 	f.store_string("\n".join(report) + "\n")
 	SaveSystem.delete_game()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveSystem.profile_path))
 	var ok: bool = logic.state["complete"] and not report.any(func(l: String) -> bool: return l.begins_with("✗"))
 	var qa_exit: int = 0 if ok and taps_fallback == 0 else 1
 	print("QA_DONE exit=%d" % qa_exit) # tools/qa_run.sh: the run finished even if the process then hangs on exit

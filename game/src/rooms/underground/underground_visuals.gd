@@ -97,6 +97,7 @@ func _ready() -> void:
 	_build_evidence()
 	_build_echoes()
 	_build_fans()
+	_build_prism_taps()
 	_build_arcs()
 	_build_rising()
 	_own_bulb_material()
@@ -435,6 +436,19 @@ func _build_fans() -> void:
 		room.add_child(mi)
 		_cull_tag(mi, "N")
 		_fans.append(mi)
+
+
+## A prism with its turntable is 9 x 11 cm, which is 5 to 6 mm on a phone from the Prism bench view (the whole bench, the
+## receptors and the apron buttons share one frame), and the apron buttons are 2 mm. A 0.30 m cube around each prism is its
+## tap target: a tap steps the prism and a drag turns it (the buttons stay for the precise case). QA, 2026-10-10.
+const PRISM_TAP := Vector3(0.30, 0.30, 0.30)
+
+
+func _build_prism_taps() -> void:
+	for which: String in ["p", "q"]:
+		var n := part("prism_bench", "IA_prism_" + which) as Node3D
+		if n != null:
+			room.call("add_tap_area", n, PRISM_TAP, "", "IA_prism_" + which, Vector3(0.0, 0.10, 0.0))
 
 
 func _fan_origin(which: String) -> Vector3:

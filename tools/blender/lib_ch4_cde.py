@@ -74,12 +74,14 @@ def bm_polar_box(bm, r0, r1, a_deg, t_w, y0, y1, bottom=False):
         corners.append(rad * rr + tan * tt)
     lo = [bm.verts.new((c.x, y0, c.z)) for c in corners]
     hi = [bm.verts.new((c.x, y1, c.z)) for c in corners]
+    # (r, t) is a left-handed frame seen from above, so the loop (r0,-h) (r1,-h) (r1,+h) (r0,+h) runs CLOCKWISE seen from above:
+    # the outward-facing sides are (j, i, hi_i, hi_j), the top is the reversed hi loop and the bottom is the lo loop
     for i in range(4):
         j = (i + 1) % 4
-        bm.faces.new((lo[i], lo[j], hi[j], hi[i]))
-    bm.faces.new(hi)
+        bm.faces.new((lo[j], lo[i], hi[i], hi[j]))
+    bm.faces.new(list(reversed(hi)))
     if bottom:
-        bm.faces.new(list(reversed(lo)))
+        bm.faces.new(lo)
 
 
 def bm_bar(bm, a, b, w, ref=(0.0, 1.0, 0.0), caps=True):
@@ -122,7 +124,8 @@ def bm_boss(bm, c, normal, r, h, sides=6, phase=0.0):
 
 
 def bm_dome(bm, c, r, h, segs=5, normal=(0.0, 1.0, 0.0)):
-    """A low rivet head on a surface with outward `normal`: base ring r, shoulder 0.62 r at 0.85 h, flat cap. 3 * segs - 2 + segs tris."""
+    """A low rivet head on a surface with outward `normal`: base ring r, shoulder 0.62 r at 0.85 h, flat cap. 3 * segs - 2 tris. Faces
+    are oriented outward (the cap looks along `normal`)."""
     n = Vector(normal).normalized()
     ref = Vector((0, 0, 1)) if abs(n.z) < 0.9 else Vector((1, 0, 0))
     u = n.cross(ref).normalized()
@@ -133,11 +136,26 @@ def bm_dome(bm, c, r, h, segs=5, normal=(0.0, 1.0, 0.0)):
         d = u * math.cos(a) + w * math.sin(a)
         base.append(bm.verts.new(Vector(c) + d * r))
         top.append(bm.verts.new(Vector(c) + d * (0.62 * r) + n * (0.85 * h)))
+    faces = []
     for i in range(segs):
         j = (i + 1) % segs
-        bm.faces.new((base[i], base[j], top[j], top[i]))
-    bm.faces.new(top)
+        faces.append(bm.faces.new((base[i], base[j], top[j], top[i])))
+    faces.append(bm.faces.new(top))
+    cap = faces[-1]
+    cap.normal_update()
+    if cap.normal.dot(n) < 0.0:
+        for f in faces:
+            f.normal_flip()
     return top
+
+
+def bm_face(bm, verts, ref):
+    """A face whose normal looks along `ref` (flipped if it does not)."""
+    f = bm.faces.new(verts)
+    f.normal_update()
+    if f.normal.dot(Vector(ref)) < 0.0:
+        f.normal_flip()
+    return f
 
 
 def bm_revolve(bm, prof, nseg, centre=(0.0, 0.0), phase_deg=0.0, a0=0.0, a1=360.0, closed=False):
@@ -154,6 +172,8 @@ def bm_revolve(bm, prof, nseg, centre=(0.0, 0.0), phase_deg=0.0, a0=0.0, a1=360.
         rings.append(ring)
     for k in range(len(rings) - (0 if closed else 1)):
         ra, rb = rings[k], rings[(k + 1) % len(rings)]
+        if (ra[0].co - rb[0].co).length < 1e-9 and (ra[-1].co - rb[-1].co).length < 1e-9:
+            continue                                  # a repeated profile point (a closing duplicate): no zero-area faces
         for i in range(nseg):
             j = (i + 1) % cnt
             try:
@@ -198,8 +218,8 @@ def toothed_ring(name, R, N, mat, y0=0.12, y1=0.50, root=0.30, tip=0.385, w_root
 
     # ---- (a) the inner ring
     bi = bmesh.new()
-    prof = [(Rf, y1), (R - inner + 0.06, y1), (R - inner, y1 - 0.045), (R - inner, yb + 0.07),
-            (R - inner + 0.014, yb + 0.06), (R - inner + 0.014, yb - 0.02), (R - inner, yb - 0.03), (R - inner, y0)]
+    prof = [(Rf, y1), (R - inner + 0.06, y1), (R - inner, y1 - 0.045), (R - inner, yb + 0.03),
+            (R - inner + 0.014, yb + 0.02), (R - inner + 0.014, yb - 0.05), (R - inner, yb - 0.06), (R - inner, y0)]
     bm_revolve(bi, prof, N, phase_deg=0.5 * dA)
     fix_dir(bi, up=True)
     # notch floors: the inner ring's outer wall, only where a notch is
@@ -290,12 +310,14 @@ def toothed_ring(name, R, N, mat, y0=0.12, y1=0.50, root=0.30, tip=0.385, w_root
             base = rad * (R - 0.30)
             tipp = rad * (R + 0.0)
             pts = [base - tan * 0.15, base + tan * 0.15, tipp]
+            ctr = (pts[0] + pts[1] + pts[2]) / 3.0
             lo = [extra.verts.new((p.x, y1 - 0.002, p.z)) for p in pts]
             hi = [extra.verts.new((p.x, y1 + 0.022, p.z)) for p in pts]
             for i in range(3):
                 j = (i + 1) % 3
-                extra.faces.new((lo[j], lo[i], hi[i], hi[j]))
-            extra.faces.new(hi)
+                mid = (pts[i] + pts[j]) / 2.0 - ctr
+                bm_face(extra, (lo[i], lo[j], hi[j], hi[i]), (mid.x, 0.0, mid.z))
+            bm_face(extra, hi, (0.0, 1.0, 0.0))
     if rivets:
         for k in range(N):
             c = (k + 0.5) * dA
@@ -306,7 +328,6 @@ def toothed_ring(name, R, N, mat, y0=0.12, y1=0.50, root=0.30, tip=0.385, w_root
                 bm_dome(extra, pol(R - 0.22, c, y1), 0.016, 0.014, segs=5)
     objs = [ring_in, seg]
     if len(extra.verts):
-        bmesh.ops.recalc_face_normals(extra, faces=list(extra.faces))
         objs.append(K.obj_from_bm(name + "_extra", extra, mat))
     else:
         extra.free()
@@ -429,8 +450,9 @@ def qa_sprites() -> None:
 def qa_reliquary(skip=(), sprites=False) -> None:
     """The island stand-in plus every group D GLB that exists (except `skip`) at the island origin (0, 2.5, 0)."""
     qa_island()
+    hide = [h for h in os.environ.get("MR_HIDE", "").split(",") if h]          # MR_HIDE=cage,glass_tower hides those in a closeup
     for name in ("core_crystal", "cage", "glass_tower", "cradle", "heart_drawer"):
-        if name not in skip and os.path.exists(K.V.model_glb(name)):
+        if name not in skip and name not in hide and os.path.exists(K.V.model_glb(name)):
             C.qa_import(name, (0.0, 2.5, 0.0), 0.0, prefix=f"qa_{name}_")
     if sprites:
         qa_sprites()
@@ -440,3 +462,11 @@ def qa_place_island(objs) -> None:
     """Put the freshly built objects of the model under test at the island origin."""
     K.qa_place(list(objs), (0.0, 2.5, 0.0), 0.0, name="qa_island_root")
     M.refresh()
+
+
+def vis(prefix, on) -> None:
+    """QA: show / hide (render) every object whose name starts with `prefix` (a qa_import prefix such as qa_cage_)."""
+    for o in bpy.data.objects:
+        if o.name.startswith(prefix):
+            o.hide_render = not on
+            o.hide_viewport = not on
