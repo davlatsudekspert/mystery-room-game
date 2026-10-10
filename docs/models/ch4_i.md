@@ -11,7 +11,7 @@ blender -b --factory-startup -P tools/blender/models/<name>.py [-- --no-render] 
 ```
 
 Everything is **ONE closed mesh per pose or figure with ONE material slot, `M_Echo`** (the scene puts the `echo.gdshader` ShaderMaterial on it as `material_override`), smooth normals, box UVs, origin on the floor between the feet, the figure faces **Godot +Z**, **−X = its right**.
-Checked on every GLB: `check_glb_names.py` passes; a pure-numpy re-read of the GLBs (`volcheck`: welded edges used exactly twice, signed volume > 0 = outward faces, material `M_Echo` only) reports **0 problems on all 31 meshes**.
+Checked on every GLB: `check_glb_names.py` passes; a pure-numpy re-read of the GLBs (`python3 -I qa/blender/ch4/echo_check.py game/assets/models/echo_*.glb`: welded edges used exactly twice, signed volume > 0 = outward faces, material `M_Echo` only) reports **0 problems on all 36 meshes**.
 The review renders show each figure with the in-game look (`game/src/fx/echo.gdshader` re-created in Cycles: back faces culled, additive fresnel rim, scanlines) on a near-black background, plus a context render from a contract camera.
 
 ## Summary
@@ -55,6 +55,8 @@ The review renders show each figure with the in-game look (`game/src/fx/echo.gds
     There is no rig: the three key poses are enough for the 1 – 2 m between the Core and the cradle.
 - **Hair, heads and the face.** The detailed figures (`echo_strand_desk`, both Leylas, the three technicians, the clerk) reuse the Chapter 2 / 3 heads (Strand's beard and fringe, Leyla's swept-back hair and bun a little older, the scientists' bob and side-parted hair, the welder's crop) at 1,300 – 1,850 triangles: a face reads as a face at 2 m but it is coarse
   (on Leyla a ring-shaped crease on the forehead shows in the fresnel look; it is inherited from the Chapter 3 face pipeline and is in the Chapter 3 originals too). The low-poly figures have no faces at all (a skull, a jaw, a nose, hair and headgear shapes).
+- **Imported node names (checked with `godot --headless --path game -s qa/blender/ch4/echo_check.gd`).** All eight files load; every mesh has one surface and sits at the identity transform. In the single-figure files the mesh node carries the file's name (`echo_strand_desk`, `echo_tech_panel`, `echo_clerk_post`),
+  so Godot names the imported ROOT `<file>2` (`echo_strand_desk2`): find the mesh by its name below the root (`ModelUtil.find(inst, "echo_strand_desk")`), not the root. The multi-pose files keep their pose names (`pose_a`, `welder_c`, `pose_walk_b`, `tech_a`, …) and the empties theirs (`grip_right`, `rim_touch_tech_a`, `lens_mount_seat`, `lever_grip`, `dial_touch`, `chalk_target`).
 - **No texture, no vertex colour, no skeleton.** The scene's shader is the whole look. `M_Echo` must be overridden (`material_override`): the slot has no `.tres` of its own (`M_Echo_Fallback.tres` is the placeholder).
 - Nothing tapped is in these meshes: the kept echoes (`tech_panel`, `tech_wheels`, `clerk_post`, `leyla_lift`) need the scene's tap areas (about 0.9 x 1.7 x 0.9 around the figure); the figures have no colliders.
 
@@ -90,7 +92,7 @@ Grip check (`lib_ch4_echo.grip_report`, samples along the lever's axis ±6 cm): 
 
 ## echo_leyla_1998_lift.glb (7,400 tris) and echo_leyla_1998_lens.glb (15,778 tris)
 
-Leyla in 1998, about 45: the face lineage of `echo_leyla_standing` a little older, a **field coat to mid-thigh with a stand collar, a belt and four patch pockets**, trousers and field boots (the functions of `echo_leyla_1998.py`, imported). `pose_lift` 7,400 (bounds (−0.321, 0, −0.159) … (0.267, 1.677, 0.582) in the build frame): torso turned 16°, head 19° to her left, the left arm raised and pointing at the chalk.
+Leyla in 1998, about 45: the face lineage of `echo_leyla_standing` a little older, a **field coat to mid-thigh with a stand collar, a belt and four patch pockets**, trousers and field boots (the functions of `echo_leyla_1998.py`, imported). `pose_lift` 7,400 (bounds (−0.267, 0, −0.159) … (0.321, 1.677, 0.582)): torso turned 16°, head 19° to her left, the left arm raised and pointing at the chalk.
 The lens file: three poses of about 5,300 (head 1,700, body 2,750, hands 320 each): `pose_walk` 5,234 (left foot forward, the right heel raised, the lens on the right palm at the chest, the left arm swinging back), `pose_walk_b` 5,236 (the opposite stride, the left arm forward), `pose_seat` 5,308 (the right arm out with the lens at the cradle, the left palm cupped beside it).
 The palm under the lens: the nearest surface is 0.2 cm from the lens's lowest rim point. Bounds: `pose_walk` (−0.314, 0, −0.369) … (0.252, 1.642, 0.437), `pose_walk_b` (−0.307, 0, −0.23) … (0.241, 1.642, 0.476), `pose_seat` (−0.328, 0, −0.186) … (0.222, 1.672, 0.528).
 
@@ -113,4 +115,4 @@ Contacts: `echo_tech_panel` grip report: four of five samples along the stem are
 ## Files and commands
 
 `game/assets/models/{echo_crowd,echo_named,echo_strand_desk,echo_leyla_1998_lift,echo_leyla_1998_lens,echo_tech_panel,echo_tech_wheels,echo_clerk_post}.glb(+.import)`, `qa/blender/ch4/echo_*.png`, `tools/blender/models/echo_{crowd,named,strand_desk,leyla_1998_lift,leyla_1998_lens,tech_panel,tech_wheels,clerk_post}.py`,
-`tools/blender/lib_ch4_echo.py`, `tools/blender/lib_ch4_echo_staff.py`, `tools/blender/build_lists/ch4_i.txt`. Rebuild: `tools/blender/build_all.sh` (the three heaviest scripts take 1 – 2 minutes each with renders, 30 – 60 s with `--no-render`); re-import: `godot --headless --path game --import`.
+`tools/blender/lib_ch4_echo.py`, `tools/blender/lib_ch4_echo_staff.py`, `tools/blender/build_lists/ch4_i.txt`, `qa/blender/ch4/echo_check.py` (GLB geometry check) and `qa/blender/ch4/echo_check.gd` (Godot load check). Rebuild: `tools/blender/build_all.sh` (the three heaviest scripts take 1 – 2 minutes each with renders, 30 – 60 s with `--no-render`); re-import: `godot --headless --path game --import`.

@@ -508,16 +508,18 @@ logbook 0.20 × 0.14 × 0.025, flat), `pocket_watch` (Ø 0.05, a brass hunter ca
 paper, flat), `leyla_parcel` (a brown-paper parcel with string, 0.20 × 0.12 × 0.08, flat). Existing: `crystal_lens`, `key_strand`,
 `key_leyla`.
 
-Echoes (`lib_echo`, one slot `M_Echo`, poses as root objects, origin between the feet, facing +Z):
+Echoes (`lib_echo`, one slot `M_Echo`, poses as root objects, origin between the feet, facing +Z; **as built, §13.11 and `ch4_i.md`**):
 - `echo_crowd` (≤ 1.4k file, 450 per pose, 3 poses `pose_a/b/c`): a simplified standing figure; the code draws **33** with one `MultiMesh`
   and switches the pose per minute.
-- `echo_named` (≤ 29k file, 1.2k per figure per pose, 3 poses): **8** detailed figures as one `MultiMesh` per pose (foreground).
+- `echo_named` (≤ 29k file, 1.2k per mesh, **24 meshes `<who>_<a|b|c>`**: 8 figures x 3 poses, `<who>` = `operator`, `welder`, `archivist`, `scientist_f`,
+  `scientist_m`, `technician_f`, `technician_m`, `clerk`): the **8** detailed foreground figures (merged per pose by the code, not a `MultiMesh`: one mesh per `MultiMesh`).
   Positions of the 41: 14 on the apron r 12.6, 11 at r 9.5, 8 at r 7.5, 5 at r 5.5, 3 at r 3.8, evenly spaced and staggered, all
   facing the Core; the 8 named ones are the ones nearest the catwalk.
-- `echo_strand_desk` (≤ 5k): Strand reaching for the master lever; origin on `echo_mount_strand`; contact point: right grip at
-  (−0.15, 1.12, 0.62) relative to the figure (lever grip lifted or down).
-- `echo_leyla_1998` (≤ 16k file, ≤ 8k per pose): **`pose_lift`** (1998, at the lift, looks at the chalk) and **`pose_walk`** /
-  **`pose_seat`** (walks from the Core to the cradle and seats the lens at (0, 3.82, 0.62); right hand at (−0.10, 1.35, 0.45)).
+- `echo_strand_desk` (≤ 5k): Strand reaching for the master lever; origin on `echo_mount_strand`; right grip at (−0.16, 1.142, 0.443) relative to
+  the figure (the lever DOWN; the contract's first number (−0.15, 1.12, 0.62) did not match the built lever), empty `grip_right`.
+- `echo_leyla_1998_lift` (≤ 8k): **`pose_lift`** (1998, at the lift, looks at the chalk). `echo_leyla_1998_lens` (≤ 16k file, ≤ 8k per pose): **`pose_walk`**, **`pose_walk_b`**
+  and **`pose_seat`** (walks from the Core to the cradle and seats the lens: lens centre (−0.10, 1.3135, 0.45) = the cradle's `lens_mount` for an origin at world (−0.10, 2.5, 1.0766), yaw 180).
+  (`echo_leyla_1998.glb` is the Chapter 3 echo and is not touched.)
 - `echo_tech_panel`, `echo_clerk_post` (≤ 6k each), `echo_tech_wheels` (≤ 12k file, two figures `tech_a`, `tech_b`, 6k each).
 
 ## 10. Variants: evidence rendered from the state (no answer baked)
@@ -674,3 +676,12 @@ Order: A first (everything else is QA-rendered inside `shell_hall`); then B, C, 
       (leather / paper / brass; kraft / paper / ink), the documented exception to "≤ 2 materials" (3 surfaces). `ItemDB` must point `tower_key_1..4` at `tower_key_1` … `tower_key_4` (there is no
       `tower_key.glb`) and list `reverse_pawl` and `leyla_parcel` as FLAT; the standing `pocket_watch` needs Euler (−90°, 0, 0) on the heart drawer's flat `watch_mount` (see `ch4_h.md`).
     - **Marks.** Extruding `lib_ch3_symbols.loops("mark")` makes Blender fill half of the ring's hole; every Chapter 4 relief mark of groups F–H is built by `lib_ch4_mark.mark_solids` (an annulus and a bar).
+11. **Built-model changes found while modelling** (group I; the measured page `ch4_i.md` has the numbers):
+    - **`echo_leyla_1998` is two files.** `echo_leyla_1998.glb` already exists (Chapter 3: `pose_touch_0..2`, `pose_kneel`, `pose_offer`) and is not overwritten: the Chapter 4 Leyla is `echo_leyla_1998_lift` (`pose_lift`) and `echo_leyla_1998_lens`
+      (`pose_walk`, `pose_walk_b`, `pose_seat`; the third pose is the other stride of the walk, still inside the 16k file cap).
+    - **`echo_named` is 24 root meshes** (`<who>_a|b|c`), and **one `MultiMesh` cannot hold eight different figures** (§9's "one `MultiMesh` per pose"): the code merges the eight meshes of a pose into one mesh (one draw per pose) or draws eight meshes. The three poses mean
+      a = at work, b = the next task, c = 03:17 (the flash: eyes shielded); the crowd's `pose_a/b/c` the same.
+    - **Contact points.** The lever grip (DOWN) is at figure (−0.160, 1.142, 0.443), not (−0.15, 1.12, 0.62) (0.18 nearer to Strand); `echo_tech_panel` grips the main lever's PULLED stem at (−0.04, 0.75, 0.50) and the figure's world position is **(−0.8, 0, 13.0)**
+      (panel0 is at yaw 180: the mount's panel-local x +0.8 is world −0.8). **The technicians cannot reach the wheels from `echo_mount_wheels_1/2`** (the wheel axis is 0.65 ahead and 0.70 to the side): both are posed reaching, the fingertips 2 – 4 cm from the rim.
+      The lens is carried on the right palm and seated from the player's side of the cradle (origin world (−0.10, 2.5, 1.0766), yaw 180): from the Core side she would stand inside the pedestal.
+    - **Correction to `ch4_g.md`:** the clerk's world position is **(13.05, 0.03, −2.95)**, yaw 90 (x = 12.7 − z_local = 12.7 + 0.35), not (13.55, …): 13.55 is inside the post station (front plane x = 13.45).
