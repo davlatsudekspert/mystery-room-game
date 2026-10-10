@@ -233,6 +233,43 @@ func test_settings_panel_fits_the_screen() -> void:
 	_reset_screen()
 
 
+## HUD geometry at Normal and Extra large on the owner's iPhone and the narrowest 16:9 phone: the inventory
+## column, the bottom banners and the corner buttons never overlap each other, and the banners keep a usable width.
+func test_hud_elements_do_not_collide() -> void:
+	for dev: Dictionary in [IPHONE, MAX_PHONE]:
+		for user in [1.0, 1.5]:
+			_set_screen(dev, float(user))
+			var tag := "hud %s x%.2f" % [dev["size"], user]
+			var canvas: Vector2 = UITheme.metrics()["canvas"]
+			var safe := UITheme.safe_margins()
+			var pad := UITheme.HUD_PAD
+			var btn := UITheme.target(UITheme.HUD_BTN_PX)
+			var back := UITheme.target(UITheme.HUD_BACK_PX)
+			var col_top := safe.y + pad + back + 16.0
+			var column := Rect2(safe.x + pad, col_top, UITheme.hud_column_width(), canvas.y - safe.w - pad - col_top)
+			var pause := Rect2(canvas.x - safe.z - pad - btn, canvas.y - safe.w - pad - btn, btn, btn)
+			var hint := Rect2(canvas.x - safe.z - pad - btn, safe.y + pad, btn, btn)
+			var back_r := Rect2(safe.x + pad, safe.y + pad, back, back)
+			var band_w := UITheme.hud_text_width()
+			var band := Rect2((canvas.x - band_w) * 0.5, canvas.y - safe.w - pad - 300.0, band_w, 300.0) # a tall message
+			check(not column.intersects(band), "%s: the inventory column %s overlaps the message band %s" % [tag, column, band])
+			check(not pause.intersects(band), "%s: the pause button overlaps the message band" % tag)
+			check(not column.intersects(back_r) and not column.intersects(pause), "%s: the column overlaps a corner button" % tag)
+			check(not hint.intersects(back_r), "%s: hint and back overlap" % tag)
+			check(band_w >= 600.0, "%s: the message band is only %.0f px wide" % [tag, band_w])
+			check(column.size.y >= 3.0 * UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM), "%s: the column has room for fewer than three slots (%.0f px)" % [tag, column.size.y])
+			# the longest view title fits the top band in two lines of display small caps
+			var caps := UITheme.caps_font(true, 2)
+			var fs := UITheme.size(30)
+			var top_w := canvas.x - 2.0 * (maxf(safe.x, safe.z) + pad + maxf(btn, back) + 20.0) - 64.0
+			for loc in ["en", "ru", "uz"]:
+				TranslationServer.set_locale(loc)
+				for key in ["obj.drawing", "obj.poster", "obj2.chart", "obj.chalkboard"]:
+					var w := caps.get_string_size(tr(key), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+					check(w <= top_w * 2.0 * 0.9, "%s [%s]: title «%s» needs more than two lines (%.0f px in %.0f)" % [tag, loc, tr(key), w, top_w])
+	_reset_screen()
+
+
 func test_safe_area_insets() -> void:
 	# a left camera cutout of 120 device px on a 1920 px wide screen = 120 canvas px
 	_set_screen({"size": Vector2i(1920, 1080), "dpi": 400.0, "safe": Rect2i(120, 0, 1800, 1050)}, 1.0)

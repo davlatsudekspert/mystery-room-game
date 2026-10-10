@@ -488,10 +488,10 @@ static func dialog(host: Control, design_w: float, title_key: String = "", title
 	p.custom_minimum_size = Vector2(panel_width(design_w), 0)
 	center.add_child(p)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 18)
+	v.add_theme_constant_override("separation", 14)
 	p.add_child(v)
 	var body := VBoxContainer.new()
-	body.add_theme_constant_override("separation", 18)
+	body.add_theme_constant_override("separation", 14)
 	if title_key != "":
 		var head := VBoxContainer.new() # title over a gold rule; scrolls with the body (a short screen gives the room to the content)
 		head.add_theme_constant_override("separation", 2)

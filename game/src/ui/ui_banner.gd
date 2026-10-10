@@ -134,7 +134,7 @@ func fit(max_w: float) -> void:
 	_title_rect = Rect2()
 	if title_label.visible:
 		title_label.position = Vector2(roundf(cx - tw * 0.5), y)
-		title_label.size = Vector2(ceilf(tw), ceilf(th) + 2.0)
+		_resize(title_label, Vector2(ceilf(tw), ceilf(th) + 2.0))
 		_title_rect = Rect2(title_label.position, title_label.size)
 		y += th
 	_rule_y = -1.0
@@ -143,11 +143,19 @@ func fit(max_w: float) -> void:
 		y += rule_gap * 2.0 + 2.0
 	if subtitle_label.visible:
 		subtitle_label.position = Vector2(roundf(cx - sw * 0.5), y)
-		subtitle_label.size = Vector2(ceilf(sw), ceilf(sh) + 2.0)
+		_resize(subtitle_label, Vector2(ceilf(sw), ceilf(sh) + 2.0))
 	if has_icon:
 		icon.position = Vector2(pad_x, roundf((h_total - icon_px) * 0.5))
 		icon.size = Vector2(icon_px, icon_px)
 	queue_redraw()
+
+
+## Sets a label's size in two steps: a wrapping label's minimum height is computed from its current width, so
+## setting the width first lets the height take the value measured for that width (not one for the old width).
+static func _resize(l: Label, s: Vector2) -> void:
+	l.size = Vector2(s.x, l.size.y)
+	l.size = s
+	l.size = s
 
 
 func _grad(r: Rect2, from: Color, to: Color) -> void:

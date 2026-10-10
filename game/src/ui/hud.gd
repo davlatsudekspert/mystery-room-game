@@ -415,6 +415,7 @@ func message(text: String, seconds: float = 2.8) -> void:
 		_message.text = text
 	_message.modulate.a = 1.0 # (QA scripts blank the label itself to detect the next message as new)
 	_stack_bottom()
+	_yield_overlap(_cap_plate, _msg_plate)
 	if _msg_tween and _msg_tween.is_valid():
 		_msg_tween.kill()
 	_msg_tween = create_tween()
@@ -426,12 +427,28 @@ func message(text: String, seconds: float = 2.8) -> void:
 func caption(text: String, seconds: float = 3.5) -> void:
 	_caption_line.text = text
 	_stack_top()
+	_yield_overlap(_msg_plate, _cap_plate)
 	if _cap_tween and _cap_tween.is_valid():
 		_cap_tween.kill()
 	_cap_tween = create_tween()
 	_cap_tween.tween_property(_cap_plate, "modulate:a", 1.0, 0.25)
 	_cap_tween.tween_interval(seconds)
 	_cap_tween.tween_property(_cap_plate, "modulate:a", 0.0, 0.6)
+
+
+## Large text on a short screen: when the banner that is appearing (`newer`) would overlap one still showing
+## (`older`), the older one fades out at once. The newer line is the one the player is waiting for.
+func _yield_overlap(older: UIBanner, newer: UIBanner) -> void:
+	if not older.visible or older.modulate.a <= 0.05 or not newer.visible:
+		return
+	if not Rect2(older.position, older.size).intersects(Rect2(newer.position, newer.size)):
+		return
+	var tw := create_tween()
+	tw.tween_property(older, "modulate:a", 0.0, 0.2)
+	if older == _cap_plate and _cap_tween and _cap_tween.is_valid():
+		_cap_tween.kill()
+	elif older == _msg_plate and _msg_tween and _msg_tween.is_valid():
+		_msg_tween.kill()
 
 
 func set_view(id: String, is_root: bool, caption_key: String) -> void:
@@ -606,12 +623,12 @@ func show_hint() -> void:
 # ====================================================================== pause
 func show_pause() -> void:
 	var o := _open_overlay(0.6)
-	var d := UITheme.dialog(o, 620, "ui.pause", 50)
+	var d := UITheme.dialog(o, 620, "ui.pause", 46)
 	var v: VBoxContainer = d["body"]
-	v.add_theme_constant_override("separation", 14)
+	v.add_theme_constant_override("separation", 10)
 	(d["footer"] as Control).visible = false
 	var ch := Chapters.get_chapter(GameState.chapter_id)
-	var sub := UITheme.label((tr("chapter.label") % int(ch.get("number", 1))) + " · " + tr(str(ch.get("title", ""))), 24, UITheme.MUTED)
+	var sub := UITheme.label((tr("chapter.label") % int(ch.get("number", 1))) + " · " + tr(str(ch.get("title", ""))), 22, UITheme.MUTED)
 	sub.add_theme_font_override("font", UITheme.caps_font(false, 1))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)

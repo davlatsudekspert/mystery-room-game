@@ -79,9 +79,9 @@ func _build() -> void:
 	# --- header: the title over a gold rule with a diamond
 	_header = VBoxContainer.new()
 	_header.add_theme_constant_override("separation", 0)
-	_header.add_child(UITheme.title("ui.settings", 50))
-	_header.add_child(UIOrnament.rule(0.0, 26.0))
-	_header.add_child(_gap(10.0))
+	_header.add_child(UITheme.title("ui.settings", 46))
+	_header.add_child(UIOrnament.rule(0.0, 24.0))
+	_header.add_child(_gap(6.0))
 	v.add_child(_header)
 	# --- body: the sections, in two columns when there is room, scrolling under edge fades when short
 	_scroll_host = Control.new()
@@ -111,13 +111,13 @@ func _build() -> void:
 	# --- footer: a hairline, then the actions; wraps onto two lines on a narrow screen instead of overflowing
 	var foot := VBoxContainer.new()
 	foot.add_theme_constant_override("separation", 0)
-	foot.add_child(_gap(14.0))
+	foot.add_child(_gap(10.0))
 	var line := ColorRect.new()
 	line.color = UITheme.HAIRLINE
 	line.custom_minimum_size = Vector2(0, 1)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	foot.add_child(line)
-	foot.add_child(_gap(14.0))
+	foot.add_child(_gap(10.0))
 	var actions := UITheme.button_row(28)
 	var restore := UITheme.text_button("ui.restore")
 	restore.pressed.connect(func() -> void:
