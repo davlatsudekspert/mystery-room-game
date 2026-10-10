@@ -14,6 +14,11 @@
 # Secrets (owner, 2026-10-08): IOS_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64 (API key with the
 # Admin role: cloud-managed distribution signing requires it). asc_check.py normalises the .p8 (the secret
 # holds the key body without its BEGIN/END lines) and never prints it. Details: docs/release/IOS_TESTFLIGHT.md
+#
+# In-app purchases (docs/MONETIZATION.md): the StoreKit 2 plugin (hrk4649/godot_ios_plugin_iap 0.4.0, pinned by
+# SHA-256) and the In-App Purchase capability go into the project only for store_sandbox builds or once
+# REAL_PAYMENTS_ENABLED = true; the Xcode-project check enforces both ways. A store_sandbox build is for TestFlight
+# only (TestFlight purchases are sandbox and never charged): never submit one for App Review.
 name: iOS build
 
 on:
@@ -27,6 +32,10 @@ on:
         description: "Tester build: add the custom feature beta_unlock (paid chapters open, no payment). MUST be false for an App Store release build"
         type: boolean
         default: true
+      store_sandbox:
+        description: "TestFlight purchase test: StoreKit plugin + custom feature store_sandbox (sandbox purchases, never charged). Needs beta_unlock=false. Never submit it for review"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -47,7 +56,19 @@ jobs:
     outputs:
       build_number: ${{ steps.gate.outputs.next_build }}
       short_version: ${{ steps.version.outputs.short_version }}
+      storekit: ${{ steps.store.outputs.storekit }}
     steps:
+      # a purchase test build must not open the paid chapters for free, or the testers cannot test the purchase
+      - name: Inputs
+        env:
+          BETA_UNLOCK: ${{ inputs.beta_unlock }}
+          STORE_SANDBOX: ${{ inputs.store_sandbox }}
+        run: |
+          if [ "$STORE_SANDBOX" = "true" ] && [ "$BETA_UNLOCK" = "true" ]; then
+            echo "::error::store_sandbox tests the purchase: run it with beta_unlock = false"; exit 1
+          fi
+          echo "beta_unlock=$BETA_UNLOCK store_sandbox=$STORE_SANDBOX upload_to_testflight=${{ inputs.upload_to_testflight }}"
+
       - uses: actions/checkout@v5
 
       - name: Install PyJWT
@@ -91,12 +112,31 @@ jobs:
       - name: Import project and run tests
         run: tools/run_tests.sh
 
+      # StoreKit goes into the build for store_sandbox (TestFlight purchase tests) or once REAL_PAYMENTS_ENABLED is
+      # true. The repository never carries the plugin, so other builds cannot link it.
+      - name: StoreKit decision and plugin
+        id: store
+        env:
+          STORE_SANDBOX: ${{ inputs.store_sandbox }}
+        run: |
+          real=false
+          if grep -Eq '^const REAL_PAYMENTS_ENABLED := true' game/src/autoload/premium.gd; then real=true; fi
+          storekit=false
+          if [ "$STORE_SANDBOX" = "true" ] || [ "$real" = "true" ]; then storekit=true; fi
+          echo "REAL_PAYMENTS_ENABLED=$real store_sandbox=$STORE_SANDBOX -> StoreKit in this build: $storekit"
+          echo "storekit=$storekit" >> "$GITHUB_OUTPUT"
+          if [ "$storekit" = "true" ]; then
+            python3 tools/store/add_store_plugins.py --game game --ios
+          fi
+
       - name: Export the Xcode project (Godot, project only)
         id: version
         env:
           TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
           BUILD_NUMBER: ${{ steps.gate.outputs.next_build }}
           BETA_UNLOCK: ${{ inputs.beta_unlock }}
+          STORE_SANDBOX: ${{ inputs.store_sandbox }}
+          STOREKIT: ${{ steps.store.outputs.storekit }}
         # These edits change only the runner's checkout of export_presets.cfg; the repo preset stays as committed.
         run: |
           set -euo pipefail
@@ -106,9 +146,11 @@ jobs:
           sed -i "s/^application\/version=.*/application\/version=\"$BUILD_NUMBER\"/" export_presets.cfg
           # Tester builds: custom feature beta_unlock in the iOS preset only (Premium.tester_build() opens the paid
           # chapters; real payments stay disabled). An App Store release build must run with beta_unlock=false.
+          # store_sandbox: Premium uses StoreKit (sandbox on TestFlight) although REAL_PAYMENTS_ENABLED is false.
           FEATURES=""
-          if [ "$BETA_UNLOCK" = "true" ]; then
-            FEATURES="beta_unlock"
+          if [ "$BETA_UNLOCK" = "true" ]; then FEATURES="beta_unlock"; fi
+          if [ "$STORE_SANDBOX" = "true" ]; then FEATURES="${FEATURES:+$FEATURES,}store_sandbox"; fi
+          if [ -n "$FEATURES" ]; then
             # tester builds: the game's folder (logs/godot.log) shows in the Files app, so a tester can send the log
             sed -i "s/^user_data\/accessible_from_files_app=.*/user_data\/accessible_from_files_app=true/" export_presets.cfg
           fi
@@ -117,24 +159,30 @@ jobs:
           mv "$RUNNER_TEMP/presets.cfg" export_presets.cfg
           SHORT=$(grep -m1 '^application/short_version=' export_presets.cfg | cut -d'"' -f2)
           echo "short_version=$SHORT" >> "$GITHUB_OUTPUT"
-          echo "version $SHORT, build $BUILD_NUMBER, iOS custom_features=\"$FEATURES\""
-          echo "iOS build $SHORT ($BUILD_NUMBER): beta_unlock=$BETA_UNLOCK, upload_to_testflight=${{ inputs.upload_to_testflight }}" >> "$GITHUB_STEP_SUMMARY"
-          N=$(grep -c '^custom_features="beta_unlock"' export_presets.cfg || true)
-          [ "$N" = "$([ -n "$FEATURES" ] && echo 1 || echo 0)" ] || { echo "::error::custom_features edit did not hit exactly the iOS preset"; exit 1; }
+          echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
+          echo "version $SHORT, build $BUILD_NUMBER, iOS custom_features=\"$FEATURES\", StoreKit=$STOREKIT"
+          echo "iOS build $SHORT ($BUILD_NUMBER): beta_unlock=$BETA_UNLOCK, store_sandbox=$STORE_SANDBOX, StoreKit=$STOREKIT, upload_to_testflight=${{ inputs.upload_to_testflight }}" >> "$GITHUB_STEP_SUMMARY"
+          N=$(grep -c -x "custom_features=\"$FEATURES\"" export_presets.cfg || true)
+          if [ -n "$FEATURES" ]; then
+            [ "$N" = "1" ] || { echo "::error::custom_features edit did not hit exactly the iOS preset"; exit 1; }
+          fi
           mkdir -p ../build/ios
           # the .ipa path names the project; with export_project_only Godot writes build/ios/MysteryRoom.xcodeproj
           godot --headless --export-release "iOS" ../build/ios/MysteryRoom.ipa > "$RUNNER_TEMP/export.log" 2>&1 \
             || { grep -E "ERROR|WARNING" "$RUNNER_TEMP/export.log" | tail -40; exit 1; }
           grep -E "ERROR|WARNING" "$RUNNER_TEMP/export.log" | tail -20 || true
           ls -la ../build/ios
+          if [ "$STOREKIT" = "true" ]; then python3 ../tools/ios/add_iap_capability.py ../build/ios; fi
 
-      - name: Verify the Xcode project (bundle id, version, team, Info.plist, privacy manifest, icons)
+      - name: Verify the Xcode project (bundle id, version, team, Info.plist, privacy manifest, StoreKit, icons)
         env:
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          FEATURES: ${{ steps.version.outputs.features }}
+          STOREKIT: ${{ steps.store.outputs.storekit }}
         run: |
           python3 tools/ios/verify_xcode_project.py build/ios --bundle-id "$BUNDLE_ID" \
             --version "${{ steps.version.outputs.short_version }}" --build "${{ steps.gate.outputs.next_build }}" \
-            --custom-features "${{ inputs.beta_unlock && 'beta_unlock' || '' }}"
+            --custom-features "$FEATURES" $([ "$STOREKIT" = "true" ] && echo --storekit)
 
       - name: Pack the Xcode project
         run: tar -cf "$RUNNER_TEMP/ios-xcode-project.tar" -C build ios && ls -la "$RUNNER_TEMP/ios-xcode-project.tar"
@@ -153,6 +201,7 @@ jobs:
     env:
       BUILD_NUMBER: ${{ needs.xcode-project.outputs.build_number }}
       SHORT_VERSION: ${{ needs.xcode-project.outputs.short_version }}
+      STOREKIT: ${{ needs.xcode-project.outputs.storekit }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -264,6 +313,11 @@ jobs:
           # the App Store's "Languages" row is read from the bundle's .lproj folders (expected: en ru uz)
           echo "localizations: $(cd "$APP" && ls -d ./*.lproj | sed 's|^\./||; s|\.lproj$||' | tr '\n' ' ')"
           test -f "$APP/MysteryRoom.pck" && echo "game data: $(du -h "$APP/MysteryRoom.pck" | cut -f1)"
+          # StoreKit is linked exactly when the build carries the purchase plugin
+          SK=false
+          if otool -L "$APP/MysteryRoom" | grep -q "StoreKit.framework"; then SK=true; fi
+          echo "StoreKit.framework linked: $SK (expected $STOREKIT)"
+          [ "$SK" = "$STOREKIT" ] || { echo "::error::StoreKit linked=$SK, expected $STOREKIT"; exit 1; }
 
       - name: Remove the API key file
         if: always()

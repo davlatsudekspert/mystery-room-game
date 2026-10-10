@@ -9,6 +9,10 @@
 # versionCode = the workflow run number, so every build Play receives is higher than the last.
 # Never use "Re-run" on a run that already uploaded to Play: the re-run keeps the same versionCode and Play rejects it.
 # Owner checklist and the update procedure: docs/release/GOOGLE_PLAY_TESTING.md
+# In-app purchases (docs/MONETIZATION.md): Google Play Billing (GodotGooglePlayBilling 3.3.0, pinned by SHA-256) is
+# added to the Gradle build only when billing is included: store_sandbox, include_billing, or REAL_PAYMENTS_ENABLED
+# = true in game/src/autoload/premium.gd. Only then does the AAB declare com.android.vending.BILLING (plus the
+# INTERNET and ACCESS_NETWORK_STATE permissions of Google's billing libraries); the verify step enforces both ways.
 name: Android build
 
 on:
@@ -41,6 +45,14 @@ on:
         description: "Test build: testers can play paid chapters (custom feature beta_unlock). MUST be false for a store production build"
         type: boolean
         default: true
+      store_sandbox:
+        description: "Purchase test build: Play Billing + custom feature store_sandbox (the real Play purchase sheet). Needs release + beta_unlock=false. ONLY License testers are not charged"
+        type: boolean
+        default: false
+      include_billing:
+        description: "Add Play Billing (BILLING permission) with purchases still off. Needed once before Play Console lets you create full_game"
+        type: boolean
+        default: false
 
 env:
   GODOT_VERSION: "4.7.2"
@@ -64,6 +76,9 @@ jobs:
           BUILD_TYPE: ${{ inputs.build_type }}
           UPLOAD: ${{ inputs.upload_to_play }}
           VERSION_NAME: ${{ inputs.version_name }}
+          BETA_UNLOCK: ${{ inputs.beta_unlock }}
+          STORE_SANDBOX: ${{ inputs.store_sandbox }}
+          INCLUDE_BILLING: ${{ inputs.include_billing }}
           HAS_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
           HAS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
           HAS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS != '' }}
@@ -76,6 +91,14 @@ jobs:
           if [ "$UPLOAD" = "true" ] && [ "$BUILD_TYPE" != "release" ]; then
             echo "::error::upload_to_play needs build_type = release"; exit 1
           fi
+          # Play Billing is an Android plugin: it needs the Gradle build (the AAB), and Play only bills Play-installed builds
+          if { [ "$STORE_SANDBOX" = "true" ] || [ "$INCLUDE_BILLING" = "true" ]; } && [ "$BUILD_TYPE" != "release" ]; then
+            echo "::error::store_sandbox / include_billing need build_type = release (Play Billing is in the Gradle-built AAB only)"; exit 1
+          fi
+          # a purchase test build must not open the paid chapters for free, or the testers cannot test the purchase
+          if [ "$STORE_SANDBOX" = "true" ] && [ "$BETA_UNLOCK" = "true" ]; then
+            echo "::error::store_sandbox tests the purchase: run it with beta_unlock = false"; exit 1
+          fi
           if [ "$BUILD_TYPE" = "release" ]; then
             [ "$HAS_KS" = "true" ]    || missing="$missing ANDROID_KEYSTORE_BASE64"
             [ "$HAS_PASS" = "true" ]  || missing="$missing ANDROID_KEYSTORE_PASSWORD"
@@ -87,7 +110,7 @@ jobs:
           if [ -n "$missing" ]; then
             echo "::error::Missing repository secrets:$missing"; exit 1
           fi
-          echo "build_type=$BUILD_TYPE upload_to_play=$UPLOAD secrets: keystore=$HAS_KS password=$HAS_PASS alias=$HAS_ALIAS play=$HAS_PLAY"
+          echo "build_type=$BUILD_TYPE upload_to_play=$UPLOAD store_sandbox=$STORE_SANDBOX include_billing=$INCLUDE_BILLING secrets: keystore=$HAS_KS password=$HAS_PASS alias=$HAS_ALIAS play=$HAS_PLAY"
 
       - uses: actions/checkout@v5
 
@@ -122,6 +145,30 @@ jobs:
       - name: Import project and run tests
         run: tools/run_tests.sh
 
+      # Billing goes into the build when a purchase can run in it: store_sandbox, include_billing, or (release builds)
+      # REAL_PAYMENTS_ENABLED = true. The repository never carries the plugin, so other builds cannot declare BILLING.
+      - name: Billing decision
+        id: billing
+        env:
+          BUILD_TYPE: ${{ inputs.build_type }}
+          STORE_SANDBOX: ${{ inputs.store_sandbox }}
+          INCLUDE_BILLING: ${{ inputs.include_billing }}
+        run: |
+          real=false
+          if grep -Eq '^const REAL_PAYMENTS_ENABLED := true' game/src/autoload/premium.gd; then real=true; fi
+          billing=false
+          if [ "$STORE_SANDBOX" = "true" ] || [ "$INCLUDE_BILLING" = "true" ]; then billing=true; fi
+          if [ "$real" = "true" ] && [ "$BUILD_TYPE" = "release" ]; then billing=true; fi
+          echo "REAL_PAYMENTS_ENABLED=$real store_sandbox=$STORE_SANDBOX include_billing=$INCLUDE_BILLING -> billing in this build: $billing"
+          echo "billing=$billing" >> "$GITHUB_OUTPUT"
+          echo "Android ${BUILD_TYPE}: billing=$billing (REAL_PAYMENTS_ENABLED=$real, store_sandbox=$STORE_SANDBOX)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Google Play Billing plugin (only when billing is included)
+        if: steps.billing.outputs.billing == 'true'
+        run: |
+          python3 tools/store/add_store_plugins.py --game game --android
+          godot --headless --path game --import > "$RUNNER_TEMP/plugin_import.log" 2>&1 || { tail -30 "$RUNNER_TEMP/plugin_import.log"; exit 1; }
+
       - name: Configure Godot editor settings (SDK + signing)
         env:
           KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -151,16 +198,23 @@ jobs:
           grep -E "^version/(code|name)=" game/export_presets.cfg | sort -u
 
       # Premium.tester_build(): OS.has_feature("beta_unlock") opens the paid chapters without any payment code.
-      # Only this runner's copy of export_presets.cfg changes; the repository preset never carries the feature.
-      - name: Test-build feature beta_unlock (Android presets only)
-        if: inputs.beta_unlock
+      # store_sandbox: Premium uses Play Billing although REAL_PAYMENTS_ENABLED is false (purchase test builds).
+      # Only this runner's copy of export_presets.cfg changes; the repository preset never carries the features.
+      - name: Test-build features beta_unlock / store_sandbox (Android presets only)
+        if: inputs.beta_unlock || inputs.store_sandbox
+        env:
+          BETA_UNLOCK: ${{ inputs.beta_unlock }}
+          STORE_SANDBOX: ${{ inputs.store_sandbox }}
         run: |
-          awk '
+          add=""
+          if [ "$BETA_UNLOCK" = "true" ]; then add="beta_unlock"; fi
+          if [ "$STORE_SANDBOX" = "true" ]; then add="${add:+$add,}store_sandbox"; fi
+          awk -v add="$add" '
             /^\[preset\.[0-9]+\]$/ { plat = "" }
             /^platform=/ { plat = $0 }
             /^custom_features=/ && plat == "platform=\"Android\"" {
               v = $0; sub(/^custom_features="/, "", v); sub(/"$/, "", v)
-              $0 = "custom_features=\"" (v == "" ? "" : v ",") "beta_unlock\""
+              $0 = "custom_features=\"" (v == "" ? "" : v ",") add "\""
             }
             { print }
           ' game/export_presets.cfg > /tmp/presets.cfg
@@ -199,12 +253,14 @@ jobs:
           test -s ../build/android/mystery-room-release.aab || { echo "::error::no AAB was produced"; exit 1; }
 
       # Stops the run before any upload unless the bundle is exactly what Play should receive.
-      - name: Verify the AAB (package, versionCode, SDK, permissions, ABI, upload-key signature)
+      - name: Verify the AAB (package, versionCode, SDK, permissions, billing, ABI, upload-key signature)
         if: inputs.build_type == 'release'
         env:
           AAB: build/android/mystery-room-release.aab
           EXPECTED_VERSION_CODE: ${{ github.run_number }}
           BETA_UNLOCK: ${{ inputs.beta_unlock }}
+          STORE_SANDBOX: ${{ inputs.store_sandbox }}
+          BILLING: ${{ steps.billing.outputs.billing }}
         run: |
           set -euo pipefail
           BT=/tmp/bundletool.jar
@@ -226,12 +282,22 @@ jobs:
           if grep -q 'android:debuggable="true"' <<<"$M"; then echo "::error::the bundle is debuggable"; fail=1; fi
           perms=$({ grep -o '<uses-permission[^>]*android:name="[^"]*"' <<<"$M" || true; } | sed 's/.*android:name="//; s/"$//' | sort -u)
           echo "permissions: $(echo $perms)"
+          # Without billing: VIBRATE only. With billing: also BILLING and the two network permissions that Google's
+          # billing libraries declare (com.google.android.datatransport); nothing else.
           for p in $perms; do
             case "$p" in
               android.permission.VIBRATE|"$PACKAGE_NAME".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION) ;;
+              com.android.vending.BILLING|android.permission.INTERNET|android.permission.ACCESS_NETWORK_STATE)
+                [ "$BILLING" = "true" ] || { echo "::error::permission $p in a build without billing"; fail=1; } ;;
               *) echo "::error::unexpected permission $p"; fail=1 ;;
             esac
           done
+          has_billing=false
+          if grep -qx "com.android.vending.BILLING" <<<"$perms"; then has_billing=true; fi
+          plugin=false
+          if grep -q 'org.godotengine.plugin.v2.GodotGooglePlayBilling' <<<"$M"; then plugin=true; fi
+          echo "billing: requested $BILLING, BILLING permission $has_billing, GodotGooglePlayBilling plugin $plugin"
+          [ "$has_billing" = "$BILLING" ] && [ "$plugin" = "$BILLING" ] || { echo "::error::billing is $has_billing (plugin $plugin), requested $BILLING"; fail=1; }
           grep -q " base/lib/arm64-v8a/libgodot_android.so$" <<<"$L" || { echo "::error::no arm64-v8a library"; fail=1; }
           echo "ABIs: $({ grep -o ' base/lib/[^/]*/' <<<"$L" || true; } | sort -u | sed 's# base/lib/##; s#/##' | tr '\n' ' ')"
           grep -q "jar verified" <<<"$JV" || { echo "::error::the AAB signature does not verify"; fail=1; }
@@ -244,6 +310,10 @@ jobs:
           if [ "${bu:-0}" -gt 0 ]; then has_bu=true; else has_bu=false; fi
           echo "beta_unlock feature in $PB: $has_bu (requested: $BETA_UNLOCK)"
           [ -n "$PB" ] && [ "$has_bu" = "$BETA_UNLOCK" ] || { echo "::error::beta_unlock is $has_bu, requested $BETA_UNLOCK"; fail=1; }
+          ss=$({ unzip -p "$AAB" "$PB" 2>/dev/null || true; } | { grep -a -c "store_sandbox" || true; })
+          if [ "${ss:-0}" -gt 0 ]; then has_ss=true; else has_ss=false; fi
+          echo "store_sandbox feature in $PB: $has_ss (requested: $STORE_SANDBOX)"
+          [ "$has_ss" = "$STORE_SANDBOX" ] || { echo "::error::store_sandbox is $has_ss, requested $STORE_SANDBOX"; fail=1; }
           echo "size: $(stat -c %s "$AAB") bytes"
           exit $fail
 

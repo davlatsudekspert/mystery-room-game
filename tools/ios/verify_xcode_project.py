@@ -159,7 +159,8 @@ def main() -> int:
 		for f in (root / n).glob("*.*") if f.suffix in (".cpp", ".mm", ".m", ".h") and f.is_file())
 	if a.storekit:
 		ok(plugin_linked, "the StoreKit plugin (ios-in-app-purchase.xcframework) is in the project")
-		ok((root / n / "dylibs").exists() or plugin_linked, "plugin files copied")
+		xcf = root / n / "dylibs/ios/plugins/ios-in-app-purchase/ios-in-app-purchase.xcframework"
+		ok((xcf / "ios-arm64/ios-in-app-purchase.a").exists(), f"the plugin's device library is in {xcf.relative_to(root)}")
 		ok(registered, "the plugin's ios_in_app_purchase_init is registered at start-up")
 		ok(storekit, "StoreKit.framework is linked")
 		ok(capability, "In-App Purchase capability (com.apple.InAppPurchase) is on")

@@ -58,7 +58,12 @@ WALLS = {   # name: (normal into the room, point(a, y)); a = x on the north / so
 def ensure_materials() -> None:
     """Preview materials (Godot swaps every M_* slot for res://assets/materials/<name>.tres)."""
     E.ensure_materials()
-    M.material(GRIME, color="3A2A1C", rough=0.9, alpha=0.5, image=ATLAS)
+    mat = M.material(GRIME, color="3A2A1C", rough=0.9, alpha=0.99, image=ATLAS)     # QA preview: the atlas alpha drives the blend
+    nt = mat.node_tree
+    bsdf = nt.nodes.get("Principled BSDF")
+    tex = next((n for n in nt.nodes if n.type == "TEX_IMAGE"), None)
+    if bsdf is not None and tex is not None and not bsdf.inputs["Alpha"].links:
+        nt.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
     M.material(WOOL, color="8A4034", rough=0.95)
     M.material(PLASTER_DARK, color="2C3436", rough=0.95)
     M.material(STONE_DARK, color="4A4844", rough=0.8)
