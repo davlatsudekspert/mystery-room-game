@@ -10,6 +10,8 @@ extends Node
 ##        state key is true) [--lens=take|leave] [--key=strand|leyla] (ch3: the Chapter 2 key path)
 ##        [--perf] (no tap marks: log draw calls / primitives / objects per view instead)
 ##        [--breakdown] (with --perf: the draw calls each model, effect node and light shadow adds to the view)
+##        [--hud-breakdown] (with --perf: the HUD alone: the view's calls with the HUD shown / hidden, the HUD with the
+##        3D room hidden, and the calls each HUD node adds; plus the nodes that break 2D batching)
 ##        [--screen=phone61|phone20|phone55|tablet10|WxH@dpi[:l,t,r,b]] (render as that phone: its aspect, dpi and
 ##        safe insets drive the HUD's size and the mm checks; the window takes the same aspect)
 ##        [--text-scale=1.15] (the player's Settings → Text size)
@@ -152,6 +154,8 @@ func _run() -> void:
 			get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out_dir, v]) # a clean shot, no marks
 			if OS.get_cmdline_user_args().has("--breakdown"):
 				await _breakdown(v)
+			if OS.get_cmdline_user_args().has("--hud-breakdown"):
+				await _hud_breakdown(v)
 			continue
 		print("tap_map: view %s" % v) # progress: tools/qa_run.sh kills a run whose log stops growing
 		await _map(v)
@@ -278,6 +282,117 @@ func _breakdown(view_id: String) -> void:
 	rows.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) > int(b[0]))
 	for r: Array in rows:
 		lines.append("  %s %4d  %s" % [view_id, int(r[0]), str(r[1])])
+
+
+## The HUD's own draw calls in this view. Measured three ways: the view with the HUD hidden, the HUD with the 3D room
+## hidden (so only the 2D canvas draws), and the HUD with each of its nodes hidden in turn (a node is hidden, never
+## faded, so its whole subtree drops out). Batching makes the deltas approximate: removing a node can merge the
+## batches around it. Ends with the visible nodes that break batching (own material, clipping, outlines, shadows).
+func _hud_breakdown(view_id: String) -> void:
+	var hud := room.get("hud") as CanvasLayer
+	if hud == null:
+		return
+	var root := hud.get("_root") as Control
+	var total := await _draw_calls()
+	hud.visible = false
+	var scene := await _draw_calls()
+	hud.visible = true
+	room.visible = false
+	var alone := await _draw_calls()
+	hud.visible = false
+	var empty := await _draw_calls()
+	hud.visible = true
+	lines.append("hud[%s]: view %d, HUD hidden %d, HUD alone (room hidden) %d, nothing shown %d -> HUD adds %d" % [
+		view_id, total, scene, alone, empty, total - scene])
+	var rows: Array = []
+	for n in root.get_children():
+		var ci := n as CanvasItem
+		if ci == null or not ci.visible:
+			continue
+		ci.visible = false
+		var c := await _draw_calls()
+		ci.visible = true
+		var delta := alone - c
+		rows.append([delta, "%s (%s)" % [n.name, n.get_class()]])
+		print("  hud-breakdown %s: %s %d" % [view_id, n.name, delta]) # progress for tools/qa_run.sh's stall watchdog
+		if delta >= 3:
+			for ch in n.get_children():
+				var cc := ch as CanvasItem
+				if cc == null or not cc.visible:
+					continue
+				cc.visible = false
+				var c2 := await _draw_calls()
+				cc.visible = true
+				if alone - c2 != 0:
+					rows.append([alone - c2, "  %s/%s (%s)" % [n.name, ch.name, ch.get_class()]])
+	for r: Array in rows:
+		lines.append("  %s %4d  %s" % [view_id, int(r[0]), str(r[1])])
+	# what a visible label's outline and clipping cost (each switched off in turn, then restored)
+	for l in root.find_children("*", "Label", true, false):
+		var lab := l as Label
+		if not lab.is_visible_in_tree() or lab.text == "":
+			continue
+		var base_c := await _draw_calls()
+		var o := lab.get_theme_constant("outline_size")
+		var clip := lab.clip_text
+		var what := "'%s' (%s, %d px, outline %d, clip %s)" % [lab.atr(lab.text).left(24), lab.get_parent().name, lab.get_theme_font_size("font_size"), o, clip]
+		if o > 0:
+			lab.add_theme_constant_override("outline_size", 0)
+			lines.append("  %s label %s without outline: %d -> %d" % [view_id, what, base_c, await _draw_calls()])
+			lab.add_theme_constant_override("outline_size", o)
+		if clip:
+			lab.clip_text = false
+			lines.append("  %s label %s without clip_text: %d -> %d" % [view_id, what, base_c, await _draw_calls()])
+			lab.clip_text = true
+		lab.visible = false
+		lines.append("  %s label %s hidden: %d -> %d" % [view_id, what, base_c, await _draw_calls()])
+		lab.visible = true
+	var breakers: Array[String] = []
+	_batch_breakers(root, "", breakers)
+	for b in breakers:
+		lines.append("  %s breaker: %s" % [view_id, b])
+	room.visible = true
+
+
+## Appends one line per visible HUD node that breaks 2D batching: an own material, clipping, a font outline or shadow,
+## a StyleBoxFlat with a shadow or anti-aliasing, a custom _draw (reports how many it has) or a different texture.
+func _batch_breakers(n: Node, path: String, out: Array[String]) -> void:
+	var ci := n as CanvasItem
+	if ci != null and not ci.visible:
+		return
+	var here := path + "/" + str(n.name)
+	if ci != null:
+		var why: Array[String] = []
+		if ci.material != null:
+			why.append("material " + ci.material.get_class())
+		if n is Control:
+			var c := n as Control
+			if c.clip_contents:
+				why.append("clip_contents")
+			if n is Label:
+				var l := n as Label
+				var o := l.get_theme_constant("outline_size")
+				if o > 0:
+					why.append("font outline %d" % o)
+				if l.get_theme_color("font_shadow_color").a > 0.0:
+					why.append("font shadow")
+				why.append("font " + str(l.get_theme_font("font").resource_name if l.get_theme_font("font") else "?"))
+			for sname in ["panel", "normal", "pressed", "hover"]:
+				var sb := c.get_theme_stylebox(sname)
+				if sb is StyleBoxFlat and c.has_theme_stylebox_override(sname):
+					var f := sb as StyleBoxFlat
+					if f.shadow_size > 0:
+						why.append("StyleBoxFlat %s shadow" % sname)
+					if f.anti_aliasing and (f.corner_radius_top_left > 0 or f.border_width_left > 0):
+						why.append("StyleBoxFlat %s AA" % sname)
+		if n is ScrollContainer:
+			why.append("ScrollContainer clip")
+		if n.get_script() != null and n.has_method("_draw"):
+			why.append("custom _draw")
+		if not why.is_empty():
+			out.append("%s: %s" % [here, ", ".join(why)])
+	for ch in n.get_children():
+		_batch_breakers(ch, here, out)
 
 
 func _draw_calls() -> int:
