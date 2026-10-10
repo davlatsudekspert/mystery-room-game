@@ -343,6 +343,11 @@ def qa(parts, args):
         V = E.view("finale")
         lights(V[0])
         E.shoot(NAME + "_6", V[0], V[1], V[2])
+    # 7 the Institute mark on the plate's tab, close up (a brass ring with its meridian, both halves open)
+    if E.want(args, "7"):
+        cam = W((-0.38, 1.22, 0.38))
+        lights(cam)
+        E.shoot(NAME + "_7", cam, W((-0.42, 0.945, 0.2555)), 30)
 
 
 def main():

@@ -10,6 +10,7 @@ const NO_PROBE_LAYER := 1 << 19
 const ALL_GROUPS := "HBPKRISTWElwt"
 const DRAG_PX_PER_STEP := 26.0
 const INTRO_SECONDS := 10.5
+const PROBE_WARMUP_FRAMES := 5
 
 var visuals: ArrayHallVisuals
 var tones: ArrayHallTones
@@ -18,6 +19,9 @@ var _cinematic := false
 var _cull_nodes: Array[Node3D] = []
 var _probes: Array[ReflectionProbe] = []
 var _drawn := ALL_GROUPS
+var _echo_bodies: Array[StaticBody3D] = []
+var _warm_frames := 0 # frames the whole hall stays drawn so the reflection probe captures all of it
+var _warm_view := ""
 var _zone := ""
 var _knob_acc := 0.0
 var _drag_kind := ""
@@ -210,6 +214,28 @@ func _enclosure_taps() -> void:
 		add_tap_area(wr, Vector3(7.4, 0.15, 2.7), "watch", "", Vector3(0, 3.45, 0.0))
 
 
+func register_echo_body(b: StaticBody3D) -> void:
+	_echo_bodies.append(b)
+
+
+## A kept echo is a hologram: a control behind it (a handwheel the technician stands before, the lever of Panel 0) still
+## takes the tap; the echo is tapped where nothing it hides can be worked.
+func raycast(screen: Vector2) -> Dictionary:
+	var h := super.raycast(screen)
+	if h.is_empty() or not str((h["collider"] as Node).get_meta("part", "")).begins_with("Echo_"):
+		return h
+	var layers: Array[int] = []
+	for b in _echo_bodies:
+		layers.append(b.collision_layer)
+		b.collision_layer = 0
+	var behind := super.raycast(screen)
+	for i in _echo_bodies.size():
+		_echo_bodies[i].collision_layer = layers[i]
+	if not behind.is_empty() and str((behind["collider"] as Node).get_meta("part", "")) != "":
+		return behind
+	return h
+
+
 ## Culling (§1.3): `groups` lists the zones a node belongs to; it is drawn while any of them is.
 func tag_cull(n: Node3D, groups: String) -> void:
 	if n == null:
@@ -284,7 +310,7 @@ func _build_lights() -> void:
 	var fill_dir := DirectionalLight3D.new()
 	fill_dir.name = "hall_fill"
 	fill_dir.light_color = Color("a9c4e0")
-	fill_dir.light_energy = 0.28
+	fill_dir.light_energy = 0.4
 	fill_dir.shadow_enabled = false
 	fill_dir.rotation_degrees = Vector3(-62.0, 18.0, 0.0)
 	add_child(fill_dir)
@@ -296,10 +322,13 @@ func _build_lights() -> void:
 	_spot("shaft", Vector3(0.0, 12.2, 0.0), Vector3(0.0, 0.0, 0.0), 30.0, Color("d6e6ff"), 2.6 if powered else 0.0, 17.0, "HKRI", true)
 	_spot("bridge_lamp", Vector3(0.0, 5.9, 13.5), Vector3(0.0, 3.5, 13.1), 70.0, warm, 1.7 if powered else 0.8, 7.0, "B", false)
 	_light("panel_lamp", "omni", Vector3(0.0, 2.0, 12.6), Color("ffd29a"), 1.3, 3.2, "P")
-	_light("apse_lamp", "omni", Vector3(-10.4, 3.1, 2.3), Color("ffd29a"), 0.3, 6.5, "S")
+	_light("apse_lamp", "omni", Vector3(-8.6, 2.6, 0.6), Color("ffd29a"), 1.1, 8.0, "S")
 	_light("sun_arc", "omni", Vector3(-12.4, 1.8, 0.0), Color("f2f8ff"), 0.0, 12.0, "S")
 	_light("booth_lamp", "omni", _at("booth", "booth_lamp", Vector3(0.0, 4.25, -12.9)), Color("ffd7a0"), 1.1, 4.5, "t")
 	_light("watch_lamp", "omni", _at("watch_room", "watch_lamp", Vector3(12.6, 2.95, 0.0)), Color("ffe0b4"), 1.1, 4.5, "w")
+	_light("watch_front", "omni", Vector3(9.6, 2.3, 0.0), Color("ffd7a8"), 0.9, 5.5, "W")
+	_light("booth_front", "omni", Vector3(0.0, 2.5, -9.4), Color("ffd7a8"), 0.8, 5.5, "T")
+	_light("bay_lamp", "omni", Vector3(0.0, 2.7, 10.4), Color("ffd29a"), 0.9, 7.5, "l")
 	_light("lift_lamp", "omni", _at("shell_lift4", "lift_light", Vector3(0.0, 5.8, 16.4)), Color("ffd29a"), 0.9, 8.0, "l")
 	_light("lift_spill", "omni", Vector3(4.6, 3.8, 13.6), Color("9fd8ff"), 1.6, 8.0, "l") # the hall's cold glow over the bridge
 	_light("lift_pass", "omni", Vector3(3.2, -3.0, 16.4), Color("ffcf8a"), 0.0, 6.0, "l")
@@ -319,7 +348,7 @@ func _build_lights() -> void:
 	probe.update_mode = ReflectionProbe.UPDATE_ONCE
 	probe.interior = true
 	probe.cull_mask = ~NO_PROBE_LAYER & 0xFFFFF
-	probe.set_meta("cull", "H")
+	probe.set_meta("cull", ALL_GROUPS) # drawn in every view: the polished metal reflects the hall wherever it stands
 	add_child(probe)
 	_probes.append(probe)
 	var dust := DustMotes.create(Vector3(5.0, 4.0, 5.0), 110)
@@ -742,6 +771,10 @@ func _turn(p: String, model_id: String, dir: int) -> void:
 
 # ====================================================================== per-frame
 func _process(_delta: float) -> void:
+	if _warm_frames < PROBE_WARMUP_FRAMES:
+		_warm_frames += 1
+		if _warm_frames == PROBE_WARMUP_FRAMES:
+			apply_culling(_warm_view if _warm_view != "" else cam.current())
 	var fill: OmniLight3D = lights["focus_fill"]
 	fill.global_position = cam.global_position + cam.global_basis * Vector3(0.12, 0.18, 0.05)
 
@@ -754,7 +787,10 @@ const BRIGHT_CLOSEUPS: Array[String] = ["gate_1", "gate_2", "gate_3", "gate_4", 
 
 
 func view_changed_hook(id: String) -> void:
-	apply_culling(id)
+	if _warm_frames < PROBE_WARMUP_FRAMES:
+		_warm_view = id # the first frames draw the whole hall once: the reflection probe captures it (UPDATE_ONCE)
+	else:
+		apply_culling(id)
 	var fill: OmniLight3D = lights["focus_fill"]
 	var e := 0.0 if cam.is_root() else (1.5 if id in BRIGHT_CLOSEUPS else 0.8)
 	create_tween().tween_property(fill, "light_energy", e, 0.6)

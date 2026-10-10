@@ -550,6 +550,8 @@ def qa(parts, args):
         ("8", NAME + "_8", (-6.9, 0.80, -0.26), (-7.0, 0.67, 0.09), 34, dict()),
         # 9 lever frame close-up, lever 3 pulled
         ("9", NAME + "_9", (-8.25, 1.38, -0.30), (-8.05, 1.05, 0.40), 44, dict(pulled=(3,), tag=False, live=True)),
+        # 10 the Institute mark on the operator-side face, close up (a brass ring with its meridian, both halves open)
+        ("10", NAME + "_10", (-8.20, 0.62, -0.52), (-8.31, 0.47, 0.10), 28, dict()),
     ]
     for tag, name, cam, tgt, fov, st in shots:
         if not B.want(args, tag):

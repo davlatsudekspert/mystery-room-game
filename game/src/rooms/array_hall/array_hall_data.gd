@@ -179,14 +179,12 @@ const CAPTION := {
 	"rise_core": "obj4.oculus", "rise_up": "obj4.oculus", "finale": "obj4.core",
 }
 
-## Echo mounts: id -> [model with the mount empty, empty name, culling group, fallback position, fallback yaw degrees, optional: true
-## = stand at the fallback position instead of the model's mount].
+## Echo mounts: id -> [model with the mount empty, empty name, culling group, fallback position, fallback yaw degrees].
 const ECHO_MOUNTS := {
-	"tech_panel": ["panel0", "echo_mount_tech_panel", "P", Vector3(0.8, 0.0, 13.0), 0.0],
-	# the technicians stand beyond the outer wheels (a figure between the wheels would hide wheel I and IV from the bridge)
-	"tech_wheels_a": ["bridge", "echo_mount_wheels_1", "B", Vector3(-4.5, 2.5, 13.2), 180.0, true],
-	"tech_wheels_b": ["bridge", "echo_mount_wheels_2", "B", Vector3(4.5, 2.5, 13.2), 180.0, true],
-	"clerk_post": ["watch_room", "echo_mount_clerk_post", "W", Vector3(13.55, 0.03, -2.95), 90.0],
+	"tech_panel": ["panel0", "echo_mount_tech_panel", "P", Vector3(-0.8, 0.0, 13.0), 0.0],
+	"tech_wheels_a": ["bridge", "echo_mount_wheels_1", "B", Vector3(-2.9, 2.5, 13.3), 180.0],
+	"tech_wheels_b": ["bridge", "echo_mount_wheels_2", "B", Vector3(2.9, 2.5, 13.3), 180.0],
+	"clerk_post": ["watch_room", "echo_mount_clerk_post", "W", Vector3(13.05, 0.03, -2.95), 90.0],
 	"leyla_lift": ["shell_lift4", "echo_mount_leyla_lift", "B", Vector3(-3.4, 0.0, 17.0), 0.0],
 	"strand_desk": ["master_desk", "echo_mount_strand", "B", Vector3(1.12, 2.5, 13.93), 180.0],
 }

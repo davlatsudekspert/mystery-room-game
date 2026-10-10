@@ -532,7 +532,7 @@ func _build_echoes() -> void:
 			var n := _make_echo(fid, str(pick[0]), pose_name, _echo_mount(fid), e[0])
 			if n:
 				n.set_meta("kept", eid)
-				room.call("add_tap_area", n, Vector3(0.9, 1.7, 0.9), "", "Echo_" + eid, Vector3(0, 0.85, 0))
+				room.call("register_echo_body", room.call("add_tap_area", n, Vector3(0.9, 1.7, 0.9), "", "Echo_" + eid, Vector3(0, 0.85, 0)))
 	var lw := _pick_model(ArrayHallData.LEYLA_WALK, "echo_leyla_1998_lens")
 	_make_echo("leyla_walk", str(lw[0]), str(lw[1]), Transform3D.IDENTITY, "I")
 	var gh := _pick_model(ArrayHallData.STRAND_GHOST, "echo_strand_desk")
@@ -555,7 +555,7 @@ func _pick_model(cands: Array, wanted: String) -> Array:
 func _echo_mount(fid: String) -> Transform3D:
 	var e: Array = ArrayHallData.ECHO_MOUNTS.get(fid, ["", "", "B", Vector3.ZERO, 0.0])
 	var mount: Node3D = part(e[0], e[1])
-	if mount and mount.is_inside_tree() and not (e.size() > 5 and bool(e[5])):
+	if mount and mount.is_inside_tree():
 		return mount.global_transform
 	return Transform3D(Basis(Vector3.UP, deg_to_rad(float(e[4]))), e[3])
 
@@ -1553,28 +1553,80 @@ func wake_work_lamps() -> void:
 	_waking = false
 
 
-## Leave path: Leyla, 1998, steps out of the Core, walks to the cradle, seats the lens you left for her and fades.
+## Leave path: Leyla, 1998, steps out of the Core, walks round the cradle's pedestal carrying the lens you left for her, seats
+## it (the seat pose's palm is exactly at the cradle's socket) and fades. The two walk poses alternate while she moves.
+const LEYLA_PATH: Array[Vector3] = [Vector3(-0.95, 2.5, -0.30), Vector3(-1.05, 2.5, 0.50), Vector3(-0.10, 2.5, 1.0766)]
+const LEYLA_STRIDE_SECONDS := 0.35
+
+
 func leyla_seats_lens(seconds: float) -> void:
 	var n: Node3D = _echoes.get("leyla_walk")
 	if n == null:
 		await get_tree().create_timer(seconds).timeout
 		return
-	var from := Transform3D(Basis(Vector3.UP, deg_to_rad(-20.0)), Vector3(-0.35, 2.5, -0.35))
-	var to := Transform3D(Basis(Vector3.UP, deg_to_rad(-75.0)), Vector3(0.62, 2.5, 0.42))
-	n.global_transform = from
+	_carry_lens(n)
+	var lens := _held.get("lens_carry", []) as Array
+	var lens_nodes: Array = lens[1] if lens.size() > 1 else []
+	var seg: Array[float] = []
+	var total := 0.0
+	for i in range(1, LEYLA_PATH.size()):
+		var d := LEYLA_PATH[i].distance_to(LEYLA_PATH[i - 1])
+		seg.append(d)
+		total += d
+	var walk := seconds * 0.62
+	n.global_transform = Transform3D(Basis(Vector3.UP, atan2(LEYLA_PATH[1].x - LEYLA_PATH[0].x, LEYLA_PATH[1].z - LEYLA_PATH[0].z)), LEYLA_PATH[0])
+	_show_pose(n, "pose_walk")
 	room.call("set_present", n, true)
 	_fade(n, 0.0, 0.9, 0.9)
-	var tw := room.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var tw := room.create_tween()
 	tw.tween_method(func(t: float) -> void:
-		if is_instance_valid(n):
-			n.global_transform = from.interpolate_with(to, t), 0.0, 1.0, seconds * 0.55)
-	await get_tree().create_timer(seconds * 0.6).timeout
+		if not is_instance_valid(n):
+			return
+		var at := t * total
+		var i := 0
+		while i < seg.size() - 1 and at > seg[i]:
+			at -= seg[i]
+			i += 1
+		var f := clampf(at / maxf(seg[i], 0.001), 0.0, 1.0)
+		var pos := LEYLA_PATH[i].lerp(LEYLA_PATH[i + 1], f)
+		var dir := LEYLA_PATH[i + 1] - LEYLA_PATH[i]
+		var yaw := atan2(dir.x, dir.z)
+		if i == seg.size() - 1:
+			yaw = lerp_angle(yaw, PI, smoothstep(0.4, 1.0, f)) # the last steps turn her to the cradle
+		n.global_transform = Transform3D(Basis(Vector3.UP, yaw), pos)
+		_show_pose(n, "pose_walk" if int(t * walk / LEYLA_STRIDE_SECONDS) % 2 == 0 else "pose_walk_b"), 0.0, 1.0, walk)
+	await get_tree().create_timer(walk).timeout
+	_show_pose(n, "pose_seat")
+	n.global_transform = Transform3D(Basis(Vector3.UP, PI), LEYLA_PATH[-1])
+	await get_tree().create_timer(seconds * 0.16).timeout
 	defer_lens = false
-	apply_state(true) # the lens appears in its socket as her hand reaches it
-	await get_tree().create_timer(seconds * 0.15).timeout
-	_fade(n, 0.9, 0.0, seconds * 0.25)
-	await get_tree().create_timer(seconds * 0.25).timeout
+	apply_state(true) # the lens stands in its socket as she takes her hand away
+	for ln: Node3D in lens_nodes:
+		ln.visible = false
+	await get_tree().create_timer(seconds * 0.1).timeout
+	_fade(n, 0.9, 0.0, seconds * 0.12)
+	await get_tree().create_timer(seconds * 0.12).timeout
 	room.call("set_present", n, false)
+	for ln: Node3D in lens_nodes:
+		ln.visible = true
+
+
+## The lens on Leyla's palm in each of her three poses (an instance on each pose's empty, which turns up and down with it).
+func _carry_lens(figure: Node3D) -> void:
+	if _held.has("lens_carry"):
+		return
+	var nodes: Array = []
+	for mount_name: String in ["lens_mount_walk", "lens_mount_walk_b", "lens_mount_seat"]:
+		var mount := ModelUtil.find(figure, mount_name)
+		if mount == null:
+			continue
+		var ln := ModelUtil.spawn(ItemDB.model_path("crystal_lens"), mount, Transform3D.IDENTITY, "none")
+		if ln == null:
+			continue
+		for mi in ModelUtil.find_meshes(ln):
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		nodes.append(ln)
+	_held["lens_carry"] = ["lens_carry", nodes]
 
 
 func forty_second_turns() -> void:

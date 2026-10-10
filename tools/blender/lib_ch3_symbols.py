@@ -173,17 +173,25 @@ def _diamond():
     return [[_ccw([(0.0, 0.5), (-0.5, 0.0), (0.0, -0.5), (0.5, 0.0)])]]
 
 
-def _mark(ticks=False, n=48):
-    """Ring + meridian (unit glyph box), split into non-overlapping pieces."""
-    ro, ri = MARK_RING_R + MARK_RING_W / 2, MARK_RING_R - MARK_RING_W / 2
-    hw, half = MARK_MERIDIAN_W / 2, MARK_MERIDIAN_HALF
-    out = [[_ccw(_circle(ro, n, phase=math.pi / 2)), _cw(_circle(ri, n, phase=math.pi / 2))]]
+def _mark(ticks=False, n=48, bold=1.0):
+    """Ring + meridian (unit glyph box) as ONE shape: the union outline [outer, left hole, right hole].
+
+    The outer loop is the ring's outer circle with the meridian's two stubs sticking out at 12 and 6 o'clock; the
+    ring's interior is split by the meridian into two D-shaped holes (left and right). Earlier versions cut the glyph
+    into touching pieces (annulus + stubs + the bar inside the ring); Blender's curve filler mis-triangulated those
+    when they were extruded (half of the ring's hole came out capped, or all of it), so the loops here never touch.
+    `bold` > 1 thickens the ring band and the meridian (small reliefs read better); the ticks keep their width.
+    """
+    rw, bw = MARK_RING_W * bold, MARK_MERIDIAN_W * bold
+    ro, ri = MARK_RING_R + rw / 2, MARK_RING_R - rw / 2
+    hw, half = bw / 2, MARK_MERIDIAN_HALF
     do, di = math.asin(hw / ro), math.asin(hw / ri)
-    # top piece: from the outer circle up to the end of the meridian
-    top = [(hw, half), (-hw, half)] + _arc(ro, math.pi / 2 + do, math.pi / 2 - do, 2)
-    bot = [(-hw, -half), (hw, -half)] + _arc(ro, -math.pi / 2 + do, -math.pi / 2 - do, 2)
-    mid = _arc(ri, math.pi / 2 - di, math.pi / 2 + di, 2) + _arc(ri, -math.pi / 2 - di, -math.pi / 2 + di, 2)
-    out += [[_ccw(top)], [_ccw(bot)], [_ccw(mid)]]
+    m = max(n // 2, 8)
+    outer = ([(hw, half), (-hw, half)] + _arc(ro, math.pi / 2 + do, 3 * math.pi / 2 - do, m)
+             + [(-hw, -half), (hw, -half)] + _arc(ro, -math.pi / 2 + do, math.pi / 2 - do, m))
+    left = _arc(ri, math.pi / 2 + di, 3 * math.pi / 2 - di, m)         # closed by the meridian's left edge
+    right = _arc(ri, -math.pi / 2 + di, math.pi / 2 - di, m)           # closed by the meridian's right edge
+    out = [[_ccw(outer), _cw(left), _cw(right)]]
     if ticks:
         r0, r1, tw = MARK_TICK
         for k in range(12):
@@ -215,24 +223,30 @@ def _sign(n_out=40, n_in=30, n_dot=16):
 
 
 _BUILDERS = {"sun": _sun, "moon": _moon, "star": _star, "triangle": _triangle, "circle": _circle_shape,
-             "square": _square, "diamond": _diamond, "mark": lambda: _mark(False), "mark_ticks": lambda: _mark(True),
-             "sign": _sign}
+             "square": _square, "diamond": _diamond, "mark": lambda bold=1.0: _mark(False, bold=bold),
+             "mark_ticks": lambda bold=1.0: _mark(True, bold=bold), "sign": _sign}
+_BOLDABLE = ("mark", "mark_ticks")
 
 
-def shapes(kind: str, h: float = 1.0):
+def shapes(kind: str, h: float = 1.0, bold: float = 1.0):
     """Symbol `kind` as non-overlapping filled shapes [[outer, *holes], ...], bounding box centred on (0, 0),
-    height h (+y up). kind: one of NAMES, or 'mark', 'mark_ticks', 'sign'."""
+    height h (+y up). kind: one of NAMES, or 'mark', 'mark_ticks', 'sign'. `bold` (> 1: thicker ring band and
+    meridian) applies to 'mark' and 'mark_ticks' only."""
     if kind not in _BUILDERS:
         raise KeyError(f"unknown symbol {kind!r}; known: {sorted(_BUILDERS)}")
+    if kind in _BOLDABLE:
+        return _scale_to_height(_centre(_BUILDERS[kind](bold)), h)
+    if bold != 1.0:
+        raise ValueError(f"bold only applies to {_BOLDABLE}, not {kind!r}")
     return _scale_to_height(_centre(_BUILDERS[kind]()), h)
 
 
-def loops(kind: str, h: float = 1.0):
-    return [lp for s in shapes(kind, h) for lp in s]
+def loops(kind: str, h: float = 1.0, bold: float = 1.0):
+    return [lp for s in shapes(kind, h, bold) for lp in s]
 
 
-def bounds(kind: str, h: float = 1.0):
-    return _bounds_of(shapes(kind, h))
+def bounds(kind: str, h: float = 1.0, bold: float = 1.0):
+    return _bounds_of(shapes(kind, h, bold))
 
 
 def ring_icon(i: int, d: float, line: float = 0.05, bold: float = 0.19, n: int = 40):
@@ -340,12 +354,17 @@ def ensure_materials() -> None:
 
 # ====================================================================== Blender inlays
 def inlay(name: str, kind: str, h: float, depth: float = 0.0, mat: str = "M_Brass_Aged", bevel: float = 0.0004,
-          loc=(0.0, 0.0, 0.0), rot_z: float = 0.0):
+          loc=(0.0, 0.0, 0.0), rot_z: float = 0.0, bold: float = 1.0):
     """Symbol `kind` (height h) in the local XY plane facing +Z: a zero-thickness inlay (depth 0) or a relief
-    extruded from z = 0 to z = depth with a small bevel (bottom cap dropped). rot_z (radians) then loc."""
+    extruded from z = 0 to z = depth with a small bevel (bottom cap dropped). rot_z (radians) then loc.
+    `bold` > 1 thickens the ring and the meridian of 'mark' / 'mark_ticks'. The bevel is capped at a third of the
+    thinnest band (curve_solid shrinks the outline by the bevel, so a band thinner than 2 x bevel would vanish)."""
     import lib_mech as L
     from mathutils import Matrix
-    lp = loops(kind, h)
+    lp = loops(kind, h, bold)
+    if kind in _BOLDABLE:
+        band = min(MARK_RING_W, MARK_MERIDIAN_W) * bold * h / (2.0 * MARK_MERIDIAN_HALF)
+        bevel = min(bevel, band / 3.0)
     if depth <= 0.0:
         o = L.flat_shape(name, lp, mat=mat)
     else:
