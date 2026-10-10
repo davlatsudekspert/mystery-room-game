@@ -1082,7 +1082,7 @@ func breaker_trip() -> void:
 
 ## A short burst of sparks (CPU particles: off with safe graphics, never casting shadows).
 func sparks(at: Vector3) -> void:
-	if bool(Settings.get_value("safe_graphics")):
+	if CrashGuard.safe_level() >= 2:
 		return
 	var p := CPUParticles3D.new()
 	p.one_shot = true

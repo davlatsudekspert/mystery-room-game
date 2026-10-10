@@ -26,6 +26,9 @@ var _dirs: Dictionary = {} # knob / turntable -> tap direction (+1 / -1), turnin
 var _drag_kind := ""
 var _knob_acc := 0.0
 var _recording := 0 # playback generation of Leyla's recorder (a rewind restarts it)
+## The brass rim of a crystal port framing the port views: in a port view the camera sits at the lens, so the
+## port's own ring is behind it; tapping this rim (IA_port_ring) switches between now and the kept memory.
+var eyepiece: Node3D
 
 
 func _ready() -> void:
@@ -48,6 +51,7 @@ func _ready() -> void:
 	build_hud()
 	add_child(PerfGuard.new())
 	_build_frost()
+	_build_eyepiece()
 	GameState.events.connect(_on_events)
 	visuals.apply_state(false)
 	DecalLoc.apply(self)
@@ -62,6 +66,7 @@ func _ready() -> void:
 		hud.call("play_intro")
 	elif not capture_mode and l3().state["array_awake"] and not l3().state["complete"]:
 		get_tree().create_timer(1.2).timeout.connect(func() -> void: hud.call("show_choice"))
+	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
 
 
 func _exit_tree() -> void:
@@ -295,6 +300,71 @@ func _build_portals() -> void:
 		_portals[pid] = mi
 
 
+func _build_eyepiece() -> void:
+	eyepiece = Node3D.new()
+	eyepiece.name = "eyepiece"
+	cam.add_child(eyepiece)
+	var r_in := 1.0
+	var r_out := 3.4
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var seg := 64
+	var inner := Color("2a2116")
+	var lip := Color("8a6a36")
+	var outer := Color("120e09")
+	for i in seg:
+		var a0 := TAU * i / seg
+		var a1 := TAU * (i + 1) / seg
+		for ring: Array in [[r_in, r_in * 1.06, lip, inner], [r_in * 1.06, r_out, inner, outer]]:
+			var ra: float = ring[0]
+			var rb: float = ring[1]
+			var p0 := Vector3(cos(a0) * ra, sin(a0) * ra, 0)
+			var p1 := Vector3(cos(a1) * ra, sin(a1) * ra, 0)
+			var q0 := Vector3(cos(a0) * rb, sin(a0) * rb, 0)
+			var q1 := Vector3(cos(a1) * rb, sin(a1) * rb, 0)
+			for v: Array in [[p0, ring[2]], [q0, ring[3]], [q1, ring[3]], [p0, ring[2]], [q1, ring[3]], [p1, ring[2]]]:
+				st.set_color(v[1])
+				st.add_vertex(v[0])
+	var mesh := st.commit()
+	var mi := MeshInstance3D.new()
+	mi.name = "IA_port_ring"
+	mi.mesh = mesh
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.vertex_color_use_as_albedo = true
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.no_depth_test = true
+	m.render_priority = 10
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	eyepiece.add_child(mi)
+	var body := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var shape := mesh.create_trimesh_shape()
+	shape.backface_collision = true
+	cs.shape = shape
+	body.add_child(cs)
+	body.set_meta("part", "IA_port_ring")
+	mi.add_child(body)
+	eyepiece.visible = false
+
+
+## Frame a port view (or its memory) with the eyepiece rim: the opening just fits the view's height.
+func _place_eyepiece(id: String) -> void:
+	var port := ""
+	if id.begins_with("port_") and id.length() >= 6:
+		port = id.substr(0, 6)
+	eyepiece.visible = port != ""
+	if port == "":
+		return
+	var fov: float = UndergroundData.VIEWS[id][2]
+	var d := 0.12
+	var r := d * tan(deg_to_rad(fov * 0.5)) * 0.97
+	eyepiece.transform = Transform3D(Basis.from_scale(Vector3.ONE * r), Vector3(0, 0, -d))
+	for body in eyepiece.find_children("*", "StaticBody3D", true, false):
+		body.set_meta("hotspot", port)
+
+
 func _build_frost() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 5
@@ -331,14 +401,15 @@ static func _any(tags: String, drawn: String) -> bool:
 
 func apply_culling(view: String) -> void:
 	_drawn = groups_for(view)
-	var safe := bool(Settings.get_value("safe_graphics"))
+	# safe graphics level 2+ (CrashGuard): no probes or particles, whatever the view draws
+	var safe := CrashGuard.safe_level() >= 2
 	for n in _cull_nodes:
 		if not is_instance_valid(n):
 			continue
 		var tags := str(n.get_meta("cull", ""))
 		var on := tags == "" or _any(tags, _drawn)
 		n.set_meta("culled", not on)
-		n.visible = bool(n.get_meta("present", true)) and on
+		n.visible = bool(n.get_meta("present", true)) and on and not (safe and n is GPUParticles3D)
 	for p in _probes:
 		p.visible = not safe and _any(str(p.get_meta("cull", "")), _drawn)
 	var s := l3().state
@@ -512,10 +583,12 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 			if cam.current() != "glass_floor":
 				cam.go("glass_floor")
 		"tunnel":
-			if l3().state["shutter_open"]:
+			if not l3().state["shutter_open"]:
+				_say("msg.c3_shutter_shut")
+			elif UndergroundData.zone_of(cam.current()) == "gallery":
 				_walk("camp")
 			else:
-				_say("msg.c3_shutter_shut")
+				_walk("gallery_w")
 		"console":
 			_interact_console(p)
 		"memorial":
@@ -873,6 +946,8 @@ func view_changed_hook(id: String) -> void:
 	var e := 0.0 if cam.is_root() or id.ends_with("_mem") else 0.9
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	_frost.visible = id.ends_with("_mem")
+	_place_eyepiece(id)
+	sync_colliders(eyepiece)
 	visuals.view_changed(id)
 	_zone_mood(UndergroundData.zone_of(id))
 	if id == "seed_library":

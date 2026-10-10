@@ -102,6 +102,23 @@ def text3d(name, body, size, loc, z, mat, depth=0.0, font=None, rot_z=0.0, spaci
                   spacing=spacing, res=res)
 
 
+def prism_x(name, pts_zy, x0, x1, mat):
+    """Closed prism: polygon [(z, y), ...] (G-frame side profile) extruded along X from x0 to x1."""
+    bm = bmesh.new()
+    a = [bm.verts.new((x0, y, z)) for (z, y) in pts_zy]
+    b = [bm.verts.new((x1, y, z)) for (z, y) in pts_zy]
+    n = len(pts_zy)
+    bm.faces.new(a)
+    bm.faces.new(list(reversed(b)))
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((a[i], a[j], b[j], b[i]))
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4], quad_method="BEAUTY",
+                          ngon_method="EAR_CLIP")
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return K.obj_from_bm(name, bm, mat)
+
+
 def place_mesh(obj, m):
     """Bake a 4x4 G-frame transform into a mesh (objects are built at the origin, then moved)."""
     obj.data.transform(m)
@@ -109,11 +126,12 @@ def place_mesh(obj, m):
 
 
 def vcolor(obj, rgba, name="Col") -> None:
-    """Set (or create) a per-corner COLOR attribute with one value on every corner of `obj`."""
+    """Set (or create) a per-corner COLOR attribute with one value on every corner of `obj`. FLOAT_COLOR is linear,
+    so the glTF COLOR_0 carries the exact numbers (a BYTE_COLOR would be sRGB-converted on export)."""
     me = obj.data
     attr = me.color_attributes.get(name)
     if attr is None:
-        attr = me.color_attributes.new(name=name, type="BYTE_COLOR", domain="CORNER")
+        attr = me.color_attributes.new(name=name, type="FLOAT_COLOR", domain="CORNER")
     for d in attr.data:
         d.color = rgba
     me.color_attributes.active_color = attr
@@ -252,7 +270,14 @@ def _swap_preview_materials(prefix):
 
 
 def imported(prefix, name):
-    return bpy.data.objects.get(prefix + name)
+    """An object by prefix + node name, ignoring the '.001' suffix Blender adds when the name already exists."""
+    o = bpy.data.objects.get(prefix + name)
+    if o is not None:
+        return o
+    for o in bpy.data.objects:
+        if o.name.startswith(prefix) and o.name[len(prefix):].split(".")[0] == name:
+            return o
+    return None
 
 
 def hall(prefix="qa_hall_", lamps=True):
