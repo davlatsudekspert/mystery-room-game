@@ -33,6 +33,13 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 | Weekly store statistics report | after the public release |
 | Closed testing, production, public release | each needs a separate approval |
 
+**Queued fixes (found by QA, 2026-10-10):**
+- Chapter 3 ring-shaped symbol marks: control_desk's mark caps only the right half of the ring, and gallery_console's is a solid disc. The cause is closed loops extruded in tools/blender/lib_ch3_symbols. See docs/previews/ch3/bug_mark_*.jpg. Fix and rebuild after the echo-figure Blender job.
+- Chapter 3 glass-floor ring signs are 3–5 mm on a phone. Enlarge them in the Blender model.
+- Chapter 2 hall view is 154 draw calls (budget 150). Merge static meshes (ModelUtil.merge_static).
+- Small 3D controls: a tap-assist radius is being built in RoomBase. It covers 28 of 62 Chapter 3 parts, which are under 9 mm.
+- The Chapter 3 release candidate is ready for closed testing (hud-check 0 failures on phone and tablet, rendered strand and leyla runs with 0 fallbacks, Continue passes, 300-game logic sweep clean). It is not yet ready for a public release until a phone check of the desk levers, the hook key and Continue.
+
 **Running now:**
 - Ch3 set dressing (camp, shutter corridor, memorial gallery, grime): Sonnet agent;
 - Ch4 models, groups A and B (shell, bridge, catwalk, master desk, panel 0): Sonnet agent;
