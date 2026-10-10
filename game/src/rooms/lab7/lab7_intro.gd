@@ -10,8 +10,8 @@ extends Node
 
 const DOOR_AJAR_DEG := -38.0
 const DOOR_DRIFT_DEG := -31.0
-const CARD_IN_S := 1.0
-const CARD_OUT_S := 0.6
+const CARD_IN_S := 0.9
+const CARD_OUT_S := 0.5
 const CARD1_HOLD_S := 2.4
 const CARD2_HOLD_S := 4.4
 const REVEAL_S := 1.0
@@ -34,9 +34,9 @@ var _glint: FirstGlint
 
 ## Seconds from the first frame to the first prompt when nobody taps (QA and the 20 s budget).
 static func duration() -> float:
-	var card1 := CARD_IN_S + CARD1_HOLD_S + CARD_OUT_S + 0.1
-	var card2 := CARD_IN_S + CARD2_HOLD_S + CARD_OUT_S + 0.1
-	return card1 + 0.3 + card2 + 1.7 + 0.5 + 0.9 + 1.0 + 2.1
+	var card1 := CARD_IN_S + CARD1_HOLD_S + CARD_OUT_S
+	var card2 := CARD_IN_S + CARD2_HOLD_S + CARD_OUT_S
+	return card1 + card2 + 1.7 + 0.5 + 0.9 + 1.0 + 2.1
 
 
 ## Starts the opening on a fresh Chapter 1 (called by the room once everything is built).
@@ -147,10 +147,7 @@ func run() -> void:
 	if await _card("intro.1", CARD1_HOLD_S):
 		_finish()
 		return
-	if await _wait(0.3):
-		_finish()
-		return
-	AudioManager.sfx("intro_thunder", -13.0)
+	AudioManager.sfx("intro_thunder", -13.0) # no gap: the second card rises as the first goes
 	if await _card("intro.2", CARD2_HOLD_S):
 		_finish()
 		return
@@ -200,7 +197,7 @@ func _card(key: String, hold: float) -> bool:
 		return true
 	var out := _tween()
 	out.tween_property(_box, "modulate:a", 0.0, CARD_OUT_S).set_trans(Tween.TRANS_SINE)
-	return await _wait(CARD_OUT_S + 0.1)
+	return await _wait(CARD_OUT_S)
 
 
 # ====================================================================== the world
@@ -232,7 +229,9 @@ var _door_now := DOOR_AJAR_DEG
 
 func _prep() -> void:
 	var cam: RoomCamera = room.get("cam")
-	cam.go("door", true)
+	# a wider shot than the "door" close-up: the whole door and, above it, the maglock lamp that is about to light
+	cam.add_view("intro_door", Vector3(0.9, 1.45, 0.25), Vector3(3.0, 1.5, 0.95), 62.0)
+	cam.go("intro_door", true)
 	hud.call("set_caption", "") # no view title over the opening: the door is not "sealed" yet
 	_door_now = DOOR_AJAR_DEG
 	_door_deg(DOOR_AJAR_DEG)

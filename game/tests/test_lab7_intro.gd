@@ -29,7 +29,7 @@ func test_opening_skips_to_a_settled_room_and_the_notebook_glows() -> void:
 		room.queue_free()
 		return
 	var cam: RoomCamera = room.get("cam")
-	eq(cam.current(), "door", "it starts on the door")
+	eq(cam.current(), "intro_door", "it starts on the door")
 	check(not (room.get("touch") as TouchInput).enabled, "input is locked while it plays")
 	var leaf: Node3D = (room.get("visuals") as Lab7Visuals).part("door_lab7", "IA_door_leaf")
 	var rest: Transform3D = (room.get("visuals") as Lab7Visuals).rest[leaf]

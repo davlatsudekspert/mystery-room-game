@@ -41,7 +41,9 @@ static func show_credits(host: Control, on_close: Callable) -> Control:
 				l.add_theme_color_override("font_color", UITheme.CREAM)
 				body.add_child(_centered(l, true))
 			CreditsData.Kind.LINE:
-				body.add_child(_centered(UITheme.label(text, 22, UITheme.MUTED), true))
+				var l := UITheme.title(text, 22, false)
+				l.add_theme_color_override("font_color", UITheme.MUTED)
+				body.add_child(_centered(l, true))
 			CreditsData.Kind.THANKS:
 				var l := UITheme.title(text, 28, false)
 				body.add_child(_centered(l, true))
