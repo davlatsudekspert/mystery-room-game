@@ -38,7 +38,7 @@ void fragment() {
 	vec3 lamp = vec3(1.0, 0.97, 0.9);
 	float lit = max(max(image_on, slide_on), white);
 	if (lit > 0.0) {
-		col = mix(col, lamp * 1.25, lit);
+		col = mix(col, lamp * 1.05, lit); // 1.25 clipped the whole lit field to white (the slide view lost the screen's weave)
 	}
 	if (image_on > 0.0) {
 		vec3 img = soft(uv, blur * 0.018);

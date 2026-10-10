@@ -284,6 +284,16 @@ func _build_evidence() -> void:
 				var u := m.duplicate() as BaseMaterial3D
 				ring.set_surface_override_material(0, u)
 				_mats["ring_%d" % r] = u
+	# the drum symbols: cream enamel instead of the model's dark steel, or they vanish in the shrouded windows
+	var cream := StandardMaterial3D.new()
+	cream.albedo_color = Color(0.94, 0.9, 0.8)
+	cream.roughness = 0.5
+	cream.emission_enabled = true
+	cream.emission = Color(1.0, 0.94, 0.8)
+	cream.emission_energy_multiplier = 0.3
+	for side: String in ["west", "east"]:
+		for i in 4:
+			_set_slot(part("door_" + side, "IA_drum_%d" % i) as MeshInstance3D, "M_Steel_Dark", cream)
 
 
 static func _glyph_bits(g: String) -> int:
@@ -706,13 +716,19 @@ func _apply_gallery(animated: bool) -> void:
 	var s := logic.state
 	var awake: bool = s["gallery_awake"]
 	var array: bool = s["array_awake"]
+	# asleep the rings are dormant glass (a cool grey tint, almost no emission), awake they glow, and the answering
+	# Array shines without blowing out into bloom
 	for r in 4:
 		var m := _mats.get("ring_%d" % r) as BaseMaterial3D
 		if m:
-			m.emission_energy_multiplier = 7.0 if array else (3.2 if awake else 0.7)
+			m.emission_energy_multiplier = 3.0 if array else (1.2 if awake else 0.15)
+			m.albedo_color = Color(0.81, 0.96, 1.0) if array else (Color(0.62, 0.78, 0.85) if awake else Color(0.4, 0.48, 0.53))
 		var sym := _mats.get("ring_sym_%d" % r) as BaseMaterial3D
 		if sym:
 			sym.albedo_color = Color(LUMEN, 1.0) * (1.0 if awake else 0.45)
+	var up := (room.get("lights") as Dictionary).get("array_up") as Light3D
+	if up:
+		up.light_energy = 3.0 if array else (2.0 if awake else 1.0)
 	for k in 5:
 		_lamp(part("shell_gallery", "lamp_glass_%d" % k), true, Color("ffe6c4"), 2.2)
 	# console

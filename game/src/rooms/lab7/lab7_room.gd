@@ -1177,8 +1177,9 @@ func _view_caption(id: String) -> String:
 func _on_view_changed(id: String) -> void:
 	hud.call("set_view", id, cam.is_root(), _view_caption(id))
 	var fill: OmniLight3D = lights["focus_fill"]
-	var bright_views := ["bookshelf", "books", "projector", "chalkboard", "coat", "filing", "mirror_a", "mirror_b", "lock"]
-	var dim_views := ["radio", "radio_hatch", "poster"] # a cream dial / glossy glass 60 cm from the lens: the full fill clips it white
+	var bright_views := ["bookshelf", "books", "projector", "chalkboard", "coat", "filing", "mirror_a", "mirror_b"]
+	# a cream dial, glossy glass or the lock's pale eye 60 cm from the lens: the full fill clips them white
+	var dim_views := ["radio", "radio_hatch", "poster", "lock"]
 	var e := 0.0 if cam.is_root() else (1.5 if id in bright_views else (0.45 if id in dim_views else 1.0))
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor", "sculpture"]

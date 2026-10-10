@@ -51,13 +51,12 @@ const CASES := {
 		["power_on", "panel", "panel7", "IA_main_lever", "main lever after the power is back"],
 		["power_on", "radio", "radio", "IA_tuning_knob", "live radio knob"],
 		["power_on", "projector", "lumen_projector", "IA_projector_lever", "projector lever, no lens"],
-		["shelf_open", "books", "bookshelf", "IA_book_2", "book after the case swung open"],
+		["shelf_open", "bookshelf", "bookshelf", "", "the swung-open bookcase"],
 		["shelf_open", "shadow", "shadow_lock", "sculpture_ring", "sculpture from the shadow view"],
 		["shelf_open", "sculpture", "shadow_lock", "IA_ring_knob", "sculpture ring knob"],
 		["shelf_open", "cabinet", "shadow_lock", "IA_cabinet_door", "locked cabinet"],
 		["shelf_open", "emblem", "shadow_lock", "IA_emblem_socket", "empty emblem socket"],
 		["shelf_open", "evidence", "evidence_board", "", "evidence wall (document)"],
-		["emblem_recorded", "cabinet", "shadow_lock", "", "open cabinet"],
 		["beam_on", "projector_rings", "lumen_projector", "IA_ring_0", "ring while the beam is on"],
 		["beam_on", "projector", "lumen_projector", "IA_projector_lever", "lever while the beam is on"],
 		["beam_on", "lock", "light_sensor", "", "light lock with the beam on"],
@@ -125,6 +124,8 @@ func _ready() -> void:
 		elif a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7))
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if DisplayServer.get_name() == "headless":
+		get_window().size = Vector2i(1280, 720) # headless has no window and would project onto a square viewport
 	SaveSystem.save_path = "user://qa_feedback_save.json"
 	SaveSystem.profile_path = "user://qa_feedback_profile.json"
 	GameState.profile = {"choices": {"ch1_lens": "leave_lens", "ch1_shards": 5}}
@@ -205,26 +206,43 @@ func _rect(n: Node3D, own_only: bool) -> Rect2:
 			first = false
 	if first and n.get_child_count() > 0 and not cam().is_position_behind(n.global_position):
 		# a tap area with no mesh of its own (a static part of the shell): its collider box
+		var shapes: Array[Node] = []
 		for c in n.get_children():
-			for cs in c.get_children():
-				if cs is CollisionShape3D and (cs as CollisionShape3D).shape is BoxShape3D:
-					var sz := ((cs as CollisionShape3D).shape as BoxShape3D).size
-					var aabb := AABB(-sz * 0.5, sz)
-					for k in 8:
-						var wp := (cs as Node3D).global_transform * aabb.get_endpoint(k)
-						if cam().is_position_behind(wp):
-							continue
-						var sp := cam().unproject_position(wp)
-						r = Rect2(sp, Vector2.ZERO) if first else r.expand(sp)
-						first = false
+			shapes.append(c)
+			shapes.append_array(c.get_children())
+		for cs in shapes:
+			if cs is CollisionShape3D and (cs as CollisionShape3D).shape is BoxShape3D:
+				var sz := ((cs as CollisionShape3D).shape as BoxShape3D).size
+				var aabb := AABB(-sz * 0.5, sz)
+				for k in 8:
+					var wp := (cs as Node3D).global_transform * aabb.get_endpoint(k)
+					if cam().is_position_behind(wp):
+						continue
+					var sp := cam().unproject_position(wp)
+					r = Rect2(sp, Vector2.ZERO) if first else r.expand(sp)
+					first = false
 	return r
 
 
-func _hit(sp: Vector2) -> String:
+## -> {"model", "hotspot", "part"} of what a tap at sp lands on ({} = nothing).
+func _res(sp: Vector2) -> Dictionary:
 	var h: Dictionary = room.call("raycast", sp)
-	if h.is_empty():
-		return ""
-	return str(room.call("resolve", h)["part"])
+	return {} if h.is_empty() else room.call("resolve", h)
+
+
+func _hit(sp: Vector2) -> String:
+	var r := _res(sp)
+	return str(r.get("part", "")) if not r.is_empty() else ""
+
+
+## A point counts for (model, part) when it lands on that part, or, for a part-less tap target, anywhere on the model.
+func _lands(sp: Vector2, model: String, part: String) -> bool:
+	var r := _res(sp)
+	if r.is_empty():
+		return false
+	if part != "" and str(r["part"]) == part:
+		return true
+	return str(r["model"]) == model and (part == "" or str(r["part"]) == "")
 
 
 ## The screen point to tap: the part's projected centre, or the nearest sample that really resolves to the part.
@@ -238,7 +256,7 @@ func _tap_point(model: String, part: String) -> Array:
 	var vs := get_viewport().get_visible_rect().size
 	var screen := Rect2(Vector2.ZERO, vs)
 	var mid := r.get_center()
-	if screen.has_point(mid) and (part == "" or _hit(mid) == part):
+	if screen.has_point(mid) and _lands(mid, model, part):
 		return [mid, _hit(mid)]
 	# The middle of the bounds is covered, empty or off-screen (an open door swung toward the camera): a player taps
 	# where the part is visible, so look for such a point, nearest the middle first; failing that, the nearest
@@ -253,15 +271,15 @@ func _tap_point(model: String, part: String) -> Array:
 			if not screen.has_point(p):
 				continue
 			var d := p.distance_to(mid)
-			var got := _hit(p)
-			if d < best_d and got == part:
+			var got := _res(p)
+			if d < best_d and _lands(p, model, part):
 				best = p
 				best_d = d
-			elif d < any_d and got != "":
+			elif d < any_d and not got.is_empty() and str(got["model"]) == model:
 				any = p
 				any_d = d
 	if best.x >= 0:
-		return [best, part]
+		return [best, _hit(best)]
 	if any.x >= 0:
 		return [any, _hit(any)]
 	if not screen.intersects(r):

@@ -33,6 +33,8 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 | Solver playthrough | `qa/playthrough.tscn` | Plays every puzzle by tapping the projected screen point of each part. The tap goes through the same raycast → hotspot → logic path as a finger. A step counts only when the expected state change happens. Any logic fallback is a failure |
 | Player review | `qa/player_review.tscn` | Plays like a first-time player: the intro, looking around and tapping everything in the dark, wrong attempts, hints, the documents, a language switch, quit and continue, the finale |
 | Lighting probe | `qa/view_probe.tscn --cam=…` | Renders fixed camera angles to compare lighting before and after a change |
+| Tap map | `tools/qa_run.sh -- res://qa/tap_map.tscn -- --chapter=ch1 --views=… [--until=shelf_open] [--perf --brightness=0.7]` | Marks every tappable part in a view: green = reachable, orange = small, red = covered, and names what a tap hits instead (works for Chapter 1 since 2026-10-10: the room exposes `raycast`/`resolve` like RoomBase). `--brightness` renders at a Settings slider value |
+| Feedback audit | `godot --headless --path game res://qa/feedback_audit.tscn -- --chapter=ch1` | Taps 48 mechanisms and pieces of scenery in their own views, in the puzzle state each belongs to (locked, not yet, solved, emptied), through the real raycast, and checks that each tap answered with a message, caption, sound, camera move, document or state change. Headless: no render slot needed |
 
 ### Status
 | Area | Level | Evidence |
@@ -71,6 +73,7 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 |---|---|---|
 | Solver playthrough | `tools/qa_run.sh -- res://qa/playthrough_ch2.tscn -- --out=<dir> --lens=take` (and `--lens=leave`) | Plays P1–P12, the finale and the optional echoes by real taps through the room's raycast. It aims where a part is actually visible, like a player. Every logic fallback is reported with what the tap hit instead |
 | Tap map | `tools/qa_run.sh -- res://qa/tap_map.tscn -- --chapter=ch2 --views=… [--until=booth_open] [--do=open_cat_drawer:4,…]` | Marks every tappable part in a view: green = reachable, orange = small, red = covered; it names what a tap hits instead |
+| Feedback audit | `godot --headless --path game res://qa/feedback_audit.tscn -- --chapter=ch2` | 40 taps on mechanisms and scenery in their own views and states (no pressure, no card, no reel, locked, emptied, unlocked), each checked for an answer (message, caption, sound, camera move, document or state change) |
 | Logic tests | `tools/run_tests.sh` | Puzzle rules, both lens paths, the no-softlock fuzz |
 
 ### What the 3D QA found and fixed (2026-10-09)

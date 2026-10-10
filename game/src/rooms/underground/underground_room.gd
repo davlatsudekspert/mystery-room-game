@@ -230,6 +230,8 @@ func _build_lights() -> void:
 	var lumen := Color("bdf2ff")
 	# Choir Hall
 	_spot("key_choir", Vector3(-8.0, 5.6, 2.6), Vector3(-8.6, 0.0, -1.2), 55.0, warm, 2.6, 10.0, "C", true)
+	# a wash over the three cabinet fronts and the plate (they read nearly black from the desk otherwise)
+	_spot("cabinet_wash", Vector3(-8.3, 3.3, 2.2), Vector3(-8.3, 1.1, 3.9), 80.0, warm, 1.6, 4.5, "C", false)
 	for k in 4:
 		var fb: Vector3 = [Vector3(-12.3, 3.4, -3.88), Vector3(-7.4, 3.4, -3.88), Vector3(-11.6, 3.4, 3.88), Vector3(-7.4, 3.4, 3.88)][k]
 		_light("work_%d" % k, "omni", _at("shell_choir", "light_choir_%d" % k, fb) + Vector3(0, -0.15, 0), warm, 1.1, 5.0, "C")
@@ -241,6 +243,11 @@ func _build_lights() -> void:
 	_spot("array_up", Vector3(0.0, -29.0, 0.0), Vector3(0.0, 5.0, 0.0), 40.0, lumen, 3.0, 35.0, "G", false)
 	_light("sconce_0", "omni", _at("shell_gallery", "light_gallery_0", Vector3(3.072, 2.76, 2.151)), Color("ffe2b8"), 0.8, 4.0, "G")
 	_light("sconce_1", "omni", _at("shell_gallery", "light_gallery_3", Vector3(-3.072, 2.76, 2.151)), Color("ffe2b8"), 0.8, 4.0, "G")
+	# a shroud lamp in front of each drum lock: the drums sit 5 cm behind the plate, where no room light reaches
+	for side: String in ["west", "east"]:
+		var door := models.get("door_" + side) as Node3D
+		var at := door.global_transform * Vector3(-1.16, 1.55, 0.58) if door else Vector3(-3.1 if side == "west" else 3.1, 1.55, 1.16 if side == "west" else -1.16)
+		_light("drum_light_" + side, "omni", at, Color("ffd9a8"), 1.3, 1.1, "G")
 	# Nursery
 	_spot("key_nursery", Vector3(9.8, 3.9, 0.2), Vector3(9.8, 0.0, -3.4), 60.0, cold, 2.4, 8.0, "N", true)
 	_light("fill_0", "omni", Vector3(6.8, 3.6, 1.2), cold, 0.9, 5.0, "N")

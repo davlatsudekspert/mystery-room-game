@@ -29,7 +29,7 @@ All coordinates are **Godot, model-local, metres**; models face +Z; angles follo
 | `choir_rack` | 5,440 (6,000) | 13 (13) | 4 | `choir_rack.glb` | `choir_rack.png`, `_2` … `_5` |
 | `choir_tube` | 2,352 (2,800) | 7 (7) | 1 | `choir_tube.glb` | `choir_tube.png`, `_2` |
 | `tube_bench` | 1,438 (2,500) | 5 (5) | 3 | `tube_bench.glb` | `tube_bench.png`, `_2` |
-| `strand_office` | TBD (9,000) | TBD (7) | 4 | `strand_office.glb` | `strand_office.png`, `_2` … `_5` |
+| `strand_office` | 5,608 (9,000) | 7 (7) | 4 | `strand_office.glb` | `strand_office.png`, `_2` … `_5` |
 | `office_desk` | TBD (5,000) | TBD (6) | 4 | `office_desk.glb` | `office_desk.png`, `_2` … `_4` |
 | `meter_case` | TBD (2,500) | TBD (7) | 4 | `meter_case.glb` | `meter_case.png`, `_2`, `_3` |
 
@@ -130,7 +130,7 @@ QA: `tube_bench.png` (`bench` view, the spare tubes 6 1 3 front → back), `_2` 
 
 ---
 
-## strand_office.glb (TBD tris, 7 surfaces)
+## strand_office.glb (5,608 tris, 7 surfaces)
 
 **Shape.** Built in world coordinates. Walnut frame-and-panel dado to 0.90 (plinth, raised fields on both faces, cap
 rail), brass mullions every ~0.7 m with brass transoms at 1.92 … 1.96 and head rails under the roof, clear glass
@@ -142,7 +142,7 @@ the wooden coat stand at (−10.55, 0, 3.7) with a brass ring and four hooks (St
 
 | Node | Pivot / position | Materials | Notes |
 |---|---|---|---|
-| `strand_office` | (0, 0, 0) | Wood_Panel, Brass_Aged, Glass | static |
+| `strand_office` | (0, 0, 0) | Wood_Panel, Brass_Aged, Glass | static, 4,716 tris; bounds x −13.02 … −10.14, y 0 … 2.905, z 1.14 … 4.02 |
 | `IA_office_door` | (−10.2, 0, 2.22) | Wood_Panel, Glass | leaf z 2.22 … 3.10, y 0 … 2.12, x −10.22 … −10.18: stiles, rails, a raised lower panel, glass above 0.96; **open = +100° about +Y** (the free edge swings to x −9.33, z 2.07, into the hall) |
 | `IA_office_lock` | (−10.14, 1.05, 3.0), child of the door | Brass_Aged | box x −10.18 … −10.10, y 0.98 … 1.12, z 2.95 … 3.05 on the hall face; a raised ■ in a sunk border on its face, the key-slot escutcheon on its top, lever handles on both faces at z 2.86 |
 | `office_key_mount` | (−10.14, 1.1168, 3.0), child of the lock | — | rot (90, 90, 0): `key_square` stands blade down, bow face toward +X; its collar face (0.0032 above its origin) rests on the box top at y 1.12 |
@@ -201,8 +201,42 @@ QA: `meter_case.png` (`meter_case` view, closed, 0 0 0), `_2` (code 4 2 6 set, l
 
 ## Deviations from the contract
 
-TBD
+1. **`meter_case` is 0.25 deep (contract 0.20) and draws 11 surfaces (cap 7).** The `resonance_meter` is 0.213 long
+   and lies top toward −Z (§4), so a 0.20 case cannot close over it; the case is 5 cm deeper, `meter_mount` sits
+   2.5 cm forward at (0, 0.04, 0.025), and every front-face number (dials, windows, latch) is +0.025 in z, the lid
+   pivot −0.025. The dials' numerals must read at ~10 px in the `meter_case` view, so each drum is cream enamel with
+   dark (`M_Leather`) numerals: two surfaces per dial (6) + static 3 (leather, brass, velvet) + latch + lid = 11.
+2. **Strand's lab coat lives in `office_desk.glb`** (`M_Paper`), hanging on `strand_office`'s coat stand: the office's
+   four slots (glass, walnut, brass, the photo decal) have no cream. The stand's geometry is shared through
+   `lib_ch3_bc.COAT_STAND`.
+3. **`choir_rack`'s striker is one material (`M_Felt`, a felt-wrapped roller on felt-wrapped arms)**: with two
+   materials the rack would draw 14 against the cap of 13 (static 2 + 7 slots + striker + hammer + lock + quad).
+4. **The office door's jambs stand outside the doorway** (z 2.16 … 2.20 and 3.10 … 3.14): the 0.88 leaf pivoting at
+   z 2.22 fills the 2.2 … 3.1 opening itself.
+5. **`transformer` uses three slots, not four.** Fins, bolts and the skid are painted like the tank (as on real
+   units) and the rating plate is copper, so `M_Steel_Dark` is not needed; this is what keeps the model at the
+   4-surface cap with a separate `hum_lamp` (which shares `M_Porcelain` with the bushings).
+6. **The middle bushing is lower (y 2.17)** than the outer two (2.35) so the feed bars to the ladder pass over it.
+7. **`tube_bench`'s mallet is wooden** (a felt head would be a fourth static material, 6 surfaces against 5).
+8. **The bench tube axis** on the shallow V is 0.9137, 1.3 mm under the contract's 0.915 mount height (the tube floats
+   by that much; invisible).
+9. **The desk lamp's shade** is centred at z −0.08 (contract "about −0.05") so its rim's front sits at z −0.03,
+   behind the hanging strip (whose body spans z −0.0241 … −0.0119 from the mount).
 
 ## Notes for integration
 
-TBD
+- `choir_tube`: parent `IA_tube_<r>` to `slot_mount_<k>` / `bench_mount_<j>` with identity; the rack's pegs and the
+  bench's cradles were placed from the tube's eye (hole top 5.6 mm below the origin) and radius.
+- `choir_rack`: `rack_lock` slides along its local Y (−0.05) and the striker rotates +15° about local X; both are
+  root-level with identity rests. `stair_quad` keeps `M_Shader_Quad` with UV 0..1.
+- `transformer`: `arc_base` / `arc_top` are root-level empties on the ladder's centre line; `echo_mount` carries the
+  180° yaw (parent `echo_welder` with identity).
+- `strand_office` is a room-coordinate model: spawn at the origin, yaw 0. `IA_office_lock` is a child of
+  `IA_office_door` and `office_key_mount` a child of the lock, so both swing with the door; the lock's hotspot also
+  covers the lever handles.
+- `office_desk`: `ecg_mount`, `letters_mount`, `office_light` are root-level; the strip hangs face east. The
+  `IA_office_lamp` pivot is the shade axis (0.50, 1.11, −0.08); the base and stem are static.
+- `meter_case`: `meter_mount` is at (0, 0.04, 0.025) (not z 0); `case_lid` pivots at (0, 0.10, −0.125).
+- Every lamp / jewel uses its glass, enamel or porcelain slot; the code's `set_emission` duplicates the material per
+  mesh, so shared slots are safe.
+- Godot `.import` files for the new GLBs come from the lead's import; this group did not run Godot.
