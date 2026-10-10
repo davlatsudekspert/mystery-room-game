@@ -10,7 +10,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	# QA on the iOS Simulator (.github/workflows/ios-sim.yml): MR_QA=newgame plays the New Game path by itself and
 	# prints whether the room's first seconds were drawn. Debug and tester builds only.
-	if OS.get_environment("MR_QA") == "newgame" and (OS.is_debug_build() or Premium.tester_build()):
+	if OS.get_environment("MR_QA") == "newgame" and (OS.is_debug_build() or Premium.tester_tools()):
 		var qa := _QaNewGame.new()
 		get_tree().root.add_child(qa)
 		qa.run.call_deferred()

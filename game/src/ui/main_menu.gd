@@ -104,7 +104,7 @@ func _ready() -> void:
 
 func _version_text() -> String:
 	var ver: String = tr("ui.version") % ProjectSettings.get_setting("application/config/version", "0.1.0")
-	if Premium.tester_build():
+	if Premium.tester_tools():
 		# a tester's screenshot then says which renderer the phone ran (metal / vulkan / opengl3, mobile / gl_compatibility)
 		ver += "  ·  %s %s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_current_rendering_method()]
 		if CrashGuard.previous != "":
@@ -340,8 +340,11 @@ func _show_chapters() -> void:
 		var can := Premium.can_play(ch["id"])
 		if can:
 			state_key = "ui.completed" if GameState.is_chapter_completed(ch["id"]) else ("ui.free" if Chapters.is_free(ch["id"]) else "ui.play")
-		var b := UITheme.button(state_key if not can else "ui.play", 300)
-		b.disabled = not can
+		# a released paid chapter the player does not own yet: "Unlock" opens the purchase screen when this build
+		# has a store (release builds keep "Coming soon" while real payments are off)
+		var buyable := not can and bool(ch.get("released", false)) and not Chapters.is_free(ch["id"]) and Premium.store_open()
+		var b := UITheme.button("ui.play" if can else ("ui.buy" if buyable else state_key), 300)
+		b.disabled = not can and not buyable
 		if can:
 			var id: String = ch["id"]
 			b.pressed.connect(func() -> void:
@@ -349,6 +352,8 @@ func _show_chapters() -> void:
 					_play(id)
 				elif GameState.start_new(id):
 					_play(id))
+		elif buyable:
+			b.pressed.connect(_show_purchase)
 		row.add_child(b)
 		v.add_child(row)
 	var unlock := UITheme.label("ui.unlock_desc", 22, UITheme.MUTED)
@@ -357,6 +362,13 @@ func _show_chapters() -> void:
 	var close := UITheme.button("ui.close", 260)
 	close.pressed.connect(_clear_panel)
 	(d["footer"] as Control).add_child(close)
+
+
+## The purchase screen over the chapter list; closing it shows the list again (now with Play if it was bought).
+func _show_purchase() -> void:
+	_open_panel()
+	var p := PurchasePanel.open(_panel_host)
+	p.closed.connect(_show_chapters)
 
 
 func _confirm(key: String, yes: Callable) -> void:

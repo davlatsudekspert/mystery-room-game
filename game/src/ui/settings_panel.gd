@@ -35,12 +35,21 @@ var _lang_buttons: Dictionary = {} # code -> Button (QA presses them by their na
 var _scale_buttons: Array[Button] = []
 var _col_w := 600.0 # inner width of one column (set by _build before the sections)
 var _fit_queued := false
+var _restore_asked := false
 
 
 func _ready() -> void:
 	_build()
 	Settings.changed.connect(_on_setting_changed)
 	Loc.language_changed.connect(_on_language_changed)
+	Premium.restore_finished.connect(_on_restore_finished)
+
+
+## The answer to this panel's Restore purchases: restored, nothing found, or why it failed.
+func _on_restore_finished(_ok: bool, message: String) -> void:
+	if _restore_asked:
+		_restore_asked = false
+		SceneManager.toast(tr(message), 3.5)
 
 
 func _on_language_changed(_code: String) -> void:
@@ -121,8 +130,8 @@ func _build() -> void:
 	var actions := UITheme.button_row(28)
 	var restore := UITheme.text_button("ui.restore")
 	restore.pressed.connect(func() -> void:
-		Premium.restore_purchases()
-		SceneManager.toast(tr("ui.restored")))
+		_restore_asked = true # the store answers later (the mock at once): _on_restore_finished shows its answer
+		Premium.restore_purchases())
 	var privacy := UITheme.text_button("ui.privacy", UITheme.MUTED)
 	privacy.pressed.connect(func() -> void: OS.shell_open(PRIVACY_URL))
 	var close := UITheme.button("ui.close", 260)

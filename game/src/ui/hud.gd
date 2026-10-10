@@ -1844,17 +1844,32 @@ func show_chapter_complete() -> void:
 		next.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(next)
-		if Premium.can_play(next_id):
+		var add_play := func() -> void:
 			var go := UITheme.button("ui.play", 420)
 			go.pressed.connect(func() -> void:
 				AudioManager.stop_all_ambience()
 				if GameState.start_new(next_id):
 					SceneManager.goto(Chapters.get_chapter(next_id)["scene"]))
 			footer.add_child(go)
+			footer.move_child(go, 0)
+		if Premium.can_play(next_id):
+			add_play.call()
 		else:
-			var soon := UITheme.label("ui.to_be_continued" if not Chapters.get_chapter(next_id).get("released", false) else "ui.unlock_desc", 24, UITheme.MUTED)
+			var released := bool(Chapters.get_chapter(next_id).get("released", false))
+			var soon := UITheme.label("ui.to_be_continued" if not released else "ui.unlock_desc", 24, UITheme.MUTED)
 			soon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			v.add_child(soon)
+			if released and Premium.store_open():
+				# "Unlock" opens the purchase screen over this card; once bought, it becomes "Play"
+				var unlock := UITheme.button("ui.buy", 420)
+				unlock.pressed.connect(func() -> void:
+					var pp := PurchasePanel.open(o)
+					pp.closed.connect(func() -> void:
+						if Premium.can_play(next_id) and is_instance_valid(unlock):
+							unlock.queue_free()
+							soon.queue_free()
+							add_play.call()))
+				footer.add_child(unlock)
 	var menu := UITheme.button("ui.main_menu", 420)
 	menu.pressed.connect(func() -> void:
 		AudioManager.stop_all_ambience()
