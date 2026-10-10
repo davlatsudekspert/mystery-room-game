@@ -75,6 +75,12 @@ func _check_layout(hud: Node, tag: String) -> void:
 			var side := minf((s as Control).size.x, (s as Control).size.y) * mm
 			check(side >= UITheme.TOUCH_MM - 0.05, "%s: a slot is %.1f mm" % [tag, side])
 			break
+	var meter_label := hud.get("_meter_label") as Label
+	if meter_label != null and meter_label.is_visible_in_tree():
+		var f := meter_label.get_theme_font("font")
+		var fs := meter_label.get_theme_font_size("font_size")
+		for word in meter_label.atr(meter_label.text).split(" ", false):
+			check(f.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= meter_label.custom_minimum_size.x + 0.5, "%s: the meter breaks the word «%s»" % [tag, word])
 	var title := hud.get("_top_plate") as UIBanner
 	check(title.visible and bool(title.get_meta("on", true)), "%s: the view title shows" % tag)
 	check((hud.get("_prompt_plate") as UIBanner).visible, "%s: the prompt shows" % tag)

@@ -1638,11 +1638,15 @@ func _fit_meter(canvas: Vector2) -> void:
 		return
 	var f := _meter_label.get_theme_font("font")
 	var fs := _meter_label.get_theme_font_size("font_size")
-	var w := f.get_string_size(_meter_label.atr(_meter_label.text), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 4.0
+	var text := _meter_label.atr(_meter_label.text)
+	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 4.0
 	var bars := 0.0
 	for b in _meter_bars:
 		bars += b.custom_minimum_size.x + 8.0
-	var cap := maxf(bars, canvas.x * 0.24)
+	var word := 0.0 # never narrower than its longest word (a word is never broken)
+	for part in text.split(" ", false):
+		word = maxf(word, f.get_string_size(part, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 4.0)
+	var cap := maxf(maxf(bars, word), canvas.x * 0.24)
 	_meter_label.autowrap_mode = TextServer.AUTOWRAP_OFF if w <= cap else TextServer.AUTOWRAP_WORD_SMART
 	_meter_label.custom_minimum_size.x = minf(w, cap)
 
