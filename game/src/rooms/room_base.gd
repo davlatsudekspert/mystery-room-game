@@ -176,12 +176,10 @@ func build_hud() -> void:
 
 
 # ====================================================================== back / navigation
-## Android back / Escape: overlay → selected item → camera step back → other root → pause menu.
+## Android back / Escape: the HUD first (overlay → item in hand → open bag, hud.consume_back()), then a camera
+## step back → other root → pause menu.
 func handle_back() -> void:
-	if hud.call("handle_back") or _ending:
-		return
-	if logic.selected != "":
-		logic.select_item("")
+	if hud.call("consume_back") or _ending:
 		return
 	if cam.is_root() and cam.current() == main_root():
 		hud.call("show_pause")

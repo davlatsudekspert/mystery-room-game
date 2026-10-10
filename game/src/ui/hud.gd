@@ -798,14 +798,43 @@ func _open_overlay(dim: float = 0.72) -> Control:
 	return o
 
 
-## Back button: closes the open overlay (pause, inspect, notebook, hint...). The finale choice and the
-## chapter-complete screen need an explicit answer, and cinematics/intro swallow it. -> true if consumed.
-func handle_back() -> bool:
+## Android back / Escape (SceneManager._dispatch_back() → room.handle_back(), which asks the HUD first). One press
+## undoes one thing, the nearest first:
+##   1. the open overlay: a document, a zoomed picture, the inspect view, a hint, pause or settings (settings
+##      return to the pause menu and an enlarged photograph to the evidence board, as their Close buttons do);
+##   2. the item in hand: Combine is left, then the item goes back into the bag;
+##   3. the open tray folds into the bag.
+## -> true when the press was used here. Only then does the room move the camera back, and at the room view
+## open the pause menu. The finale choice and the chapter-complete screen need an explicit answer, and
+## cinematics (the intro) swallow the press.
+func consume_back() -> bool:
 	if _overlay != null:
 		if not bool(_overlay.get_meta("locked", false)):
-			_close_overlay()
+			var back: Callable = _overlay.get_meta("back", Callable())
+			if back.is_valid():
+				back.call()
+			else:
+				_close_overlay()
 		return true
-	return _busy
+	if _busy:
+		return true
+	if _combine_mode:
+		_combine_mode = false
+		_refresh_inventory()
+		return true
+	if logic.selected != "":
+		logic.select_item("")
+		_refresh_inventory()
+		return true
+	if _bag_open:
+		set_bag_open(false, true)
+		return true
+	return false
+
+
+## The older name of consume_back() (rooms and QA scripts call it).
+func handle_back() -> bool:
+	return consume_back()
 
 
 func _close_overlay() -> void:
@@ -911,6 +940,7 @@ func show_pause() -> void:
 	var settings := UITheme.button("ui.settings", 520)
 	settings.pressed.connect(func() -> void:
 		var o2 := _open_overlay(0.6)
+		o2.set_meta("back", show_pause) # Android back returns to the pause menu, as Close does
 		var sp := SettingsPanel.new()
 		UITheme.safe_center(o2).add_child(sp)
 		sp.closed.connect(show_pause))
@@ -1338,6 +1368,8 @@ func _show_picture(path: String, title: String = "", caption: String = "") -> vo
 ## A zoomable picture in the reader; `back` reopens the view it came from when it closes.
 func _show_zoom(tex: Texture2D, title: String, back: Callable = Callable(), caption: String = "") -> void:
 	var o := _open_overlay(0.85)
+	if back.is_valid():
+		o.set_meta("back", back) # Android back reopens the view it came from, as Close does
 	var r := _reader(o, title, "", tex, caption != "")
 	if caption != "":
 		(r["vbox"] as VBoxContainer).add_child(_ink_label(caption, 32))

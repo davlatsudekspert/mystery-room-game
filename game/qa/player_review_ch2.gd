@@ -570,6 +570,9 @@ func attempt(action: String, model_id: String, part_name: String, wait: float = 
 func pick(id: String) -> void:
 	if logic.selected == id:
 		return
+	if hud.has_method("set_bag_open"):
+		hud.call("set_bag_open", true) # the slots are in the bag's tray (docs/UI_UX.md → Bag)
+		await _settle(0.3)
 	var b := _slot_button(id)
 	if b != null and b.is_visible_in_tree():
 		b.emit_signal("pressed")
