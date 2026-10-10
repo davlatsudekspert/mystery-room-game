@@ -239,6 +239,8 @@ Checks (2026-10-10, after the changes):
 | Quick logic-flow run | `godot --headless --path game res://qa/playthrough_ch3.tscn -- --out=<dir> --quick --key=leyla` | The same taps without a renderer (the headless window is set to 16:9 so the views frame as on a phone); 4 to 7 minutes depending on the machine load. A fallback caused by a part that is missing from a model that *is* built is reported as a wiring bug (only models listed in `missing_models` count as "not built yet") |
 | Tap map / perf | `tools/qa_run.sh --stall=1500 -- res://qa/tap_map.tscn -- --chapter=ch3 --until=<state key> --views=desk,drum_east [--perf --breakdown] [--cam=name:x,y,z:tx,ty,tz:fov]` | Marks every tappable part in a view, or (`--perf`) logs draw calls and primitives and saves a clean PNG per view. `--until` runs the solver to a state: `case_open` (Choir, hall not started), `crystal_grown` (seal still closed), `camp_open`, `gallery_awake` (the Array asleep), `array_awake` (finale). `--perf` prints nothing until the end, so pass `--stall=1500` or the watchdog kills the run after 180 s; `--cam` tries a camera before it goes into `underground_data.gd` |
 | Logic tests | `tools/run_tests.sh` | Puzzle rules, both wing orders, both lens paths, the secret, 60-seed variants, the no-softlock fuzz |
+| Mid-wing Continue | `godot --headless --path game res://qa/playthrough_ch3.tscn -- --out=<dir> --quick --key=strand --seed=23 --reload-every=3` | Quits and presses Continue every 3rd step; the rebuilt scene must show the same state and the same tappable parts (see Release-candidate QA) |
+| Logic sweep | `godot --headless --path game res://qa/playthrough_ch3.tscn -- --out=<dir> --logic-sweep --sweep-seeds=75` | 300 games of solver actions mixed with random takes / returns, a save round trip after every action, a completion check from every 4th state; about 1 minute |
 
 ### What the 3D QA found and fixed (2026-10-10)
 | Problem | Effect on a player | Fix |
@@ -287,12 +289,134 @@ Draw calls per view (`tap_map --perf`, HUD included, 19.5:9, same state before -
 
 Checks run on the final state (2026-10-10):
 - `cd game && godot --headless res://qa/check_scripts.tscn`: `checked 96 scripts, 0 broken`; `python3 tools/blender/check_glb_names.py`: `checked 150 GLB files, 0 with reserved names`; `tools/run_tests.sh`: `163 tests, 25416 checks, 0 failures`.
-- `tap_map --chapter=ch3 --hud-check --screen=phone61`, 55 views, `camp_open`: `hud-check (phone61): 161 controls in 55 views, 7 failures, 35 banner warnings (280 focus-only controls and 6 slivers not checked)`; 12 views of the camp, shutter, recorder, gallery, memorial, socket, console and finale at `array_awake`: `hud-check (phone61): 30 controls in 12 views, 0 failures, 5 banner warnings (64 focus-only controls and 1 slivers not checked)`. The camp, shutter, recorder, memorial, socket_42 and gallery views list **no** unreachable or off-screen control. The 7 failures of the 55-view run are all pre-existing and outside the dressed areas (`rack` bench 1 and 2, `rack_close` hammer, the four prism-bench knobs in `prisms`: 1.5 to 5 mm from the screen edge, minimum 6); a run of those views with `--no-dress` gives the same 7.
+- `tap_map --chapter=ch3 --hud-check --screen=phone61`, 55 views, `camp_open`: `hud-check (phone61): 161 controls in 55 views, 7 failures, 35 banner warnings (280 focus-only controls and 6 slivers not checked)`; 12 views of the camp, shutter, recorder, gallery, memorial, socket, console and finale at `array_awake`: `hud-check (phone61): 30 controls in 12 views, 0 failures, 5 banner warnings (64 focus-only controls and 1 slivers not checked)`. The camp, shutter, recorder, memorial, socket_42 and gallery views list **no** unreachable or off-screen control. The 7 failures of the 55-view run are all pre-existing and outside the dressed areas (`rack` bench 1 and 2, `rack_close` hammer, the four prism-bench knobs in `prisms`: 1.5 to 5 mm from the screen edge, minimum 6); a run of those views with `--no-dress` gives the same 7. **Fixed in the release-candidate QA below.**
 - `godot --headless --path game res://qa/playthrough_ch3.tscn -- --quick --key=strand`: `taps through the 3D scene: 102, logic fallbacks: 0`, exit 0; `--key=leyla`: `taps through the 3D scene: 100, logic fallbacks: 0`, exit 0.
 
 Previews at phone aspect (2340 x 1080 renders, stored 1560 x 720), `docs/previews/ch3/dress_<view>_before.jpg` / `_after.jpg`: `dress_camp` (`camp_open`), `dress_shutter` (`camp_open`), `dress_recorder` (`camp_open`), `dress_shutter_open` (`shutter_open`: the tunnel to the dressed Gallery), `dress_gallery` (`shutter_open`), `dress_memorial` and `dress_socket42` (`array_awake`). Cycles checks of the models: `qa/blender/ch3/dress_camp*.png`, `dress_corridor*.png`, `dress_memorial*.png`.
 
 Rebuild: `python3 tools/blender/models/ch3_dress_textures.py` (atlas and the five `M_Dress_*` materials), then `tools/blender/build_all.sh` (the three scripts are in `build_lists/ch3_dress.txt`), then `godot --headless --path game --import`.
+
+### Release-candidate QA (2026-10-10)
+Scope: the HUD check at 19.5:9 and 4:3 (and 20:9, 16:9), rendered playthroughs of both Chapter 2 key paths, seed variants, save/reload in the middle of each wing, odd take / return orders, every hint at levels 1 and 2, and what a phone player would trip on. `released` stays `false`: the verdict is at the end.
+
+#### HUD check
+The 7 failures of the set-dressing run were pre-existing and were **not** HUD overlaps: the controls sat 1.4 to 5 mm inside the screen edge (minimum 6 mm). The first 4:3 run of this chapter found 2 more, the 16:9 and 20:9 runs 4 more, and the start state 1 more. All are fixed by moving cameras (`underground_data.gd` `VIEWS`); no tap point had to move.
+
+| View | Control | Measured | Cause | Fix |
+|---|---|---|---|---|
+| `rack` (19.5:9) | `IA_bench_0/1/2`, the bench's three places | 0.4 (sliver), 1.4, 2.9 mm from the bottom edge | the camera looks up at the rack; the bench top is below the eye line | camera 0.9 m east and level: the whole rack and the three places are on screen |
+| `rack_close` (19.5:9) | `IA_hammer` | 5.0 mm from the right edge | the hammer stands 1.4 m east of the rack's middle | camera 0.45 m further back, 0.15 m higher |
+| `rack_close` (4:3) | `IA_slot_0`, `IA_slot_6` (and `IA_tube_4` after a first try) | 5.1, 5.4 (2.8) mm | the rack is 2.2 m wide | the same move; a 0.2 m shift east had pushed the left tube off the tablet |
+| `rack_close` (16:9) | `IA_hammer`, then the bench tubes at the bottom right | 3.3 mm | a wider or lower frame lets the bench peek in | the camera's 0.15 m rise keeps the bench below the frame |
+| `prisms` (19.5:9, 4:3) | `IA_p_left/right`, `IA_q_left/right` (apron buttons) | 2.6 mm (phone), 5.5 mm (tablet) from the bottom edge | the apron is below the frame | camera higher and further back, looking down: buttons, prisms and the seal's three receptors sit between the title and the banners |
+| `bench` (4:3) | `IA_hammer` | 4.3 mm from the left edge | the hammer is 0.83 m west of the bench's middle | camera 0.2 m west |
+| `memorial` (4:3) | `IA_socket_42` | 1.7 mm from the right edge | socket 42 is at x 1.78 | camera 0.25 m east, fov 62 (the arc stays whole on a phone) |
+| `grow` (19.5:9, start state) | `IA_peg_2` | 2.8 mm from the right edge | the cam drum's pegs sit at the frame's edge | 0.15 m east, fov 56 (the start lever stays inside on a tablet) |
+| `scope` (20:9) | `IA_knob_x`, `IA_knob_y` | 3.9, 4.7 mm from the edges | the knobs beside the scope enter the frame at the edges | fov 40 |
+| `switch_room` (16:9) | `IA_passage_w` | under the bag button | the west passage is at the frame's left edge | camera 0.2 m west |
+
+Lines, state `camp_open`, all 55 views (`tap_map --chapter=ch3 --hud-check`):
+
+| | Before | After |
+|---|---|---|
+| phone61 (19.5:9, 400 dpi) | `hud-check (phone61): 161 controls in 55 views, 7 failures, 35 banner warnings (280 focus-only controls and 6 slivers not checked)` (the set-dressing run); the three views alone: `hud-check (phone61): 39 controls in 3 views, 7 failures, 0 banner warnings (2 focus-only controls and 1 slivers not checked)` | headless, final cameras: `hud-check (phone61): 164 controls in 55 views, 0 failures, 33 banner warnings (289 focus-only controls and 3 slivers not checked)` |
+| tablet10 (4:3, 264 dpi) | the three views alone, old framing: `hud-check (tablet10): 35 controls in 3 views, 6 failures, 0 banner warnings (2 focus-only controls and 0 slivers not checked)`; all 55 views with the phone fixes in: `hud-check (tablet10): 139 controls in 55 views, 2 failures, 23 banner warnings (262 focus-only controls and 0 slivers not checked)` | headless, final cameras: `hud-check (tablet10): 144 controls in 55 views, 0 failures, 23 banner warnings (262 focus-only controls and 0 slivers not checked)` |
+
+The same 55 views in the other game states, final cameras, headless (the tap map's geometry, raycast and HUD layout do not need a renderer; the same 7 failures reproduce headless on the old cameras, within 0.1 mm of the rendered values): 0 failures in all of them.
+
+| State | phone61 | tablet10 |
+|---|---|---|
+| start | `167 controls in 55 views, 0 failures, 39 banner warnings (250 focus-only controls and 3 slivers not checked)` | `145 controls, 0 failures, 28 banner warnings` |
+| `crystal_grown` (seal closed) | `161 controls, 0 failures, 34 banner warnings` | `141 controls, 0 failures, 24 banner warnings` |
+| `camp_open` | `164 controls, 0 failures, 33 banner warnings` | `144 controls, 0 failures, 23 banner warnings` |
+| `shutter_open` | `166 controls, 0 failures, 34 banner warnings` | `146 controls, 0 failures, 24 banner warnings` |
+| `array_awake` | `166 controls, 0 failures, 34 banner warnings` | `146 controls, 0 failures, 24 banner warnings` |
+
+Also 0 failures: phone20 (20:9) `165 to 169 controls` and phone55 (16:9) `160 to 162 controls` at the start and `camp_open` states, and the ten changed views at text size 1.3 (phone61, tablet10) and 1.15 (phone20, phone55). The banner warnings are transient: the story caption or "Nothing happens." covers a control for 2 to 6 s (cabinet locks, seed-library drawers, drum handles, the remelt button).
+
+#### Playthroughs (`tools/qa_run.sh -- res://qa/playthrough_ch3.tscn -- --out=<dir> --key=<path>`, software Vulkan, 1280 x 720 frames)
+Rendered, canonical answers, final cameras and strings (every line as printed):
+```
+--key=strand   ✓ continue: scene rebuilt from the save (state kept, opens at choir, gate open)
+               taps through the 3D scene: 108, logic fallbacks: 0 (0 of them for models not built yet)
+               QA_DONE exit=0
+--key=leyla    ✓ continue: scene rebuilt from the save (state kept, opens at nursery, gate open)
+               taps through the 3D scene: 104, logic fallbacks: 0 (0 of them for models not built yet)
+               QA_DONE exit=0
+```
+Seed variants (headless `--quick`, 16:9 window; the per-game answers differ in every one):
+```
+--key=strand --seed=5                  taps through the 3D scene: 104, logic fallbacks: 0 ...   continue ✓ (opens at choir)    exit 0
+--key=leyla  --seed=9                  taps through the 3D scene: 102, logic fallbacks: 0 ...   continue ✓ (opens at nursery)  exit 0
+--key=strand --seed=31 --reload-every=3  (twice)  taps ... 125, fallbacks 0   ✓ reload checks (every 3 steps, 149 tappable parts compared each time): 30, failed: 0
+--key=leyla  --seed=47 --reload-every=3           taps ... 146, fallbacks 0   ✓ reload checks (every 3 steps, 149 tappable parts compared each time): 31, failed: 0
+--key=strand --seed=23 --reload-every=2           taps ... 135, fallbacks 0   ✓ reload checks ...: 48, failed: 0   (earlier cameras)
+--key=leyla  --seed=23 --reload-every=2           taps ... 176, fallbacks 0   ✓ reload checks ...: 49, failed: 0   (earlier cameras)
+```
+One of the first `--seed=31` runs aborted: after `✓ solved prisms` Godot printed `The caller thread can't call the function propagate_notification() on this node` and died with signal 11 (probably the scene rebuild of a `--reload-every=3` Continue; headless, with three other runs competing for the CPU). The same command twice more ran clean. Not reproduced, not explained: see the open issues.
+
+New options of `playthrough_ch3.gd`:
+| Option | What it does |
+|---|---|
+| `--reload-every=N` | Also quits and presses Continue after every N-th solver step, in the middle of a wing (the original check runs once, after the first wing). The rebuilt scene must hold the same logic state, open at the right hall with the gate open, **and show the same tappable parts** (name, position, orientation of every visible collider in the Choir, the Gallery and the Nursery root views, compared once nothing moves). |
+| `--logic-sweep [--sweep-seeds=N]` | No scene. The solver's own player actions, one at a time, interleaved with random takes, returns and uses (the no-softlock test's action set and invariants) for both key paths, both lens paths and a per-game seed; a save round trip after every action; from every 4th state a copy made through the save must still finish the chapter. |
+| tap-size scan (always on) | Logs the visible size, as a phone61 player sees it, of every part the playthrough taps and lists those under 9 mm on both sides. |
+| per-process save files | The save and profile are `user://qa_ch3_save_<pid>.json`: two runs at once used to load each other's save (a rendered strand run once "continued" into a leyla save: `state DIFFERS, opens at nursery`). |
+
+#### Softlocks: save and reload in the middle of each wing, odd orders
+```
+--logic-sweep --sweep-seeds=75:  logic sweep: 300 games, 62957 actions, 25594 save round trips, 6444 completion checks from saved states   QA_DONE exit=0
+```
+300 games = 75 per-game seeds x both key paths x both lens paths. Scene level: the reload checks above, 30 to 49 per run, each one a Continue after every 2nd or 3rd atomic player action, in both wings and in the Gallery, with the same logic state and the same tappable parts before and after. No softlock, no lost item and no scene/state drift found. The 240-run random fuzz of `test_underground_no_softlock.gd` (nonsense actions, end-state round trip) is unchanged and passes.
+A timing artefact found on the way, not a bug: right after `pull_drum_handle` the blast door slides for several seconds, so a signature taken at once differed from the rebuilt scene's (the door at rest). The check now waits until two signatures in a row agree.
+
+#### Hints at levels 1 and 2
+Ch1 and Ch2 name the object to look at; Ch3's level 1 only set the mood ("The desk is dead.") and several level 2 hints said "the plate" or "the wall". Every level 1 and 2 hint of the 12 goals now names an object the player can see, and its place where that is not obvious, with the names of the view captions (`obj3.*`). Strings: `tools/localization/strings_ch3.py` `H` and the 24 rows of `strings.csv` (EN, RU, UZ; level 3 unchanged).
+
+| Goal | Level 1 names | Level 2 names |
+|---|---|---|
+| `c3_interlock` | the switch room's three cabinets | the interlock plate above them, each lock's key shape |
+| `c3_heart` | the meter case in Strand's office | the strip on the lamp in his office |
+| `c3_choir` | the tube rack opposite the switch cabinets | the meter, the chalk staircase above the rack |
+| `c3_restore` | the control desk, the switch room | the isolators, the interlock plate |
+| `c3_startup` | the control desk | the three crystal inspection ports, the counter |
+| `c3_seed` | the seed library in the Nursery | Leyla's log on the autoclave, the library |
+| `c3_grow` | the autoclave, the growth chart next to it | Leyla's curve on the growth chart, the cam drum's pegs |
+| `c3_prisms` | the spectral seal, the prism bench before it | the prisms (tap one to turn it), the three rims of the seal |
+| `c3_melody` | the field recorder in Leyla's camp | the recorder's four notes, her crystals, the oscillograph |
+| `c3_rings` | the Gallery's glass floor, the blast door | the Array's rings, the door's drum lock |
+| `c3_resonance` | Strand's plate on the Gallery console | the Nursery crystal in the console cradle, both knobs, the scope's figure |
+| `c3_finale` | the two figures in the Gallery | the 41 memorial crystals |
+
+`tools/run_tests.sh` (hint, localization and layout tests): `204 tests, 28581 checks, 0 failures`.
+
+#### What a phone player would trip on
+Measured as a phone61 player sees the parts the playthrough taps (visible size; the collider is that box plus 4 mm, `ModelUtil`): 62 targets, 28 under 9 mm on both sides.
+
+| Finding | Where | Fix or status |
+|---|---|---|
+| Prisms 5 to 8 mm wide with the turntable, the apron buttons 1.8 mm | `prisms` | **fixed**: a 0.30 m tap cube around each prism (about 10 mm from the new framing): a tap steps the prism and bounces at the ends, a drag turns it; the buttons stay |
+| Desk levers 1.6 to 3.3 mm wide (8.8 mm tall), master knob 3.5 x 2.7 mm, the key on the desk hook 1.5 x 2.5 mm | `desk` (overview) | open: the whole desk must stay in one frame to read the plate and the globes; needs a tap-assist radius in `RoomBase.raycast` or a closer view |
+| Meter case dials 2.2 to 3.1 x 8.8 mm, cabinet locks 7.1 mm, console knobs 8.2 x 7.6 mm, cam drum pegs 2.9 to 4.3 x 8 mm | `meter_case`, `cabinet_*`, `console`, `cam_drum` | open: the same cause |
+| The shutter's four crystals 1.0 to 1.3 mm wide (6 to 8 mm tall) | `shutter` | open |
+| Autoclave chamber item 1.8 x 4.6 mm, seed card 2.1 x 3.7 mm, Strand's letters 5.6 x 2.2 mm, the seventh tube 1.8 x 4 mm | `autoclave`, `seed_drawer`, `office`, `rack` | open |
+| Ring signs on the glass floor are 3 to 5 mm; the star is a thin sparkle, pale on pale glass | `glass_floor` (the `array_below` model, Blender side) | open: thicken the star, enlarge the signs |
+| Dark: the desk's front, the lower left of `rack_close`, the shelf under the bench are near black at default brightness | `desk`, `rack_close`, `bench` | by design (§1.5); the targets themselves are lit |
+| Bloom: the lit seal receptor (white centre), the drum windows' symbols (white on brass), the card Leyla touches (white rectangle) are the brightest things on screen | `seal`, `drum_*`, `seed_library` | readable, no halo over neighbours; check on a real phone at maximum brightness |
+
+#### Previews (phone aspect, 2340 x 1080 rendered, stored at 1560 x 720, no marks)
+`docs/previews/ch3/rc_01_choir_rack.jpg` (`rack`, start), `rc_02_control_desk.jpg` (`desk`, hall running), `rc_03_prism_bench.jpg` (`prisms`, seal closed), `rc_04_leyla_camp.jpg` (`camp`, shutter open), `rc_05_gallery_console.jpg` (`console`, Array awake), `rc_06_finale_gallery.jpg` (`finale`, Array awake). Rendered with `tap_map --perf --screen=phone61`.
+
+#### Open issues and verdict
+Open issues:
+1. **Tiny tap targets (the one real risk).** 28 of the 62 parts a playthrough taps are under 9 mm on both sides on a 6.1" phone: the desk's five levers (1.6 to 3.3 mm wide), the master knob, the key on the desk hook, the meter-case dials, the shutter's four crystals, the autoclave chamber item, the seed cards. `RoomBase.raycast` has no finger radius and the colliders are the visible part plus 4 mm. It needs a decision outside this chapter's files: a tap-assist radius in `RoomBase.raycast` (smallest part within N mm of the touch), or closer framings with the controls enlarged. Only the prisms were fixed here.
+2. **Glass-floor ring signs** (the code the Gallery's door wants): 3 to 5 mm, the star a thin sparkle on pale glass. A model change in `array_below` (Blender side).
+3. **One unexplained crash** in 1 of about 14 headless reload runs (`propagate_notification()` from a non-main thread, signal 11, right after `solved prisms`); the identical command ran clean twice more and no rendered run showed it. If a Continue after the Nursery wing can do this on a device, it is a crash on the load path: a device Continue test mid-wing is worth one run.
+4. **Localization pipeline drift:** `tools/localization/build_csv.py` run on this tree writes a `strings.csv` without 62 rows that exist only in the committed CSV (`credits.*`, `licenses.*`, `ui.buy*`, `store.*`, `cap2.*`, ...; another agent's edits of `strings_ch1.py` / `strings_ch2.py` are uncommitted). The 24 hint rows were patched into the CSV in place; do not regenerate it until those land.
+5. Audio: the zone tones and the finale music still fall back to Chapter 2 tracks (Status table). Nothing was rendered on a real phone GPU or heard on a real speaker; the tests above are software Vulkan and logic.
+6. The human-testing list below still stands (interlock plate pictograms, the 1979 loop, the chalk staircase, prism fans on a phone, ring symbols, the recorder keys, brightness).
+
+Verdict for `released: true`: **ready for a closed-testing release, not yet for the public one.** For: 204 tests with 0 failures, the 300-game sweep and 6 clean reload runs (30 to 49 mid-wing Continues each) with no softlock or drift, both key paths rendered with 102 to 108 taps, 0 fallbacks and Continue passing, seed variants clean, the HUD check at 0 failures on 4 screens and 5 game states, every level 1 and 2 hint naming an object in three languages. Against: open issue 1 (a phone player may not be able to hit the desk levers and the hook key at all, and the first puzzle needs them), open issue 3 (an unexplained crash), and no device run. One phone playtest of the desk, the meter case and the shutter crystals, plus a Continue test, would settle it; if the tap-assist radius lands in `RoomBase`, rerun `playthrough_ch3` and the hud-check once.
 
 ### Status
 | Area | Level | Evidence |
@@ -308,6 +432,7 @@ Rebuild: `python3 tools/blender/models/ch3_dress_textures.py` (atlas and the fiv
 | Audio | IMPLEMENTED | Tube and crystal tones are synthesized (`underground_tones.gd`); zone tones and the finale music fall back to Chapter 2 tracks until Chapter 3's exist |
 | Performance | Under budget (≤ 150 draw calls / 150k primitives) | Every model built; `tap_map --perf` (HUD included), worst case over the states `case_open`, `crystal_grown`, `camp_open`, `gallery_awake`, `array_awake`, 2026-10-10. Draw calls per view: **choir_s 145**, desk 135, nursery 132, nursery_w 123, prisms 123, choir 117, finale 113, seed_library 110, port_b 104, switch_room 97, console 95, rack 91, gallery_w 88, office_door 87, office 85, autoclave 85, gallery 84, camp 83, recorder 83, drum_east 78, bench 74, glass_floor 77, seal 76, shutter 76, cam_drum 76, cabinet_1 75, ecg_lamp 73, meter_case 76, drum_west 72, cradle 71, growth_log 71, memorial 70, socket_42 70, interlock_plate 68, lift 58; primitives 9k to 57k (finale the most). `--breakdown` of the two worst: the scene alone is 85 (choir_s) and 75 (desk) draw calls, **the HUD adds about 60** (UX's). Biggest scene contributors in choir_s: three switch cabinets 9 each, control desk 12, shell 8, meter case 8, office desk 7, strand office 6. No batching was needed: the cabinets' numeral and lock-symbol meshes are shown per state (`_apply_cabinets`) and the dials, levers and lamps animate, so `ModelUtil.merge_static` would save about 3 calls per cabinet at the price of a second set of visibility rules. Re-measure after any HUD growth: choir_s has 5 calls of margin |
 | Set dressing (camp, shutter wall, memorial niche) | VISUALLY VERIFIED (software renderer), AUTOMATED | Art pass of 2026-10-10, see "Set dressing" above: 3 models + 1 atlas + 2 CC0 props, no colliders; worst-case draw calls 133 (shutter, `array_awake`); `playthrough_ch3 --quick` 102 / 100 taps, 0 fallbacks; hud-check clean in every dressed view |
+| Release-candidate QA (HUD at 4 screens, rendered playthroughs, mid-wing Continue, hints) | AUTOMATED TESTED + VISUALLY VERIFIED | 2026-10-10, see "Release-candidate QA": hud-check 0 failures at phone61 and tablet10 (7 and 2 before), strand and leyla rendered `108` and `104` taps with 0 fallbacks and Continue passing, 30 to 49 mid-wing reloads per run without drift, 300-game logic sweep clean, hints at levels 1 and 2 name their object. Open: 28 of 62 tap targets under 9 mm, one unexplained headless crash |
 | Released | — | `chapters.gd`: `released: false` |
 
 ### Still needs human testing

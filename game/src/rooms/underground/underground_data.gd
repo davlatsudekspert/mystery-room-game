@@ -97,7 +97,9 @@ const VIEWS := {
 	"office": [Vector3(-10.5, 1.6, 2.35), Vector3(-12.55, 0.85, 2.95), 56.0, false, "C", "", ""],
 	"ecg_lamp": [Vector3(-12.0, 1.3, 2.3), Vector3(-12.62, 1.06, 2.45), 40.0, false, "C", "", ""],
 	"meter_case": [Vector3(-12.05, 1.25, 3.3), Vector3(-12.6, 0.84, 3.3), 40.0, false, "C", "", ""],
-	"switch_room": [Vector3(-8.3, 1.65, 1.75), Vector3(-8.3, 1.4, 4.0), 58.0, false, "CL", "", ""],
+	# hud-check at 16:9 and 20:9 (extra screens): the west passage's tap point sat under the bag button / 0.2 mm from the edge;
+	# 0.2 m west puts the passage inside the frame on 16:9, 19.5:9, 20:9 and 4:3
+	"switch_room": [Vector3(-8.5, 1.65, 1.75), Vector3(-8.5, 1.4, 4.0), 58.0, false, "CL", "", ""],
 	"cabinet_0": [Vector3(-7.4, 1.45, 2.75), Vector3(-7.4, 1.3, 3.55), 50.0, false, "C", "", ""],
 	"cabinet_1": [Vector3(-8.3, 1.45, 2.75), Vector3(-8.3, 1.3, 3.55), 50.0, false, "C", "", ""],
 	"cabinet_2": [Vector3(-9.2, 1.45, 2.75), Vector3(-9.2, 1.3, 3.55), 50.0, false, "C", "", ""],
@@ -126,7 +128,9 @@ const VIEWS := {
 	"gallery_w": [Vector3(2.7, 1.65, 2.2), Vector3(-1.8, 1.0, -2.2), 62.0, true, "GS", "", ""],
 	"glass_floor": [Vector3(0.0, 1.55, 1.1), Vector3(0.0, -30.0, -0.6), 32.0, false, "GS", "", ""],
 	"console": [Vector3(0.0, 1.55, 3.45), Vector3(0.0, 1.0, 2.55), 52.0, false, "GS", "", ""],
-	"scope": [Vector3(0.0, 1.42, 3.0), Vector3(0.0, 1.25, 2.53), 34.0, false, "G", "", ""],
+	# hud-check at 20:9: the two knobs beside the scope showed at the frame's edges (3.9 and 4.7 mm in); fov 40 holds them
+	# inside on 19.5:9 and 20:9 and leaves them off the 4:3 tablet
+	"scope": [Vector3(0.0, 1.42, 3.0), Vector3(0.0, 1.25, 2.53), 40.0, false, "G", "", ""],
 	"strand_plate": [Vector3(-0.42, 1.3, 3.1), Vector3(-0.42, 0.97, 2.76), 34.0, false, "G", "", ""],
 	"cradle": [Vector3(0.0, 1.35, 3.15), Vector3(0.0, 1.0, 2.74), 38.0, false, "G", "", ""],
 	# hud-check at 4:3: socket 42 (x 1.78) sat 1.7 mm from the right edge. 0.25 m east and 2 degrees wider keep the whole
