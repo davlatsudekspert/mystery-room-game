@@ -117,7 +117,7 @@ def qa(args, parts):
         lit(cam, 70.0, 0.25)
         C.shoot(NAME, cam, tgt, fov, samples=S, res=RES)
     if C.want(args, "2"):          # a low oblique on mark 1: sleepers, clips, the groove and the numerals I..IV
-        cam, tgt, fov = (-3.4, 1.7, 12.6), (-1.2, 0.0, 7.2), 58
+        cam, tgt, fov = (-3.4, 1.5, 11.2), (-1.3, 0.0, 7.4), 58
         lit(cam, 90.0, 0.3)
         C.shoot(NAME + "_2", cam, tgt, fov, samples=S, res=RES)
 
