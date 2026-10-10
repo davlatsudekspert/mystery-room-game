@@ -37,6 +37,7 @@ func setup(title_sz: int, sub_sz: int, sub_color: Color = UITheme.CREAM) -> void
 	title_label.add_theme_constant_override("outline_size", 3)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.clip_text = true # fit() sizes the labels itself (a Label's own minimum size is updated a frame late)
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title_label.visible = false
 	add_child(title_label)
@@ -45,6 +46,7 @@ func setup(title_sz: int, sub_sz: int, sub_color: Color = UITheme.CREAM) -> void
 	subtitle_label.add_theme_constant_override("outline_size", 4)
 	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	subtitle_label.clip_text = true
 	subtitle_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	subtitle_label.visible = false
 	add_child(subtitle_label)
@@ -90,34 +92,19 @@ func fit(max_w: float) -> void:
 	var th := 0.0
 	_fl = 0.0
 	if title_label.visible:
-		var f := title_label.get_theme_font("font")
-		var fs := title_label.get_theme_font_size("font_size")
-		var w := f.get_string_size(ttext, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 4.0
-		if w <= inner_max:
-			title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-			tw = w
-			th = f.get_height(fs)
+		var m := _measure(title_label, ttext, inner_max)
+		tw = m.x
+		th = m.y
+		if title_label.autowrap_mode == TextServer.AUTOWRAP_OFF:
 			_fl = clampf((inner_max - tw) * 0.5 - 18.0 * k, 0.0, FLOURISH * k)
 			if _fl < 14.0 * k:
 				_fl = 0.0
-		else:
-			title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			tw = inner_max
-			th = f.get_multiline_string_size(ttext, HORIZONTAL_ALIGNMENT_CENTER, inner_max, fs).y
 	var sw := 0.0
 	var sh := 0.0
 	if subtitle_label.visible:
-		var f := subtitle_label.get_theme_font("font")
-		var fs := subtitle_label.get_theme_font_size("font_size")
-		var w := f.get_string_size(stext, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 4.0
-		if w <= inner_max:
-			subtitle_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-			sw = w
-			sh = f.get_height(fs)
-		else:
-			subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			sw = inner_max
-			sh = f.get_multiline_string_size(stext, HORIZONTAL_ALIGNMENT_CENTER, inner_max, fs).y
+		var m := _measure(subtitle_label, stext, inner_max)
+		sw = m.x
+		sh = m.y
 	var title_w := tw + (2.0 * (_fl + 18.0 * k) if _fl > 0.0 else 0.0)
 	var text_w := maxf(title_w, sw)
 	var rule_gap := 10.0 * k if (title_label.visible and subtitle_label.visible) else 0.0
@@ -150,11 +137,27 @@ func fit(max_w: float) -> void:
 	queue_redraw()
 
 
-## Sets a label's size in two steps: a wrapping label's minimum height is computed from its current width, so
-## setting the width first lets the height take the value measured for that width (not one for the old width).
+## The size a label needs for `text`: one line hugging its width when it fits `max_w`, otherwise wrapped at
+## `max_w`; the height counts whole lines plus the theme's line spacing (what the Label itself needs to show
+## every line). Sets the label's autowrap mode accordingly.
+static func _measure(l: Label, text: String, max_w: float) -> Vector2:
+	var f := l.get_theme_font("font")
+	var fs := l.get_theme_font_size("font_size")
+	var spacing := float(l.get_theme_constant("line_spacing"))
+	var line_h := f.get_height(fs)
+	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 4.0
+	var lines := 1
+	if w <= max_w:
+		l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	else:
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		w = max_w
+		lines = maxi(1, int(roundf(f.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, max_w, fs).y / line_h)))
+	return Vector2(w, lines * line_h + (lines - 1) * spacing + 4.0)
+
+
+## Sets a label's size (the labels clip, so Godot's deferred minimum size never clamps the measured value).
 static func _resize(l: Label, s: Vector2) -> void:
-	l.size = Vector2(s.x, l.size.y)
-	l.size = s
 	l.size = s
 
 
