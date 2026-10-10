@@ -30,8 +30,8 @@ const CAGE_TO := -16.0
 const WARM := Color("ffc58a")
 const DEEP := Color("8fe6ff")
 ## The shaft view (archive_room.gd adds it): from the landing sill, nearly straight down.
-const VIEW_POS := Vector3(1.5, -0.55, -3.68)
-const VIEW_TARGET := Vector3(1.62, -31.0, -5.35)
+const VIEW_POS := Vector3(1.5, -0.45, -3.85)
+const VIEW_TARGET := Vector3(1.58, -31.0, -5.0)
 
 var room: Node3D
 var running := false

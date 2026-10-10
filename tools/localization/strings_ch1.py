@@ -145,5 +145,6 @@ S = [
 # ---------------------------------------------------------------- engagement pass (docs/ENGAGEMENT.md): reveals and the hand-off to Chapter 2
 ("cap1.draught", "[A cold draught breathes out from behind the shelves]", "[Из-за полок тянет холодным сквозняком]", "[Javonlar ortidan sovuq shabada esdi]"),
 ("cap1.corridor", "[Beyond the door, the corridor lamps wake one by one]", "[За дверью одна за другой загораются лампы коридора]", "[Eshik ortida yoʻlak chiroqlari birin-ketin yonmoqda]"),
+("cap1.beam_b", "[The beam leaps to the second mirror]", "[Луч перескакивает на второе зеркало]", "[Nur ikkinchi koʻzguga sakrab oʻtdi]"),
 ("epi1.postmark", "Under the corridor lamp you unfold the parcel's wrapper again. The postmark reads: 14 XI 1979.", "Под лампой в коридоре вы снова разворачиваете обёртку посылки. На штемпеле: 14 XI 1979.", "Yoʻlak chirogʻi ostida posilka oʻramini yana ochasiz. Shtempelda: 14 XI 1979."),
 ]

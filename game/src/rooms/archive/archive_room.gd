@@ -85,8 +85,9 @@ const CAPTION := {
 ## Views that are inside the projection booth (the booth interior is only drawn while one is active).
 const CAT_VIEWS := ["catalogue", "cat_drawer", "cat_section"]
 ## The vault reel close-up ([pos, target, fov]) and where the push toward the 42nd silhouette ends.
-const REEL_FROM := [Vector3(1.52, 1.84, -4.0), Vector3(1.52, 1.85, -5.17), 38.0]
-const REEL_TO := [Vector3(1.8, 1.76, -4.55), Vector3(1.9, 1.75, -5.17), 30.0]
+## The screen sits a little low in the frame so the caption band at the top never covers the picture.
+const REEL_FROM := [Vector3(1.52, 1.84, -4.0), Vector3(1.52, 1.95, -5.17), 44.0]
+const REEL_TO := [Vector3(1.8, 1.76, -4.55), Vector3(1.9, 1.78, -5.17), 34.0]
 const BOOTH_VIEWS := ["booth", "projector", "splicer", "slides", "slide_projector", "lens_case"]
 const VAULT_VIEWS := ["vault", "vault_ports", "vault_inside", "vault_mouth"]
 
@@ -445,7 +446,8 @@ func _build_views() -> void:
 	# the finale (docs/ENGAGEMENT.md): the reel close up, then the push toward the 42nd figure at its right edge;
 	# the key cradle for the choice; the freight-lift shaft under the vault for the cliffhanger
 	V.call("vault_reel", REEL_FROM[0], REEL_FROM[1], REEL_FROM[2])
-	V.call("vault_cradle", Vector3(1.5, 1.42, -4.02), Vector3(1.5, 1.2, -5.15), 36.0)
+	# the cradle high in the frame: the choice dialog opens over the middle of the screen, not over the keys
+	V.call("vault_cradle", Vector3(1.5, 1.5, -3.95), Vector3(1.5, 0.8, -5.15), 50.0)
 	V.call("shaft", ArchiveTeaser.VIEW_POS, ArchiveTeaser.VIEW_TARGET, 64.0)
 
 

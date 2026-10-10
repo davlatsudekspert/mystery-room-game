@@ -1451,6 +1451,7 @@ func _feedback(e: String) -> void:
 		"beam_path":
 			if arg == "mirror_back":
 				hud.call("message", tr("msg.mirror_back"))
+			_beam_progress()
 		"lock_waits_for_sign":
 			hud.call("message", tr("msg.lock_waits"))
 		"mirror":
@@ -1609,6 +1610,22 @@ func _stage_bookcase_reveal() -> void:
 	get_tree().create_timer(3.5).timeout.connect(puff.queue_free)
 	AudioManager.sfx("reveal", -6.0, 0.7)
 	get_tree().create_timer(0.7).timeout.connect(func() -> void: hud.call("caption", tr("cap1.draught"), 3.5))
+
+
+## The mirror stretch has one milestone a player can feel: the first time the first mirror sends the beam on to the
+## second one, a bright tick and a caption mark it (the second mirror then still has to be turned). Shown once.
+var _beam_reached_b := false
+
+
+func _beam_progress() -> void:
+	if _beam_reached_b or not logic.state["mirror_b_mounted"]:
+		return
+	var pts: PackedVector2Array = logic.trace_beam()["points"]
+	if pts.size() >= 3 and pts[2].distance_to(Lab7Logic.MIRROR_B_POS) < 0.01:
+		_beam_reached_b = true
+		AudioManager.sfx("ring_turn", -2.0, 1.45)
+		AudioManager.sfx("reveal", -10.0, 1.6)
+		hud.call("caption", tr("cap1.beam_b"), 3.5)
 
 
 ## A save made after the finale choice (the player quit on the chapter card): show the open door and the chapter
