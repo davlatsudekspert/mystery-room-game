@@ -312,11 +312,14 @@ def qa(args, parts):
         cam, tgt, fov = C.view("chronometer")
         lit(cam, 80.0, 0.22)
         C.shoot(NAME + "_2", cam, tgt, fov, samples=S, res=RES)
-    if C.want(args, "3"):          # the same with the pawl fitted: the cover closed
+    bay = ((-0.40, 4.3, 14.15), (-0.62, 3.62, 13.38), 34)
+    if C.want(args, "3"):          # the escapement bay open: the movement and the empty pawl seat
+        lit(bay[0], 90.0, 0.25)
+        C.shoot(NAME + "_3", bay[0], bay[1], bay[2], samples=S, res=RES)
+    if C.want(args, "4"):          # the same with the cover closed (after the pawl is fitted)
         K.pose_rot(parts["plate"], "x", 100.0)
-        cam, tgt, fov = C.view("chronometer")
-        lit(cam, 80.0, 0.22)
-        C.shoot(NAME + "_3", cam, tgt, fov, samples=S, res=RES)
+        lit(bay[0], 90.0, 0.25)
+        C.shoot(NAME + "_4", bay[0], bay[1], bay[2], samples=S, res=RES)
 
 
 def main():
