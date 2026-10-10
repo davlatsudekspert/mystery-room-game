@@ -52,6 +52,14 @@ while true; do
 	sleep 3
 done
 
+# Kill this run's own process tree only (xvfb-run, its Xvfb and Godot, and anything they started). Matching by
+# command line would also kill other callers' runs of the same scene.
+kill_tree() {
+	local p c
+	for c in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$c"; done
+	kill "$1" 2>/dev/null
+}
+
 for attempt in 1 2 3; do
 	: > "$LOG"
 	# 9>&-: only this script holds the slot lock; an Xvfb or Godot left behind by a killed run must not keep it
@@ -66,7 +74,7 @@ for attempt in 1 2 3; do
 		if grep -q '^QA_DONE exit=' "$LOG"; then
 			result=$(grep -m1 -o 'QA_DONE exit=[0-9]*' "$LOG" | cut -d= -f2)
 			sleep 10 # give it a moment to exit by itself
-			pkill -P "$pid" 2>/dev/null; kill "$pid" 2>/dev/null
+			kill_tree "$pid"
 			break
 		fi
 		size=$(stat -c %s "$LOG")
@@ -78,8 +86,7 @@ for attempt in 1 2 3; do
 		fi
 		if [ "$still" -ge "$STALL" ]; then
 			echo "qa_run: no output for ${STALL}s (attempt $attempt), restarting" >&2
-			pkill -P "$pid" 2>/dev/null; kill "$pid" 2>/dev/null
-			pkill -f "godot --path $ROOT/game $1" 2>/dev/null
+			kill_tree "$pid"
 			break
 		fi
 	done

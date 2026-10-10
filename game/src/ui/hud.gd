@@ -738,7 +738,7 @@ func _fly_to_bag(id: String) -> void:
 	_fly.position = start - _fly.size * 0.5
 	var ctrl := Vector2(lerpf(start.x, end.x, 0.3), minf(start.y, end.y) - canvas.y * 0.16) # the top of the arc
 	var f := _fly
-	var tw := create_tween()
+	var tw := f.create_tween() # dies with the icon: a newer flight that frees it leaves no lambda behind
 	tw.tween_method(func(t: float) -> void:
 		if not is_instance_valid(f):
 			return
