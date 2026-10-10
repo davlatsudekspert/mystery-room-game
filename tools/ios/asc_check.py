@@ -314,15 +314,14 @@ def report_crashes(asc: Asc, app_id: str, n: int) -> None:
 		out(f"- GET /v1/builds: HTTP {st}: {err(builds)}")
 	st, subs = asc.get(f"/v1/apps/{app_id}/betaFeedbackCrashSubmissions", {"limit": str(n), "sort": "-createdDate",
 		"fields[betaFeedbackCrashSubmissions]": "createdDate,deviceModel,osVersion,appUptimeInMilliseconds,buildBundleId,build,crashLog",
-		"include": "build,crashLog", "fields[builds]": "version", "fields[betaCrashLogs]": "logText"})
+		"include": "build", "fields[builds]": "version"})
 	out("### TestFlight crash reports shared by testers")
 	if st != 200:
 		out(f"- GET betaFeedbackCrashSubmissions: HTTP {st}: {err(subs)}")
 		return
 	versions = {b["id"]: b["attributes"].get("version") for b in subs.get("included") or [] if b.get("type") == "builds"}
-	# the logs come back included with the list when Apple has one; the per-submission endpoint is the fallback
-	logs = {b["id"]: (b.get("attributes") or {}).get("logText") or "" for b in subs.get("included") or []
-		if b.get("type") == "betaCrashLogs"}
+	# the list cannot include crashLog (HTTP 400), so each log is read through its own endpoint
+	logs: dict = {}
 	data = subs.get("data") or []
 	if not data:
 		out("- none yet (the tester taps Share on the crash prompt, or sends feedback from the TestFlight app)")
