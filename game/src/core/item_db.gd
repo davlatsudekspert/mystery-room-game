@@ -44,11 +44,23 @@ const ITEMS := {
 	"seed_crystal": {"model": "seed_crystal"},
 	"nursery_crystal": {"model": "nursery_crystal"},
 	"cloudy_crystal": {"model": "nursery_crystal"},
+	# Chapter 4 (models come with the Array Hall room; until then the inventory shows the item name)
+	"tower_key_1": {"model": "tower_key"},
+	"tower_key_2": {"model": "tower_key"},
+	"tower_key_3": {"model": "tower_key"},
+	"tower_key_4": {"model": "tower_key"},
+	"strand_log": {"model": "strand_log", "doc": "log4"},
+	"pocket_watch": {"model": "pocket_watch", "doc": "watch4"},
+	"strand_last_letter": {"model": "letter", "doc": "letter4"},
+	"reverse_pawl": {"model": "reverse_pawl"},
+	"leyla_note_1998": {"model": "letter", "doc": "note4"},
+	"leyla_parcel": {"model": "leyla_parcel", "doc": "parcel4"},
 }
 
 const FLAT := ["notebook", "strand_letter", "leyla_photo", "brass_key", "leyla_badge", "index_card", "blank_card",
 	"request_card", "personnel_file", "emblem_slide", "strand_key", "leyla_key", "locker_key", "key_diamond",
-	"key_triangle", "key_circle", "key_square", "ecg_strip", "strand_letters"]
+	"key_triangle", "key_circle", "key_square", "ecg_strip", "strand_letters", "tower_key_1", "tower_key_2",
+	"tower_key_3", "tower_key_4", "strand_log", "strand_last_letter", "leyla_note_1998"]
 
 
 static func exists(id: String) -> bool:

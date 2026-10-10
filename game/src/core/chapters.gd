@@ -13,7 +13,8 @@ const LIST: Array[Dictionary] = [
 		"scene": "res://src/rooms/underground/underground.tscn", "logic": "res://src/rooms/underground/underground_logic.gd",
 		"product": "full_game", "released": false}, # scene in integration (models arriving by group); unreleased
 	{"id": "ch4", "number": 4, "title": "chapter.ch4.title", "subtitle": "chapter.ch4.subtitle",
-		"scene": "", "logic": "", "product": "full_game", "released": false},
+		"scene": "", "logic": "res://src/rooms/array_hall/array_hall_logic.gd",
+		"product": "full_game", "released": false}, # logic and tests done; the scene comes with the Ch4 models. Unreleased: the HUD only offers a chapter with released == true, so the empty scene path is never loaded
 ]
 
 

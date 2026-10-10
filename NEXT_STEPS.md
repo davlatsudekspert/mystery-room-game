@@ -35,6 +35,14 @@ Next in the queue:
 6. **Real-device test:** `docs/TESTING_ON_DEVICE.md` with the first tester build.
 7. **Logo rights:** the owner confirms where the logo artwork came from and that it may be used commercially (`docs/ASSET_LICENSES.md`).
 
+## Chapter 4 — The Experiment (the Array Hall)
+Design and logic are done (2026-10-10): `docs/CHAPTER4_DESIGN.md`, `game/src/rooms/array_hall/array_hall_logic.gd`, `game/tests/array_hall_solver.gd`, `game/tests/test_array_hall_puzzles.gd`, `tools/localization/strings_ch4.py`. The chapter is registered in `chapters.gd` with its logic and an empty scene path, `released: false`. Next, in order:
+1. **Model contract** `docs/models/ch4.md` from the design's models section (groups A–I), then the Blender agents (two at a time; A first with the shared numerals).
+2. **Scene** `game/src/rooms/array_hall/array_hall.tscn` + room code, in the Chapter 3 pattern: the views listed in the design, zone culling, the beam ribbons per `beam:k`, the replay crowd driven by the chronometer wheel, the snap-back staging. Set the `scene` path in `chapters.gd` when it exists.
+3. **HUD reader cases** for the Chapter 4 documents (`show_document`: `log4`, `letter4`, `watch4`, `note4`, `parcel4` → `doc4.log`, `doc4.letter`, `doc4.watch`, `doc4.note`, `doc4.parcel`) and the item models named in `ItemDB` (`tower_key`, `strand_log`, `pocket_watch`, `reverse_pawl`, `leyla_parcel`).
+4. Before the scene lands, give `main_menu.gd` Continue a guard: a saved `ch4` game with an empty scene path would call `SceneManager.goto("")` (only a dev save can contain one today; the chapter select and the chapter-complete card are already guarded by `Premium.can_play`). `HUD.show_document` has no arm for the five Chapter 4 ids, so "Read" does nothing until step 3.
+5. `qa/playthrough_ch4` on both keys, both lens paths and both trust values, plus a variant seed; then `released: true` for ch3 and ch4 together with the bundle.
+
 ## Plugins to use (owner's choice, 2026-10-09)
 The owner enables these on the claude.ai account; they load in a new session. Use them where they help the game:
 - **Superpowers:**
