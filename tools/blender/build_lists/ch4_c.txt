@@ -1,0 +1,5 @@
+# Chapter 4 group C: the Array (lib_ch4.py, lib_ch4_cde.py). docs/models/ch4_c.md
+ring_rails.py
+array_rings.py
+mirror_tower.py
+beam_segment.py

@@ -139,95 +139,117 @@ def fix_dir(bm, up=True):
 
 # ---------------------------------------------------------------------- the toothed ring (array_rings)
 def toothed_ring(name, R, N, mat, y0=0.12, y1=0.50, root=0.30, tip=0.385, w_root=0.56, w_tip=0.34, inner=0.40,
-                 notch_w=0.20, notch_depth=0.27, notches=8, pads=True, rivets=True):
-    """The geared rim beam of one Array ring, centred on the hall axis, as ONE closed solid (the bottom face is removed at
-    the end): inner wall at R - inner, rack teeth from R + root to R + tip over y0..y_band, a stepped rim above, N teeth
-    (a multiple of 8), `notches` deep index notches cut into the gaps at azimuths 0, 45, ... (the position azimuths).
-    Returns the object."""
-    bm = bmesh.new()
+                 notch_w=0.20, floor=0.03, notches=8, pads=True, rivets=True):
+    """The geared rim beam of one Array ring, centred on the hall axis. N rack teeth (a multiple of `notches`), the beam
+    spans R - inner .. R + tip. It is built from (a) a continuous inner ring (top, inner chamfer, inner wall with two machined
+    grooves) whose outer edge is at R + floor, and (b) `notches` outer segments (the stepped rim and the rack) that stop
+    `notch_w` / 2 either side of the gaps at the position azimuths 0, 45, ...: the open slot between two segments is the DEEP
+    INDEX NOTCH (depth root - floor = 0.27, full height, its floor is the inner ring). No booleans; the bottom is open."""
     dA = 360.0 / N
+    M_ = N // notches
     pitch = 2.0 * math.pi * (R + root) / N
     wr = math.degrees((pitch * w_root / 2.0) / (R + root))
     wt = math.degrees((pitch * w_tip / 2.0) / (R + tip))
+    wn = math.degrees((notch_w / 2.0) / (R + root))
     yb = y0 + 0.28                      # top of the toothed band
     yr = y1 - 0.04                      # top of the rim wall (the chamfer follows)
     rim_r = R + root - 0.04
     cham_r = R + root - 0.07
+    Rf = R + floor
 
-    def tooth_loop(y):
-        loop = []
-        for k in range(N):
-            c = (k + 0.5) * dA
-            for da, rr in ((-wr, root), (-wt, tip), (wt, tip), (wr, root)):
-                loop.append(bm.verts.new(pol(R + rr, c + da, y)))
-        return loop
+    # ---- (a) the inner ring
+    bi = bmesh.new()
+    prof = [(Rf, y1), (R - inner + 0.06, y1), (R - inner, y1 - 0.045), (R - inner, yb + 0.07),
+            (R - inner + 0.014, yb + 0.06), (R - inner + 0.014, yb - 0.02), (R - inner, yb - 0.03), (R - inner, y0)]
+    bm_revolve(bi, prof, N, phase_deg=0.5 * dA)
+    fix_dir(bi, up=True)
+    # notch floors: the inner ring's outer wall, only where a notch is
+    for m in range(notches):
+        g = m * M_ * dA
+        v = [bi.verts.new(pol(Rf, g + sg * wn, yy)) for (sg, yy) in ((-1, y0), (1, y0), (1, y1), (-1, y1))]
+        f = bi.faces.new(v)
+        n_out = Vector(pol(1.0, g, 0.0))
+        f.normal_update()
+        if f.normal.dot(n_out) < 0:
+            f.normal_flip()           # the floor faces the open slot, i.e. outward
+    ring_in = K.obj_from_bm(name + "_in", bi, mat)
 
-    def circle_loop(r, y):
-        return [bm.verts.new(pol(r, (k + 0.5) * dA, y)) for k in range(N)]
+    # ---- (b) the outer segments
+    bm = bmesh.new()
 
-    def wall(la, lb):
-        n = len(la)
-        for i in range(n):
-            j = (i + 1) % n
-            bm.faces.new((la[i], la[j], lb[j], lb[i]))
+    def orient(faces, ref):
+        for f in faces:
+            f.normal_update()
+            c = f.calc_center_median()
+            if f.normal.dot(ref(c)) < 0.0:
+                f.normal_flip()
 
-    def ledge(S, T):
-        for k in range(N):
-            k1 = (k + 1) % N
-            t0, t1, t2, t3 = T[4 * k], T[4 * k + 1], T[4 * k + 2], T[4 * k + 3]
-            u0, u1 = T[4 * k1], T[4 * k1 + 1]
-            bm.faces.new((S[k], S[k1], u1, u0, t3, t2))
-            bm.faces.new((S[k], t2, t1))
+    def radial(c):
+        v = Vector((c.x, 0.0, c.z))
+        return v.normalized() if v.length > 1e-9 else Vector((0, 0, 1))
 
-    # outer: the bottom tooth loop, the band top tooth loop, the rim circle, chamfer circle
-    T0, T1 = tooth_loop(y0), tooth_loop(yb)
-    S1 = circle_loop(rim_r, yb)
-    S2 = circle_loop(rim_r, yr)
-    S3 = circle_loop(cham_r, y1)
-    wall(T0, T1)
-    ledge(S1, T1)
-    wall(S1, S2)
-    wall(S2, S3)
-    # top annulus to the inner chamfer
-    Ti = circle_loop(R - inner + 0.06, y1)
-    wall(S3, Ti)
-    # inner wall with two machined grooves
-    prof = [(R - inner + 0.06, y1), (R - inner, y1 - 0.045), (R - inner, yb + 0.07), (R - inner + 0.014, yb + 0.06),
-            (R - inner + 0.014, yb - 0.02), (R - inner, yb - 0.03), (R - inner, y0)]
-    inner_loops = [Ti] + [circle_loop(r, y) for (r, y) in prof[1:]]
-    for a, b in zip(inner_loops[:-1], inner_loops[1:]):
-        wall(a, b)
-    # bottom (closed solid for the notch cut): annulus inner circle .. tooth loop
-    Bi = inner_loops[-1]
-    ledge(Bi, T0)
-    bmesh.ops.triangulate(bm, faces=list(bm.faces), quad_method="BEAUTY", ngon_method="BEAUTY")
-    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-    o = K.obj_from_bm(name, bm, mat)
-    # deep index notches
-    if notches:
-        cb = bmesh.new()
-        for m in range(notches):
-            g = m * (N // notches) * dA
-            bm_polar_box(cb, R + root - notch_depth, R + tip + 0.2, g, notch_w, y0 - 0.05, y1 + 0.2, bottom=True)
-        bmesh.ops.recalc_face_normals(cb, faces=list(cb.faces))
-        cut = K.obj_from_bm(name + "_cut", cb, mat)
-        M.boolean(o, cut)
-        # drop the bottom faces again (never seen) to save triangles
-        bm2 = bmesh.new()
-        bm2.from_mesh(o.data)
-        kill = [f for f in bm2.faces if f.normal.y < -0.9 and all(abs(v.co.y - y0) < 1e-4 for v in f.verts)]
-        bmesh.ops.delete(bm2, geom=kill, context="FACES")
-        bm2.to_mesh(o.data)
-        bm2.free()
+    def rad_up(c):
+        return radial(c) + Vector((0, 1.0, 0))
+
+    def up(c):
+        return Vector((0, 1.0, 0))
+
+    for m in range(notches):
+        g0 = m * M_ * dA
+        a_s, a_e = g0 + wn, g0 + M_ * dA - wn
+        t_chain = lambda y: ([bm.verts.new(pol(R + root, a_s, y))]
+                             + [bm.verts.new(pol(R + rr, (m * M_ + j + 0.5) * dA + da, y))
+                                for j in range(M_) for da, rr in ((-wr, root), (-wt, tip), (wt, tip), (wr, root))]
+                             + [bm.verts.new(pol(R + root, a_e, y))])
+        c_chain = lambda r, y: ([bm.verts.new(pol(r, a_s, y))]
+                                + [bm.verts.new(pol(r, (m * M_ + j + 0.5) * dA, y)) for j in range(M_)]
+                                + [bm.verts.new(pol(r, a_e, y))])
+
+        def wall(la, lb):
+            out = []
+            for i in range(len(la) - 1):
+                out.append(bm.faces.new((la[i], la[i + 1], lb[i + 1], lb[i])))
+            return out
+
+        T0, T1 = t_chain(y0), t_chain(yb)
+        S1, S2, S3 = c_chain(rim_r, yb), c_chain(rim_r, yr), c_chain(cham_r, y1)
+        Cn = c_chain(Rf, y1)
+        Bn = [bm.verts.new(pol(Rf, a_s, y0)), bm.verts.new(pol(Rf, a_e, y0))]
+        orient(wall(T0, T1), radial)
+        orient(wall(S1, S2), radial)
+        orient(wall(S2, S3), rad_up)
+        orient(wall(S3, Cn), up)
+        led = []
+        # ledge between the band top (tooth chain T1) and the rim (circle chain S1)
+        led.append(bm.faces.new((S1[0], S1[1], T1[2], T1[1], T1[0])))
+        for j in range(M_):
+            t = 1 + 4 * j
+            led.append(bm.faces.new((S1[1 + j], T1[t + 2], T1[t + 1])))
+            if j < M_ - 1:
+                led.append(bm.faces.new((S1[1 + j], S1[2 + j], T1[t + 5], T1[t + 4], T1[t + 3], T1[t + 2])))
+        led.append(bm.faces.new((S1[M_], S1[M_ + 1], T1[-1], T1[-2], T1[-3])))
+        orient(led, up)
+        # the slot's side walls (the segment ends)
+        for end, sgn in ((0, -1), (-1, 1)):
+            poly = [Bn[0 if end == 0 else 1], T0[end], T1[end], S1[end], S2[end], S3[end], Cn[end]]
+            f = bm.faces.new(poly)
+            f.normal_update()
+            tang = Vector((math.cos(math.radians(a_s if end == 0 else a_e)), 0.0,
+                           math.sin(math.radians(a_s if end == 0 else a_e)))) * sgn
+            if f.normal.dot(tang) < 0.0:
+                f.normal_flip()
+    bmesh.ops.triangulate(bm, faces=list(bm.faces), quad_method="BEAUTY", ngon_method="EAR_CLIP")
+    seg = K.obj_from_bm(name + "_seg", bm, mat)
+
     extra = bmesh.new()
     if pads:
         for m in range(notches):
-            g = m * (N // notches) * dA
+            g = m * M_ * dA
             a = math.radians(g)
             rad = Vector((math.sin(a), 0.0, -math.cos(a)))
             tan = Vector((math.cos(a), 0.0, math.sin(a)))
-            base = rad * (R + root - 0.34)
-            tipp = rad * (R + root - 0.06)
+            base = rad * (R - 0.30)
+            tipp = rad * (R + 0.0)
             pts = [base - tan * 0.15, base + tan * 0.15, tipp]
             lo = [extra.verts.new((p.x, y1 - 0.002, p.z)) for p in pts]
             hi = [extra.verts.new((p.x, y1 + 0.022, p.z)) for p in pts]
@@ -236,18 +258,20 @@ def toothed_ring(name, R, N, mat, y0=0.12, y1=0.50, root=0.30, tip=0.385, w_root
                 extra.faces.new((lo[j], lo[i], hi[i], hi[j]))
             extra.faces.new(hi)
     if rivets:
-        for k in range(0, N, 2):
+        for k in range(N):
             c = (k + 0.5) * dA
-            for rr in (R + 0.10,):
-                p = pol(rr, c, y1)
-                bm_dome(extra, p, 0.016, 0.014, segs=5)
+            j = k % M_
+            if 1 <= j <= M_ - 2 and k % 2 == 0:
+                bm_dome(extra, pol(R + 0.125, c, y1), 0.016, 0.014, segs=5)
+            if 1 <= j <= M_ - 2 and k % 4 == 1:
+                bm_dome(extra, pol(R - 0.22, c, y1), 0.016, 0.014, segs=5)
+    objs = [ring_in, seg]
     if len(extra.verts):
         bmesh.ops.recalc_face_normals(extra, faces=list(extra.faces))
-        ex = K.obj_from_bm(name + "_extra", extra, mat)
-        o = K.merge(name, [o, ex])
+        objs.append(K.obj_from_bm(name + "_extra", extra, mat))
     else:
         extra.free()
-    return o
+    return K.merge(name, objs)
 
 
 # ---------------------------------------------------------------------- crystal
