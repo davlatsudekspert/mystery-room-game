@@ -1,0 +1,8 @@
+# Chapter 3 group D: the Nursery (lib_ch3_d.py on top of lib_ch3_a.py). docs/models/ch3_d.md
+autoclave.py
+autoclave_dead.py
+growth_log.py
+seed_library.py
+growth_chart.py
+spectral_seal_door.py
+prism_bench.py

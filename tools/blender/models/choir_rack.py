@@ -20,7 +20,7 @@ floor level, centre. Posts at x ±1.35, top bar at y 2.35 (front face z 0.20), b
   IA_hammer             the master-hammer lever on the right post, pivot (1.42, 1.10, 0.22) at its base;
                         pull = +45° about local +X (M_Brass_Aged).
   rack_lock             the brass locking bar in front of the peg tips, at rest above the eyes (y 2.305..2.345,
-                        z 0.24..0.255); slides -0.05 on local Y once choir_tuned, closing the hooks.
+                        z 0.25..0.265); slides -0.05 on local Y once choir_tuned, closing the hooks.
   stair_quad            the chalk staircase on the wall above the rack: x ±1.30, y 2.55..3.45, z 0.004, UV 0..1
                         (u -> +X, v -> +Y), M_Shader_Quad (QA preview: qa/blender/ch3/preview/stair_quad.png).
 
@@ -55,7 +55,7 @@ PEG_Z = (0.10, 0.235)
 STRIKER_PIVOT = (0.0, 2.40, 0.30)
 ROLLER_Y, ROLLER_R = 2.12, 0.022
 HAMMER = (1.42, 1.10, 0.22)
-LOCK = (2.305, 2.345, 0.24, 0.255)              # lock bar y0, y1, z0, z1 at rest
+LOCK = (2.305, 2.345, 0.25, 0.265)              # lock bar y0, y1, z0, z1 at rest (in front of the peg tips, z <= 0.243)
 LOCK_SLIDE = -0.05
 QUAD = (-1.30, 1.30, 2.55, 3.45, 0.004)
 PLACE = ((-9.6, 0.0, -4.0), 0.0)
@@ -107,10 +107,13 @@ def frame():
         p.append(B.gbox("bmul", (x - 0.012, y0, bz0), (x + 0.012, y1, bz1 + 0.004), STEEL, 0.001))
         for y in (y0 + 0.08, 1.70, y1 - 0.06):
             p.append(B.rivet("brv2", 0.005, (x, y, bz1 + 0.004), normal=(0, 0, 1), mat=STEEL, segs=6))
-    # hammer bracket on the right post's outer face
+    # hammer bracket on the right post's outer face: a plate, an outer cheek and the web between them (the boss turns
+    # between the cheeks)
     hx, hy, hz = HAMMER
-    p.append(B.gbox("hbrk", (POST_X + POST_W / 2, hy - 0.03, hz - 0.045), (hx + 0.03, hy + 0.03, hz + 0.045), STEEL, 0.003))
-    p.append(B.gbox("hbrk2", (POST_X + POST_W / 2 - 0.012, hy - 0.07, hz - 0.06), (POST_X + POST_W / 2, hy + 0.07, hz + 0.06), STEEL, 0.002))
+    xf = POST_X + POST_W / 2
+    p.append(B.gbox("hplate", (xf - 0.012, hy - 0.075, hz - 0.06), (xf + 0.005, hy + 0.075, hz + 0.06), STEEL, 0.002))
+    p.append(B.gbox("hcheek", (hx + 0.027, hy - 0.04, hz - 0.045), (hx + 0.034, hy + 0.04, hz + 0.045), STEEL, 0.002))
+    p.append(B.gbox("hweb", (xf, hy - 0.05, hz - 0.045), (hx + 0.034, hy - 0.04, hz + 0.045), STEEL, 0.002))
     return p
 
 
@@ -135,10 +138,11 @@ def brass_static():
         p.append(B.gbox("guide_k", (gx0, ly0 + LOCK_SLIDE - 0.012, lz0 - 0.004), (gx1, ly1 + 0.012, lz0), BRASS, 0.001))
     # hammer quadrant: a toothed brass arc the lever's catch rides on (static)
     hx, hy, hz = HAMMER
-    arc = [(math.cos(math.radians(a)) * 0.12, math.sin(math.radians(a)) * 0.12) for a in range(40, 101, 10)]
-    arc_in = [(math.cos(math.radians(a)) * 0.095, math.sin(math.radians(a)) * 0.095) for a in range(100, 39, -10)]
+    # drawn in XY (x = cos a, y = sin a), then stood in the YZ plane as (y = cos a, z = sin a): a = 0 is the upright
+    # rest, a = 45 the pulled lever; the plate sits at the lever's right, x = hx + 0.035 .. 0.041
+    arc = [(math.cos(math.radians(a)) * 0.12, math.sin(math.radians(a)) * 0.12) for a in range(-10, 61, 10)]
+    arc_in = [(math.cos(math.radians(a)) * 0.095, math.sin(math.radians(a)) * 0.095) for a in range(60, -11, -10)]
     q = B.plate("quadrant", [arc + arc_in], 0.006, mat=BRASS, bevel=0.0, loc=(0.0, 0.0, 0.0))
-    # the plate is drawn in XY facing +Z: stand it in the YZ plane at the lever's right (x = hx + 0.035), rising from the pivot
     q.data.transform(Matrix.Translation((hx + 0.035, hy, hz)) @ Matrix.Rotation(math.radians(90), 4, "Y") @
                      Matrix.Rotation(math.radians(90), 4, "Z"))
     p.append(q)
@@ -212,7 +216,10 @@ def build():
     sq = stair_quad()
     mts = mounts()
     B.K.to_blender()
-    A.finalize_uv()          # box UVs; the shader quad keeps its 0..1 UVs? no: M_Shader_Quad is not a decal slot
+    A.finalize_uv()
+    uvl = sq.data.uv_layers.active      # finalize_uv skips only M_Decal_*: restore the shader quad's 0..1 UVs
+    for li, (uu, vv) in zip(range(4), ((0, 0), (1, 0), (1, 1), (0, 1))):
+        uvl.data[li].uv = (uu, vv)
     return dict(static=st, slots=slots, striker=strk, hammer=hm, lock=lk, quad=sq, mounts=mts)
 
 

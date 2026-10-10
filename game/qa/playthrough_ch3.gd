@@ -462,6 +462,9 @@ func _count_missing(why: String, puzzle: String, label: String) -> void:
 func run() -> void:
 	var s := logic.state
 	var lift := "lift_w" if s["entry"] == "choir" else "lift_e"
+	# a new game begins in the lift (capture mode skips the intro and the room opens at the hall: step back in)
+	cam().go(lift, true)
+	await _settle(0.6)
 	await shot("lift")
 	if not quick:
 		await _perf(lift)
