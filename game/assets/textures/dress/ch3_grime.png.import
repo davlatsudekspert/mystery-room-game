@@ -3,15 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxeowm5p7rpd2"
-path="res://.godot/imported/ch3_grime.png-6cbc1164678fc88b35f3f0a1d0b2c86c.ctex"
-metadata={
-"vram_texture": false
-}
+valid=false
 
 [deps]
 
 source_file="res://assets/textures/dress/ch3_grime.png"
-dest_files=["res://.godot/imported/ch3_grime.png-6cbc1164678fc88b35f3f0a1d0b2c86c.ctex"]
 
 [params]
 

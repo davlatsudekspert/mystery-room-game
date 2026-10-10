@@ -12,7 +12,7 @@ front. Board x +-0.95, y 0.2 - 2.1, z 0 - 0.22 (face at z = 0.22), plinth to y 0
                                  the main lever's quadrant guide
   leyla_chalk   M_Chalk          her sign, 1998 and four tally strokes on the lower left, 2 mm proud
   lamp_lock / lamp_light / lamp_array / lamp_vent   M_Glass_Dark domes r 0.035 at (-0.30 / 0 / 0.30 / 0.60, 1.86, 0.22)
-  IA_switch_1..5   M_Brass_Aged  toggles, ORIGIN (-0.78, y_s, 0.22), neutral = straight out +Z (identity).
+  IA_switch_1..5   M_Brass_Aged  toggles, ORIGIN (-0.74, y_s, 0.22), neutral = straight out +Z (identity).
                    UP (on) = -40 deg about +X, DOWN (off) = +40 deg
   IA_main_lever    M_Brass_Aged  ORIGIN (0.84, 0.60, 0.24), rest = upright (+Y); PULLED = +60 deg about +X
   trace_<s>_<line> M_Brass_Aged  20 junction dots r 0.024 raised 4 mm at (x_line, y_s, 0.22); s = 1..5, line = lock | light |
@@ -41,7 +41,7 @@ LINES = ("lock", "light", "array", "vent")
 LINE_X = (-0.30, 0.0, 0.30, 0.60)
 ROW_Y = (1.42, 1.18, 0.94, 0.70, 0.46)
 LAMP_Y = 1.86
-SW_X = -0.78
+SW_X = -0.74
 LEVER_P = (0.84, 0.60, 0.24)
 
 
@@ -58,19 +58,19 @@ def relief(name, loops, x, y, depth=0.003, mat=BRASS):
 def pictograms():
     out = []
     # LOCK: a padlock
-    body = L.rounded_rect(0.050, 0.034, 0.005, 2, 0.0, -0.014)
-    shackle = arc(0.016, 180, 0, 8) + arc(0.010, 0, 180, 8)
-    shackle = [(x, y + 0.004) for (x, y) in shackle]
+    body = L.rounded_rect(0.072, 0.050, 0.007, 2, 0.0, -0.020)
+    shackle = arc(0.024, 180, 0, 8) + arc(0.0155, 0, 180, 8)
+    shackle = [(x, y + 0.005) for (x, y) in shackle]
     out.append(relief("pg_lock", [body], LINE_X[0], 1.70))
     out.append(relief("pg_lock2", [shackle], LINE_X[0], 1.70))
     # LIGHT: the sun symbol (disc with 8 rays)
-    out.append(C.S.inlay("pg_light", "sun", 0.062, depth=0.003, mat=BRASS, loc=(LINE_X[1], 1.70, FACE)))
+    out.append(C.S.inlay("pg_light", "sun", 0.090, depth=0.003, mat=BRASS, loc=(LINE_X[1], 1.70, FACE)))
     # ARRAY: concentric rings and a dot
-    rings = [L.circle(0.027, 20), list(reversed(L.circle(0.022, 20))), L.circle(0.016, 16), list(reversed(L.circle(0.011, 16))), L.circle(0.0055, 10)]
+    rings = [L.circle(0.040, 24), list(reversed(L.circle(0.033, 24))), L.circle(0.024, 20), list(reversed(L.circle(0.017, 20))), L.circle(0.008, 12)]
     out.append(relief("pg_array", rings, LINE_X[2], 1.70))
     # VENT: three stacked upward chevrons
-    for k, y in enumerate((-0.020, 0.0, 0.020)):
-        chev = [(-0.022, y), (0.0, y + 0.016), (0.022, y), (0.022, y - 0.007), (0.0, y + 0.009), (-0.022, y - 0.007)]
+    for k, y in enumerate((-0.030, 0.0, 0.030)):
+        chev = [(-0.034, y), (0.0, y + 0.025), (0.034, y), (0.034, y - 0.011), (0.0, y + 0.014), (-0.034, y - 0.011)]
         out.append(relief(f"pg_vent{k}", [chev], LINE_X[3], 1.70))
     return out
 
@@ -107,7 +107,7 @@ def brass_parts():
     # numerals I..V and the switch collars
     for s in range(5):
         out.append(C.N.roman_obj(f"rn{s + 1}", s + 1, 0.06, 0.003, BRASS, loc=(0.0, 0.0, 0.0)))
-        out[-1].data.transform(Matrix.Translation((-0.905, ROW_Y[s], FACE)))
+        out[-1].data.transform(Matrix.Translation((-0.85, ROW_Y[s], FACE)))
         out.append(D.ring("sc", 0.012, 0.030, FACE, FACE + 0.010, (SW_X, ROW_Y[s], 0.0), (0, 0, 1), 16, BRASS, chamfer=0.002))
     # the main lever's guide: two arc rails at x = 0.80 / 0.88, radius 0.34 about the pivot, 0 .. 70 deg toward +Z, and a base boss
     py, pz = LEVER_P[1], LEVER_P[2]
@@ -122,14 +122,14 @@ def brass_parts():
 
 def chalk_part():
     out = []
-    sign = C.S.inlay("sign", "sign", 0.13, depth=0.002, mat=CHALK, loc=(-0.84, 0.29, FACE))
+    sign = C.S.inlay("sign", "sign", 0.13, depth=0.002, mat=CHALK, loc=(-0.80, 0.29, FACE))
     out.append(sign)
     for k, ch in enumerate("1998"):
         d = C.N.digit_obj(f"d{k}", int(ch), 0.07, 0.002, CHALK, res=1)
-        d.data.transform(Matrix.Translation((-0.745 + 0.052 * k, 0.29, FACE)))
+        d.data.transform(Matrix.Translation((-0.705 + 0.052 * k, 0.29, FACE)))
         out.append(d)
     for k in range(4):                                                    # four tally strokes: "this time, all four"
-        out.append(K.gbox("tally", (-0.50 + 0.022 * k, 0.255, FACE), (-0.496 + 0.022 * k, 0.335, FACE + 0.002), CHALK, 0.0))
+        out.append(K.gbox("tally", (-0.46 + 0.022 * k, 0.255, FACE), (-0.456 + 0.022 * k, 0.335, FACE + 0.002), CHALK, 0.0))
     return M.join(out, "leyla_chalk")
 
 

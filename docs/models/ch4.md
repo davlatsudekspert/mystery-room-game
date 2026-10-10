@@ -377,15 +377,15 @@ z ∈ [0, 0.22], front at z = 0.22), on a plinth; a raised bevelled bezel; a bra
   plaques at y = 1.70 below each: a padlock, a sun, concentric rings, a fan of chevrons;
 - **Strand's plate** across the top (brass, 0.90 × 0.12 at (0.15, 2.00)): four filled discs Ø 0.07, one over each lamp;
 - four vertical brass **buses**, one per line, at the lamp x, from y = 1.60 down to 0.40 (static inlay, 8 mm wide, 1.5 mm proud);
-- five **switch rows**: the switch toggles in a column at x = −0.78, y_s = 1.42, 1.18, 0.94, 0.70, 0.46 (s = 1..5, top to bottom),
-  Roman numerals I..V engraved at x = −0.90, and a horizontal brass wire from x = −0.66 to 0.72 at each y_s;
+- five **switch rows**: the switch toggles in a column at x = −0.74, y_s = 1.42, 1.18, 0.94, 0.70, 0.46 (s = 1..5, top to bottom),
+  Roman numerals I..V at x = −0.85, and a horizontal brass wire from x = −0.66 to 0.72 at each y_s;
 - a **junction dot** where switch row s crosses line bus l if the switch feeds that line (the 20 `trace_*` objects);
 - **`leyla_chalk`**: her crescent-and-three-dots sign, four tally strokes and the digits 1998 in `M_Chalk` flat strokes on the
-  bezel's lower left, about 0.5 wide (x ∈ [−0.90, −0.40], y ∈ [0.22, 0.36]);
+  bezel's lower left, about 0.5 wide (x ∈ [−0.89, −0.40], y ∈ [0.22, 0.36]);
 - **`IA_main_lever`** at the right edge, a big brass lever (stem 0.40) in a slotted quadrant, pivot (0.84, 0.60).
 
 **Parts:**
-- **`IA_switch_1..5`**: brass bat-handle toggles (stem 0.06, round tip), origin at the pivot on the panel face (−0.78, y_s,
+- **`IA_switch_1..5`**: brass bat-handle toggles (stem 0.06, round tip), origin at the pivot on the panel face (−0.74, y_s,
   0.22); neutral = pointing straight out +Z at identity. **Up (on) = −40° about +X, down (off) = +40°.** The code sets +40° at
   the start (all off).
 - **`IA_main_lever`**: origin at its pivot (0.84, 0.60, 0.24); rest = upright (+Y) and **pulled = +60° about +X** (toward the

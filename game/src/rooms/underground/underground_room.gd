@@ -296,7 +296,7 @@ func _build_lights() -> void:
 		_light("memorial_lamp", "omni", Vector3(0.0, 2.7, -1.6), Color("ffe0b8"), 2.0, 5.5, "G")
 	# the candles Leyla left on the memorial's ledge (dressing): a small warm pool on the stone below the band
 	if _dress:
-		_light("memorial_candles", "omni", _at("dress_memorial", "memorial_candles", Vector3(-0.54, 0.72, -3.82)), Color("ffa860"), 0.8, 1.9, "G")
+		_light("memorial_candles", "omni", _at("dress_memorial", "memorial_candles", Vector3(-0.54, 0.72, -3.82)), Color("ffa860"), 0.5, 2.1, "G")
 	# a shroud lamp in front of each drum lock: the drums sit 5 cm behind the plate, where no room light reaches
 	for side: String in ["west", "east"]:
 		var door := models.get("door_" + side) as Node3D

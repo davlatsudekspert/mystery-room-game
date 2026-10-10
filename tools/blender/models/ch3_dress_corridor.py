@@ -1,8 +1,8 @@
 """ch3_dress_corridor.glb — set-dressing of the crystal shutter's wall (group K, drawn in the camp's own views): the
 service side of Leyla's camp, where the shutter tunnel to the Gallery leaves the room. Pipes and conduit run along the
 walls, a fire bucket hangs on a hook under its pictogram, a dusty hand cart is parked in the room, warning marks (original,
-language-neutral pictograms: hazard bolt, flame, no entry, flow chevrons, valve, hazard stripes, ) are
-stencilled on the tiles and the floor, and the tiles are cracked, stained and missing in places.
+language-neutral pictograms: hazard bolt, flame, flow chevrons, valve, and one weathered hazard stripe on the floor at the shutter's foot) are
+stencilled on the tiles, and the tiles are cracked, stained and missing in places.
 Nothing here is interactive (no colliders).
 
 ROOM-COORDINATE model: origin = the world origin, built in place in the camp x 4.5 .. 7.6, z -4.0 .. -1.2, y 0 .. 2.9.
@@ -15,7 +15,7 @@ The shutter frame (x 4.5 .. 4.65, z -3.25 .. -1.95, y 0 .. 2.1), its crystals an
       fire bucket  crimson enamel with sand, on a hook plate (north wall), the flame pictogram above it
       hand cart    plank deck on a steel frame, four casters, a tubular handle with a cable coil, a canvas-covered load
       grime atlas  the west wall's baseboard dirt, soot, damp, rust, streaks, cracks, missing tiles; the warning marks;
-                   the hazard stripe in front of the shutter and the  on the floor
+                   the one hazard stripe in front of the shutter, weathered and dirtied over
 
     blender -b --factory-startup -P tools/blender/models/ch3_dress_corridor.py [-- --no-render]
 """
@@ -32,7 +32,7 @@ TRI_BUDGET, SURF_BUDGET, MAT_BUDGET = 5000, 10, 10
 WALL_N, WALL_W, WALL_S, WALL_E = X.WALL_N, X.WALL_W, X.WALL_S, X.WALL_E
 place, at = X.place, X.at
 CART = (5.60, 0.0, -2.42)
-CART_YAW = 100.0                         # long axis north-south, parked in the ; the handle points south
+CART_YAW = 100.0                         # long axis north-south, parked in front of the shutter's south half; the handle points south
 BUCKET_X = 4.96
 
 
@@ -147,9 +147,9 @@ def grime():
     floor("st_stripes", 4.86, -2.6, 1.34, 0.30, 90.0, 0.0045)
     floor("baseboard", 4.75, -2.6, 2.9, 0.55, 90.0)
     floor("damp_a", 5.55, -2.20, 1.0, 1.0, 40.0)
-    floor("damp_b", 4.95, -2.95, 0.8, 0.8, 100.0, 0.0038)
+    floor("damp_b", 5.00, -2.95, 0.8, 0.8, 90.0, 0.0038)
     floor("corner", 4.85, -2.25, 0.8, 0.8, 270.0, 0.0038)
-    floor("soot", 4.90, -2.62, 0.7, 0.7, 30.0, 0.0040)
+    floor("soot", 4.95, -2.62, 0.7, 0.7, 0.0, 0.0040)
     return d.items
 
 
