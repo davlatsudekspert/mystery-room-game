@@ -88,6 +88,7 @@ func _ready() -> void:
 				ModelUtil.use_exact_collider(mi)
 	_compressor_on = logic.state["pressure_ok"]
 	_legible_piping_plate()
+	_satin_dial_plate()
 	_dress_splice_frames()
 	_mark_gauges()
 
@@ -140,6 +141,25 @@ func _mark_gauges() -> void:
 		var r := 0.072
 		wedge.transform = Transform3D(rest_xf.basis * Basis(Vector3.BACK, ang - PI / 2.0),
 			rest_xf.origin + rest_xf.basis * Vector3(cos(ang) * r, sin(ang) * r, -0.002))
+
+
+## The booth door's polished brass plate mirrors the pendants straight into the dial close-up: 15 % of that frame
+## clipped to white around the finger holes. Satin brass keeps the metal and loses the glare.
+func _satin_dial_plate() -> void:
+	var door := model("booth_door")
+	if door == null:
+		return
+	var satin := StandardMaterial3D.new()
+	satin.albedo_color = Color("c9a45c")
+	satin.metallic = 0.55
+	satin.roughness = 0.6
+	for mi in ModelUtil.find_meshes(door):
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var src := mi.get_active_material(i)
+			if src != null and src.resource_name.begins_with("M_Brass"):
+				mi.set_surface_override_material(i, satin)
 
 
 ## The compressor's piping diagram is the evidence for P2. Polished brass inlay on black lacquer only shows what

@@ -46,6 +46,20 @@ All screenshots and frame counts come from the software renderer in the dev cont
 | 9 | 8 | Localized decals (badge, cards, rules, labels) in EN/RU/UZ | No native-speaker review |
 | 10 | 6 | Released in the chapter list (paid bundle; tester builds open it). Player review: 1 small UI issue left | Real payments and store review |
 
+## 2026-10-10 update: 3D light and player-QA pass (Chapters 1 and 2)
+Only the criteria that moved. Evidence: the same seed played before and after through the real scene (Ch1 seed 4242, Ch2 seed 777 leave path), frame statistics (mean luminance and the share of pixels clipped to white), tap maps, and the new headless feedback audit (`qa/feedback_audit.tscn`). Before/after pairs: `docs/previews/quality/`.
+
+| # | Chapter | Score | Evidence | Main gap |
+|---|---|---|---|---|
+| 1 | Ch1 | 7.5 → **8** | Glow 0.6/0.05/1.1 → 0.4/0/1.35 and emissives 3.5–4.0 → 2.2–2.6: the panel's jewel lamps, bulbs and the projector lens no longer bloom into white discs; the dark lab is unchanged (mean 37.8 → 37.5); the powered lab keeps its pendant-and-shadow mood (`ch1_lab_powered_before_after.jpg`, `ch1_panel_before_after.jpg`) | The beam is still a bright tube at energy 1.05 (3.1 % clipped); the regression run at 0.75 is pending. Software renderer only, no phone captures |
+| 1 | Ch2 | 8 → **8.5** | Splicer light box 11.8 % → 0.1 % clipped; the film view's white haze is gone and the picture is the brightest thing (`ch2_film_before_after.jpg`); hall pendants no longer blots | The dial close-up still clips 15 % on the polished brass plate (a satin override is in the next run); the slide field clipped 21 % (shader fix pending its run) |
+| 4 | Ch1 | 7 → **7.5** | Feedback audit: 48 taps in 9 puzzle states, 0 silent. Tap maps of 27 views: every puzzle part green; the only red/orange marks are parts hidden by design (a closed compartment, rings seen edge-on). Panel 7's lever and lamps clear the HUD. Drawer wheels and safe keys grew from ~4–5 mm to ~8 mm on a 6" phone (two-state close-ups). Radiator and sculpture got tap areas | No real-finger test; darkroom-stage tap maps pending |
+| 4 | Ch2 | 8 → **8.5** | Feedback audit: 40 taps in 6 states, 0 silent (no pressure, no card, no reel, locked, emptied, unlocked). Dial holes and punch keys ~7 mm on a phone (were ~5) | Full tap map of 30 views pending in the render queue; no real-finger test |
+| 6 | both | 7 → **7.5** | Every tap now has an audible answer (a tick for solved wheels, a rattle for locked doors, a soft tap for scenery), from the existing synthesized set | Not heard on a device |
+| 7 | Ch1 | 6 | Measured in this pass: 130 draw calls (dark) / 136 (powered), 112–117k primitives, under the 150k primitive target; the draw-call count rose with the HUD redesign's inventory column | FPS on a phone |
+| 7 | Ch2 | 6 → **5.5** | Hall view 166 draw calls (budget 150; it was 144 before the aisle sign and the HUD column), ~86k primitives | A `--perf --breakdown` run is queued to name the extra draws |
+| 8 | both | 8 | Ch1 seed 4242: 100 taps, 0 fallbacks before and after; Ch2 seed 777 leave: 94 taps, 0 fallbacks before and after. 102 tests pass on main plus these changes | More seeds and both player reviews are queued behind other agents' renders |
+
 ## Fixes found by QA in this round (see `docs/GAMEPLAY_QA.md`)
 - Chapter 2 crash on every "use item" tap: `ItemDB.is_tool` clashed with Godot's `Script.is_tool()`.
 - The projector beam rendered as a floor-to-ceiling slab.
