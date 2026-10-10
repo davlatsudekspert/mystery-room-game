@@ -10,7 +10,7 @@ floor level at the footprint centre. Body 1.40 w x 0.60 d; the slope runs from t
 
   gallery_console  (static, M_Wood_Walnut / M_Brass_Aged / M_Glass_Dark) the cabinet with plinth and raised panels,
                    brass nosing and grille, the board with the scope bezel and the dark glass margin, the knob bosses,
-                   scale rings and brass numerals 1-5 (150, 120, 90, 60, 30 deg round each knob), a tube-rack
+                   scale rings and brass numerals 1-5 (150, 120, 90, 60, 30 deg round each knob) on black enamel dials, a tube-rack
                    pictogram under X and a crystal pictogram under Y, the two lamp bezels, and the keystone pad of the
                    finale socket (level top y 0.98, a boss 0.0202 high for the crystal's foot)
   scope_screen     round CRT face Ø 0.24 at (0, 1.25, -0.065), UV 0..1 over its bounding square, M_Shader_Quad
@@ -58,7 +58,7 @@ SCOPE_R = 0.12
 KNOB = {"x": (-0.34, 1.20, -0.06), "y": (0.34, 1.20, -0.06)}
 KNOB_R, KNOB_H = 0.035, 0.030
 NUMERAL_ANG = {1: 150, 2: 120, 3: 90, 4: 60, 5: 30}
-NUMERAL_R = 0.066
+NUMERAL_R = 0.064
 LAMP = {"choir": (-0.62, 1.42, -0.065), "nursery": (0.62, 1.42, -0.065)}
 CRADLE = (0.0, 0.98, 0.14)
 SEAT_TOP = 0.98
@@ -86,24 +86,23 @@ def on_slope(o, centre):
 
 
 # ====================================================================== pictograms (relief, facing +Z)
-def rack_pictogram(cx, cy, z, mat=BRASS, depth=0.0015):
-    """Tube rack: a base bar, a top bar and three standing tubes (0.054 x 0.040)."""
+def rack_pictogram(cx, cy, z, mat=BRASS, depth=0.002):
+    """Tube rack: a base bar, a top bar, three standing tubes (0.070 x 0.052)."""
     out = []
-    for (x0, y0, x1, y1) in ((-0.027, -0.020, 0.027, -0.014), (-0.027, 0.010, 0.027, 0.016),
-                             (-0.020, -0.014, -0.012, 0.010), (-0.004, -0.014, 0.004, 0.010), (0.012, -0.014, 0.020, 0.010)):
+    for (x0, y0, x1, y1) in ((-0.035, -0.026, 0.035, -0.017), (-0.035, 0.006, 0.035, 0.015),
+                             (-0.027, -0.017, -0.015, 0.006), (-0.006, -0.017, 0.006, 0.006), (0.015, -0.017, 0.027, 0.006)):
         out.append(K.gbox("rk", (cx + x0, cy + y0, z), (cx + x1, cy + y1, z + depth), mat, 0.0))
-    # three test tubes standing in the rack, drawn as round-topped bars above the top bar
-    for x in (-0.016, 0.0, 0.016):
-        out.append(K.gbox("rk_tube", (cx + x - 0.003, cy + 0.016, z), (cx + x + 0.003, cy + 0.030, z + depth), mat, 0.0))
+    for x in (-0.021, 0.0, 0.021):
+        out.append(K.gbox("rk_tube", (cx + x - 0.0045, cy + 0.015, z), (cx + x + 0.0045, cy + 0.035, z + depth), mat, 0.0))
     return out
 
 
-def crystal_pictogram(cx, cy, z, mat=BRASS, depth=0.0015):
-    """A hexagonal crystal with pointed ends, outlined, with one facet line (0.022 x 0.046)."""
-    outer = [(0.0, 0.026), (0.011, 0.014), (0.011, -0.014), (0.0, -0.026), (-0.011, -0.014), (-0.011, 0.014)]
-    inner = [(0.0, 0.019), (0.0065, 0.0115), (0.0065, -0.0115), (0.0, -0.019), (-0.0065, -0.0115), (-0.0065, 0.0115)]
+def crystal_pictogram(cx, cy, z, mat=BRASS, depth=0.002):
+    """A hexagonal crystal with pointed ends, outlined, with one facet line (0.030 x 0.062)."""
+    outer = [(0.0, 0.032), (0.015, 0.018), (0.015, -0.018), (0.0, -0.032), (-0.015, -0.018), (-0.015, 0.018)]
+    inner = [(0.0, 0.022), (0.0075, 0.0135), (0.0075, -0.0135), (0.0, -0.022), (-0.0075, -0.0135), (-0.0075, 0.0135)]
     o = K.plate("cr_out", [outer, list(reversed(inner))], depth, z0=z, mat=mat, bevel=0.0, drop_bottom=True, loc=(cx, cy, 0.0))
-    f = K.gbox("cr_facet", (cx - 0.0007, cy - 0.016, z), (cx + 0.0007, cy + 0.016, z + depth), mat, 0.0)
+    f = K.gbox("cr_facet", (cx - 0.0012, cy - 0.020, z), (cx + 0.0012, cy + 0.020, z + depth), mat, 0.0)
     return [o, f]
 
 
@@ -131,6 +130,7 @@ def body():
         kn = K.glathe("pull", [(0.0, 0.0), (0.006, 0.0), (0.006, 0.010), (0.012, 0.016), (0.012, 0.020), (0.0, 0.021)],
                       (sx * 0.46, 0.50, Z_F + 0.008), (0, 0, 1), 8, BRASS, smooth=50.0)
         brs.append(kn)
+    brs.append(K.gbox("junction", (x0, Y_B, BZ), (x1, Y_B + 0.014, BZ + 0.012), BRASS, 0.002))
     brs.append(K.gbox("board_cap", (x0 - 0.008, y1, z0 - 0.006), (x1 + 0.008, y1 + 0.014, z1 + 0.004), BRASS, 0.0015))
     for sx in (-1, 1):
         for sy in (1.06, 1.44):
@@ -144,17 +144,22 @@ def body():
                            mat=BRASS, segs=6))
     # the knobs' bosses, scale rings and numerals; the pictograms under them
     for key, (kx, ky, kz) in KNOB.items():
+        # a black enamel dial behind the numerals and a black plate behind the pictogram: the brass reads on them (Glass_Dark is
+        # opaque glossy black)
+        gls.append(K.glathe("dial", [(0.092, 0.0), (0.092, 0.0012), (0.0, 0.0012)], (kx, ky, BZ), (0, 0, 1), 28, GLASS, smooth=30.0))
+        gls.append(K.plate("pict_plate", [L.rounded_rect(0.090, 0.074, 0.008, 2)], 0.0012, z0=BZ, mat=GLASS, bevel=0.0, drop_bottom=True,
+                           loc=(kx, 1.068, 0.0)))
         brs.append(K.gcyl("boss", 0.030, BZ, kz, base=(kx, ky, 0.0), axis=(0, 0, 1), segments=12, mat=BRASS, chamfer=0.0015))
-        ring = K.plate("scale_ring", [circle(0.0845, 28), list(reversed(circle(0.0795, 28)))], 0.0012, z0=BZ, mat=BRASS, bevel=0.0,
+        ring = K.plate("scale_ring", [circle(0.0905, 28), list(reversed(circle(0.0865, 28)))], 0.0015, z0=BZ, mat=BRASS, bevel=0.0,
                        drop_bottom=True, loc=(kx, ky, 0.0))
         brs.append(ring)
         for v, ang in NUMERAL_ANG.items():
             a = math.radians(ang)
-            t = K.V.text("num", str(v), 0.0165, (kx + NUMERAL_R * math.cos(a), ky + NUMERAL_R * math.sin(a)), BZ, mat=BRASS, depth=0.0016,
+            t = K.V.text("num", str(v), 0.027, (kx + NUMERAL_R * math.cos(a), ky + NUMERAL_R * math.sin(a)), BZ, mat=BRASS, depth=0.0028,
                          res=1)
             brs.append(t)
-    brs += rack_pictogram(KNOB["x"][0], 1.085, BZ)
-    brs += crystal_pictogram(KNOB["y"][0], 1.085, BZ)
+    brs += rack_pictogram(KNOB["x"][0], 1.068, BZ)
+    brs += crystal_pictogram(KNOB["y"][0], 1.068, BZ)
     # the lamps' bezels
     for key, (lx, ly, lz) in LAMP.items():
         brs.append(B.bezel("lamp_bezel", (lx, ly, BZ), 0.0165, 0.026, 0.012, normal=(0, 0, 1), mat=BRASS, seg=14))
@@ -217,7 +222,7 @@ def strand_plate():
                          z0=0.0, mat=BRASS, bevel=0.0008, drop_bottom=True))
     for sx in (-1, 1):
         for sy in (-1, 1):
-            parts.append(K.screw("pl_screw", 0.0036, (sx * 0.096, sy * 0.076, 0.004), normal=(0, 0, 1), mat=BRASS, segs=8))
+            parts.append(K.rivet("pl_screw", 0.0045, (sx * 0.096, sy * 0.076, 0.004), normal=(0, 0, 1), mat=BRASS, segs=8))
     parts.append(K.gbox("tab", (-0.034, -0.116, -0.0105), (0.034, -0.078, 0.0), BRASS, 0.002))
     mark = S.inlay("mark", "mark", 0.024, depth=0.0016, mat=BRASS, loc=(0.0, -0.097, 0.0))
     parts.append(mark)
@@ -276,6 +281,13 @@ def verify(path):
 
 
 # ====================================================================== QA
+def lights(cam):
+    """The Gallery's §1.5 lights + a stand-in console lamp (the key spot's cone misses the console at z 2.6) + the camera fill."""
+    E.gallery_lights(cam, fill=30.0, array_awake=True)
+    K.light("console_lamp", "POINT", (0.0, 2.1, 3.5), 140.0, "FFD9A8", radius=0.12)
+    K.light("console_lamp2", "AREA", (0.0, 1.9, 2.0), 40.0, "CFE6F2", radius=0.6, target=(0.0, 1.0, 2.7))
+
+
 def qa(parts, args):
     E.qa_begin()
     roots = D.roots()
@@ -295,32 +307,32 @@ def qa(parts, args):
     # a crystal in the cradle (the cradle_mount is the item's origin, identity)
     h = D.attach("nursery_crystal", cm, "qa_nc_")
     if h is not None:
-        K.override(next((o for o in bpy.data.objects if o.name.startswith("qa_nc_crystal_body")), None), K.glow("qa_crystal", "CFF6FF", 2.0))
+        K.override(next((o for o in bpy.data.objects if o.name.startswith("qa_nc_crystal_body")), None), K.glow("qa_crystal", "CFF6FF", 0.7))
     W = lambda p: E.world_point(E.CONSOLE_POS, 0.0, p)   # noqa: E731
     # 1 the console view (§2)
     if E.want(args, "1"):
         V = E.view("console")
-        E.gallery_lights(V[0], fill=10.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME, V[0], V[1], V[2])
     # 2 hero: from the operator's left, the slope with the plate, the cradle and the finale socket, low and close
     if E.want(args, "2"):
         cam = W((-0.55, 1.28, 0.62))
-        E.gallery_lights(cam, fill=8.0, array_awake=True)
+        lights(cam)
         E.shoot(NAME + "_2", cam, W((0.0, 0.98, 0.10)), 46)
     # 3 the scope view (§2)
     if E.want(args, "3"):
         V = E.view("scope")
-        E.gallery_lights(V[0], fill=8.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME + "_3", V[0], V[1], V[2])
     # 4 the strand_plate view (§2)
     if E.want(args, "4"):
         V = E.view("strand_plate")
-        E.gallery_lights(V[0], fill=8.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME + "_4", V[0], V[1], V[2])
     # 5 the cradle view (§2)
     if E.want(args, "5"):
         V = E.view("cradle")
-        E.gallery_lights(V[0], fill=8.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME + "_5", V[0], V[1], V[2])
     # 6 the finale view: the fork on the choice socket
     if E.want(args, "6"):
@@ -329,7 +341,7 @@ def qa(parts, args):
             o.hide_render = True
         D.attach("strand_fork", chm, "qa_sf_")
         V = E.view("finale")
-        E.gallery_lights(V[0], fill=8.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME + "_6", V[0], V[1], V[2])
 
 

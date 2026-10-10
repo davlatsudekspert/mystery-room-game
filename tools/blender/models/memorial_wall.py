@@ -212,37 +212,44 @@ def verify(path):
 
 
 # ====================================================================== QA
+def lights(cam):
+    """The Gallery's §1.5 lights + a stand-in lamp on the memorial arc (the sconces are far from the north wall) + the camera fill."""
+    E.gallery_lights(cam, fill=30.0, array_awake=True)
+    K.light("memorial_lamp", "POINT", (0.0, 2.7, -1.6), 260.0, "FFD9A8", radius=0.12)
+    K.light("memorial_lamp2", "POINT", (1.2, 2.0, -2.4), 60.0, "FFE2C2", radius=0.1)
+
+
 def qa(parts, args):
     E.qa_begin()
     E.gallery_room(doors=True, array=True)
-    K.override(parts["crystals"], K.glow("qa_mem_crystal", "CFF6FF", 1.6))
+    K.override(parts["crystals"], K.glow("qa_mem_crystal", "CFF6FF", 0.9))
     km = next(o for o in bpy.data.objects if o.name == "echo_kneel_mount")
     sm = next(o for o in bpy.data.objects if o.name == "socket_42_mount")
     # 1 the memorial view (§2)
     if E.want(args, "1"):
         V = E.view("memorial")
-        E.gallery_lights(V[0], fill=8.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME, V[0], V[1], V[2])
     # 2 the socket_42 view (§2), a nursery_crystal in the cup, the ring lit
     if E.want(args, "2"):
         D.attach("nursery_crystal", sm, "qa_nc_")
         nb = next((o for o in bpy.data.objects if o.name.startswith("qa_nc_crystal_body")), None)
         if nb is not None:
-            K.override(nb, K.glow("qa_crystal", "CFF6FF", 3.0))
+            K.override(nb, K.glow("qa_crystal", "CFF6FF", 0.7))
         K.override(parts["ring"], K.glow("qa_ring", "CFF6FF", 4.0))
         V = E.view("socket_42")
-        E.gallery_lights(V[0], fill=8.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME + "_2", V[0], V[1], V[2])
     # 3 the secret view (§2): Leyla 1998 kneeling at the socket
     if E.want(args, "3"):
         E.echo_pose("echo_leyla_1998", "pose_kneel", km, "qa_el_")
         V = E.view("secret")
-        E.gallery_lights(V[0], fill=8.0, array_awake=True)
+        lights(V[0])
         E.shoot(NAME + "_3", V[0], V[1], V[2])
     # 4 hero: the empty socket, close, a little from the left
     if E.want(args, "4"):
         cam = (1.45, 1.30, -3.05)
-        E.gallery_lights(cam, fill=8.0, array_awake=True)
+        lights(cam)
         E.shoot(NAME + "_4", cam, (1.78, 1.2, -3.49), 34)
 
 
