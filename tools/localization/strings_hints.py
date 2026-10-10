@@ -65,12 +65,12 @@ H = {
 "handle": [
     ("The main breaker can't be moved.", "Главный рубильник не двигается.", "Asosiy uzgich qimirlamaydi."),
     ("Its handle is missing — you have it.", "У него нет рукояти — она у вас.", "Uning dastasi yoʻq — u sizda."),
-    ("Select the breaker handle and tap the main lever on Panel 7.", "Выберите рукоять и нажмите на главный рычаг щита 7.", "Uzgich dastasini tanlang va 7-paneldagi asosiy richagga bosing."),
+    ("Select the breaker handle and tap the main lever on Panel 7.", "Выберите рукоять и нажмите на главный рычаг щита 7.", "Uzgich dastasini tanlang va 7-paneldagi asosiy dastakka bosing."),
 ],
 "circuits": [
     ("Leyla listed which lines must be live.", "Лейла записала, какие линии должны быть под током.", "Leyla qaysi liniyalar tok ostida boʻlishi kerakligini yozib qoldirgan."),
     ("LOCK, LIGHT and ARRAY on; VENT off. Follow the copper traces from each switch to the lamps.", "ЗАМОК, СВЕТ и РЕШЁТКА — вкл., ВЕНТИЛЯЦИЯ — выкл. Проследите медные дорожки от переключателей к лампам.", "QULF, YORUGʻLIK va PANJARA yoqilgan, SHAMOLLATISH oʻchiq. Har bir ulagichdan lampalargacha mis yoʻlakchalarni kuzating."),
-    ("Raise switches I, II and III only, then raise the main lever.", "Поднимите только переключатели I, II и III, затем главный рычаг.", "Faqat I, II va III ulagichlarni koʻtaring, soʻng asosiy richagni koʻtaring."),
+    ("Raise switches I, II and III only, then raise the main lever.", "Поднимите только переключатели I, II и III, затем главный рычаг.", "Faqat I, II va III ulagichlarni koʻtaring, soʻng asosiy dastakni koʻtaring."),
 ],
 "valve": [
     ("The radio is silent.", "Радио молчит.", "Radio jim."),
@@ -78,8 +78,8 @@ H = {
     ("Select the radio valve from the safe and tap the radio.", "Выберите радиолампу из сейфа и нажмите на радио.", "Seyfdan olingan radiolampani tanlang va radioga bosing."),
 ],
 "tune": [
-    ("Strand left his beacon's band on his board.", "Странд оставил на доске волну своего маяка.", "Strand mayogʻining toʻlqinini dokasida qoldirgan."),
-    ("The chalkboard says λ = 41 m. The radio dial is marked in metres too.", "На доске написано λ = 41 м. Шкала радио тоже размечена в метрах.", "Dokada λ = 41 m deb yozilgan. Radio shkalasi ham metrlarda belgilangan."),
+    ("Strand left his beacon's band on his board.", "Странд оставил на доске волну своего маяка.", "Strand mayogʻining toʻlqinini doskasida qoldirgan."),
+    ("The chalkboard says λ = 41 m. The radio dial is marked in metres too.", "На доске написано λ = 41 м. Шкала радио тоже размечена в метрах.", "Doskada λ = 41 m deb yozilgan. Radio shkalasi ham metrlarda belgilangan."),
     ("Drag the knob (or tap its left side) until the needle sits on 41 m.", "Крутите ручку пальцем (или нажимайте её левую сторону), пока стрелка не встанет на 41 м.", "Murvatni barmoq bilan buring (yoki chap tomoniga bosing), koʻrsatkich 41 m ga kelsin."),
 ],
 "books": [
@@ -99,23 +99,23 @@ H = {
 ],
 "record": [
     ("“The crystal remembers what falls on it.”", "«Кристалл помнит то, что на него падает».", "«Billur ustiga tushgan narsani eslab qoladi»."),
-    ("The mark's socket fits the crystal lens.", "Гнездо в центре знака подходит для кристаллической линзы.", "Belgi markazidagi uyaga billur linza mos keladi."),
-    ("Place the crystal lens in the socket while the shadow forms the mark.", "Вставьте линзу в гнездо, пока тень образует знак.", "Soya belgini hosil qilib turganda billur linzani uyaga qoʻying."),
+    ("The mark's socket fits the crystal lens.", "Гнездо в центре знака подходит для кристаллической линзы.", "Belgi markazidagi uyachaga billur linza mos keladi."),
+    ("Place the crystal lens in the socket while the shadow forms the mark.", "Вставьте линзу в гнездо, пока тень образует знак.", "Soya belgini hosil qilib turganda billur linzani uyachaga qoʻying."),
 ],
 "retrieve_lens": [
     ("The crystal has remembered the mark.", "Кристалл запомнил знак.", "Billur belgini eslab qoldi."),
     ("Now it must travel with the light.", "Теперь он должен отправиться вместе со светом.", "Endi u yorugʻlik bilan birga yoʻlga chiqishi kerak."),
-    ("Tap the socket to take the lens back.", "Нажмите на гнездо, чтобы забрать линзу.", "Linzani qaytarib olish uchun uyaga bosing."),
+    ("Tap the socket to take the lens back.", "Нажмите на гнездо, чтобы забрать линзу.", "Linzani qaytarib olish uchun uyachaga bosing."),
 ],
 "lens": [
-    ("The projector's socket is empty.", "Гнездо проектора пусто.", "Proyektor uyasi boʻsh."),
+    ("The projector's socket is empty.", "Гнездо проектора пусто.", "Proyektor uyachasi boʻsh."),
     ("The crystal lens fits it.", "Туда подходит кристаллическая линза.", "Unga billur linza mos keladi."),
     ("Select the crystal lens and tap the projector.", "Выберите линзу и нажмите на проектор.", "Billur linzani tanlang va proyektorga bosing."),
 ],
 "projector": [
     ("Strand's letter tells how to tune it.", "Письмо Странда говорит, как его настроить.", "Strandning maktubi uni qanday sozlashni aytadi."),
     ("“The heaviest first.” Compare the samples' density (ρ).", "«Начиная с самого тяжёлого». Сравните плотность (ρ) образцов.", "«Eng ogʻiridan boshlab». Namunalarning zichligini (ρ) solishtiring."),
-    ("Set the rings to crimson, cobalt, green — then pull the lever.", "Установите кольца: малиновый, кобальтовый, зелёный — и потяните рычаг.", "Halqalarni toʻq qizil, kobalt, yashilga qoʻying — soʻng richagni torting."),
+    ("Set the rings to crimson, cobalt, green — then pull the lever.", "Установите кольца: малиновый, кобальтовый, зелёный — и потяните рычаг.", "Halqalarni toʻq qizil, kobalt, yashilga qoʻying — soʻng dastakni torting."),
 ],
 "mount_mirror": [
     ("One mirror stand is empty.", "Одна зеркальная стойка пуста.", "Bitta koʻzgu tirgagi boʻsh."),
