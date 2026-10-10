@@ -279,9 +279,20 @@ func _new_game() -> void:
 
 
 func _play(chapter_id: String) -> void:
+	if not playable(chapter_id):
+		_show_chapters() # a save of a chapter this build cannot load (no scene yet, or unreleased): pick another
+		return
 	AudioManager.stop_music(1.5)
 	var ch := Chapters.get_chapter(chapter_id)
 	SceneManager.goto(ch["scene"])
+
+
+## A chapter whose scene this build can load: it is released and has a scene. Continue on any other save (an
+## unreleased chapter, such as Chapter 4 while its scene is built) opens the chapter list instead of loading "".
+static func playable(chapter_id: String) -> bool:
+	var ch := Chapters.get_chapter(chapter_id)
+	var scene := str(ch.get("scene", ""))
+	return bool(ch.get("released", false)) and scene != "" and ResourceLoader.exists(scene)
 
 
 func _clear_panel() -> void:

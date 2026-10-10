@@ -37,12 +37,18 @@ func play_opening_camera() -> void:
 	pass
 
 
-## Waits `seconds` of real time (tweens run on process frames).
+## Waits `seconds` of real time (tweens run on process frames). Bails out when the room has left the tree, and
+## after a frame limit, so a failing test fails fast instead of hanging the run.
 func wait(seconds: float) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var t0 := Time.get_ticks_msec()
-	while Time.get_ticks_msec() - t0 < int(seconds * 1000.0):
+	var frames := 0
+	var limit := int(seconds * 240.0) + 10
+	while Time.get_ticks_msec() - t0 < int(seconds * 1000.0) and frames < limit:
+		if not is_instance_valid(self) or not is_inside_tree():
+			return
 		await tree.process_frame
+		frames += 1
 
 
 ## Taps the screen at `p` (canvas px) as a finger would: a touch down and up, through the GUI.

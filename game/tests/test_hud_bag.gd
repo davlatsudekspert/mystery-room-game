@@ -151,6 +151,10 @@ func test_bag_open_close_and_memory() -> void:
 	var hud := r.hud
 	var tray := hud.get("_inv_panel") as Control
 	var bag := hud.get("_bag_btn") as IconButton
+	if bag == null or tray == null:
+		check(false, "the HUD has a bag and a tray")
+		await _finish(r)
+		return
 	check(not bool(hud.call("is_bag_open")) and not tray.visible, "collapsed by default")
 	eq(bag.count, 2, "the collapsed bag counts its items")
 	bag.emit_signal("pressed")
@@ -170,6 +174,10 @@ func test_bag_open_close_and_memory() -> void:
 	await r.wait(0.35)
 	check(bool(hud.call("is_bag_open")), "the bag opens in a close-up")
 	var slot := (hud.get("_inv_box") as Control).get_child(1) as Button
+	if slot == null:
+		check(false, "the second slot is a button")
+		await _finish(r)
+		return
 	slot.emit_signal("pressed")
 	eq(r.logic.selected, "battery_cell", "the slot picks the item")
 	await r.wait(0.7)
@@ -207,6 +215,10 @@ func test_found_item_flies_to_the_bag() -> void:
 	var r := await _start([])
 	var hud := r.hud
 	var bag := hud.get("_bag_btn") as IconButton
+	if bag == null:
+		check(false, "the HUD has a bag")
+		await _finish(r)
+		return
 	_give(r.logic, "notebook") # emits item_added:notebook through GameState
 	hud.call("message", tr("ui.item_added") % tr(ItemDB.name_key("notebook")))
 	check((hud.get("_tips_shown") as Dictionary).has("inventory"), "the first item shows the bag tip")
