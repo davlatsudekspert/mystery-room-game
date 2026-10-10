@@ -1254,6 +1254,10 @@ func _on_view_changed(id: String) -> void:
 	var dim_views := ["radio", "radio_hatch", "poster", "lock"]
 	var e := 0.0 if cam.is_root() else (1.5 if id in bright_views else (0.45 if id in dim_views else 1.0))
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
+	# up close the poster's glass only veils the table (it reflects the pendant and lifts the ink to a 2:1 contrast)
+	var glass: Node3D = ModelUtil.find(models.get("poster_frame"), "poster_glass")
+	if glass != null:
+		glass.visible = id != "poster"
 	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor", "sculpture"]
 	if id == "darkroom" and not _darkroom_seen:
 		_darkroom_seen = true
