@@ -51,6 +51,19 @@ func wait(seconds: float) -> void:
 		frames += 1
 
 
+## Waits, frame by frame, until `cond` is true; false when the room has left the tree or `max_seconds` of real time
+## have gone by. The cap is generous and only a hang reaches it: the wait follows the game's own frames (tweens
+## advance by frame time), so a loaded machine just takes longer instead of failing a fixed-delay check.
+func wait_until(cond: Callable, max_seconds: float = 20.0) -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	var t0 := Time.get_ticks_msec()
+	while not cond.call():
+		if not is_instance_valid(self) or not is_inside_tree() or Time.get_ticks_msec() - t0 > int(max_seconds * 1000.0):
+			return false
+		await tree.process_frame
+	return true
+
+
 ## Taps the screen at `p` (canvas px) as a finger would: a touch down and up, through the GUI.
 func tap_screen(p: Vector2) -> void:
 	var tree := Engine.get_main_loop() as SceneTree

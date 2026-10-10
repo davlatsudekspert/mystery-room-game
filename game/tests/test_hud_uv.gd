@@ -89,11 +89,14 @@ func test_the_lamp_strikes_on_the_page() -> void:
 	check(uvb != null, "the page offers the UV lamp")
 	if uvb != null:
 		uvb.emit_signal("pressed")
-		await r.wait(0.05)
-		var lights := _lights(o)
+		var lights := _lights(o) # the press adds the light at once
 		eq(lights.size(), 1, "the lamp lights the page")
-		await r.wait(0.9)
 		if lights.size() == 1:
-			check(is_equal_approx((lights[0] as UIUVLight).strength, 1.0), "the light settles at full strength")
+			# the tube strikes (a flicker, 0.63 s of tween in all) and settles: wait for the light itself to get there,
+			# frame by frame, instead of a fixed real-time delay that a loaded machine overran (load average 12)
+			var light := lights[0] as UIUVLight
+			var settled := await r.wait_until(func() -> bool: return light.strength >= 1.0)
+			check(settled, "the light settles (it started at 0)")
+			check(is_equal_approx(light.strength, 1.0), "the light settles at full strength")
 		check(bool((GameState.logic as Lab7Logic).state["uv_page"]), "the page is revealed in the logic")
 	await _finish(r)
