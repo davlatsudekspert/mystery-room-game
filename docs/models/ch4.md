@@ -190,15 +190,16 @@ Root views (free look) are marked R. Draw = culling groups (§1.3). FOV is verti
 
 | View | Camera | Looks at | FOV | Draw |
 |---|---|---|---|---|
-| `lift` (R, intro) | (0.5, 1.6, 16.9) | (−1.0, 1.9, 12.0) | 64 | H, B, R (dark) |
-| `lift_chalk` | (−1.0, 1.55, 15.9) | (−3.0, 1.5, 18.18) | 50 | B |
+| `lift` (R, intro) | (1.55, 1.6, 16.5), just outside the cage's east gate | (5.0, 2.2, 12.5) | 64 | H, B, R (dark) |
+| `bay_hero` | (0, 1.7, 7.5) | (0, 2.6, 15.5) | 60 | H, B |
+| `lift_chalk` | (−2.9, 1.55, 15.4) | (−3.0, 1.5, 18.18) | 46 | B |
 | `bridge` (R) | (0, 4.4, 14.6) | (0, 3.4, 0) | 66 | H, B, K, R, I, E |
 | `desk` | (0, 4.35, 14.5) | (0, 3.5, 13.1) | 58 | B |
 | `chronometer` | (0, 4.15, 14.1) | (0, 3.7, 13.2) | 40 | B |
 | `handwheels` | (0, 4.2, 14.2) | (0, 3.7, 8.0) | 78 | B, K, R |
 | `panel0` | (0, 1.45, 12.7) | (0, 1.2, 14.0) | 50 | P, B |
 | `catwalk` (R) | (0, 3.9, 11.6) | (0, 3.0, 3.0) | 64 | K, R, I |
-| `hatch_1`..`hatch_4` | (0, 3.2, z_n + 0.9) | (0, 0.6, z_n) | 44 | K, R |
+| `hatch_1`..`hatch_4` | (0, 3.35, z_n + 0.55) | (0, 0.65, z_n − 0.05) | 50 | K, R |
 | `island` (R) | (0, 3.8, 5.6) | (0, 3.2, 0) | 64 | I, K |
 | `gate_1`..`gate_4` | outside gate n, 1.8 m, eye 3.9 | the lock face | 46 | I |
 | `collar` | (0, 3.8, 2.6) | (0, 3.7, 1.22) | 40 | I |
@@ -221,12 +222,12 @@ Materials: `M_Concrete`, `M_Paint_Green`, `M_Steel_Dark`, `M_Brass_Aged`. Built 
 `hall_dado` (green panels 0–3.2), `hall_vault` (the dome with ribs), `hall_trim` (steel: oculus ring, rib caps, girder
 bands), `hall_brass` (cornice bands, the floor inlay, the numerals), `oculus_shutter_a`, `oculus_shutter_b`.
 
-- **Walls:** r 14.0 inner face, up to y = 7.0, 16 concrete pilasters 0.5 wide at φ = 11.25° + 22.5° k (those inside an
-  opening are skipped); green dado panels between them; brass bands at y 3.2 and 3.3; a brass cornice at y 6.8–7.0.
+- **Walls:** r 14.0 inner face, up to y = 7.0, concrete pilasters 0.5 wide at φ = 7.5° + 15° k (24 positions, the 6 inside an
+  opening are skipped, so 18 stand); green dado panels between them; brass bands at y 3.2 and 3.3; a brass cornice at y 6.8–7.0.
   Openings: the **south bay** φ ∈ [154.6°, 205.4°] (x ∈ [−6, 6]) up to y = 6.2 with a lintel above (the bay's reveal is
   `shell_lift4`'s) and the **west apse** niche (§1.2: half-cylinder r 3.6 about (−13.6, 0, 0), height 4.6, half-dome cap).
 - **Vault:** from (r 14, y 7.0) rising to (r 1.5, y 12.0) in a shallow dome, 24 radial ribs and 4 concentric ring ribs,
-  the underside concrete with recessed coffers. The shaft above the oculus ring: a concrete tube r 1.5 from y 12.0 to 14.6.
+  the underside concrete; each radial rib sits at a pilaster's azimuth (7.5° + 15° k) and carries a thin brass cap. The shaft above the oculus ring: a concrete tube r 1.5 from y 12.0 to 14.6.
 - **Oculus:** a thick steel ring r 1.5–1.95 at y 11.9–12.1. **`oculus_shutter_a`/`_b`**: two half-discs r 1.6 at
   y = 11.85 with brass edge strips; origin at the hall axis (0, 11.85, 0). Closed = identity. **Open = a slides −1.7 m,
   b slides +1.7 m along X** (a is the west half, b the east half).
@@ -264,7 +265,7 @@ rails, the stair handrails), `bridge_paint` (green painted pier wall face and st
   wheel plates under the wheels at x = −3.6, −2.2, 2.2, 3.6.
 - **`catwalk_gate`** (own object, one material, `M_Brass_Aged`; the posts are in `bridge_rail`): a 1.1 wide, 1.1 high
   lattice gate leaf hinged on its west post; origin at the hinge
-  (−0.55, 2.5, 11.95); closed = identity; **open = −95° about +Y** (swings north onto the catwalk). A brass lock lamp
+  (−0.55, 2.5, 11.95); closed = identity; **open = +95° about +Y** (swings north onto the catwalk). A brass lock lamp
   jewel on the leaf is part of the mesh. The code opens it at `solved:power`.
 - Empties: `wheel_mount_1..4` at (−3.6 / −2.2 / 2.2 / 3.6, 2.5, 12.45), identity; `desk_mount` (0, 2.5, 13.15);
   `echo_mount_wheels_1` (−2.9, 2.5, 13.3) and `echo_mount_wheels_2` (2.9, 2.5, 13.3), **yaw 180** (the technicians face

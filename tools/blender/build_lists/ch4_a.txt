@@ -2,3 +2,5 @@
 shell_hall.py
 shell_lift4.py
 bridge.py
+catwalk.py
+shared_numerals.py
