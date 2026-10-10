@@ -31,7 +31,7 @@ All coordinates are **Godot, model-local, metres**; models face +Z; angles follo
 | `tube_bench` | 1,438 (2,500) | 5 (5) | 3 | `tube_bench.glb` | `tube_bench.png`, `_2` |
 | `strand_office` | 5,608 (9,000) | 7 (7) | 4 | `strand_office.glb` | `strand_office.png`, `_2` … `_5` |
 | `office_desk` | 3,234 (5,000) | 6 (6) | 4 | `office_desk.glb` | `office_desk.png`, `_2` … `_4` |
-| `meter_case` | TBD (2,500) | TBD (7) | 4 | `meter_case.glb` | `meter_case.png`, `_2`, `_3` |
+| `meter_case` | 2,443 (2,500) | **11 (7)** | 4 | `meter_case.glb` | `meter_case.png`, `_2`, `_3` |
 
 ---
 
@@ -178,7 +178,7 @@ preview), `_3` (the note and the letters), `_4` (the coat on the stand, from the
 
 ---
 
-## meter_case.glb (TBD tris, 11 surfaces)
+## meter_case.glb (2,443 tris, 11 surfaces)
 
 **Shape.** A dark leather case 0.30 × 0.10 × **0.25** (body to 0.085, lid 0.085 … 0.10) with brass corner caps, feet,
 hinge knuckles, a brass bezel plate round the three digit windows and the ☼ ☾ ✦ inlays above them, a leather strap
@@ -188,7 +188,7 @@ handle on the lid, a velvet tray inside.
 
 | Node | Pivot / position | Materials | Notes |
 |---|---|---|---|
-| `meter_case` | (0, 0, 0) | Leather, Brass_Aged, Velvet | static |
+| `meter_case` | (0, 0, 0) | Leather, Brass_Aged, Velvet | static, 1,386 tris; bounds x ±0.152, y 0 … 0.119 (the strap), z −0.132 … 0.136 |
 | `IA_case_dial_0..2` | (x_i, 0.055, 0.11), x_i = −0.07, 0, 0.07 | Enamel_Cream, Leather | Ø 0.04 × 0.014 thumb drums, axis +X, 5 mm proud of the front through the windows; dark numerals 0–9 wrapped on the rim, 0 facing +Z at rest, digit d at `Basis(X, +36° d)·(0, 0, 1)`; **one step = −36° about local +X** |
 | `IA_case_latch` | (0, 0.02, 0.127) | Brass_Aged | push catch on the front |
 | `case_lid` | (0, 0.10, −0.125) | Leather | pivot at the back top edge; **open = −100° about local +X** |
@@ -240,3 +240,7 @@ QA: `meter_case.png` (`meter_case` view, closed, 0 0 0), `_2` (code 4 2 6 set, l
 - Every lamp / jewel uses its glass, enamel or porcelain slot; the code's `set_emission` duplicates the material per
   mesh, so shared slots are safe.
 - Godot `.import` files for the new GLBs come from the lead's import; this group did not run Godot.
+- `meter_case.glb` was exported and imported (`godot --headless --import`) on 2026-10-10 with the group E/F build; its
+  three renders were re-made then (`meter_case.png` closed at 0 0 0, `_2` open at 4 2 6 with the meter, `_3` the
+  windows close-up): the digits read at the `meter_case` view, the ☼ ☾ ✦ inlays sit on the leather above the
+  bezel plate, the lid clears the wall when open.

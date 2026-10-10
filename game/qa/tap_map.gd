@@ -10,14 +10,36 @@ extends Node
 ##        state key is true) [--lens=take|leave] [--key=strand|leyla] (ch3: the Chapter 2 key path)
 ##        [--perf] (no tap marks: log draw calls / primitives / objects per view instead)
 ##        [--breakdown] (with --perf: the draw calls each model, effect node and light shadow adds to the view)
-## Writes <view>.png and tap_map.txt (one line per orange or red part).
+##        [--screen=phone61|phone20|phone55|tablet10|WxH@dpi[:l,t,r,b]] (render as that phone: its aspect, dpi and
+##        safe insets drive the HUD's size and the mm checks; the window takes the same aspect)
+##        [--text-scale=1.15] (the player's Settings → Text size)
+##        [--hud-check] (every control in the view — IA_*, Item_*, Shard_*, Echo_* — must have its tap point on
+##        screen, clear of the HUD's input-blocking controls and at least EDGE_MM from the screen edge; a control
+##        under a banner that only covers it is a warning. The message and prompt banners are shown while it
+##        measures, as they are while a player works a mechanism with an item in hand. Exit 1 on any failure)
+## Writes <view>.png and tap_map.txt (one line per orange or red part, and one per HUD failure or warning).
 
 const SCENES := {"ch1": "res://src/rooms/lab7/lab7.tscn", "ch2": "res://src/rooms/archive/archive.tscn",
 	"ch3": "res://src/rooms/underground/underground.tscn"}
 
+## Emulated screens (device px, dpi, safe insets l/t/r/b in device px): the phones the HUD check runs at.
+const SCREENS := {
+	"phone61": {"size": Vector2i(2340, 1080), "dpi": 400.0, "insets": [120, 0, 0, 0]}, # 19.5:9, camera cutout left
+	"phone20": {"size": Vector2i(2400, 1080), "dpi": 400.0, "insets": [120, 0, 0, 0]}, # 20:9
+	"phone55": {"size": Vector2i(1920, 1080), "dpi": 480.0, "insets": [0, 0, 0, 0]}, # 16:9
+	"tablet10": {"size": Vector2i(2048, 1536), "dpi": 264.0, "insets": [0, 0, 0, 0]}, # 4:3
+}
+const EDGE_MM := 6.0 # a control's tap point keeps this far from the screen edge (thumbs and case bezels)
+const ASSUMED_COLUMN := 0.13 # until HUD.blocked_rects() lands: the inventory column is ~13 % of the width
+
 var out_dir := "/tmp/tap_map"
 var room: Node3D
 var lines: Array[String] = []
+var hud_check := false
+var hud_controls := 0
+var hud_failures := 0
+var hud_warnings := 0
+var _screen_name := ""
 
 
 func _ready() -> void:
@@ -54,7 +76,15 @@ func _run() -> void:
 			GameState.variant_seed = int(a.substr(7))
 		elif a.begins_with("--brightness="):
 			Settings.values["brightness"] = clampf(float(a.substr(13)), 0.7, 1.6) # the Settings slider's range, unsaved
+		elif a.begins_with("--screen="):
+			_screen_name = a.substr(9)
+		elif a.begins_with("--text-scale="):
+			Settings.values["text_scale"] = clampf(float(a.substr(13)), 0.9, 1.3)
+		elif a == "--hud-check":
+			hud_check = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if _screen_name != "":
+		await _apply_screen(_screen_name)
 	SaveSystem.save_path = "user://qa_tapmap_save.json"
 	SaveSystem.profile_path = "user://qa_tapmap_profile.json"
 	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens == "take" else "leave_lens", "ch1_shards": 5,
@@ -100,12 +130,55 @@ func _run() -> void:
 				await _breakdown(v)
 			continue
 		await _map(v)
+	var qa_exit := 0
+	if hud_check:
+		lines.append("hud-check%s: %d controls in %d views, %d failures, %d banner warnings" % [
+			" (%s)" % _screen_name if _screen_name != "" else "", hud_controls, views.size(), hud_failures, hud_warnings])
+		qa_exit = 1 if hud_failures > 0 else 0
 	var f := FileAccess.open(out_dir + "/tap_map.txt", FileAccess.WRITE)
 	f.store_string("\n".join(lines) + "\n")
 	print("\n".join(lines))
 	SaveSystem.delete_game()
-	print("QA_DONE exit=0") # tools/qa_run.sh: the run finished even if the process then hangs on exit
-	get_tree().quit()
+	print("QA_DONE exit=%d" % qa_exit) # tools/qa_run.sh: the run finished even if the process then hangs on exit
+	get_tree().quit(qa_exit)
+
+
+## Renders as the named phone: the window takes its aspect (scaled to what the X server can fit, which keeps the
+## canvas layout identical), and Settings.emulate gives UITheme its dpi and safe area, so the HUD is laid out and
+## sized as on that phone and mm checks use its pixel pitch.
+func _apply_screen(spec: String) -> void:
+	var size := Vector2i.ZERO
+	var dpi := 400.0
+	var insets: Array = [0, 0, 0, 0]
+	if SCREENS.has(spec):
+		var d: Dictionary = SCREENS[spec]
+		size = d["size"]
+		dpi = float(d["dpi"])
+		insets = d["insets"]
+	else:
+		var m := spec.split(":")
+		var wh := m[0].split("@")
+		var p := wh[0].split("x")
+		size = Vector2i(int(p[0]), int(p[1]))
+		if wh.size() > 1:
+			dpi = float(wh[1])
+		if m.size() > 1:
+			var ins := m[1].split(",")
+			for k in mini(4, ins.size()):
+				insets[k] = int(ins[k])
+	var win := get_window()
+	win.size = size
+	await _settle(0.3)
+	if win.size != size:
+		var k := minf(float(win.size.x) / size.x, float(win.size.y) / size.y)
+		win.size = Vector2i(int(size.x * k), int(size.y * k))
+		await _settle(0.3)
+	var safe := Rect2i(int(insets[0]), int(insets[1]), size.x - int(insets[0]) - int(insets[2]),
+		size.y - int(insets[1]) - int(insets[3]))
+	Settings.set("emulate", {"size": size, "dpi": dpi, "safe": safe})
+	lines.append("screen %s: %dx%d @ %.0f dpi, insets %s, window %s, canvas %s, %.4f mm per canvas px, text scale %.2f" % [
+		spec, size.x, size.y, dpi, str(insets), str(win.size), str(get_viewport().get_visible_rect().size),
+		UITheme.mm_per_px(), UITheme.scale()])
 
 
 ## One solver step of the chapter's scripted solver (the same ones the no-softlock tests use).
@@ -242,14 +315,19 @@ func _map(view_id: String) -> void:
 					lgot if lgot != "" else "(nothing)"])
 			elif hits < 3:
 				hits = 3 # its label is a sure target, even if most of its body is covered
-		marks.append({"pos": pos, "part": part, "hits": hits, "got": top})
+		marks.append({"pos": pos, "part": part, "hits": hits, "got": top, "rect": r})
 		if hits < 3:
 			lines.append("%s: %s reachable at %d/%d sample points (mostly hits %s)" % [view_id, part, hits, total,
 				top if top != "" else "(nothing)"])
+	var zones: Array[Dictionary] = []
+	if hud_check:
+		zones = await _hud_check(view_id, marks)
 	var layer := CanvasLayer.new()
 	layer.layer = 100
 	var canvas := _Marks.new()
 	canvas.marks = marks
+	canvas.zones = zones
+	canvas.edge_px = EDGE_MM / UITheme.mm_per_px() if hud_check else 0.0
 	canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(canvas)
 	add_child(layer)
@@ -257,6 +335,139 @@ func _map(view_id: String) -> void:
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out_dir, view_id])
 	layer.queue_free()
+	if hud_check:
+		_hud_restore()
+
+
+## Is this part a control a player must be able to tap (not scenery that merely answers a tap)?
+static func _is_control(part: String) -> bool:
+	return part.begins_with("IA_") or part.begins_with("Item_") or part.begins_with("Shard_") \
+		or part.begins_with("Echo_") or part == "main_handle"
+
+
+## The HUD check for one view. Shows the message and prompt banners (an item in hand, a line of feedback: the
+## state a player is in while working a mechanism), then tests every control's tap point against the screen edge,
+## the HUD's input-blocking controls and the banners. Returns the zones to draw on the shot.
+func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
+	var vp := get_viewport().get_visible_rect()
+	var hud := room.get("hud") as CanvasLayer
+	var logic: RoomLogic = GameState.logic
+	# the worst case a player sees here: an item selected (prompt banner, inspect / combine flyout) and a message
+	if hud != null:
+		for id: String in logic.inventory:
+			if id != "uv_lamp":
+				logic.select_item(id)
+				break
+		hud.call("message", tr("msg.nothing"), 30.0)
+		await _settle(0.5)
+	var blocked := _blocked_rects(hud)
+	var covers := _banner_rects(hud)
+	var edge_px := EDGE_MM / UITheme.mm_per_px()
+	var zones: Array[Dictionary] = []
+	for b in blocked:
+		zones.append({"rect": b["rect"], "kind": "blocked", "name": b["name"]})
+	for c in covers:
+		zones.append({"rect": c["rect"], "kind": "cover", "name": c["name"]})
+	for m in marks:
+		var part: String = m["part"]
+		if not _is_control(part) or int(m["hits"]) == 0:
+			continue # scenery, or a part already reported as covered by the scene itself
+		hud_controls += 1
+		var p: Vector2 = m["pos"]
+		var why := ""
+		if not vp.has_point(p):
+			why = "tap point off screen"
+		else:
+			var d := minf(minf(p.x - vp.position.x, vp.end.x - p.x), minf(p.y - vp.position.y, vp.end.y - p.y))
+			if d < edge_px:
+				why = "%.1f mm from the screen edge (min %.0f)" % [d * UITheme.mm_per_px(), EDGE_MM]
+			else:
+				for b in blocked:
+					if (b["rect"] as Rect2).has_point(p):
+						why = "under the HUD: %s" % b["name"]
+						break
+		if why != "":
+			hud_failures += 1
+			m["hud"] = why
+			lines.append("HUD[%s]: %s — %s" % [view_id, part, why])
+			continue
+		var r: Rect2 = m["rect"]
+		if not vp.encloses(r):
+			hud_warnings += 1
+			m["hud_warn"] = "partly off screen"
+			lines.append("HUD[%s]: %s — part partly off screen (tap point %.0f,%.0f is on)" % [view_id, part, p.x, p.y])
+			continue
+		for c in covers:
+			if (c["rect"] as Rect2).has_point(p):
+				hud_warnings += 1
+				m["hud_warn"] = "under a banner"
+				lines.append("HUD[%s]: %s — covered by a banner (%s)" % [view_id, part, c["name"]])
+				break
+	return zones
+
+
+func _hud_restore() -> void:
+	var logic: RoomLogic = GameState.logic
+	logic.select_item("")
+	var hud := room.get("hud") as CanvasLayer
+	if hud != null:
+		hud.call("message", "", 0.1)
+
+
+## Where a tap never reaches the room: HUD.blocked_rects() when the HUD provides it, otherwise every visible HUD
+## control that stops input (buttons, slots, scroll areas) plus the inventory column as assumed until then
+## (ASSUMED_COLUMN of the width, from under the Back button to the bottom). -> [{rect, name}]
+func _blocked_rects(hud: CanvasLayer) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if hud == null:
+		return out
+	if hud.has_method("blocked_rects"):
+		for r: Rect2 in hud.call("blocked_rects"):
+			out.append({"rect": r, "name": "HUD control"})
+		return out
+	var rects: Array[Dictionary] = []
+	for c in hud.find_children("*", "Control", true, false):
+		var ctl := c as Control
+		if not ctl.is_visible_in_tree() or ctl.mouse_filter != Control.MOUSE_FILTER_STOP:
+			continue
+		if ctl is UIBanner or ctl is Label:
+			continue
+		var r := ctl.get_global_rect()
+		if r.size.x < 2.0 or r.size.y < 2.0:
+			continue
+		var nm := str(ctl.name)
+		if ctl is IconButton:
+			nm = "%s button" % (ctl as IconButton).icon_id
+		elif ctl is Button and ctl.tooltip_text != "":
+			nm = "slot «%s»" % ctl.tooltip_text
+		rects.append({"rect": r, "name": nm})
+	# keep the outermost rects only
+	for a in rects:
+		var inside := false
+		for b in rects:
+			if a != b and (b["rect"] as Rect2).encloses(a["rect"]) and (b["rect"] as Rect2) != (a["rect"] as Rect2):
+				inside = true
+				break
+		if not inside:
+			out.append(a)
+	var vp := get_viewport().get_visible_rect()
+	var safe := UITheme.safe_margins()
+	var top := safe.y + UITheme.HUD_PAD + UITheme.target(UITheme.HUD_BACK_PX) + 16.0
+	out.append({"rect": Rect2(0.0, top, vp.size.x * ASSUMED_COLUMN, vp.size.y - top), "name": "inventory column (assumed %d %%)" % int(ASSUMED_COLUMN * 100)})
+	return out
+
+
+## Banners that cover the scene without taking input (title, caption, message, prompt). -> [{rect, name}]
+func _banner_rects(hud: CanvasLayer) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if hud == null:
+		return out
+	for c in hud.find_children("*", "Control", true, false):
+		if c is UIBanner and (c as Control).is_visible_in_tree() and (c as Control).modulate.a > 0.05:
+			var b := c as UIBanner
+			var txt := b.title_label.text if b.title_label.text != "" else b.subtitle_label.text
+			out.append({"rect": b.get_global_rect(), "name": "banner «%s»" % tr(txt).left(40)})
+	return out
 
 
 func _screen_rect(cam: Camera3D, mi: MeshInstance3D) -> Rect2:
@@ -273,9 +484,18 @@ func _screen_rect(cam: Camera3D, mi: MeshInstance3D) -> Rect2:
 
 class _Marks extends Control:
 	var marks: Array[Dictionary] = []
+	var zones: Array[Dictionary] = [] # HUD check: blocked (red) and cover (yellow) rects
+	var edge_px := 0.0 # HUD check: the screen-edge margin (cyan line)
 
 	func _draw() -> void:
 		var font := ThemeDB.fallback_font
+		for z: Dictionary in zones:
+			var blocked: bool = z["kind"] == "blocked"
+			var zc := Color(1.0, 0.2, 0.2) if blocked else Color(1.0, 0.85, 0.2)
+			draw_rect(z["rect"], Color(zc, 0.12), true)
+			draw_rect(z["rect"], zc, false, 1.5)
+		if edge_px > 0.0:
+			draw_rect(Rect2(Vector2.ONE * edge_px, size - Vector2.ONE * 2.0 * edge_px), Color(0.3, 0.9, 1.0, 0.8), false, 1.0)
 		for m: Dictionary in marks:
 			var h: int = m["hits"]
 			var c := Color(0.2, 1.0, 0.35) if h >= 3 else (Color(1.0, 0.7, 0.1) if h > 0 else Color(1.0, 0.25, 0.2))
@@ -283,4 +503,10 @@ class _Marks extends Control:
 			var label: String = str(m["part"]).replace("IA_", "")
 			if h < 3:
 				label += " %d→%s" % [h, str(m["got"]).replace("IA_", "")]
+			if m.has("hud"):
+				draw_arc(m["pos"], 11.0, 0.0, TAU, 24, Color(1.0, 0.2, 0.2), 2.5)
+				label += " ✗ " + str(m["hud"])
+			elif m.has("hud_warn"):
+				draw_arc(m["pos"], 11.0, 0.0, TAU, 24, Color(1.0, 0.85, 0.2), 2.0)
+				label += " ! " + str(m["hud_warn"])
 			draw_string(font, m["pos"] + Vector2(7, 4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, c)

@@ -155,8 +155,16 @@ func setup_from_profile(choices: Dictionary) -> void:
 		inventory.append("crystal_lens")
 
 
+## Profile values may come back from JSON as bools, numbers or strings.
 static func _truthy(v: Variant) -> bool:
-	return v == true or str(v) == "true" or (typeof(v) in [TYPE_INT, TYPE_FLOAT] and float(v) != 0.0)
+	match typeof(v):
+		TYPE_BOOL:
+			return v
+		TYPE_INT, TYPE_FLOAT:
+			return float(v) != 0.0
+		TYPE_STRING:
+			return str(v).to_lower() in ["true", "1"]
+	return false
 
 
 static func _num(v: Variant) -> int:
@@ -377,7 +385,7 @@ func press_knob(i: int) -> Array[String]:
 		if i + 1 < GEARS:
 			g[i + 1] = (int(g[i + 1]) + 1) % GEAR_STEPS
 			_emit("gear:%d:%d" % [i + 1, int(g[i + 1])])
-		if not g.has(1) and not g.has(2) and not g.has(3) and not g.has(4) and not g.has(5):
+		if _all_zero(g):
 			state["box_open"] = true
 			_emit("box_open")
 			_emit("solved:box")
@@ -534,11 +542,9 @@ func aligned() -> bool:
 	return folded() == RINGS
 
 
+## Every tower at mark 1, under the catwalk: the Night started here, and the reversal ends here.
 func home() -> bool:
-	return not (state["rings"] as Array).has(1) and not (state["rings"] as Array).has(2) \
-		and not (state["rings"] as Array).has(3) and not (state["rings"] as Array).has(4) \
-		and not (state["rings"] as Array).has(5) and not (state["rings"] as Array).has(6) \
-		and not (state["rings"] as Array).has(7)
+	return _all_zero(state["rings"])
 
 
 ## The hall replays while the Sun's beam is folded through all four towers into the Core.
@@ -1229,6 +1235,13 @@ func hint_args(goal: String, level: int) -> Array:
 				out.append(tr("hint.c4_act.%s" % str(step[1])))
 			return out
 	return []
+
+
+static func _all_zero(a: Array) -> bool:
+	for v: Variant in a:
+		if int(v) != 0:
+			return false
+	return true
 
 
 static func _ints_eq(a: Array, b: Array) -> bool:

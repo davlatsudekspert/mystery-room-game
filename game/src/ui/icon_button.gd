@@ -2,7 +2,8 @@ class_name IconButton
 extends Button
 ## Round brass line-icon button drawn in code (crisp at any DPI, no texture assets): a dark translucent disc
 ## inside a hairline gold bezel (two rings), the icon in cream. Pressed or active, the disc fills with brass.
-## icons: back, hint, pause (a roman-numeral "II"), inspect, combine, uv, close, next, prev, book
+## icons: back, hint, pause (a roman-numeral "II"), inspect, combine, uv, close, next, prev, book, bag (the
+## inventory: a doctor's bag with a handle, a frame seam and a clasp)
 ## The tappable rect is at least UITheme.TOUCH_MM on the physical screen; the drawn disc can be smaller
 ## (`visual`), so phones get thumb-sized targets without oversized icons.
 
@@ -20,6 +21,16 @@ var active := false:
 		queue_redraw()
 ## Fraction of the rect covered by the drawn disc (1 = edge to edge).
 var visual := 1.0
+## A picture drawn inside the disc instead of the line icon (the bag shows the item in hand).
+var picture: Texture2D:
+	set(v):
+		picture = v
+		queue_redraw()
+## A number on a small gold disc at the bezel (the bag: how many items it holds); 0 = none.
+var count := 0:
+	set(v):
+		count = v
+		queue_redraw()
 
 
 static func make(id: String, diameter: int = 96) -> IconButton:
@@ -58,6 +69,17 @@ func _draw() -> void:
 	draw_arc(c, r - 7.0, 0.0, TAU, 64, Color(ring, ring.a * 0.32), 1.0, true) # the bezel's inner ring
 	var s := r * 0.42
 	var w := maxf(2.5, r * 0.065)
+	if picture != null:
+		# the item in hand, kept square inside the bezel's inner ring
+		var ts := picture.get_size()
+		if ts.x > 0.0 and ts.y > 0.0:
+			var box := (r - 9.0) * 1.42
+			var k := minf(box / ts.x, box / ts.y)
+			var ds := ts * k
+			draw_texture_rect(picture, Rect2(c - ds * 0.5, ds), false)
+		draw_arc(c, r - 2.0, 0.0, TAU, 64, UITheme.BRASS_HI, maxf(2.0, w * 0.8), true) # "in hand"
+		_draw_count(c, r)
+		return
 	match icon_id:
 		"back":
 			draw_polyline(PackedVector2Array([c + Vector2(s * 0.35, -s), c + Vector2(-s * 0.55, 0), c + Vector2(s * 0.35, s)]), col, w, true)
@@ -96,8 +118,38 @@ func _draw() -> void:
 		"book":
 			draw_rect(Rect2(c - Vector2(s * 0.7, s * 0.85), Vector2(s * 1.4, s * 1.7)), col, false, w)
 			draw_line(c + Vector2(-s * 0.35, -s * 0.85), c + Vector2(-s * 0.35, s * 0.85), col, w)
+		"bag":
+			# a doctor's bag: the handle arc, a body that widens toward its base, the frame seam and the clasp
+			var top := -s * 0.22
+			var base := s * 0.86
+			draw_arc(c + Vector2(0, top), s * 0.4, PI, TAU, 24, col, w, true)
+			draw_polyline(PackedVector2Array([c + Vector2(-s * 0.74, top), c + Vector2(s * 0.74, top),
+				c + Vector2(s * 0.95, base - s * 0.1), c + Vector2(s * 0.85, base), c + Vector2(-s * 0.85, base),
+				c + Vector2(-s * 0.95, base - s * 0.1), c + Vector2(-s * 0.74, top)]), col, w, true)
+			draw_line(c + Vector2(-s * 0.82, s * 0.16), c + Vector2(s * 0.82, s * 0.16), col, w * 0.7, true)
+			var cl := c + Vector2(0, s * 0.16)
+			draw_colored_polygon(PackedVector2Array([cl + Vector2(-s * 0.16, 0), cl + Vector2(0, -s * 0.16),
+				cl + Vector2(s * 0.16, 0), cl + Vector2(0, s * 0.16)]), col)
+	_draw_count(c, r)
 	if badge != "":
 		# a small gold dot on the bezel (the hint nudge)
 		var bc := c + Vector2(r * 0.66, -r * 0.66)
 		draw_circle(bc, r * 0.17, UITheme.INK)
 		draw_circle(bc, r * 0.13, UITheme.BRASS_HI)
+
+
+## The count on a small brass disc at the bezel's upper right (drawn over the icon or the picture).
+func _draw_count(c: Vector2, r: float) -> void:
+	if count <= 0:
+		return
+	var font := UITheme.caps_font(true, 0)
+	var fs := UITheme.size(18)
+	var txt := str(count)
+	var tw := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var rad := maxf(fs * 0.62, tw * 0.5 + 6.0)
+	var bc := c + Vector2(r * 0.7, -r * 0.7)
+	draw_circle(bc, rad + 2.0, UITheme.INK)
+	draw_circle(bc, rad, UITheme.BRASS_HI)
+	var asc := font.get_ascent(fs)
+	var desc := font.get_descent(fs)
+	draw_string(font, Vector2(bc.x - tw * 0.5, bc.y + (asc - desc) * 0.5), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, UITheme.INK)

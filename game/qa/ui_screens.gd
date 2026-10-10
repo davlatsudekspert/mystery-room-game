@@ -8,7 +8,9 @@ extends Node
 ##   --menus-only           skip the in-game overlays
 ##   --device=<id>          phone61 (6.1" 2340x1080 ~400 dpi, left cutout), phone67 (6.7" 2796x1290 ~460 dpi,
 ##                          left/right sensor housing + home indicator), phone55 (5.5" 1920x1080 ~480 dpi, 16:9),
-##                          tablet10 (10" 2048x1536 264 dpi)
+##                          tablet10 (10" 2048x1536 264 dpi), iphone (the owner's 19.5:9 iPhone, 2556x1179 460 dpi,
+##                          notch + home indicator), android20 (20:9 Android, 2400x1080 405 dpi, punch hole + gesture
+##                          bar), ipad (4:3, 2048x1536 264 dpi, home indicator)
 ##   --size=WxH --dpi=N     emulate any screen (overrides the preset); --safe=l,t,r,b insets in screen px
 ##   --text-scale=X         the player's Settings → Text size (0.9 / 1.0 / 1.15 / 1.3)
 ##   --saved                start with a saved game, so the main menu shows Continue
@@ -20,6 +22,11 @@ extends Node
 ##                          directly: a window larger than the X screen makes it report bogus insets.
 ##   --shots=a,b            save and measure only the shots whose name contains one of these (e.g. settings,hud_item);
 ##                          the screens are still walked through, so a shot sees the same state as in a full run
+##   --view=a,b             also shoot these close-ups of the room with an item in hand (<lang>_view_<id>), and with
+##                          the bag open (<lang>_view_<id>_bag)
+##   --probe=model/part     in each close-up, report whether that part (e.g. panel7/IA_main_lever) lies under a HUD
+##                          control that stops taps (measure.json "_probe"); --show-blocked tints those controls
+## HUD shots (names with "hud" or "view") also report HUD elements that overlap each other.
 ## Exit code 0 = no measured layout issue (clipped label, text wider than its button, element off-screen or under
 ## the emulated cutout). The window is resized to the emulated screen. If the X server cannot fit it, it renders at the same aspect ratio
 ## (identical canvas layout, lower pixel count) and says so. The emulated screen also drives the game's automatic
@@ -30,6 +37,9 @@ const DEVICES := {
 	"phone67": {"size": Vector2i(2796, 1290), "dpi": 460.0, "insets": [177, 0, 177, 63]},
 	"phone55": {"size": Vector2i(1920, 1080), "dpi": 480.0, "insets": [0, 0, 0, 0]},
 	"tablet10": {"size": Vector2i(2048, 1536), "dpi": 264.0, "insets": [0, 0, 0, 0]},
+	"iphone": {"size": Vector2i(2556, 1179), "dpi": 460.0, "insets": [177, 0, 177, 63]},
+	"android20": {"size": Vector2i(2400, 1080), "dpi": 405.0, "insets": [100, 0, 0, 56]},
+	"ipad": {"size": Vector2i(2048, 1536), "dpi": 264.0, "insets": [0, 0, 0, 40]},
 }
 
 var out_dir := "/tmp"
@@ -41,6 +51,9 @@ var window_size := Vector2i.ZERO
 var report: Dictionary = {}
 var clean := false # --clean: no cutout zones drawn on the screenshots
 var shots_filter: PackedStringArray = [] # --shots=: only these are saved and measured
+var views: PackedStringArray = [] # --view=: close-ups to shoot
+var probe := "" # --probe=model/part
+var show_blocked := false # --show-blocked
 var _cutout_layer: CanvasLayer
 
 
@@ -74,6 +87,12 @@ func _run() -> void:
 			shots_filter = a.substr(8).split(",", false)
 		elif a.begins_with("--device="):
 			device = a.substr(9)
+		elif a.begins_with("--view="):
+			views = a.substr(7).split(",", false)
+		elif a.begins_with("--probe="):
+			probe = a.substr(8)
+		elif a == "--show-blocked":
+			show_blocked = true
 	if device != "":
 		var d: Dictionary = DEVICES[device]
 		screen_size = d["size"]
@@ -165,6 +184,8 @@ func _run() -> void:
 		hud.call("_refresh_inventory")
 		await _settle(1.0)
 		await _shot("%s_hud_bare" % lang, hud) # the 3D frame behind captions (contrast is measured on it)
+		for v in views:
+			await _closeup_shots(room, hud, l, lang, v)
 		# "item found": the same call the rooms make when an item is picked up (room_base _feedback)
 		var found_id := "notebook" if l.has_item("notebook") else str(l.inventory[0])
 		hud.call("message", tr("ui.item_added") % tr(ItemDB.name_key(found_id)), 30.0)
@@ -186,6 +207,7 @@ func _run() -> void:
 		hud.call("caption", "", 0.01)
 		await _settle(0.8)
 		await _overlay_shot(hud, "show_hint", [], "%s_hint" % lang)
+		await _hint_ladder_shots(hud, lang)
 		await _overlay_shot(hud, "show_pause", [], "%s_pause" % lang)
 		# the settings panel as the pause menu opens it (over the 3D room, not the main menu)
 		var settings_btn := _find_button(hud.get("_overlay"), "ui.settings")
@@ -195,6 +217,8 @@ func _run() -> void:
 			await _shot("%s_pause_settings" % lang, hud.get("_overlay"))
 		await _overlay_shot(hud, "show_inspect", ["crystal_lens"], "%s_inspect" % lang, 1.0)
 		await _overlay_shot(hud, "_show_notebook", [7], "%s_notebook" % lang) # the longest page
+		l.state["uv_page"] = true # the page Leyla wrote in UV ink, as the lamp shows it
+		await _overlay_shot(hud, "_show_notebook", [4], "%s_notebook_uv" % lang, 1.6)
 		await _overlay_shot(hud, "show_document", ["letter"], "%s_letter" % lang)
 		await _overlay_shot(hud, "show_document", ["personnel_file"], "%s_document" % lang)
 		await _overlay_shot(hud, "show_document", ["photo"], "%s_photo" % lang)
@@ -421,6 +445,159 @@ func _shot(name: String, scope: Node = null) -> void:
 	if scope != null:
 		report[name] = _measure(scope)
 		var issues: Array = report[name]["issues"]
+		if (name.contains("hud") or name.contains("view")) and scope.get("_root") is Control:
+			issues.append_array(_hud_overlaps(scope))
 		print("shot %s (%d texts, %d targets, %d issues)" % [name, (report[name]["texts"] as Array).size(), (report[name]["targets"] as Array).size(), issues.size()])
 	else:
 		print("shot " + name) # tools/qa_run.sh restarts a run whose log stops growing
+
+
+# ====================================================================== close-ups, hints, HUD overlaps
+## A close-up of the room as the player sees it with an item in hand (the owner could not reach Panel 7's main
+## lever under the old inventory bar), then with the bag open. With --probe, says whether the part lies under a
+## HUD control that stops taps.
+func _closeup_shots(room: Node3D, hud: Node, l: RoomLogic, lang: String, view: String) -> void:
+	var cam := room.get("cam") as RoomCamera
+	if cam == null or not cam.views.has(view):
+		print("ui_screens: no view %s" % view)
+		return
+	var home := cam.current()
+	cam.go(view, true)
+	await _settle(1.2)
+	if not l.inventory.is_empty():
+		l.select_item(str(l.inventory[0]))
+		hud.call("_refresh_inventory")
+	await _settle(0.8)
+	await _blocked_tint(hud)
+	await _shot("%s_view_%s" % [lang, view], hud)
+	_probe_report(room, hud, "%s_view_%s" % [lang, view])
+	if hud.has_method("set_bag_open"):
+		hud.call("set_bag_open", true)
+		await _settle(0.8)
+		await _blocked_tint(hud)
+		await _shot("%s_view_%s_bag" % [lang, view], hud)
+		_probe_report(room, hud, "%s_view_%s_bag" % [lang, view])
+		hud.call("set_bag_open", false)
+	_clear_tint()
+	l.select_item("")
+	hud.call("_refresh_inventory")
+	cam.go(home, true)
+	await _settle(0.8)
+
+
+## The rects of every HUD control that stops a tap (the HUD's blocked_rects() when it has one).
+func _hud_blocked(hud: Node) -> Array[Rect2]:
+	if hud.has_method("blocked_rects"):
+		return hud.call("blocked_rects")
+	var out: Array[Rect2] = []
+	for n in (hud.get("_root") as Node).find_children("*", "Control", true, false):
+		var c := n as Control
+		if c.is_visible_in_tree() and c.mouse_filter == Control.MOUSE_FILTER_STOP and _alpha(c) > 0.05:
+			out.append(c.get_global_rect())
+	return out
+
+
+func _probe_report(room: Node3D, hud: Node, shot_name: String) -> void:
+	if probe == "" or not probe.contains("/"):
+		return
+	var models: Dictionary = room.get("models")
+	var n := ModelUtil.find(models.get(probe.get_slice("/", 0)), probe.get_slice("/", 1))
+	var cam := room.get("cam") as RoomCamera
+	if n == null or cam == null:
+		print("ui_screens: probe %s not found" % probe)
+		return
+	var mi := n as MeshInstance3D
+	var c := (mi.global_transform * mi.get_aabb()).get_center() if mi else n.global_position
+	var p := cam.unproject_position(c)
+	var hit := ""
+	for r in _hud_blocked(hud):
+		if r.has_point(p):
+			hit = str(r)
+	var res := {"part": probe, "screen": [snappedf(p.x, 1), snappedf(p.y, 1)], "covered_by": hit}
+	var probes: Dictionary = report.get("_probe", {})
+	probes[shot_name] = res
+	report["_probe"] = probes
+	print("probe %s %s at %s: %s" % [shot_name, probe, p, ("UNDER a HUD control " + hit) if hit != "" else "free to tap"])
+
+
+var _tint_layer: CanvasLayer
+
+
+## --show-blocked: a red tint over every HUD control that stops a tap (where the world cannot be tapped).
+func _blocked_tint(hud: Node) -> void:
+	_clear_tint()
+	if not show_blocked:
+		return
+	_tint_layer = CanvasLayer.new()
+	_tint_layer.layer = 120
+	add_child(_tint_layer)
+	for r in _hud_blocked(hud):
+		var cr := ColorRect.new()
+		cr.color = Color(1.0, 0.1, 0.1, 0.28)
+		cr.position = r.position
+		cr.size = r.size
+		cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_tint_layer.add_child(cr)
+	await _settle(0.1)
+
+
+func _clear_tint() -> void:
+	if _tint_layer != null:
+		_tint_layer.queue_free()
+		_tint_layer = null
+
+
+## The hint ladder: Stronger hint to level 2, Show the answer to level 3, then the same goal asked again.
+func _hint_ladder_shots(hud: Node, lang: String) -> void:
+	var more := _find_button(hud.get("_overlay"), "ui.hint_more")
+	for lvl in [2, 3]:
+		if more == null or not is_instance_valid(more) or more.disabled or not more.is_visible_in_tree():
+			break
+		more.emit_signal("pressed")
+		await _settle(0.5)
+		await _shot("%s_hint_%d" % [lang, lvl], hud.get("_overlay"))
+	await _overlay_shot(hud, "show_hint", [], "%s_hint_reopen" % lang)
+
+
+## HUD elements that overlap each other: the corner buttons, the bag, the banners, the meter and each visible
+## inventory slot and item action (the open overlay and anything faded out are left out).
+func _hud_overlaps(hud: Node) -> Array:
+	var items: Array = []
+	var root := hud.get("_root") as Control
+	var inv := hud.get("_inv_panel") as Control
+	for c in root.get_children():
+		if not (c is Control) or c == hud.get("_overlay") or c == inv:
+			continue
+		var cc := c as Control
+		if cc.is_visible_in_tree() and _alpha(cc) > 0.05 and cc.size.x > 1.0 and cc.size.y > 1.0:
+			items.append([_hud_name(hud, cc), cc.get_global_rect()])
+	if inv != null and inv.is_visible_in_tree() and _alpha(inv) > 0.05:
+		var box := hud.get("_inv_box") as Control
+		for s in box.get_children():
+			var sc := s as Control
+			if sc.is_visible_in_tree():
+				var clip := _scroll_clip(sc)
+				var r := sc.get_global_rect()
+				r = r if clip.size == Vector2.ZERO else r.intersection(clip)
+				if r.size.y > 2.0:
+					items.append(["slot", r])
+		var act := hud.get("_actions") as Control
+		if act != null:
+			for b in act.get_children():
+				if (b as Control).is_visible_in_tree():
+					items.append(["item action", (b as Control).get_global_rect()])
+	var out: Array = []
+	for i in items.size():
+		for j in range(i + 1, items.size()):
+			var a: Rect2 = items[i][1]
+			var b: Rect2 = items[j][1]
+			if a.intersects(b) and a.intersection(b).get_area() > 4.0:
+				out.append("overlap: %s %s × %s %s" % [items[i][0], a, items[j][0], b])
+	return out
+
+
+func _hud_name(hud: Node, c: Control) -> String:
+	for prop in ["_top_plate", "_cap_plate", "_msg_plate", "_prompt_plate", "_back_btn", "_hint_btn", "_pause_btn", "_bag_btn", "_meter"]:
+		if hud.get(prop) == c:
+			return prop.substr(1)
+	return c.get_class()
