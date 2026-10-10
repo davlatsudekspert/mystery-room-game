@@ -478,6 +478,31 @@ func _hinge_bookcase() -> void:
 	_frame_open_bookcase()
 
 
+## The drawer close-up has two jobs: while the drawer is shut it frames the four code wheels close enough to turn with
+## a finger (each wheel was ~4 mm wide on a phone from the old 0.8 m framing); once it slides open, the camera
+## steps back so the whole drawer and what lies in it are in view.
+func _frame_drawer() -> void:
+	if logic.state["drawer_open"]:
+		cam.add_view("drawer", Vector3(-0.5, 1.08, -1.12), Vector3(-0.5, 0.62, -1.78), 36.0)
+	else:
+		cam.add_view("drawer", Vector3(-0.5, 0.9, -1.4), Vector3(-0.5, 0.655, -1.78), 30.0)
+
+
+## The safe close-up: the keypad fills the frame while the safe is shut (keys ~5 mm wide on a phone from the old
+## framing); once the door swings open, the camera steps back to show the shelves inside.
+func _frame_safe() -> void:
+	if logic.state["safe_open"]:
+		cam.add_view("safe", Vector3(2.2, 1.32, 1.72), Vector3(2.2, 1.25, 2.5), 40.0)
+	else:
+		cam.add_view("safe", Vector3(2.26, 1.3, 2.0), Vector3(2.26, 1.26, 2.5), 34.0)
+
+
+## A close-up whose framing depends on the state was just re-aimed: glide to the new framing if the player is in it.
+func _reframe(view_id: String) -> void:
+	if cam.current() == view_id:
+		cam.refresh()
+
+
 ## Once the bookcase stands open, the views that looked at it frame the hidden doorway from a spot
 ## outside the swing arc (the "books" close-up sits inside it), and the shelf-top view follows the shelf.
 func _frame_open_bookcase() -> void:
@@ -510,7 +535,7 @@ func _build_views() -> void:
 	V.call("door", Vector3(1.55, 1.5, 0.75), Vector3(3.0, 1.25, 0.75), 56.0)
 	V.call("lock", Vector3(2.35, 1.2, 0.12), Vector3(3.0, 1.15, 0.12), 34.0)
 	V.call("desk", Vector3(-0.5, 1.48, -1.2), Vector3(-0.5, 0.8, -2.15), 52.0)
-	V.call("drawer", Vector3(-0.5, 1.08, -1.12), Vector3(-0.5, 0.62, -1.78), 36.0)
+	_frame_drawer()
 	V.call("clock", Vector3(-0.98, 1.0, -1.8), Vector3(-1.0, 0.84, -2.25), 30.0)
 	V.call("desk_side", Vector3(0.95, 0.78, -1.85), Vector3(0.25, 0.55, -2.08), 42.0)
 	V.call("under_desk", Vector3(-0.74, 0.5, -1.15), Vector3(-0.7, 0.02, -2.2), 55.0) # beside the chair, not under it
@@ -527,7 +552,7 @@ func _build_views() -> void:
 	V.call("radio", Vector3(0.55, 1.22, 1.62), Vector3(0.55, 1.05, 2.22), 36.0)
 	V.call("radio_hatch", Vector3(0.55, 1.54, 1.92), Vector3(0.54, 1.12, 2.23), 38.0)
 	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
-	V.call("safe", Vector3(2.2, 1.32, 1.72), Vector3(2.2, 1.25, 2.5), 40.0)
+	_frame_safe()
 	# Far enough back that the lamps (y 1.75) clear the title plates and the main lever's handle (y 1.10) clears the
 	# inventory bar; at 0.88 m the handle sat under the bar and a finger could not reach it.
 	V.call("panel", Vector3(1.85, 1.46, -1.3), Vector3(3.0, 1.46, -1.3), 54.0)
@@ -1231,6 +1256,8 @@ func _feedback(e: String) -> void:
 		"drawer_opened":
 			AudioManager.sfx("drawer_open")
 			hud.call("message", tr("msg.drawer_opened"))
+			_frame_drawer()
+			_reframe("drawer")
 		"gears":
 			AudioManager.sfx("gear_turn", -2.0, randf_range(0.95, 1.05))
 		"box_opened":
@@ -1257,6 +1284,8 @@ func _feedback(e: String) -> void:
 		"safe_opened":
 			AudioManager.sfx("safe_open")
 			hud.call("message", tr("msg.safe_opened"))
+			_frame_safe()
+			_reframe("safe")
 		"keyhole_revealed":
 			AudioManager.sfx("secret_panel")
 			hud.call("message", tr("msg.keyhole"))

@@ -8,6 +8,9 @@ extends RefCounted
 ## main menu. A crash report from the phone then says what failed; this keeps the game playable meanwhile.
 
 const PATH := "user://session_stage.txt"
+## The file actually used; tests point it elsewhere so a game running at the same time (QA renders share user://)
+## cannot change what they read.
+static var file_path := PATH
 ## Safe graphics levels. Each crash while loading or first drawing a scene raises the level by one at the next
 ## launch, so a tester's retries narrow down which feature the phone's GPU driver fails on:
 ##   1 = no MSAA anywhere;
@@ -37,7 +40,7 @@ static func mark(stage: String) -> void:
 
 ## A finer step inside the current stage (the model or part being built), so "last stop" names it.
 static func detail(what: String) -> void:
-	_write("%s %s" % [_stage, what])
+	_write(("%s %s" % [_stage, what]).strip_edges())
 
 
 static func safe_level() -> int:
@@ -71,8 +74,8 @@ static func resumed() -> void:
 ## Called once at launch, before the first mark().
 static func read_previous() -> String:
 	previous = ""
-	if FileAccess.file_exists(PATH):
-		var stage := FileAccess.get_file_as_string(PATH).get_slice("\t", 0).strip_edges()
+	if FileAccess.file_exists(file_path):
+		var stage := FileAccess.get_file_as_string(file_path).get_slice("\t", 0).strip_edges()
 		if stage not in ["", "paused", "menu"]:
 			previous = stage
 	return previous
@@ -83,7 +86,7 @@ static func crashed_while_loading() -> bool:
 
 
 static func _write(stage: String) -> void:
-	var f := FileAccess.open(PATH, FileAccess.WRITE)
+	var f := FileAccess.open(file_path, FileAccess.WRITE)
 	if f != null:
 		f.store_string("%s\t%d\n" % [stage, int(Time.get_unix_time_from_system())])
 		f.close()

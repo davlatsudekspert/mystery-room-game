@@ -115,6 +115,7 @@ func test_hint_escalation() -> void:
 ## A session that dies while loading a scene is remembered (CrashGuard); a clean pause or a crash later in play is not
 ## a loading crash, so only the first turns safe graphics on at the next launch.
 func test_crash_guard_stages() -> void:
+	CrashGuard.file_path = "user://test_session_stage_%d.txt" % OS.get_process_id()
 	CrashGuard.mark("load:lab7")
 	eq(CrashGuard.read_previous(), "load:lab7", "a session that died while loading is remembered")
 	check(CrashGuard.crashed_while_loading(), "a loading crash")
@@ -129,7 +130,8 @@ func test_crash_guard_stages() -> void:
 	check(not CrashGuard.crashed_while_loading(), "a crash during play keeps the graphics")
 	CrashGuard.mark("menu")
 	eq(CrashGuard.read_previous(), "", "the main menu is a clean stage")
-	DirAccess.remove_absolute(CrashGuard.PATH)
+	DirAccess.remove_absolute(CrashGuard.file_path)
+	CrashGuard.file_path = CrashGuard.PATH
 	CrashGuard.previous = ""
 
 
