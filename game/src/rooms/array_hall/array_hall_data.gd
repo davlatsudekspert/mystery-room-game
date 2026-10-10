@@ -110,7 +110,7 @@ const VIEWS := {
 	"core": [Vector3(0.0, 4.9, 2.7), Vector3(0.0, 3.95, 0.3), 52.0, false, "I", "", ""],
 	# the open drawer's pads lie behind its front panel and under the collar's digit housing (no camera sees them): the three
 	# things hover in front of the housing once the drawer is open
-	"drawer": [Vector3(0.0, 3.88, 2.5), Vector3(0.0, 3.44, 1.56), 34.0, false, "I", "", ""],
+	"drawer": [Vector3(0.0, 3.9, 2.4), Vector3(0.0, 3.42, 1.56), 46.0, false, "I", "", ""],
 	"drawer_mark": [Vector3(0.5, 3.75, 2.4), Vector3(0.0, 3.15, 0.7), 46.0, false, "I", "", ""],
 	# the Sun apse
 	"apse": [Vector3(-5.5, 1.7, 0.3), Vector3(-12.5, 1.8, 0.0), 62.0, true, "HSR", "", ""],
