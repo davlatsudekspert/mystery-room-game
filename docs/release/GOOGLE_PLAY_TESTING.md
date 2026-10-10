@@ -20,6 +20,7 @@ _Last updated: 2026-10-09. Package `com.mysteryroom.forgotteninstitute`. Sources
 - **NFCSTORE testerlari:** Play Console'dagi email roʻyxatlar boshqa ilovalarda ham ishlatilishi mumkin. Lekin har bir tester MYSTERY ROOM'ning **oʻz havolasi** orqali qaytadan qoʻshilishi shart. Taklif matni EN/RU/UZ tillarida: 8-boʻlim.
 - **Oʻzbek tili:** Play doʻkon sahifasini oʻzbek tilida qilib boʻlmaydi, rasmiy tillar roʻyxatida yoʻq. EN va RU sahifalar qilinadi. Oʻyinning oʻzi oʻzbekcha toʻliq ishlaydi.
 - **beta_unlock:** test buildlarda testerlar pullik boblarni ham oʻynay oladi. Toʻlov kodi baribir oʻchiq. Doʻkonga chiqadigan production build faqat `beta_unlock=false` bilan yigʻiladi. Test relizini production'ga «Promote» qilmang.
+- **Xarid `full_game` (2026-10-10):** kod tayyor, haqiqiy toʻlovlar **oʻchiq**. Mahsulotni Google Play'da yaratish uchun sizdan 3 ta qadam kerak: service account'ga "Manage in-app products" ruxsati (faqat MYSTERY ROOM), merchant (toʻlov) profili va License testing roʻyxati. Qadamlar: 11-boʻlim.
 
 ---
 
@@ -128,7 +129,7 @@ Verified: the `android.yml` verify step, run locally with `EXPECTED_VERSION_CODE
 | Upload action | `r0adkll/upload-google-play@v1` was a moving tag, and it receives the Play credentials | Pinned to commit `e738b9dd8f2476ea806d921b64aacd24f34515a5` (= v1.1.5, the current v1) |
 | Track / status | Before: internal + draft only | Inputs `play_track` (`internal` / `alpha` = Closed testing) and `play_status` (`draft` / `completed`). Release notes come from `docs/release/whatsnew/`. Release name = `"<versionName> (<versionCode>)"` |
 | `beta_unlock` | The director's requirement: `Premium.tester_build()` = `OS.has_feature("beta_unlock")` lets testers open paid chapters while real payments stay disabled | Input `beta_unlock` (default **true**). On the runner only, `custom_features="beta_unlock"` is added to the two Android presets. CI asserts that the exported `project.binary` contains the feature exactly when requested. The repository preset never carries it |
-| Real payments | `REAL_PAYMENTS_ENABLED := false` in `game/src/autoload/premium.gd`. No billing plugin and no ads SDK | None |
+| Real payments | `REAL_PAYMENTS_ENABLED := false` in `game/src/autoload/premium.gd`. No ads SDK. Since 2026-10-10 Play Billing (GodotGooglePlayBilling 3.3.0) is added to the Gradle build only with `store_sandbox` / `include_billing` (or once real payments are on) | The verify step allows BILLING, INTERNET and ACCESS_NETWORK_STATE only then, and requires them then (§11) |
 
 ## 4. Play Console path: internal → closed → production
 ### 4.1 Does the 12-tester / 14-day rule apply?
@@ -314,6 +315,50 @@ Prerequisites:
   - Production safety relies on the rules in section 9: a fresh `beta_unlock=false` build, and no *Promote release*.
 - **First upload by hand.** It is required [S11], so "one run does the upload" applies from the second build on.
 - **Node 20 deprecation warnings** (`actions/cache@v4`, `setup-java@v4`, `upload-artifact@v4`). They still run, on Node 24. Upgrading them later is optional and was not tested.
+
+## 11. In-app product `full_game` and purchase testing (2026-10-10)
+**State.** The game's Play Billing code is ready and tested headless with a fake billing singleton (`docs/MONETIZATION.md`). Real payments stay off (`REAL_PAYMENTS_ENABLED = false`). Nothing was created in Play Console and no workflow was dispatched.
+
+**What blocks creating the product (verified only against a fake API; to be confirmed by a `play-iap.yml` dry run):**
+1. The service account has only **"Release apps to testing tracks"**. Creating or editing in-app products needs the app permission **"Manage in-app products"** (in some permission sets it sits under "Manage store presence").
+2. Play allows paid products only with a **payments (merchant) profile**.
+3. Play creates in-app products only after a build that declares **`com.android.vending.BILLING`** was uploaded. Today's builds do not declare it.
+
+`play-iap.yml` (`dry_run` default **true**) checks these and stops with exit 3 and a message naming the missing one. With everything in place, `dry_run=false` creates `full_game`: active, "Full Game" / «Полная игра», US$4.99 in the US and Google's local price in every other region.
+
+**Billing in the AAB.** `android.yml` → `include_billing=true` (purchases still off) or `store_sandbox=true` (purchase test build; needs `beta_unlock=false`). Both need `build_type=release`. The AAB then declares `com.android.vending.BILLING`, `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE` (the last two come from Google's billing library). The verify step allows these three only in such builds and requires them there. Verified on a local release AAB (Gradle, throwaway key) on 2026-10-10; not yet on CI.
+
+**Risk: real money on the internal track.** A `store_sandbox` build uses the real Play purchase sheet. Only Google accounts on the **License testing** list buy with test cards. Every other tester on the internal track would be **charged real money**. Add the testers to License testing first, or give a `store_sandbox` build only to them.
+
+### Egasi uchun qadamlar (oʻzbekcha)
+**1. Service account'ga ruxsat (faqat MYSTERY ROOM uchun).**
+- Play Console → **Users and permissions** («Пользователи и разрешения») → MYSTERY ROOM service account (`…@…iam.gserviceaccount.com`) qatori → **Manage** («Управлять»).
+- **App permissions** («Разрешения для приложений») → faqat **MYSTERY ROOM** → **"Manage in-app products"** belgisini qoʻying. Agar bunday band boʻlmasa, **"Manage store presence"** («Управление страницей приложения в Google Play»), chunki unda in-app mahsulotlar ham bor.
+- **Account permissions**'da hech narsa qoʻshmang. Admin, production'ga reliz, moliyaviy maʼlumotlar va **boshqa ilovalar (NFCSTORE)** uchun ruxsat **bermang**. → **Apply** / **Save**.
+
+**2. Merchant (toʻlov) profili.**
+- Play Console → **Settings** («Настройки») → **Payments profile** («Платежный профиль»), yoki MYSTERY ROOM → **Monetize** → **Products** → **In-app products** sahifasidagi "Set up a merchant account" («Создать аккаунт продавца»).
+- Profil davlati Google'ning merchant roʻyxatida boʻlishi kerak. Agar shakl sizning davlatingizni qabul qilmasa, toʻxtang va direktorga yozing: bunday holda Google Play'da pullik mahsulot boʻlmaydi.
+- Bank va soliq maʼlumotlarini **oʻzingiz** kiritasiz. Ularni hech kimga yubormang.
+
+**3. License testing (testerlar pul toʻlamasligi uchun).**
+- Play Console → chap menyuning pastida **Settings** («Настройки») → **License testing** («Лицензионное тестирование»).
+- Testerlarning Gmail manzillarini qoʻshing (yoki "MYSTERY ROOM internal" email roʻyxatini tanlang). **License response: RESPOND_NORMALLY**. → **Save**.
+- Tester telefonidagi Play Store'da **shu Gmail asosiy akkaunt** boʻlishi kerak. Xarid oynasida "Test card, always approves" kabi test kartalar koʻrinadi. Koʻrinmasa, **sotib olmang**: pul yechiladi.
+
+**4. Keyin direktor (sizning ruxsatingiz bilan):**
+1. `android.yml`: `build_type=release`, `include_billing=true`, `beta_unlock=false`, `upload_to_play=true`, `play_track=internal`, `play_status=draft`. Bu Play'ga ilovada BILLING borligini koʻrsatadi. Draft'ni rollout qilish shart emas.
+2. `play-iap.yml`: avval `dry_run=true`, natijani koʻrib chiqish, keyin `dry_run=false` (`home_currency`: toʻlov profilingiz valyutasi, masalan `USD`).
+3. `android.yml`: `store_sandbox=true`, `beta_unlock=false`, `upload_to_play=true`, `play_track=internal`. Faqat License testing roʻyxatidagi testerlar sinaydi.
+
+### Ixtiyoriy: Claude in Chrome uchun tayyor topshiriq
+Quyidagi matnni Chrome'dagi Claude'ga bering. U har bir saqlashdan oldin sizdan tasdiq soʻraydi.
+
+> Google Play Console'da (play.google.com/console) faqat **MYSTERY ROOM** ilovasi (paket `com.mysteryroom.forgotteninstitute`) bilan ishlang. Boshqa ilovalarga, ayniqsa NFCSTORE'ga, umuman tegmang. Narxlar, ilova nomi, mavjudlik (davlatlar), relizlar, treklar va store sahifasini oʻzgartirmang. Hech narsani production'ga chiqarmang.
+> 1. **Users and permissions** sahifasida `iam.gserviceaccount.com` bilan tugaydigan MYSTERY ROOM service account'ini oching. **App permissions**'da faqat MYSTERY ROOM uchun **"Manage in-app products"** ruxsatini qoʻshing. U boʻlmasa, **"Manage store presence"**'ni qoʻshing. Boshqa ruxsatlarni oʻzgartirmang, Admin yoki account-level ruxsat bermang. **Saqlashdan oldin** menga nima belgilanganini koʻrsating va tasdiq kuting.
+> 2. **Settings → License testing** sahifasini oching. Men bergan Gmail manzillarini (yoki "MYSTERY ROOM internal" roʻyxatini) qoʻshing, License response'ni **RESPOND_NORMALLY** qiling. Saqlashdan oldin tasdiq soʻrang.
+> 3. **Settings → Payments profile** (yoki MYSTERY ROOM → Monetize → Products) sahifasida merchant akkaunt bor-yoʻqligini aniqlang va menga ayting. Bank, soliq yoki shaxsiy maʼlumotlarni **oʻzingiz kiritmang**: bu formani men toʻldiraman.
+> Oxirida nimalar oʻzgarganini qisqacha yozing.
 
 ## Sources
 | Tag | Official page |

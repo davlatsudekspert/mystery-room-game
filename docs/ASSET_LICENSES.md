@@ -61,3 +61,12 @@ Original assets created for this project (procedural Blender models, synthesized
 - the app icons `ui/icon*.png` and `docs/store/graphics/icon_512.png`, cut from the emblem. The monochrome icon is drawn procedurally.
 
 **Open item before store release:** the owner must confirm where the artwork came from and that it may be used commercially. If an AI image tool made it, check that tool's terms.
+
+## Third-party software: store plugins (only in builds with in-app purchases)
+Added on the CI runner by `tools/store/add_store_plugins.py` (download pinned by SHA-256, never committed; `.gitignore`). They go into a build only when it can make a purchase: `store_sandbox`, `include_billing` (Android), or `REAL_PAYMENTS_ENABLED = true` (`docs/MONETIZATION.md`). Licence texts travel inside each plugin folder (`LICENSE`).
+
+| Software | Used for | Source | Version | License | Verified on |
+|---|---|---|---|---|---|
+| GodotGooglePlayBilling | Android in-app purchases (Google Play Billing; Android plugin v2 AAR + export script) | https://github.com/godot-sdk-integrations/godot-google-play-billing (release zip `godot-google-play-billing.zip`, SHA-256 `20d75623d6f337f08d8283c83098b73678d5f575e39247af5a8eb80588b18568`) | 3.3.0 (2026-07-26) | MIT, © 2020 Godot Engine contributors | 2026-10-10 |
+| Google Play Billing Library (`com.android.billingclient:billing-ktx`) and its Google dependencies (play-services-base/-basement/-tasks/-location, datatransport, AndroidX, Kotlin) | Pulled by the plugin's Gradle dependency at build time | https://developer.android.com/google/play/billing (Google Maven) | 9.1.0 | Android Software Development Kit License (Google's free SDK terms) / Apache 2.0 (AndroidX, Kotlin) | 2026-10-10 |
+| Godot iOS plugin for In-App purchase | iOS in-app purchases (StoreKit 2; `.gdip` + static xcframeworks) | https://github.com/hrk4649/godot_ios_plugin_iap (release zip `ios-in-app-purchase-v0.4.0.zip`, SHA-256 `578800e79f2bcd8719eb00e4f80d036960518ec1b113c7b47626f95a8aeda87a`) | 0.4.0 (2026-06-19, built for Godot 4.7) | MIT, © 2025-2026 Hiroki Taira | 2026-10-10 |

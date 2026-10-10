@@ -12,6 +12,7 @@
 - Test buildlarda `beta_unlock` yoqilgan: pullik boblar toʻlovsiz ochiladi. App Store'ga chiqariladigan buildda u **oʻchiq** boʻlishi shart.
 - App Store'da oʻzbek tilidagi sahifa (lokalizatsiya) **yoʻq**: Apple roʻyxatida oʻzbek tili mavjud emas. Oʻyinning oʻzi oʻzbekcha toʻliq ishlaydi. Ilova ichida `uz.lproj` bor, shuning uchun App Store sahifasidagi "Tillar" qatorida oʻzbek tili koʻrinishi kutiladi.
 - Sizdan kerak boʻladigan qarorlar: nom, subtitr, kategoriya, maxfiylik URL, yosh reytingi va App Privacy. Ular pastdagi roʻyxatda.
+- **Xarid `full_game` (2026-10-10):** StoreKit 2 kodi tayyor, haqiqiy toʻlovlar **oʻchiq**. App Store Connect'da mahsulotni `ios-iap.yml` yaratadi (standart holatda faqat koʻrsatadi, `dry_run=true`). Xaridni sinash uchun `store_sandbox=true` bilan TestFlight build: TestFlight'dagi xaridlar har doim sandbox, pul yechilmaydi. Bunday buildni **App Review'ga yubormang**. Tafsilotlar: pastdagi "In-app purchase" boʻlimi.
 
 ## TestFlight upload (2026-10-09): build 0.1.0 (2) is in TestFlight
 The owner approved one internal TestFlight build on 2026-10-09.
@@ -191,6 +192,19 @@ Inputs:
     - (b) the build ships `uz.lproj`, so the product page's **Languages** row lists Uzbek. That row is read from the binary's `.lproj` folders, not from store localizations ([Apple forums](https://developer.apple.com/forums/thread/836440)). The macOS verify step prints the bundle's localizations;
     - (c) the game picks Uzbek from the device language or the first-run language picker;
     - (d) optionally, one screenshot shows the Uzbek UI.
+
+## In-app purchase `full_game` (2026-10-10)
+Code, plugin choice and the enable-later steps: `docs/MONETIZATION.md`. Real payments stay off.
+
+| Piece | How | State |
+|---|---|---|
+| Product in App Store Connect | `ios-iap.yml` → `tools/ios/asc_iap.py`. `dry_run` defaults to **true** (GET only). `dry_run=false` creates or fixes the NON_CONSUMABLE `full_game` on this app only: reference name "Full Game"; en-US and ru localizations (no Uzbek locale exists); US base price US$4.99 (price point looked up through the API; Apple sets the other territories); availability in the app's territories; the review screenshot `docs/store/iap/full_game_review.png` (2796×1290, the purchase screen as a store build shows it). It prints the state and what is still missing for "Ready to Submit". It never submits | Written; tested against a local fake API only; **not dispatched** |
+| StoreKit in the build | `ios.yml` input `store_sandbox` (default false; needs `beta_unlock=false`). The ubuntu job adds the StoreKit 2 plugin (hrk4649/godot_ios_plugin_iap 0.4.0, MIT, SHA-256 pinned) and the custom feature `store_sandbox`; after the export `tools/ios/add_iap_capability.py` turns on the In-App Purchase capability; `verify_xcode_project.py --storekit` requires plugin, init, StoreKit.framework and capability (and their absence in other builds); the signed-IPA check compares StoreKit linkage | Godot export + checks verified locally (Linux). **The macOS archive with the plugin has not run yet** |
+| Capability on the App ID | `IN_APP_PURCHASE` is already on the bundle id (read-only check of 2026-10-09). No new key or profile type is needed; the cloud-signed App Store profile covers it | — |
+
+**Testing in TestFlight:** after `ios-iap.yml` created the product with a price, run `ios.yml` with `store_sandbox=true`, `beta_unlock=false`, `upload_to_testflight=true` (owner's approval). TestFlight purchases are always sandbox and never charged; testers use their own Apple Account. The first in-app purchase is reviewed only when it is submitted with an app version, which is not needed for sandbox tests.
+
+**Never submit a `store_sandbox` build for App Review.** The App Store build must run with `beta_unlock=false` and `store_sandbox=false`; the Xcode check then requires a pck without custom features. As a second guard, a `store_sandbox` build that was installed from the App Store (receipt file `StoreKit/receipt`) keeps the store disabled.
 
 ## Owner checklist
 1. **Agreements:** App Store Connect → Business → the Free Apps agreement is active. The API cannot read it.
