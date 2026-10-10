@@ -299,21 +299,30 @@ func _arrange() -> void:
 		if not _meter.visible:
 			mr = Rect2()
 	var meter_half := mr.position.x - 20.0 - cx # half the width a centred banner has beside the meter
+	# the prompt (fitted first: the meter may only move down as far as the prompt's top)
+	var bottom := canvas.y - safe.w - PAD
+	var text_w := UITheme.hud_text_width()
+	_prompt_plate.max_sub_lines = 2
+	_prompt_plate.set_meta("y", bottom)
+	_prompt_plate.set_meta("max_w", text_w)
+	_fit_plate(_prompt_plate)
+	var low := canvas.y - safe.w - PAD - _pause_btn.custom_minimum_size.y - gap # the meter clears Pause
+	if _prompt_plate.visible and mr.has_area() and _box(_prompt_plate).end.x > mr.position.x:
+		low = minf(low, _prompt_plate.position.y - gap)
 	# 2. the title (two lines at most); a second line keeps clear of the meter, or the meter moves down
 	var top_w: float = _top_plate.get_meta("max_w", 1200.0)
 	_top_plate.max_title_lines = 2
 	_fit_plate(_top_plate)
 	if mr.has_area() and _top_plate.visible and _box(_top_plate).intersects(mr.grow(gap)):
 		# narrower, beside the meter, when the whole title still fits; otherwise the full width (which shows more
-		# of it) and the meter moves under the title, if it still clears the Pause button there
+		# of it) and the meter moves under the title, if it still clears the prompt and the Pause button there
 		var narrow := minf(top_w, 2.0 * meter_half)
 		_top_plate.set_meta("max_w", narrow)
 		_fit_plate(_top_plate)
 		_top_plate.set_meta("max_w", top_w)
-		var pause_top := canvas.y - safe.w - PAD - _pause_btn.custom_minimum_size.y
 		if _top_plate.title_cut:
 			_fit_plate(_top_plate)
-			if _top_plate.position.y + _top_plate.size.y + gap + mr.size.y > pause_top - gap:
+			if _top_plate.position.y + _top_plate.size.y + gap + mr.size.y > low:
 				_top_plate.set_meta("max_w", narrow) # no room under it: beside the meter, cut
 				_fit_plate(_top_plate)
 				_top_plate.set_meta("max_w", top_w)
@@ -328,13 +337,7 @@ func _arrange() -> void:
 	var tops: Array[Rect2] = [title_box]
 	if mr.has_area():
 		tops.append(mr)
-	# 3. the prompt at the bottom, the message above it
-	var bottom := canvas.y - safe.w - PAD
-	var text_w := UITheme.hud_text_width()
-	_prompt_plate.max_sub_lines = 2
-	_prompt_plate.set_meta("y", bottom)
-	_prompt_plate.set_meta("max_w", text_w)
-	_fit_plate(_prompt_plate)
+	# 3. the prompt at the bottom (narrower only if the meter still reaches it), the message above it
 	if mr.has_area() and _prompt_plate.visible and _box(_prompt_plate).intersects(mr.grow(gap)):
 		_prompt_plate.set_meta("max_w", minf(text_w, 2.0 * meter_half))
 		_fit_plate(_prompt_plate)
