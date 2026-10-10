@@ -124,24 +124,24 @@ def static_parts():
     # the digit housing: a lock box closing the gap, hollow behind four windows
     hb = bmesh.new()
     y0, y1 = 0.85, 1.55
-    X.bm_box(hb, (-0.46, y0, 1.00), (0.46, y0 + 0.05, 1.375), bottom=True)          # bottom plate
-    X.bm_box(hb, (-0.46, y1 - 0.05, 1.00), (0.46, y1, 1.375), bottom=True)          # top plate
-    X.bm_box(hb, (-0.46, y0 + 0.05, 1.00), (-0.43, y1 - 0.05, 1.355))                # side walls (stop behind the front plate)
-    X.bm_box(hb, (0.43, y0 + 0.05, 1.00), (0.46, y1 - 0.05, 1.355))
-    X.bm_box(hb, (-0.43, y0 + 0.05, 1.00), (0.43, y1 - 0.05, 1.10))                  # back wall
-    zf = 1.355
-    X.bm_box(hb, (-0.46, y0 + 0.05, zf), (-0.365, y1 - 0.05, 1.375))                 # front plate: end bars
-    X.bm_box(hb, (0.365, y0 + 0.05, zf), (0.46, y1 - 0.05, 1.375))
-    for xc in (-0.20, 0.0, 0.20):                                                    # separators (full depth)
-        X.bm_box(hb, (xc - 0.035, 1.16, 1.10), (xc + 0.035, 1.245, 1.36))
-    X.bm_box(hb, (-0.365, 1.245, zf), (0.365, y1 - 0.05, 1.375))                     # visor above the windows
-    X.bm_box(hb, (-0.365, y0 + 0.05, zf), (0.365, 1.160, 1.375))                     # lip below the windows
+    zf, zt = 1.300, 1.318                                                              # the front plate: z 1.300 .. 1.318 (the digits stand 0.014 proud of it)
+    X.bm_box(hb, (-0.46, y0, 1.00), (0.46, y0 + 0.05, zt), bottom=True)                # bottom plate
+    X.bm_box(hb, (-0.46, y1 - 0.05, 1.00), (0.46, y1, zt), bottom=True)                # top plate
+    X.bm_box(hb, (-0.46, y0 + 0.05, 1.00), (-0.43, y1 - 0.05, zf), bottom=True)        # side walls (stop behind the front plate)
+    X.bm_box(hb, (0.43, y0 + 0.05, 1.00), (0.46, y1 - 0.05, zf), bottom=True)
+    X.bm_box(hb, (-0.43, y0 + 0.05, 1.00), (0.43, y1 - 0.05, 1.10), bottom=True)       # back wall
+    X.bm_box(hb, (-0.46, y0 + 0.05, zf), (-0.365, y1 - 0.05, zt), bottom=True)         # front plate: end bars
+    X.bm_box(hb, (0.365, y0 + 0.05, zf), (0.46, y1 - 0.05, zt), bottom=True)
+    for xc in (-0.20, 0.0, 0.20):                                                      # separators between the wheels (full depth)
+        X.bm_box(hb, (xc - 0.035, 1.15, 1.10), (xc + 0.035, 1.255, zt), bottom=True)
+    X.bm_box(hb, (-0.365, 1.255, zf), (0.365, y1 - 0.05, zt), bottom=True)             # visor above the windows
+    X.bm_box(hb, (-0.365, y0 + 0.05, zf), (0.365, 1.150, zt), bottom=True)             # lip below the windows
     # the axle through the wheels
     out.append(K.obj_from_bm("housing", hb, BRASS))
     out.append(D.rod("axle", (-0.44, AXIS_YZ[0], AXIS_YZ[1]), (0.44, AXIS_YZ[0], AXIS_YZ[1]), 0.012, segs=8, mat=BRASS))
     # 40 small tick studs on the front plate lip: ten per window gap would be too many; four pointer notches instead
     for xc in DIGIT_X:
-        out.append(K.gbox("ptr", (xc - 0.012, 1.246, zf + 0.020), (xc + 0.012, 1.262, zf + 0.026), BRASS, 0.001))
+        out.append(K.gbox("ptr", (xc - 0.012, 1.256, zt), (xc + 0.012, 1.272, zt + 0.006), BRASS, 0.001))
     return out
 
 
@@ -207,6 +207,17 @@ def qa(args, parts):
         cam, tgt, fov = (-2.8, 5.3, 3.6), (0.0, 3.5, 0.0), 54
         lit(cam, 40.0, 0.2)
         C.shoot(NAME + "_2", cam, tgt, fov, samples=S, res=RES)
+    if C.want(args, "4"):          # the wheels alone (housing hidden): the digits 3 1 4 7 upright at the front
+        for o in bpy.data.objects:
+            if o.name == "glass_static":
+                o.hide_render = True
+        cam, tgt, fov = (0.0, 3.95, 2.1), (0.0, 3.7, 1.22), 36
+        lit(cam, 25.0, 0.2)
+        K.light("collar_lamp", "POINT", (0.0, 4.55, 1.9), 150.0, "FFC98A", radius=0.08)
+        C.shoot(NAME + "_4", cam, tgt, fov, samples=S, res=RES)
+        for o in bpy.data.objects:
+            if o.name == "glass_static":
+                o.hide_render = False
     if C.want(args, "3"):          # the glass sunk (-3.6 along Y): the collar and the Core stay
         K.pose_slide(parts["glass"], (0.0, -3.6, 0.0))
         cam, tgt, fov = (-2.8, 5.3, 3.6), (0.0, 3.5, 0.0), 54

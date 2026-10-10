@@ -52,7 +52,7 @@ Four nodes, one mesh object and one surface (`M_Steel_Dark`) each, **origin (0, 
 Geometry (per ring, radii measured from the ring's r): the beam spans −0.40 … +0.385 (0.785 wide), y 0.12 … 0.50.
 - **Rack**: trapezoid teeth on the outer edge (root +0.30, tip +0.385, the root 0.56 and the tip 0.34 of the pitch wide) over y 0.12 … 0.40, then a stepped
   rim (+0.26, y 0.40 … 0.46) with a 4 cm chamfer to the flat top at y 0.50.
-- **Inner side**: the top runs from +0.23 to −0.34, a chamfer, then a wall at −0.40 with two machined grooves (y 0.30 and 0.38).
+- **Inner side**: the top runs from +0.23 to −0.34, a 6 cm chamfer, then a wall at −0.40 with one machined groove band (y 0.35 … 0.42, 14 mm deep).
 - **Eight index notches** per ring, 0.20 wide, **0.27 deep**, full height, cut into the gaps at azimuths 0°, 45°, … 315° (the position azimuths: the
   slot floor is the inner ring at r + 0.03). An **arrow pad** (a raised triangle 0.30 long, 0.022 high) on the top points at every notch.
 - Rivets: one row on the rim top every other tooth, a second row on the inner top every fourth tooth.

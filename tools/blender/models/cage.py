@@ -184,7 +184,7 @@ def gate_parts(n):
         hole.append((cx + rr * math.cos(t), cy + rr * math.sin(t)))
     plate = K.plate("g_plate", [L.rounded_rect(0.30, 0.46, 0.04, n=4), hole], 0.03, z0=zf - 0.01, mat=BRASS_P, bevel=0.003,
                     loc=(LOCK_X, LOCK_Y, 0.0))
-    num = C.N.roman_obj("g_num", n, NUM_H, depth=0.028, mat=BRASS_P)
+    num = C.N.roman_obj("g_num", n, NUM_H, depth=0.030, mat=BRASS_P, bevel=0.007)    # chamfered edges: a polished relief reads
     num.data.transform(Matrix.Translation((LOCK_X, LOCK_Y + 0.10, zf + 0.019)))
     out = [leaf, plate, num]
     yaw = -90.0 * (n - 1)
