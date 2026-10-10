@@ -4,6 +4,11 @@
 # Simulator on a macOS runner, launches it with MR_QA=newgame (game/src/ui/boot.gd plays main menu → New Game
 # by itself in tester builds) and reports whether Chapter 1 reached its first drawn seconds. On a crash it prints
 # the crash report's exception and crashed thread, and uploads the console, godot.log and the .ips files.
+#
+# Finding (run 38030309035, 2026-10-10): on GitHub's Apple Silicon VMs the Simulator offers Godot no usable
+# Metal device. The game falls back to OpenGL ES (Compatibility, "Apple Software Renderer") and draws about one
+# frame in six seconds. So this run CANNOT reproduce Metal-only bugs. It does show that the app links,
+# installs, boots to the menu and logs, and it catches script errors on iOS. Use it as a smoke test only.
 name: iOS Simulator smoke test
 
 on:
