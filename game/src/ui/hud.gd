@@ -1336,7 +1336,7 @@ func _show_notebook(page: int) -> void:
 	if pg == 4:
 		# the "blank" page: UV reveals Leyla's cipher
 		var cipher := VBoxContainer.new()
-		cipher.add_theme_constant_override("separation", 26)
+		cipher.add_theme_constant_override("separation", 12)
 		v.add_child(cipher)
 		# the "blank" page: under the UV lamp Leyla's cipher glows on the paper (UIUVLight: a feathered violet
 		# pool on the sheet, fluorescing fibres, glowing ink; no hard edge anywhere)
@@ -1347,7 +1347,7 @@ func _show_notebook(page: int) -> void:
 		glyphs.alignment = BoxContainer.ALIGNMENT_CENTER
 		glyphs.add_theme_constant_override("separation", 0) # the glow's margin spaces them
 		for gid: Variant in l7.safe_glyphs(): # this game's cipher (docs/VARIANTS.md)
-			glyphs.add_child(UIUVLight.glow_picture(load("res://assets/ui/glyphs/%s.png" % gid), round(100 * UITheme.wscale())))
+			glyphs.add_child(UIUVLight.glow_picture(load("res://assets/ui/glyphs/%s.png" % gid), round(90 * UITheme.wscale())))
 		cipher.add_child(glyphs)
 		cipher.visible = l7.state["uv_page"]
 		if not l7.state["uv_page"] and l7.has_uv():
