@@ -6,7 +6,7 @@ ISLAND FRAME: placed at (0, 2.5, 0); origin = the island centre on the platform 
                centres are open; the posts beside a gate are heavier door posts), brass lattice panels between the posts (two verticals,
                two rails at y 1.0 and 1.9, an X in each of three cells, rosettes at the crossings), brass lintels over the gates and
                a brass crown ring (y 2.80 .. 3.0) with finials
-  IA_gate_1..4 M_Brass_Aged  the four gates at azimuth 180 (S, toward the catwalk) / 270 (W) / 0 (N) / 90 (E): a lattice leaf 1.24 wide,
+  IA_gate_1..4 M_Brass_Polished  the four gates (polished brass so the tappable gates read against the aged lattice) at azimuth 180 (S, toward the catwalk) / 270 (W) / 0 (N) / 90 (E): a lattice leaf 1.24 wide,
                y 0.22 .. 2.55, with a lock plate (a brass numeral I..IV in relief over a keyhole) at the free edge.
                ORIGIN = the hinge axis at the leaf's left edge seen from outside (y = 0), identity at rest.
                OPEN = -95 deg about +Y (outward)
@@ -26,11 +26,11 @@ import mrlib as M  # noqa: E402
 import lib_ch4 as C  # noqa: E402
 import lib_ch4_cde as X  # noqa: E402
 import lib_mech as L  # noqa: E402
-from lib_ch4 import K, D, BRASS, STEEL  # noqa: E402
+from lib_ch4 import K, D, BRASS, BRASS_P, STEEL  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
 NAME = "cage"
-TRI_BUDGET, SURF_BUDGET, MAT_BUDGET = 12000, 6, 2
+TRI_BUDGET, SURF_BUDGET, MAT_BUDGET = 12000, 6, 3
 R = 2.4
 H = 3.0
 POST_DEG = 15.0
@@ -41,7 +41,7 @@ HALF_W = R * math.sin(math.radians(HALF))      # 0.621
 LEAF_T = 0.04
 Y0, Y1 = 0.22, 2.55                            # leaf bottom / top
 LOCK_X, LOCK_Y = 0.40, 1.20                    # lock plate centre (gate 1 frame, x from the gate axis)
-NUM_H = 0.15
+NUM_H = 0.17
 KEY_DY = -0.12                                  # the keyhole centre below the lock plate centre
 CELLS = (0.22, 1.0, 1.9, 2.8)                  # the horizontal lines of the lattice
 
@@ -169,16 +169,22 @@ def gate_parts(n):
     for (y0, y1) in ((0.40, 0.62), (2.05, 2.27)):
         X.bm_bar(bm, (-hx - 0.012, y0, zc), (-hx - 0.012, y1, zc), 0.07, ref=(1, 0, 0))
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-    leaf = K.obj_from_bm("g_leaf", bm, BRASS)
+    # a raised rim round the lock plate (0.014 proud of it) so the plate and its numeral catch the light
+    pl, pr, pb, pt = LOCK_X - 0.15, LOCK_X + 0.15, LOCK_Y - 0.23, LOCK_Y + 0.23
+    zr = zf + 0.020
+    for (x0, x1, y0, y1) in ((pl, pr, pb, pb + 0.016), (pl, pr, pt - 0.016, pt), (pl, pl + 0.016, pb, pt), (pr - 0.016, pr, pb, pt)):
+        X.bm_box(bm, (x0, y0, zr - 0.002), (x1, y1, zr + 0.012), bottom=True)
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    leaf = K.obj_from_bm("g_leaf", bm, BRASS_P)
     # lock plate with the keyhole punched through it, and the numeral in relief
     cx, cy, rr = 0.0, KEY_DY + 0.022, 0.017                           # keyhole: a round head over a tapered slot
     hole = [(-0.004, KEY_DY - 0.020), (0.004, KEY_DY - 0.020)]
     for i in range(15):
         t = math.radians(-40.0 + 260.0 * i / 14.0)
         hole.append((cx + rr * math.cos(t), cy + rr * math.sin(t)))
-    plate = K.plate("g_plate", [L.rounded_rect(0.30, 0.46, 0.04, n=4), hole], 0.03, z0=zf - 0.01, mat=BRASS, bevel=0.003,
+    plate = K.plate("g_plate", [L.rounded_rect(0.30, 0.46, 0.04, n=4), hole], 0.03, z0=zf - 0.01, mat=BRASS_P, bevel=0.003,
                     loc=(LOCK_X, LOCK_Y, 0.0))
-    num = C.N.roman_obj("g_num", n, NUM_H, depth=0.014, mat=BRASS)
+    num = C.N.roman_obj("g_num", n, NUM_H, depth=0.028, mat=BRASS_P)
     num.data.transform(Matrix.Translation((LOCK_X, LOCK_Y + 0.10, zf + 0.019)))
     out = [leaf, plate, num]
     yaw = -90.0 * (n - 1)

@@ -9,7 +9,7 @@ ISLAND FRAME: placed at (0, 2.5, 0); origin = the island centre on the platform 
                  45 / 135 / 225 / 315, the collar r 1.13 .. 1.35 at y 0.85 .. 1.55 built as a bottom rail, a top rail and 42 thin
                  balusters (OPEN in the middle so the cradle and the Core show through it; open at the south, 34 deg) and the digit
                  housing that closes the gap: a lock box x +-0.46, y 0.85 .. 1.55, front plate at z 1.375 with four windows over the wheels
-  IA_collar_digit_1..4  M_Brass_Aged  four brass digit wheels Ø 0.20 x 0.12 at x = -0.30 / -0.10 / +0.10 / +0.30, y = 1.20, z = 1.22,
+  IA_collar_digit_1..4  M_Brass_Polished  four polished-brass digit wheels (tappable: brighter than the aged static brass) Ø 0.20 x 0.12 at x = -0.30 / -0.10 / +0.10 / +0.30, y = 1.20, z = 1.22,
                  axis local X; the digits 0-9 are 3D relief round the rim (0.058 high). ORIGIN = the axis, identity = digit 0 reads
                  upright at the front. digit d = -36 deg x d about +X (the code turns the wheel; the digit d reaches the front)
 
@@ -25,15 +25,15 @@ import bpy  # noqa: E402
 import mrlib as M  # noqa: E402
 import lib_ch4 as C  # noqa: E402
 import lib_ch4_cde as X  # noqa: E402
-from lib_ch4 import K, D, BRASS, STEEL, GLASS  # noqa: E402
+from lib_ch4 import K, D, BRASS, BRASS_P, STEEL, GLASS  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
 NAME = "glass_tower"
-TRI_BUDGET, SURF_BUDGET, MAT_BUDGET = 9000, 7, 3
+TRI_BUDGET, SURF_BUDGET, MAT_BUDGET = 9000, 7, 4
 R_GLASS = 1.10
 DIGIT_X = (-0.30, -0.10, 0.10, 0.30)
 AXIS_YZ = (1.20, 1.22)
-WHEEL_R, DRUM_R, DIGIT_H, DIGIT_D = 0.100, 0.088, 0.058, 0.019
+WHEEL_R, DRUM_R, DIGIT_H, DIGIT_D = 0.100, 0.088, 0.060, 0.026
 GAP_DEG = 17.0                                    # the collar ring is open this many degrees either side of south
 INRAD = R_GLASS * math.cos(math.radians(22.5))   # 1.016: the flat panels
 
@@ -151,9 +151,9 @@ def wheel(k):
     base = (xc, AXIS_YZ[0], AXIS_YZ[1])
     prof = [(0.0, -0.06), (0.092, -0.06), (WHEEL_R, -0.048), (WHEEL_R, -0.040), (DRUM_R, -0.040), (DRUM_R, 0.040), (WHEEL_R, 0.040),
             (WHEEL_R, 0.048), (0.092, 0.06), (0.0, 0.06)]
-    parts = [K.glathe(f"drum{k}", prof, base=base, axis=(1, 0, 0), segments=20, mat=BRASS, smooth=60.0)]
+    parts = [K.glathe(f"drum{k}", prof, base=base, axis=(1, 0, 0), segments=20, mat=BRASS_P, smooth=60.0)]
     for d in range(10):
-        o = C.N.digit_obj(f"dg{k}_{d}", d, DIGIT_H, DIGIT_D, BRASS, res=1)
+        o = C.N.digit_obj(f"dg{k}_{d}", d, DIGIT_H, DIGIT_D, BRASS_P, res=1)
         o.data.transform(Matrix.Translation(base) @ Matrix.Rotation(math.radians(36.0 * d), 4, "X")
                          @ Matrix.Translation((0.0, 0.0, DRUM_R - 0.002)))
         parts.append(o)
