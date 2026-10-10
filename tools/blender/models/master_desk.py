@@ -107,11 +107,11 @@ def brass_parts():
             out.append(on_slope(mt, DIAL_S))
     for k, (ch, x) in enumerate((("0", -0.085), ("3", -0.045), (":", -0.012), ("1", 0.022))):
         if ch == ":":
-            for y in (-0.082, -0.108):
+            for y in (-0.122, -0.148):
                 out.append(on_slope(K.gbox("colon", (x - 0.004, y - 0.004, 0.004), (x + 0.004, y + 0.004, 0.009), BRASS, 0.0), DIAL_S))
         else:
             d = C.N.digit_obj(f"lg{k}", int(ch), 0.048, 0.005, BRASS, res=1)
-            d.data.transform(Matrix.Translation((x, -0.095, 0.004)))
+            d.data.transform(Matrix.Translation((x, -0.135, 0.004)))
             out.append(on_slope(d, DIAL_S))
     out.append(on_slope(K.gcyl("cap", 0.026, 0.004, 0.028, base=(0, 0, 0), axis=(0, 0, 1), segments=14, mat=BRASS, chamfer=0.003), DIAL_S))
     # ---- the escapement bay's frame
@@ -184,28 +184,31 @@ def chronometer():
         g.data.transform(Matrix.Translation((loc[0], loc[1], 0.0)))
         return on_slope(g, BAY_S, BAY_X, off)
 
-    parts.append(gear("g1", 22, 0.036, 0.044, 0.006, (-0.055, 0.005), 0.010))
-    parts.append(gear("g2", 12, 0.020, 0.026, 0.006, (-0.010, 0.050), 0.014, 0.1, 0))
-    parts.append(gear("g3", 16, 0.027, 0.033, 0.005, (-0.075, -0.050), 0.018, 0.3, 4))
-    for (x, y, h) in ((-0.055, 0.005, 0.030), (-0.010, 0.050, 0.030), (-0.075, -0.050, 0.030)):
+    parts.append(gear("g1", 22, 0.036, 0.044, 0.005, (-0.055, 0.005), 0.006))
+    parts.append(gear("g2", 12, 0.020, 0.026, 0.005, (-0.010, 0.050), 0.009, 0.1, 0))
+    parts.append(gear("g3", 16, 0.027, 0.033, 0.005, (-0.075, -0.050), 0.012, 0.3, 4))
+    for (x, y, h) in ((-0.055, 0.005, 0.024), (-0.010, 0.050, 0.024), (-0.075, -0.050, 0.024)):
         post = K.gcyl("post", 0.005, 0.008, h, base=(x, y, 0.0), axis=(0, 0, 1), segments=8, mat=BRASS)
         parts.append(on_slope(post, BAY_S, BAY_X))
-    bridge = K.gbox("bridge", (-0.095, -0.006, 0.026), (0.020, 0.006, 0.034), BRASS, 0.002)
+    bridge = K.gbox("bridge", (-0.095, -0.006, 0.020), (0.020, 0.006, 0.026), BRASS, 0.002)
     parts.append(on_slope(bridge, BAY_S, BAY_X))
     # the empty pawl seat: a ring boss with a spring post
     seat = D.ring("seat", 0.012, 0.022, 0.004, 0.016, (0.075, -0.012, 0.0), (0, 0, 1), 16, BRASS, chamfer=0.002)
     parts.append(on_slope(seat, BAY_S, BAY_X))
-    sp = K.gcyl("spring", 0.006, 0.004, 0.020, base=(0.10, 0.035, 0.0), axis=(0, 0, 1), segments=8, mat=BRASS)
+    sp = K.gcyl("spring", 0.006, 0.004, 0.018, base=(0.10, 0.035, 0.0), axis=(0, 0, 1), segments=8, mat=BRASS)
     parts.append(on_slope(sp, BAY_S, BAY_X))
     return K.part("IA_chronometer", parts, pivot=tuple(P(BAY_S, BAY_X)))
 
 
 def chrono_plate():
-    hinge = P(BAY_S + 0.10, BAY_X)                                          # the upper edge of the bay
-    plate = K.plate("cover", [L.rounded_rect(0.28, 0.200, 0.010, 3, 0.0, -0.100)], 0.012, z0=0.0, mat=BRASS, bevel=0.002, drop_bottom=True)
-    knob = K.gcyl("knob", 0.014, 0.012, 0.034, base=(0.0, -0.18, 0.0), axis=(0, 0, 1), segments=10, mat=BRASS, chamfer=0.003)
-    barrel = K.gcyl("barrel", 0.008, -0.12, 0.12, base=(0.0, 0.0, 0.004), axis=(1, 0, 0), segments=8, mat=BRASS)
-    objs = [plate, knob, barrel]
+    hinge = P(BAY_S + 0.10, BAY_X)                                          # the upper edge of the bay, on the slope
+    lid = K.plate("cover", [L.rounded_rect(0.28, 0.200, 0.010, 3, 0.0, -0.100)], 0.012, z0=0.030, mat=BRASS, bevel=0.002, drop_bottom=True)
+    skirts = [K.gbox("sk", (-0.140, -0.200, 0.016), (-0.132, 0.0, 0.030), BRASS, 0.0),
+              K.gbox("sk", (0.132, -0.200, 0.016), (0.140, 0.0, 0.030), BRASS, 0.0),
+              K.gbox("sk", (-0.132, -0.200, 0.016), (0.132, -0.192, 0.030), BRASS, 0.0)]
+    knob = K.gcyl("knob", 0.014, 0.042, 0.064, base=(0.0, -0.17, 0.0), axis=(0, 0, 1), segments=10, mat=BRASS, chamfer=0.003)
+    barrel = K.gcyl("barrel", 0.008, -0.12, 0.12, base=(0.0, 0.0, 0.012), axis=(1, 0, 0), segments=8, mat=BRASS)
+    objs = [lid, knob, barrel] + skirts
     for o in objs:
         D.place_xz(o, tuple(hinge + NV * 0.002), tuple(NV))
     # bake the OPEN pose: -100 degrees about X through the hinge
