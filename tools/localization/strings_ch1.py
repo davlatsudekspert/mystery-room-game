@@ -118,6 +118,20 @@ S = [
 ("msg.book_pulled", "Volume %s tilts out, then springs back.", "Том %s наклоняется и возвращается на место.", "%s-jild egilib chiqdi va joyiga qaytdi."),
 ("msg.needs_uv", "Something here might show under the right light.", "Здесь что-то может проявиться при нужном свете.", "Bu yerda toʻgʻri yorugʻlikda nimadir koʻrinishi mumkin."),
 
+# ---------------------------------------------------------------- feedback for taps on scenery and locked mechanisms (3D QA pass)
+("msg.clock_stopped", "Stopped at 03:17. Nothing will turn it.", "Остановились на 03:17. Ничто их не сдвинет.", "03:17 da toʻxtab qolgan. Hech narsa uni yurgizmaydi."),
+("msg.desk_clutter", "Cold tea, her spectacles, a magnifier. She left in a hurry.", "Остывший чай, её очки, лупа. Она уходила в спешке.", "Sovigan choy, uning koʻzoynagi, lupa. U shoshib ketgan."),
+("msg.desk_side", "Carved oak panels and brass rosettes run along the side of the desk.", "Вдоль боковины стола — резные дубовые панели и латунные розетки.", "Stolning yon tomoni boʻylab oʻyma eman panellar va jez rozetkalar."),
+("msg.box_locked", "The lid will not lift. Three gear wheels turn beneath it.", "Крышка не поднимается. Под ней вращаются три шестерни.", "Qopqoq koʻtarilmaydi. Uning ostida uchta tishli gʻildirak aylanadi."),
+("msg.safe_locked", "Locked. Four digits on the keypad open it.", "Заперто. Его открывают четыре цифры на клавиатуре.", "Qulflangan. Uni klaviaturadagi toʻrtta raqam ochadi."),
+("msg.panel_lamps", "Four indicator lamps. They answer the switches below.", "Четыре индикаторные лампы. Они отвечают переключателям внизу.", "Toʻrtta koʻrsatkich chiroq. Ular pastdagi tumblerlarga javob beradi."),
+("msg.bench_glass", "Glassware, a microscope and three stoppered samples.", "Стеклянная посуда, микроскоп и три закупоренных образца.", "Shisha idishlar, mikroskop va uchta tiqinlangan namuna."),
+("msg.coat_pockets", "A coat, still on its hook. The pockets look empty.", "Пальто всё ещё на вешалке. Карманы кажутся пустыми.", "Palto hamon ilgichda. Choʻntaklari boʻsh koʻrinadi."),
+("msg.filing_locked", "The cabinet drawers are locked. Nothing rattles inside.", "Ящики картотеки заперты. Внутри ничего не гремит.", "Kartoteka tortmalari qulflangan. Ichida hech narsa shiqirlamaydi."),
+("msg.chalkboard_dust", "Strand's hand. The formula has been rubbed out and rewritten more than once.", "Почерк Странда. Формулу стирали и переписывали не раз.", "Strandning dastxati. Formula bir necha bor oʻchirilib, qayta yozilgan."),
+("msg.poster_table", "Strand's table of resonances: each symbol has its own count of dots.", "Таблица резонансов Странда: у каждого символа своё число точек.", "Strandning rezonanslar jadvali: har bir belgining oʻz nuqtalar soni bor."),
+("msg.lock_dark", "A glass eye set into the door. It waits for light.", "Стеклянный глаз, вделанный в дверь. Он ждёт света.", "Eshikka oʻrnatilgan shisha koʻz. U yorugʻlikni kutadi."),
+
 # ---------------------------------------------------------------- captions (sound → text, accessibility)
 ("cap.maglock", "[Magnetic lock clicks shut]", "[Щелчок магнитного замка]", "[Magnit qulf chiqillab yopildi]"),
 ("cap.beacon", "[Radio beacon: %s]", "[Радиомаяк: %s]", "[Radiomayoq: %s]"),

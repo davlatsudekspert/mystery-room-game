@@ -7,9 +7,9 @@ extends TestBase
 const BUTTONS := {
 	# key: button minimum width used in the UI code (px at 1920x1080 reference, before UITheme.wscale())
 	"ui.continue": 520, "ui.new_game": 520, "ui.chapters": 520, "ui.settings": 520, "ui.quit": 520,
-	"ui.resume": 520, "ui.main_menu": 520, "ui.notebook": 520, "ui.read": 260, "ui.combine": 300,
+	"ui.resume": 520, "ui.main_menu": 520, "ui.notebook": 520, "ui.read": 260, "ui.combine": 320,
 	"ui.close": 240, "ui.hint_more": 340, "ui.take_lens": 380, "ui.leave_lens": 380, "ui.restore": 420,
-	"ui.yes": 240, "ui.no": 240, "ui.play": 280, "ui.coming_soon": 280, "ui.on": 200, "ui.off": 200,
+	"ui.yes": 240, "ui.no": 240, "ui.play": 300, "ui.coming_soon": 300,
 	"ui.privacy": 380,
 }
 ## The narrowest container each button appears in: [design width of the panel, share of its inner width].
@@ -20,9 +20,9 @@ const CONTAINERS := {
 	"ui.read": ["inspect", 1.0], "ui.combine": ["inspect", 1.0], "ui.close": ["inspect", 1.0],
 	"ui.hint_more": [980, 1.0], "ui.take_lens": [1000, 1.0], "ui.leave_lens": [1000, 1.0],
 	"ui.restore": [1500, 1.0], "ui.privacy": [1500, 1.0], "ui.yes": [900, 1.0], "ui.no": [900, 1.0],
-	"ui.play": [1200, 0.4], "ui.coming_soon": [1200, 0.4], "ui.on": ["column", 0.5], "ui.off": ["column", 0.5],
+	"ui.play": [1200, 1.0], "ui.coming_soon": [1200, 1.0],
 }
-const FLAT := ["ui.privacy", "ui.restore"] # link-style buttons without a box: they may simply grow with their text
+const FLAT := ["ui.privacy", "ui.restore"] # link-style buttons without a box: they grow with their text, or wrap
 const PANEL_MARGINS := 48.0 # UITheme.panel_box() content margins left+right
 ## A 5.5" 16:9 phone at 480 dpi: the narrowest landscape canvas (1920 px) with the auto scale at its cap.
 const MAX_PHONE := {"size": Vector2i(1920, 1080), "dpi": 480.0, "safe": Rect2i(0, 0, 1920, 1080)}
@@ -51,11 +51,11 @@ func _button_metrics() -> Dictionary:
 
 
 func test_buttons_fit_at_max_text_scale() -> void:
-	_set_screen({}, 1.3) # desktop / tablet: no automatic boost
+	_set_screen({}, 1.5) # desktop: no automatic boost; Extra large text
 	var m := _button_metrics()
 	var font: Font = m["font"]
 	var size: int = m["size"]
-	eq(size, int(round(UITheme.BUTTON_PX * 1.3)), "no auto boost without a dense screen")
+	eq(size, int(round(UITheme.BUTTON_PX * 1.5)), "no auto boost without a dense screen")
 	for loc in ["en", "ru", "uz"]:
 		TranslationServer.set_locale(loc)
 		for key: String in BUTTONS:
@@ -70,8 +70,7 @@ func test_buttons_fit_at_max_text_scale() -> void:
 func _container_inner(spec: Variant) -> float:
 	if spec is String and spec == "inspect":
 		var u := UITheme.usable_rect(40.0)
-		var side := minf(880.0, minf(u.size.y, u.size.x * 0.45))
-		return u.size.x - 40.0 - side - 40.0 # hud.gd show_inspect(): 60 px side margins, 40 px gap
+		return u.size.x - 40.0 - UITheme.inspect_viewer_side() - 40.0 # hud.gd show_inspect(): 60 px side margins, 40 px gap
 	if spec is String and spec == "column":
 		return (UITheme.panel_width(SettingsPanel.DESIGN_W) - PANEL_MARGINS - 48.0) * 0.5
 	return UITheme.panel_width(float(spec)) - PANEL_MARGINS
@@ -80,15 +79,17 @@ func _container_inner(spec: Variant) -> float:
 func test_buttons_fit_on_phone_at_max_auto_scale() -> void:
 	## Buttons grow with their text, and rows wrap (UITheme.button_row), so the limit is the container:
 	## no single button may be wider than the narrowest panel or column it appears in.
-	for user in [1.0, 1.3]:
+	for user in [1.0, 1.5]:
 		_set_screen(MAX_PHONE, user)
-		check(is_equal_approx(UITheme.auto_scale(), UITheme.AUTO_MAX), "the 480 dpi phone reaches the auto cap")
+		check(UITheme.auto_scale() >= 2.5, "the 480 dpi phone gets a large automatic boost (%.2f)" % UITheme.auto_scale())
 		var m := _button_metrics()
 		var font: Font = m["font"]
 		var size: int = m["size"]
 		for loc in ["en", "ru", "uz"]:
 			TranslationServer.set_locale(loc)
 			for key: String in BUTTONS:
+				if key in FLAT:
+					continue # text links wrap onto several lines when they must
 				var w := font.get_string_size(tr(key), HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 				var need := maxf(roundf(float(BUTTONS[key]) * UITheme.wscale()), w + float(m["pad"]))
 				var spec: Array = CONTAINERS[key]
@@ -111,8 +112,8 @@ func _msg_widths(csv_prefix: String) -> Array:
 
 
 func test_hud_messages_fit_two_lines() -> void:
-	## Messages are shown in a 1440 px wide line; allow at most two lines at scale 1.3.
-	_set_screen({}, 1.3)
+	## Messages are shown in a 1440 px wide line; allow at most two lines at Extra large on a desktop.
+	_set_screen({}, 1.5)
 	var font: Font = UITheme.ui_font(500)
 	var size := UITheme.size(28)
 	for m: Array in _msg_widths("msg."):
@@ -122,9 +123,9 @@ func test_hud_messages_fit_two_lines() -> void:
 
 
 func test_hud_messages_fit_on_phone_at_max_auto_scale() -> void:
-	## On the densest phone: two lines at the default text size, three at the largest (the plate grows upward,
-	## the 3D view stays visible above it).
-	for pair in [[1.0, 2], [1.3, 3]]:
+	## On the densest phone: four lines at Normal, six at Extra large for the longest message (the banner grows
+	## upward; the 3D view stays visible above it).
+	for pair in [[1.0, 4], [1.5, 6]]:
 		_set_screen(MAX_PHONE, float(pair[0]))
 		var font: Font = UITheme.ui_font(500)
 		var size := UITheme.size(28)
@@ -137,23 +138,28 @@ func test_hud_messages_fit_on_phone_at_max_auto_scale() -> void:
 
 
 func test_auto_scale_reaches_readable_sizes() -> void:
-	# 6" 16:9 phone at 400 dpi: body text ~2.6 mm, touch targets >= 9 mm, inventory slots >= 8 mm
-	_set_screen({"size": Vector2i(1920, 1080), "dpi": 400.0}, 1.0)
-	var mm := UITheme.mm_per_px()
-	check(UITheme.size(26) * mm >= 2.55, "body text %.2f mm on a 400 dpi phone" % (UITheme.size(26) * mm))
-	check(UITheme.size(18) * mm >= UITheme.MIN_TEXT_MM - 0.05, "smallest text %.2f mm" % (UITheme.size(18) * mm))
-	check(UITheme.target(92) * mm >= UITheme.TOUCH_MM - 0.01, "touch target %.1f mm" % (UITheme.target(92) * mm))
-	check(UITheme.target(112, UITheme.SLOT_MM) * mm >= 8.0, "inventory slot %.1f mm" % (UITheme.target(112, UITheme.SLOT_MM) * mm))
-	check(UITheme.size(80) <= 80, "display titles are not boosted")
-	# the player's text size still multiplies on top
-	Settings.values["text_scale"] = 1.3
-	check(UITheme.size(26) > int(round(26 * UITheme.auto_scale())), "Text size multiplies the auto scale")
-	# 10" tablet at 264 dpi and a desktop window: no boost, the design sizes stay
-	_set_screen({"size": Vector2i(2048, 1536), "dpi": 264.0}, 1.0)
-	check(is_equal_approx(UITheme.auto_scale(), 1.0), "tablet auto scale %.2f" % UITheme.auto_scale())
-	eq(UITheme.size(26), 26, "tablet body size")
+	## Phones and tablets: body text reaches a 3 mm cap height at Normal, nothing is below MIN_TEXT_MM, touch
+	## targets >= 9 mm, inventory slots >= 8 mm; titles still lead body text; Large / Extra large multiply.
+	for dev: Dictionary in [IPHONE, {"size": Vector2i(1920, 1080), "dpi": 400.0}, MAX_PHONE, TABLET]:
+		_set_screen(dev, 1.0)
+		var mm := UITheme.mm_per_px()
+		var tag := "%s @ %.0f dpi" % [dev["size"], dev["dpi"]]
+		check(UITheme.size(26) * mm * UITheme.CAP_EM >= UITheme.BODY_CAP_MM - 0.05, "%s: body cap height %.2f mm" % [tag, UITheme.size(26) * mm * UITheme.CAP_EM])
+		check(UITheme.size(18) * mm >= UITheme.MIN_TEXT_MM - 0.05, "%s: smallest text %.2f mm" % [tag, UITheme.size(18) * mm])
+		check(UITheme.target(92) * mm >= UITheme.TOUCH_MM - 0.01, "%s: touch target %.1f mm" % [tag, UITheme.target(92) * mm])
+		check(UITheme.target(112, UITheme.SLOT_MM) * mm >= 8.0, "%s: inventory slot %.1f mm" % [tag, UITheme.target(112, UITheme.SLOT_MM) * mm])
+		check(UITheme.size(80) > UITheme.size(50) and UITheme.size(50) > UITheme.size(34) and UITheme.size(34) > UITheme.size(26), "%s: titles lead body text (%d > %d > %d > %d)" % [tag, UITheme.size(80), UITheme.size(50), UITheme.size(34), UITheme.size(26)])
+		var normal := UITheme.size(26)
+		Settings.values["text_scale"] = 1.25
+		var large := UITheme.size(26)
+		Settings.values["text_scale"] = 1.5
+		var xl := UITheme.size(26)
+		check(large > normal and xl > large, "%s: Large (%d) and Extra large (%d) grow on Normal (%d)" % [tag, large, xl, normal])
+		check(xl * mm <= 8.0, "%s: Extra large body text %.1f mm stays usable" % [tag, xl * mm])
+	# a desktop window: no boost, the design sizes stay
 	_set_screen({"size": Vector2i(1920, 1080), "dpi": 96.0}, 1.0)
 	check(is_equal_approx(UITheme.auto_scale(), 1.0), "desktop auto scale")
+	eq(UITheme.size(26), 26, "desktop body size")
 	_reset_screen()
 
 
@@ -194,7 +200,7 @@ func test_settings_panel_fits_the_screen() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var devices := {"iphone": IPHONE, "phone55": MAX_PHONE, "tablet10": TABLET}
 	for dev: String in devices:
-		for user in [1.0, 1.3]:
+		for user in [1.0, 1.5]:
 			for loc in ["en", "ru", "uz"]:
 				_set_screen(devices[dev], float(user))
 				TranslationServer.set_locale(loc)

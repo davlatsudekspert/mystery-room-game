@@ -418,18 +418,14 @@ def qa(parts, args):
         D.shoot(NAME + "_" + tag, cam, W((xc(cc) + 0.05, yr(rr), FRONT + 0.05)), 40)
         if h is not None:
             show([h] + list(h.children_recursive), False)
-    # 8 the Nursery root view
+    # 8 drawer 6 open, side view: drawer box, cup, seed, the bay above it (the Nursery root view with every group D
+    #   model is prism_bench_6.png)
     if K.want(args, "8"):
-        pose(parts)
-        D.lights()
-        D.shoot(NAME + "_8", (5.7, 1.65, 3.3), (10.6, 1.3, -2.6), 62)
-    # 9 drawer 6 open, side view: drawer box, cup, seed, the bay above it
-    if K.want(args, "9"):
         pose(parts, 6)
         show(seed_objs, True)
         cam = W((xc(2) + 0.55, yr(1) + 0.30, FRONT + 0.60))
         D.lights(cam, fill=6.0)
-        D.shoot(NAME + "_9", cam, W((xc(2), yr(1) - 0.04, FRONT + 0.15)), 40)
+        D.shoot(NAME + "_8", cam, W((xc(2), yr(1) - 0.04, FRONT + 0.15)), 40)
         show(seed_objs, False)
 
 

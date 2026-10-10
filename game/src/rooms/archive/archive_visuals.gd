@@ -443,10 +443,11 @@ func _apply_splicer(animated: bool) -> void:
 		elif held_frame == k:
 			target = Transform3D(base.basis, base.origin + Vector3(0, 0.025, 0))
 		_to(strip, target, animated, 0.3)
-	# a large backlit panel: at the small-lamp energy it blooms into a white blank and drowns the film strips
+	# a large backlit panel: even at 1.1 it rendered as a pure white blank (the booth light and the camera fill add to
+	# the emission); 0.4 reads as frosted glass with a lamp behind it
 	var box := part("film_splicer", "light_box_glass") as MeshInstance3D
 	if box:
-		ModelUtil.set_emission(box, s["booth_open"], Color("fff4dc"), 1.1)
+		ModelUtil.set_emission(box, s["booth_open"], Color("ffecc8"), 0.4)
 
 
 func _apply_screen() -> void:
@@ -506,7 +507,7 @@ func _set_beam(key: String, on: bool, lens: Node3D) -> void:
 		b = MeshInstance3D.new()
 		var cyl := CylinderMesh.new()
 		cyl.top_radius = 0.035
-		cyl.bottom_radius = 0.9 if key == "film" else 0.75
+		cyl.bottom_radius = 0.7 if key == "film" else 0.6
 		cyl.height = 1.0
 		cyl.radial_segments = 20
 		cyl.rings = 1
@@ -516,7 +517,9 @@ func _set_beam(key: String, on: bool, lens: Node3D) -> void:
 		var m := ShaderMaterial.new()
 		m.shader = load("res://src/fx/lumen_beam.gdshader")
 		m.set_shader_parameter("color", Color(1.0, 0.96, 0.86, 1.0))
-		m.set_shader_parameter("energy", 0.16) # a soft shaft: the picture on the screen must stay the brightest thing
+		# a faint dusty shaft: at 0.16 the film view was a quarter white haze and the picture on the screen was the
+		# dimmest thing in the frame; the picture must stay the brightest
+		m.set_shader_parameter("energy", 0.06)
 		b.material_override = m
 		b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		room.add_child(b)
@@ -554,7 +557,7 @@ func _apply_vault(animated: bool) -> void:
 			ItemDress.glyph(n, img)
 		var pipe := part("vault_door", "light_pipe_" + side) as MeshInstance3D
 		if pipe:
-			ModelUtil.set_emission(pipe, img != "", Color("cff6ff"), 2.5)
+			ModelUtil.set_emission(pipe, img != "", Color("cff6ff"), 2.0)
 		if _disc_mat:
 			_disc_mat.set_shader_parameter(side + "_on", 1.0 if img != "" else 0.0)
 			if img != "":
@@ -946,7 +949,7 @@ func emergency_flicker() -> void:
 		for i in 3:
 			tw.tween_callback(func() -> void: ModelUtil.set_emission(g, false))
 			tw.tween_interval(0.07)
-			tw.tween_callback(func() -> void: ModelUtil.set_emission(g, true, Color("ff9a3c"), 3.0))
+			tw.tween_callback(func() -> void: ModelUtil.set_emission(g, true, Color("ff9a3c"), LAMP_GLASS_ENERGY))
 			tw.tween_interval(0.05 + 0.03 * i)
 
 
@@ -1007,12 +1010,16 @@ func _to(n: Node3D, target: Transform3D, animated: bool, dur: float) -> void:
 	_tweens[k] = tw
 
 
+## Lit glass reads as lit at 2.2; at 3.0 the glow pass turned every bulb, lamp jewel and pendant into a white blot.
+const LAMP_GLASS_ENERGY := 2.2
+
+
 func _lamp(n: Node3D, on: bool, color: Color) -> void:
 	if n is MeshInstance3D:
-		ModelUtil.set_emission(n as MeshInstance3D, on, color, 3.0)
+		ModelUtil.set_emission(n as MeshInstance3D, on, color, LAMP_GLASS_ENERGY)
 
 
-const SHADE_GLOW := 0.55
+const SHADE_GLOW := 0.35
 var _shade_mats: Array[BaseMaterial3D] = []
 
 
@@ -1044,7 +1051,7 @@ func _glow(n: Node3D, on: bool) -> void:
 		m.roughness = 0.05
 		m.emission_enabled = on
 		m.emission = Color("cff6ff")
-		m.emission_energy_multiplier = 2.5
+		m.emission_energy_multiplier = 1.7
 		mi.material_override = m if on else null
 
 

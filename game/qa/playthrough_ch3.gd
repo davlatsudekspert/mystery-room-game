@@ -322,10 +322,13 @@ func _target(m: String, a: Array) -> Array:
 		"turn_case_wheel":
 			return ["meter_case", "meter_case", "IA_case_dial_%d" % int(a[0]), "", "heart"]
 		"tap_tube":
+			# a place that holds a tube is tapped on the tube (it hangs in front of the slot's hook), an empty one on
+			# the slot or bench place itself; both reach the same place (UndergroundRoom._rack_place)
 			var pos := int(a[0])
+			var r := int(s["tubes"][pos])
 			if pos < UndergroundLogic.SLOTS:
-				return ["rack", "choir_rack", "IA_slot_%d" % pos, "", "choir"]
-			return ["bench", "tube_bench", "IA_bench_%d" % (pos - UndergroundLogic.SLOTS), "", "choir"]
+				return ["rack", "choir_rack", "IA_slot_%d" % pos if r == 0 else "IA_tube_%d" % r, "", "choir"]
+			return ["bench", "tube_bench", "IA_bench_%d" % (pos - UndergroundLogic.SLOTS) if r == 0 else "IA_tube_%d" % r, "", "choir"]
 		"strike_hammer":
 			return ["rack", "choir_rack", "IA_hammer", "", "choir"]
 		"pull_lever":

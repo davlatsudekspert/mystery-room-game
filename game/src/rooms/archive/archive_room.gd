@@ -99,6 +99,11 @@ func _ready() -> void:
 	logic = GameState.logic
 	GameState.in_game = true
 	make_environment(Color("0a0c0d"), Color("2a3a36"), 0.5, Color("1a2826"), 0.014)
+	# A soft halo on real light sources only: the shared 0.6 / 0.05 / 1.1 bloomed the pendant shades, the splicer's
+	# light box and the projector lens into white patches
+	env.glow_intensity = 0.4
+	env.glow_bloom = 0.0
+	env.glow_hdr_threshold = 1.35
 	# this game's own index-card notches (docs/VARIANTS.md); the art is picked before anything is built
 	var punch := int((logic as ArchiveLogic).state["v_punch"])
 	DecalLoc.set_variants({"index_card": "_p%d" % punch} if punch > 0 else {})
@@ -540,10 +545,23 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 				cam.go("compressor")
 			elif p.begins_with("IA_valve_"):
 				l.turn_valve("abc".find(p.substr(9, 1)), 1)
+			elif s["pressure_ok"]:
+				hud.call("message", tr("msg.c2_valves_locked"))
+			else:
+				# a gauge, the plate or the tank: read the needles out
+				var t: Array = s["v_targets"]
+				hud.call("caption", tr("msg.c2_gauges") % [
+					tr("msg.c2_on_mark" if l.pressure() == int(t[0]) else "msg.c2_off_mark"),
+					tr("msg.c2_on_mark" if l.flow() == int(t[1]) else "msg.c2_off_mark")])
+				AudioManager.ui("ui_tap")
 		"station":
 			_interact_station(p)
 		"chart":
-			cam.go("chart")
+			if cur != "chart":
+				cam.go("chart")
+			else:
+				hud.call("show_document", "routing_chart") # the chart full size in the reader, with its rule
+				AudioManager.ui("ui_tap")
 		"desk":
 			if cur == "desk" or cur in ["punch", "deck"]:
 				var px: float = (r["pos"] as Vector3).x
@@ -566,6 +584,9 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 					l.take("ledger_reel")
 			elif cur == "hall" or cur == "west":
 				cam.go("stacks")
+			else:
+				hud.call("message", tr("msg.c2_stacks_boxes"))
+				AudioManager.ui("ui_tap")
 		"grille":
 			if cur != "grille":
 				cam.go("grille")
@@ -581,7 +602,11 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 			elif l.can_take("hatch_reel"):
 				l.take("hatch_reel")
 		"reading":
-			cam.go("reading")
+			if cur != "reading":
+				cam.go("reading")
+			else:
+				hud.call("message", tr("msg.c2_reading_table"))
+				AudioManager.ui("ui_tap")
 		"booth_door":
 			_interact_booth_door(p)
 		"projector":
@@ -618,6 +643,16 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 					hud.call("message", tr("obj2.screen"))
 			elif cur != "screen":
 				cam.go("screen")
+			else:
+				# the screen itself: dark, blurred, or showing a picture
+				var img := l.screen_image()
+				if img == "":
+					hud.call("message", tr("msg.c2_screen_dark"))
+				elif img.begins_with("film:") and not l.is_sharp():
+					hud.call("message", tr("msg.c2_blurred"))
+				else:
+					hud.call("caption", tr("cap2.projector"))
+				AudioManager.ui("ui_tap")
 		"vault":
 			_interact_vault(p)
 		_:
@@ -655,6 +690,9 @@ func _interact_catalogue(p: String, _r: Dictionary) -> void:
 		cam.go("catalogue")
 	elif int(s["cat_drawer"]) >= 0 and cur == "catalogue":
 		cam.go("cat_drawer")
+	else:
+		hud.call("message", tr("msg.c2_catalogue_drawers"))
+		AudioManager.ui("ui_tap")
 
 
 func _interact_station(p: String) -> void:
@@ -686,13 +724,15 @@ func _interact_station(p: String) -> void:
 			if l.can_take(spot):
 				l.take(spot)
 				return
-	elif p in ["IA_send_port", "port_flap"]:
+	else:
+		# the send port, its flap or the station body: where the dispatch stands
 		if s["canister"] != "":
 			hud.call("message", tr("msg.c2_canister_loaded"))
 		elif not s["pressure_ok"]:
 			hud.call("message", tr("msg.c2_no_pressure"))
 		else:
 			hud.call("message", tr("msg.c2_tube_empty"))
+		AudioManager.ui("ui_tap")
 
 
 func _interact_punch(p: String) -> void:
@@ -720,10 +760,15 @@ func _interact_deck(p: String) -> void:
 			l.play_tape()
 		"IA_eject":
 			visuals.stop_tape()
-			l.eject_tape()
+			if l.state["deck_tape"] == "":
+				hud.call("message", tr("msg.c2_deck_empty"))
+				AudioManager.sfx("deck_eject", -10.0, 1.2)
+			else:
+				l.eject_tape()
 		_:
 			if l.state["deck_tape"] == "":
 				hud.call("message", tr("msg.c2_deck_empty"))
+				AudioManager.ui("ui_tap")
 
 
 func _interact_lockers(p: String) -> void:
@@ -736,6 +781,9 @@ func _interact_lockers(p: String) -> void:
 			cam.go("locker9")
 		elif l.can_take("locker_receiver"):
 			l.take("locker_receiver")
+		else:
+			hud.call("message", tr("msg.c2_locker_empty"))
+			AudioManager.ui("ui_tap")
 		return
 	if cur not in ["lockers", "locker9"]:
 		cam.go("lockers")
@@ -759,7 +807,11 @@ func _interact_booth_door(p: String) -> void:
 		l.dial_digit(d)
 		return
 	if p == "IA_rotary_dial":
-		cam.go("dial")
+		if cur != "dial":
+			cam.go("dial")
+		else:
+			hud.call("message", tr("msg.c2_dial_lock"))
+			AudioManager.ui("ui_tap")
 		return
 	if cur != "booth_door":
 		cam.go("booth_door")
@@ -817,6 +869,10 @@ func _interact_splicer(p: String) -> void:
 		elif int(s["splice"][slot2]) >= 0:
 			l.splice_lift(slot2)
 		visuals.apply_state(true)
+		return
+	# the light box, the can or the table
+	hud.call("message", tr("msg.c2_splicer_box"))
+	AudioManager.ui("ui_tap")
 
 
 func _interact_slides(p: String) -> void:
@@ -844,6 +900,9 @@ func _interact_slide_projector(p: String) -> void:
 		_:
 			if s["slide_in"]:
 				l.eject_slide()
+			else:
+				hud.call("message", tr("msg.c2_slide_gate_empty"))
+				AudioManager.ui("ui_tap")
 
 
 func _interact_vault(p: String) -> void:
@@ -875,12 +934,25 @@ func _interact_vault(p: String) -> void:
 		"IA_port_left", "port_left_mount", "Item_port_left":
 			if s["port_left"] != "":
 				l.take_from_port("left")
+			else:
+				hud.call("message", tr("msg.c2_port_empty"))
+				AudioManager.ui("ui_tap")
 		"IA_port_right", "port_right_mount", "Item_port_right":
 			if s["port_right"] != "":
 				l.take_from_port("right")
+			else:
+				hud.call("message", tr("msg.c2_port_empty"))
+				AudioManager.ui("ui_tap")
+		"glass_disc", "disc_bezel":
+			hud.call("message", tr("msg.c2_disc"))
+			AudioManager.ui("ui_tap")
 		_:
 			if cur != "vault":
 				cam.go("vault")
+			else:
+				# the door body or a bolt: shut until the overlay matches, then the wheel opens it
+				hud.call("message", tr("msg.c2_vault_shut" if not s["vault_unlocked"] else "msg.c2_vault_unlocked"))
+				AudioManager.sfx("locker_rattle", -8.0, 0.7)
 
 
 # ====================================================================== per-frame

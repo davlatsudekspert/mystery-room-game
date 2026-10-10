@@ -33,6 +33,7 @@ var _lang_seg: UISegmented
 var _scale_seg: UISegmented
 var _lang_buttons: Dictionary = {} # code -> Button (QA presses them by their native name)
 var _scale_buttons: Array[Button] = []
+var _col_w := 600.0 # inner width of one column (set by _build before the sections)
 var _fit_queued := false
 
 
@@ -96,6 +97,8 @@ func _build() -> void:
 	pad.add_theme_constant_override("margin_right", 10)
 	pad.add_theme_constant_override("margin_left", 2)
 	_scroll.add_child(pad)
+	var cols := column_count(custom_minimum_size.x)
+	_col_w = (custom_minimum_size.x - 48.0 - 12.0 - (COL_GAP if cols == 2 else 0.0)) / cols
 	_content = VBoxContainer.new() # the columns, then (on a small phone) the Restore / Privacy links
 	_content.add_theme_constant_override("separation", 0)
 	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -134,10 +137,15 @@ func _build() -> void:
 		actions.add_child(restore)
 		actions.add_child(privacy)
 	else:
-		var links := UITheme.button_row(28)
-		links.add_child(restore)
-		links.add_child(privacy)
-		_content.add_child(links) # after the last section
+		# as full-width rows after the last section; the words wrap, so a long translation never widens the body
+		var links := VBoxContainer.new()
+		links.add_theme_constant_override("separation", 0)
+		for b: Button in [restore, privacy]:
+			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			b.custom_minimum_size.x = 0
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			links.add_child(b)
+		_content.add_child(links)
 	actions.add_child(close)
 	foot.add_child(actions)
 	_footer = foot
@@ -280,6 +288,7 @@ func _section_language() -> Control:
 	_lang_seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for code in Loc.SUPPORTED: # fixed order EN, RU, UZ; names are shown natively
 		_lang_buttons[code] = _lang_seg.add_option(Loc.NATIVE_NAMES[code], code, true, false)
+	_lang_seg.set_stacked(_lang_seg.row_width(theme) > _col_w)
 	_lang_seg.chosen.connect(func(code: Variant) -> void:
 		Loc.choose(str(code))
 		_refresh())
@@ -297,20 +306,40 @@ func _section_sound() -> Control:
 	])
 
 
+const TEXT_SIZE_KEYS := ["ui.text_normal", "ui.text_large", "ui.text_xl"] # one per Settings.TEXT_SCALES step
+
+
 func _section_display() -> Control:
-	# text size: each "A" is drawn at the size it gives on this screen
+	# text size: Normal / Large / Extra large, each word drawn at the size it gives on this screen; the control
+	# takes the full row under its label, and stacks when the three words do not fit side by side
 	_scale_seg = UISegmented.new()
-	for sc in Settings.TEXT_SCALES:
-		var b := _scale_seg.add_option("A", sc, false, false, roundf(84.0 * UITheme.wscale()))
-		b.add_theme_font_size_override("font_size", UITheme.size(30, sc))
+	_scale_seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sizes: Array = []
+	for i in Settings.TEXT_SCALES.size():
+		var sc: float = Settings.TEXT_SCALES[i]
+		var b := _scale_seg.add_option(TEXT_SIZE_KEYS[mini(i, TEXT_SIZE_KEYS.size() - 1)], sc, true, true)
+		b.add_theme_font_size_override("font_size", UITheme.size(UITheme.BUTTON_PX, sc))
+		sizes.append(UITheme.size(UITheme.BUTTON_PX, sc))
 		_scale_buttons.append(b)
+	_scale_seg.set_stacked(_scale_seg.row_width(theme, sizes) > _col_w)
 	_scale_seg.chosen.connect(func(sc: Variant) -> void:
 		Settings.set_value("text_scale", float(sc))) # → changed → the panel rebuilds at the new size
 	return _section("ui.sec_display", [
-		_row("ui.text_size", _scale_seg),
+		_stacked_row("ui.text_size", _scale_seg),
 		_row("ui.brightness", _slider("brightness", 0.7, 1.6)),
 		_row("ui.reduce_motion", _toggle("reduce_motion")),
 	], 0.0)
+
+
+## A row whose control takes the full width under its label (segmented controls with words).
+func _stacked_row(label_key: String, control: Control) -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	v.add_child(_gap(10.0))
+	v.add_child(UITheme.label(label_key, LABEL_SIZE))
+	v.add_child(control)
+	v.add_child(_gap(10.0))
+	return v
 
 
 func _section_other() -> Control:

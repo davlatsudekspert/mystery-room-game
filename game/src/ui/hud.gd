@@ -654,7 +654,7 @@ func show_inspect(id: String) -> void:
 	h.add_theme_constant_override("separation", 40)
 	o.add_child(h)
 	var u := UITheme.usable_rect(40.0)
-	var side := minf(880.0, minf(u.size.y, u.size.x * 0.45))
+	var side := UITheme.inspect_viewer_side() # smaller when the text is large: the words need the room
 	var svc := SubViewportContainer.new()
 	svc.stretch = true
 	svc.custom_minimum_size = Vector2(side, side)
@@ -741,7 +741,7 @@ func show_inspect(id: String) -> void:
 		read.pressed.connect(func() -> void: show_document(doc))
 		row.add_child(read)
 	if logic.inventory.size() > 1 and id != "uv_lamp":
-		var comb := UITheme.button("ui.combine", 300)
+		var comb := UITheme.button("ui.combine", 320)
 		comb.pressed.connect(func() -> void:
 			logic.select_item(id)
 			_combine_mode = true
@@ -759,26 +759,41 @@ func show_document(doc: String) -> void:
 		"notebook":
 			_show_notebook(0)
 		"letter":
-			_show_paper([tr("doc.letter")])
+			_show_paper(tr("doc.letter"), _doc_title(doc))
 		"photo":
 			_show_photo()
 		"evidence":
 			_show_evidence()
 		"darkroom_note":
-			_show_paper([tr("doc.darkroom_note")])
+			_show_paper(tr("doc.darkroom_note"), _doc_title(doc))
 		"badge", "index_card":
-			_show_picture("res://assets/textures/decals/ch2/%s.png" % doc, Vector2(1000, 630) if doc == "badge" else Vector2(1100, 660))
+			_show_picture("res://assets/textures/decals/ch2/%s.png" % doc, _doc_title(doc))
 		"personnel_file":
-			_show_paper([tr("doc2.file")])
+			_show_paper(tr("doc2.file"), _doc_title(doc))
 		"tape_1996", "tape_1997", "tape_1998":
 			var heard: bool = logic.state.has("clicks_heard") and (logic.state["clicks_heard"] as Array).has(doc)
-			_show_paper([tr("doc2." + doc) if heard else tr("item.%s.desc" % doc)])
+			_show_paper(tr("doc2." + doc) if heard else tr("item.%s.desc" % doc), _doc_title(doc))
 		"strand_letters":
-			_show_paper([tr("doc3.diagnosis")])
+			_show_paper(tr("doc3.diagnosis"), _doc_title(doc))
 		"strand_note":
-			_show_paper([tr("doc3.note")])
+			_show_paper(tr("doc3.note"), _doc_title(doc))
 		"growth_log":
-			_show_paper([tr("doc3.growth_log")])
+			_show_paper(tr("doc3.growth_log"), _doc_title(doc))
+		# inscriptions in the rooms: a second tap on their close-up opens the art full size (exactly as painted)
+		"poster":
+			_show_picture("res://assets/textures/decals/poster_resonance.jpg", tr("obj.poster"))
+		"chalkboard":
+			_show_picture("res://assets/textures/decals/chalkboard.jpg", tr("obj.chalkboard"))
+		"routing_chart":
+			_show_picture("res://assets/textures/decals/ch2/routing_chart.png", tr("obj2.chart"), tr("msg.c2_chart_rule"))
+
+
+## The (translated) name of the item that carries this document, or "" for a document that is not an item.
+func _doc_title(doc: String) -> String:
+	for id: String in ItemDB.ITEMS:
+		if ItemDB.document(id) == doc:
+			return tr(ItemDB.name_key(id))
+	return ""
 
 
 const NB_PAGES := 8
@@ -789,20 +804,18 @@ func _show_notebook(page: int) -> void:
 	if l7 == null:
 		return
 	var o := _open_overlay(0.82)
-	var paper := _paper_panel(o)
-	var v := paper.get_meta("vbox") as VBoxContainer
 	var pg := clampi(page, 0, NB_PAGES - 1)
-	var head := UITheme.label(tr("ui.page") % [pg + 1, NB_PAGES], 22, Color("4a3a28"))
-	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v.add_child(head)
-	var body := _hand_label(tr("doc.notebook.p%d" % (pg + 1)) if pg != 4 else "")
+	var r := _reader(o, _doc_title("notebook"), tr("ui.page") % [pg + 1, NB_PAGES])
+	var paper: Control = r["paper"]
+	var v: VBoxContainer = r["vbox"]
+	var body := _ink_label(tr("doc.notebook.p%d" % (pg + 1)) if pg != 4 else "")
 	v.add_child(body)
 	if pg == 4:
 		# the "blank" page: UV reveals Leyla's cipher
 		var cipher := VBoxContainer.new()
 		cipher.add_theme_constant_override("separation", 26)
 		v.add_child(cipher)
-		var ink_line := _hand_label(tr("doc.notebook.p5_uv"))
+		var ink_line := _ink_label(tr("doc.notebook.p5_uv"))
 		ink_line.add_theme_color_override("font_color", Color("9cffd8"))
 		# glowing ink on light paper is ~1.9:1 on its own; a dark halo keeps it legible
 		ink_line.add_theme_color_override("font_outline_color", Color("1d0f3a"))
@@ -862,120 +875,166 @@ func _show_notebook(page: int) -> void:
 	nav.add_child(next)
 
 
-## A paper sheet sized to the screen (above the bottom bar, inside the safe area); its text scrolls when it is
-## longer than the sheet (large text sizes).
-func _paper_panel(o: Control) -> Control:
+# ====================================================================== reader (documents, notes, inscriptions)
+const INK := Color("2b2118")
+const INK_SOFT := Color("4a3a28")
+const READ_PX := 40 # design size of reading text (display serif): about 5.8 mm em on a 6" phone at Normal
+
+
+## A full-screen reader: a paper plate filling the safe area above the bottom bar, the title in small caps over
+## a hairline (with `right`, e.g. the page number, at the right end), then a picture that can be pinched or
+## double-tapped to zoom and/or text at reading size that scrolls when it is longer. Every document, note and
+## inscription opens here (docs/UI_UX.md → Reader).
+## -> {"paper": PanelContainer, "vbox": VBoxContainer (the scrolling text), "image": UIZoomView or null}
+func _reader(o: Control, title: String, right: String = "", image: Texture2D = null, text_too: bool = true) -> Dictionary:
 	var center := _above_bar(o)
 	var avail := _above_bar_size()
-	var ph := minf(avail.y, 980.0)
-	var pw := minf(avail.x, maxf(1080.0, minf(1080.0 * UITheme.wscale(), ph * 1.45)))
-	var k := pw / 1080.0
 	var paper := PanelContainer.new()
 	var sb := StyleBoxTexture.new()
 	sb.texture = load("res://assets/textures/decals/notebook_page.jpg")
-	sb.content_margin_left = round(110 * k)
-	sb.content_margin_right = round(70 * k)
-	sb.content_margin_top = round(56 * k)
-	sb.content_margin_bottom = round(48 * k)
+	var k := clampf(avail.x / 1080.0, 1.0, 2.2)
+	sb.content_margin_left = round(60 * k)
+	sb.content_margin_right = round(48 * k)
+	sb.content_margin_top = round(28 * k)
+	sb.content_margin_bottom = round(28 * k)
 	paper.add_theme_stylebox_override("panel", sb)
-	paper.custom_minimum_size = Vector2(pw, ph)
+	paper.custom_minimum_size = avail
 	center.add_child(paper)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	paper.add_child(v)
+	if title != "" or right != "":
+		var head := HBoxContainer.new()
+		head.add_theme_constant_override("separation", 24)
+		var t := UITheme.label(title, 24, INK_SOFT)
+		t.add_theme_font_override("font", UITheme.caps_font(true, 2))
+		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		t.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		head.add_child(t)
+		if right != "":
+			var pr := UITheme.label(right, 22, INK_SOFT)
+			pr.add_theme_font_override("font", UITheme.caps_font(false, 1))
+			pr.autowrap_mode = TextServer.AUTOWRAP_OFF
+			pr.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+			head.add_child(pr)
+		v.add_child(head)
+		var line := ColorRect.new()
+		line.color = Color(INK_SOFT, 0.3)
+		line.custom_minimum_size = Vector2(0, 1)
+		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(line)
+	var zoom: UIZoomView = null
+	if image != null:
+		zoom = UIZoomView.new()
+		zoom.texture = image
+		zoom.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		v.add_child(zoom)
+		var hint := UITheme.label("ui.zoom_hint", 20, INK_SOFT)
+		hint.add_theme_font_override("font", UITheme.caps_font(false, 1))
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(hint)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	paper.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.visible = text_too
+	v.add_child(scroll)
 	# the theme's brass scroll bar disappears on paper: ink-brown instead
 	var vb := scroll.get_v_scroll_bar()
 	var grab := StyleBoxFlat.new()
-	grab.bg_color = Color("4a3a28", 0.85)
+	grab.bg_color = Color(INK_SOFT, 0.85)
 	grab.set_corner_radius_all(6)
 	grab.content_margin_left = 10
 	var track := grab.duplicate() as StyleBoxFlat
-	track.bg_color = Color("4a3a28", 0.15)
+	track.bg_color = Color(INK_SOFT, 0.15)
 	vb.add_theme_stylebox_override("scroll", track)
 	for st in ["grabber", "grabber_highlight", "grabber_pressed"]:
 		vb.add_theme_stylebox_override(st, grab)
-	var v := VBoxContainer.new()
-	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	v.add_theme_constant_override("separation", 18)
-	scroll.add_child(v)
-	paper.set_meta("vbox", v)
-	return paper
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 18)
+	scroll.add_child(body)
+	return {"paper": paper, "vbox": body, "image": zoom, "scroll": scroll}
 
 
-func _hand_label(text: String) -> Label:
+## Reading text: the display serif in ink on the paper, at reading size, wrapping (`sz` is the design size).
+func _ink_label(text: String, sz: int = READ_PX) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_override("font", UITheme.hand_font())
-	l.set_meta("ui_font_size", 44)
-	l.add_theme_font_size_override("font_size", UITheme.size(44))
-	l.add_theme_color_override("font_color", Color("2b2118"))
+	l.add_theme_font_override("font", UITheme.display_font(false))
+	l.set_meta("ui_font_size", sz)
+	l.add_theme_font_size_override("font_size", UITheme.size(sz))
+	l.add_theme_color_override("font_color", INK)
+	l.add_theme_constant_override("line_spacing", 8)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l
 
 
-func _show_paper(pages: Array) -> void:
+func _show_paper(text: String, title: String = "") -> void:
 	var o := _open_overlay(0.82)
-	var paper := _paper_panel(o)
-	var v := paper.get_meta("vbox") as VBoxContainer
-	v.add_child(_hand_label(str(pages[0])))
+	var r := _reader(o, title)
+	(r["vbox"] as VBoxContainer).add_child(_ink_label(text))
 	_close_button_bottom(o)
 
 
 func _show_photo() -> void:
 	var o := _open_overlay(0.82)
-	var paper := _paper_panel(o)
-	var v := paper.get_meta("vbox") as VBoxContainer
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 40)
-	v.add_child(h)
-	var photo := TextureRect.new()
-	photo.texture = load("res://assets/textures/decals/photo_3.jpg")
-	photo.custom_minimum_size = Vector2(300, 370) * UITheme.wscale()
-	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	photo.rotation = deg_to_rad(-3)
-	photo.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	h.add_child(photo)
-	h.add_child(_hand_label(tr("doc.photo")))
+	var r := _reader(o, _doc_title("photo"), "", load("res://assets/textures/decals/photo_3.jpg"))
+	(r["vbox"] as VBoxContainer).add_child(_ink_label(tr("doc.photo")))
 	_close_button_bottom(o)
 
 
+## The evidence board: the eight photographs (a tap opens one full size) and the note under them.
 func _show_evidence() -> void:
 	var o := _open_overlay(0.82)
-	var d := UITheme.dialog(o, 1300, "obj.evidence", 44)
-	var v: VBoxContainer = d["body"]
+	var r := _reader(o, tr("obj.evidence"))
+	var v: VBoxContainer = r["vbox"]
 	var grid := UITheme.button_row(14)
+	var ph := roundf(180.0 * UITheme.wscale())
 	for k in 8:
+		var tex: Texture2D = load("res://assets/textures/decals/photo_%d.jpg" % k)
+		var b := Button.new()
+		b.flat = true
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(roundf(ph * 0.82), ph)
+		for st in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+			b.add_theme_stylebox_override(st, StyleBoxEmpty.new())
 		var p := TextureRect.new()
-		p.texture = load("res://assets/textures/decals/photo_%d.jpg" % k)
-		p.custom_minimum_size = Vector2(130, 160) * UITheme.wscale()
+		p.texture = tex
 		p.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		p.rotation = deg_to_rad(randf_range(-4, 4))
-		grid.add_child(p)
+		p.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		p.set_anchors_preset(Control.PRESET_FULL_RECT)
+		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(p)
+		b.pressed.connect(func() -> void: _show_zoom(tex, tr("obj.evidence"), _show_evidence))
+		grid.add_child(b)
 	v.add_child(grid)
-	var t := UITheme.label("doc.evidence", 28)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(t)
-	var close := UITheme.button("ui.close", 260)
-	close.pressed.connect(_close_overlay)
-	(d["footer"] as Control).add_child(close)
-
-
-## A document that is a picture (badge, index card): as large as the screen allows above the close button
-## (up to 1.6x its design size), so its printed text is readable on a phone.
-func _show_picture(path: String, design: Vector2) -> void:
-	var o := _open_overlay(0.85)
-	var c := _above_bar(o)
-	var avail := _above_bar_size()
-	var k := minf(1.6, minf(avail.x / design.x, avail.y / design.y))
-	var t := TextureRect.new()
-	var lp := DecalLoc.localized_path(path)
-	t.texture = load(lp) if ResourceLoader.exists(lp) else null
-	t.custom_minimum_size = (design * k).floor()
-	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	c.add_child(t)
+	v.add_child(_ink_label(tr("doc.evidence")))
 	_close_button_bottom(o)
+
+
+## A picture full size (a document decal in the current language, an inscription), with a line of text under it
+## when there is one.
+func _show_picture(path: String, title: String = "", caption: String = "") -> void:
+	var lp := DecalLoc.localized_path(path)
+	var tex: Texture2D = load(lp) if ResourceLoader.exists(lp) else null
+	_show_zoom(tex, title, Callable(), caption)
+
+
+## A zoomable picture in the reader; `back` reopens the view it came from when it closes.
+func _show_zoom(tex: Texture2D, title: String, back: Callable = Callable(), caption: String = "") -> void:
+	var o := _open_overlay(0.85)
+	var r := _reader(o, title, "", tex, caption != "")
+	if caption != "":
+		(r["vbox"] as VBoxContainer).add_child(_ink_label(caption, 32))
+	var nav := _bottom_bar(o)
+	var close := IconButton.make("close", 96)
+	close.pressed.connect(func() -> void:
+		if back.is_valid():
+			back.call()
+		else:
+			_close_overlay())
+	nav.add_child(close)
 
 
 # ====================================================================== receiver meter (Chapter 2)
@@ -983,7 +1042,7 @@ func _show_picture(path: String, design: Vector2) -> void:
 func set_meter(level: int) -> void:
 	if _meter == null:
 		_meter = PanelContainer.new()
-		var sb := UITheme.panel_box(0.8, 6)
+		var sb := UITheme.panel_box(0.9, 6)
 		sb.set_content_margin_all(14)
 		_meter.add_theme_stylebox_override("panel", sb)
 		_meter.mouse_filter = Control.MOUSE_FILTER_IGNORE

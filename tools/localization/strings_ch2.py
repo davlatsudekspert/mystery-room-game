@@ -109,6 +109,20 @@ S = [
 ("msg.c2_echo_released", "The echo turns to the light and is gone.", "Эхо поворачивается к свету и исчезает.", "Aks-sado yorugʻlikka yuzlandi va gʻoyib boʻldi."),
 ("msg.c2_echo_count", "Kept echoes released: %d / 3", "Освобождено эхо: %d / 3", "Ozod qilingan aks-sadolar: %d / 3"),
 ("msg.c2_receiver", "Signal: %s", "Сигнал: %s", "Signal: %s"),
+# ---------------------------------------------------------------- feedback for taps on scenery and locked mechanisms (3D QA pass)
+("msg.c2_catalogue_drawers", "Drawers of staff index cards, 00 to 09.", "Ящики с карточками сотрудников, от 00 до 09.", "Xodimlar kartochkalari solingan tortmalar, 00 dan 09 gacha."),
+("msg.c2_reading_table", "An open register under the banker's lamp, a magnifier and someone's spectacles.", "Раскрытый журнал под лампой, лупа и чьи-то очки.", "Chiroq ostida ochiq jurnal, lupa va kimningdir koʻzoynagi."),
+("msg.c2_stacks_boxes", "Boxes of records, shelf after shelf, year after year.", "Коробки с документами, полка за полкой, год за годом.", "Hujjat qutilari: javon ketidan javon, yil ketidan yil."),
+("msg.c2_chart_rule", "A hand-painted routing chart: a request card goes to the book.", "Схема маршрутов, расписанная от руки: бланк запроса отправляется к книге.", "Qoʻlda chizilgan yoʻnalishlar sxemasi: soʻrov kartasi kitobga yuboriladi."),
+("msg.c2_slide_gate_empty", "The slide gate is empty.", "Рамка для слайда пуста.", "Slayd uyasi boʻsh."),
+("msg.c2_screen_dark", "The screen is dark. Nothing is being projected.", "Экран тёмный. Ничего не проецируется.", "Ekran qorongʻi. Hech narsa koʻrsatilmayapti."),
+("msg.c2_port_empty", "An empty crystal port. It wants a kept image.", "Пустое гнездо для кристалла. Ему нужен запечатлённый образ.", "Boʻsh billur uyachasi. Unga saqlangan tasvir kerak."),
+("msg.c2_vault_shut", "Eight bolts hold the door. The glass disc above the wheel shows an engraving.", "Дверь держат восемь засовов. На стеклянном диске над штурвалом — гравировка.", "Eshikni sakkizta zulfin ushlab turibdi. Shturval ustidagi shisha diskda oʻyma naqsh bor."),
+("msg.c2_disc", "Two images meet on the glass. They must match the engraving.", "На стекле сходятся два образа. Они должны совпасть с гравировкой.", "Shishada ikki tasvir uchrashadi. Ular oʻyma naqshga mos kelishi kerak."),
+("msg.c2_locker_empty", "Locker 9. Nothing left inside.", "Шкафчик 9. Внутри больше ничего нет.", "9-shkafcha. Ichida boshqa hech narsa qolmagan."),
+("msg.c2_dial_lock", "A rotary dial. Three digits open the latch.", "Дисковый номеронабиратель. Защёлку открывают три цифры.", "Diskli raqam tergich. Ilgakni uchta raqam ochadi."),
+("msg.c2_splicer_box", "A light box for reading film strips.", "Световой стол для просмотра кадров плёнки.", "Lenta kadrlarini koʻrish uchun yorugʻlik stoli."),
+
 # ---------------------------------------------------------------- captions (sound + story)
 ("cap2.compressor", "[The compressor coughs and hums]", "[Компрессор кашляет и гудит]", "[Kompressor yoʻtalib gʻuvillaydi]"),
 ("cap2.whoosh", "[A canister whooshes through the tubes]", "[По трубам со свистом летит капсула]", "[Quvurlardan kapsula shuvillab oʻtdi]"),

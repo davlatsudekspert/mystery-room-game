@@ -310,24 +310,26 @@ func _show_chapters() -> void:
 	var v: VBoxContainer = d["body"]
 	v.add_theme_constant_override("separation", 14)
 	for ch: Dictionary in Chapters.LIST:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 18)
-		var num := UITheme.label(tr("chapter.label") % int(ch["number"]), 24, UITheme.MUTED)
-		num.custom_minimum_size = Vector2(round(170 * UITheme.wscale()), 0)
+		var row := HFlowContainer.new() # the button wraps under the title when the text is large
+		row.add_theme_constant_override("h_separation", 18)
+		row.add_theme_constant_override("v_separation", 8)
+		row.alignment = FlowContainer.ALIGNMENT_END
+		var text := VBoxContainer.new()
+		text.add_theme_constant_override("separation", 0)
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var num := UITheme.label(tr("chapter.label") % int(ch["number"]), 22, UITheme.MUTED)
+		num.add_theme_font_override("font", UITheme.caps_font(false, 1))
 		num.autowrap_mode = TextServer.AUTOWRAP_OFF
-		num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		num.size_flags_vertical = Control.SIZE_FILL
-		row.add_child(num)
+		text.add_child(num)
 		var name := UITheme.label(ch["title"], 30)
-		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		name.size_flags_vertical = Control.SIZE_FILL
-		row.add_child(name)
+		name.add_theme_font_override("font", UITheme.display_font(true))
+		text.add_child(name)
+		row.add_child(text)
 		var state_key := "ui.coming_soon"
 		var can := Premium.can_play(ch["id"])
 		if can:
 			state_key = "ui.completed" if GameState.is_chapter_completed(ch["id"]) else ("ui.free" if Chapters.is_free(ch["id"]) else "ui.play")
-		var b := UITheme.button(state_key if not can else "ui.play", 280)
+		var b := UITheme.button(state_key if not can else "ui.play", 300)
 		b.disabled = not can
 		if can:
 			var id: String = ch["id"]

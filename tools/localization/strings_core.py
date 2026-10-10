@@ -129,4 +129,8 @@ S = [
 ("ui.sec_display", "Display & comfort", "Экран и комфорт", "Ekran va qulaylik"),
 ("ui.sec_other", "Other", "Прочее", "Boshqa"),
 ("ui.safe_graphics_desc", "Fewer effects and shadows: for older phones, or after a crash.", "Меньше эффектов и теней: для старых телефонов или после сбоя.", "Kamroq effekt va soya: eski telefonlar uchun yoki nosozlikdan soʻng."),
+("ui.text_normal", "Normal", "Обычный", "Oddiy"),
+("ui.text_large", "Large", "Крупный", "Katta"),
+("ui.text_xl", "Extra large", "Очень крупный", "Juda katta"),
+("ui.zoom_hint", "Pinch or double-tap to zoom", "Сведите пальцы или дважды коснитесь, чтобы увеличить", "Kattalashtirish uchun ikki barmoq bilan torting yoki ikki marta bosing"),
 ]

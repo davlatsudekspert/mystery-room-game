@@ -16,7 +16,7 @@ const HAIRLINE := Color(0.79, 0.64, 0.37, 0.16) # thin brass separators between 
 const BRASS := Color("c9a35e")
 const BRASS_HI := Color("e3c27a")
 const CREAM := Color("ede3cf")
-const MUTED := Color("9d9482") # was 8a8172: 4.6:1 on a panel over a dimmed bright scene; now ≥ 5.5:1 (WCAG AA)
+const MUTED := Color("b5ab97") # secondary text: ≥ 8:1 on panels, ≥ 4.5:1 on a 0.8-alpha plate over a white 3D frame
 const DANGER := Color("b5523b")
 const SUCCESS := Color("6fb39a")
 const UV := Color("9c7bff")
@@ -28,10 +28,13 @@ const FONT_HAND := "res://assets/fonts/Caveat-Variable.ttf"
 
 const BODY_PX := 26 # theme body size (canvas px at scale 1)
 const BUTTON_PX := 34 # button text: display serif in small caps (a smaller x-height than the sans body text)
-const BODY_MM := 2.6 # target em height of body text on the physical screen
-const MIN_TEXT_MM := 2.0 # nothing the player must read is smaller than this
-const TITLE_PX := 72 # sizes at or above this are not raised by the auto scale
-const AUTO_MAX := 1.6 # cap: very small/dense screens get scrolling, not ever-larger text
+const BODY_CAP_MM := 3.0 # target cap height of body text at Settings → Text size "Normal" (readable at arm's length)
+const CAP_EM := 0.714 # Noto Sans: cap height / em
+const BODY_MM := BODY_CAP_MM / CAP_EM # target em height of body text on the physical screen (~4.2 mm)
+const MIN_TEXT_MM := 3.0 # em height: nothing the player must read is smaller than this
+const TITLE_PX := 72 # from BODY_PX up to here the boost tapers to TITLE_BOOST of the body's (titles still lead)
+const TITLE_BOOST := 0.5
+const AUTO_MAX := 3.2 # cap: very small/dense screens get scrolling, not ever-larger text
 const TOUCH_MM := 9.0 # minimum touch target (~48 dp with margin)
 const SLOT_MM := 8.5 # inventory slots
 const MARGIN := 24.0 # breathing room between panels and the safe-area edge (canvas px)
@@ -91,7 +94,7 @@ static func mm_per_px() -> float:
 	return float(metrics()["mm_per_px"])
 
 
-## Automatic text scale for this screen (1.0 on tablets/desktop, ~1.5 on 6" phones).
+## Automatic text scale for this screen (1.0 on a desktop, ~1.6 on a 10" tablet, ~2.7 on a 6" phone).
 static func auto_scale() -> float:
 	var body_mm := BODY_PX * mm_per_px()
 	return clampf(BODY_MM / body_mm, 1.0, AUTO_MAX)
@@ -112,10 +115,13 @@ static func scale() -> float:
 static func size(base: int, user: float = -1.0) -> int:
 	var u := user_scale() if user <= 0.0 else user
 	var a := auto_scale()
-	var w := clampf(float(TITLE_PX - base) / float(TITLE_PX - BODY_PX), 0.0, 1.0)
+	# body sizes get the whole boost; from BODY_PX to TITLE_PX it tapers to TITLE_BOOST of it (monotonic: a
+	# bigger design size is always a bigger size on screen, so titles keep leading body text)
+	var t := clampf(float(base - BODY_PX) / float(TITLE_PX - BODY_PX), 0.0, 1.0)
+	var w := 1.0 - (1.0 - TITLE_BOOST) * t
 	var px := base * u * (1.0 + (a - 1.0) * w)
 	# small print is lifted to MIN_TEXT_MM (bounded, in case a platform reports a nonsense dpi)
-	var floor_px := minf(MIN_TEXT_MM / mm_per_px() * minf(1.0, u), base * u * 2.0)
+	var floor_px := minf(MIN_TEXT_MM / mm_per_px() * minf(1.0, u), base * u * 3.5)
 	px = maxf(px, floor_px)
 	# boosted sizes round up so they reach their physical target; design sizes stay exact
 	return int(ceilf(px - 0.001)) if a > 1.0001 or px > base * u + 0.5 else int(roundf(px))
@@ -163,6 +169,14 @@ const HUD_SLOT_PX := 112.0
 const HUD_COL_GAP := 8.0 # between the inventory slots and their vertical rule
 const HUD_RULE_W := 14.0
 const HUD_TEXT_W := 1440.0
+
+
+## Side of the square 3D item viewer in the inspect view: up to 880 px, never taller than the usable screen,
+## and a smaller share of the width when the text is large (the description column needs the room).
+static func inspect_viewer_side() -> float:
+	var u := usable_rect(40.0)
+	var share := clampf(0.45 / wscale(), 0.28, 0.45)
+	return minf(880.0, minf(u.size.y, u.size.x * share))
 
 
 ## Width of the inventory column on the left (a slot, the gap and the vertical rule).
@@ -272,7 +286,7 @@ static func text_button(text: String, color: Color = BRASS_HI) -> Button:
 ## banner agree on the text width).
 static func caption_plate() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.02, 0.022, 0.028, 0.74)
+	sb.bg_color = Color(0.02, 0.022, 0.028, 0.8)
 	sb.set_corner_radius_all(4)
 	sb.content_margin_left = 32
 	sb.content_margin_right = 32

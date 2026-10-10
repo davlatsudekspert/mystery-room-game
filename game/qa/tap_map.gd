@@ -52,6 +52,8 @@ func _run() -> void:
 			until = a.substr(8)
 		elif a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7))
+		elif a.begins_with("--brightness="):
+			Settings.values["brightness"] = clampf(float(a.substr(13)), 0.7, 1.6) # the Settings slider's range, unsaved
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_tapmap_save.json"
 	SaveSystem.profile_path = "user://qa_tapmap_profile.json"

@@ -7,8 +7,8 @@ extends Button
 
 const INDENT := 64.0 # canvas px from the row's left edge to the text; the rule's diamond sits left of the text
 const DIAMOND_X := 20.0 # centre of the diamond from the row's left edge
-const SIZE_NORMAL := 50 # design font sizes (UITheme.size)
-const SIZE_PRIMARY := 60
+const SIZE_NORMAL := 42 # design font sizes (UITheme.size); phones boost these about 2.4x
+const SIZE_PRIMARY := 50
 const REST := Color("e9dfca")
 const HOT := Color("f3cf8a")
 const PRIMARY_REST := Color("efd29a")

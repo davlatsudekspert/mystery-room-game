@@ -13,7 +13,7 @@ const BAND := Color(0.02, 0.022, 0.028)
 var title_label: Label
 var subtitle_label: Label
 var icon: TextureRect
-var band_alpha := 0.74
+var band_alpha := 0.8 # over a white 3D frame: cream text 7:1, muted 4.9:1, brass 7:1
 var _title_rect := Rect2()
 var _fl := 0.0 # flourish length actually drawn (0 = none)
 var _rule_y := -1.0 # the rule between title and subtitle (-1 = none)

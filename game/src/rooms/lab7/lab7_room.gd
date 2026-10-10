@@ -56,7 +56,7 @@ const HOTSPOT_VIEW := {
 	"bookshelf": "bookshelf", "gearbox": "gearbox", "chalkboard": "chalkboard", "projector": "projector",
 	"bench": "bench", "radio": "radio", "poster": "poster", "safe": "safe", "panel": "panel", "coat": "coat",
 	"mirror_a": "mirror_a", "mirror_b": "mirror_b", "lock": "lock", "evidence": "evidence",
-	"shadow": "shadow", "window": "window", "vials": "vials",
+	"shadow": "shadow", "window": "window", "vials": "vials", "radiator": "radiator",
 }
 const HOTSPOT_CAPTION := {
 	"door": "obj.door", "desk": "obj.desk", "clock": "obj.clock", "filing": "obj.filing",
@@ -149,9 +149,11 @@ func _build_environment() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.0
 	env.glow_enabled = true
-	env.glow_intensity = 0.6
-	env.glow_bloom = 0.05
-	env.glow_hdr_threshold = 1.1
+	# A soft halo on real light sources only: the old 0.6 / 0.05 / 1.1 bloomed every lit enamel and brass surface
+	# into a white patch (lamp shades, the projector lens, the panel lamps) and washed the close-ups out.
+	env.glow_intensity = 0.4
+	env.glow_bloom = 0.0
+	env.glow_hdr_threshold = 1.35
 	env.fog_enabled = true
 	env.fog_light_color = Color("1b2a2b")
 	env.fog_density = 0.012
@@ -205,6 +207,16 @@ func _build_models() -> void:
 	_build_backdrop()
 	_build_uv_ink()
 	_build_shards()
+	# The radiator is part of the static room shell: give it a tap target of its own, so the low view where the
+	# Lumen shard hides between its feet can be reached by tapping it (docs/models/architecture.md, "Radiator").
+	var radiator := Node3D.new()
+	radiator.name = "radiator_tap"
+	add_child(radiator)
+	radiator.position = Vector3(1.5, 0.45, -2.37)
+	radiator.set_meta("hotspot", "radiator")
+	models["radiator_tap"] = radiator
+	_roots[radiator] = "radiator_tap"
+	_add_tap_area(radiator, Vector3(0.84, 0.7, 0.16), "radiator", "IA_radiator")
 	var dust := DustMotes.create(Vector3(2.8, 1.5, 2.3), 140)
 	dust.position = Vector3(0, 1.6, 0)
 	add_child(dust)
@@ -500,7 +512,9 @@ func _build_views() -> void:
 	V.call("radio_hatch", Vector3(0.55, 1.54, 1.92), Vector3(0.54, 1.12, 2.23), 38.0)
 	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
 	V.call("safe", Vector3(2.2, 1.32, 1.72), Vector3(2.2, 1.25, 2.5), 40.0)
-	V.call("panel", Vector3(2.12, 1.5, -1.3), Vector3(3.0, 1.45, -1.3), 50.0)
+	# Far enough back that the lamps (y 1.75) clear the title plates and the main lever's handle (y 1.10) clears the
+	# inventory bar; at 0.88 m the handle sat under the bar and a finger could not reach it.
+	V.call("panel", Vector3(1.85, 1.46, -1.3), Vector3(3.0, 1.46, -1.3), 54.0)
 	V.call("coat", Vector3(1.5, 1.38, -1.7), Vector3(2.12, 1.07, -2.08), 52.0) # west of Panel 7's open door
 	V.call("mirror_a", Vector3(0.95, 1.5, 1.05), Vector3(1.6, 1.15, 1.6), 46.0)
 	V.call("mirror_b", Vector3(0.85, 1.45, 0.4), Vector3(1.6, 1.15, 0.12), 46.0)
@@ -636,6 +650,15 @@ func _collider_volume(col: Node) -> float:
 	return 1.0
 
 
+## The same names RoomBase gives these, so the shared QA tools (qa/tap_map.gd) work on this room too.
+func raycast(screen: Vector2) -> Dictionary:
+	return _raycast(screen)
+
+
+func resolve(hit: Dictionary) -> Dictionary:
+	return _resolve(hit)
+
+
 func _resolve(hit: Dictionary) -> Dictionary:
 	## -> {"hotspot", "part", "model", "pos"}
 	var out := {"hotspot": "", "part": "", "model": "", "pos": hit.get("position", Vector3.ZERO)}
@@ -742,22 +765,40 @@ func _interact(hs: String, part: String, r: Dictionary) -> void:
 		"lock":
 			if cam.current() != "lock":
 				cam.go("lock")
+			elif not s["door_open"]:
+				hud.call("message", tr("msg.lock_waits") if s["beam_on"] and logic.trace_beam()["end"] == "lock" else tr("msg.lock_dark"))
+				AudioManager.ui("ui_tap")
 		"notebook":
 			if logic.can_take("notebook"):
 				logic.take("notebook")
 		"clock":
-			cam.go("clock")
+			if cam.current() != "clock":
+				cam.go("clock")
+			else:
+				hud.call("message", tr("msg.clock_stopped"))
+				AudioManager.sfx("wheel_tick", -8.0, 0.8)
 		"desk":
 			_interact_desk(part, r)
 		"bookshelf":
 			_interact_bookshelf(part, r)
 		"gearbox":
 			_interact_gearbox(part)
-		"chalkboard", "poster", "filing", "window", "coat", "evidence":
+		"chalkboard", "poster", "filing", "window", "coat", "evidence", "radiator":
 			if cam.current() != HOTSPOT_VIEW.get(hs, ""):
 				_focus(hs)
 			elif hs == "evidence":
 				hud.call("show_document", "evidence")
+			elif hs in ["poster", "chalkboard"]:
+				hud.call("show_document", hs) # the inscription full size in the reader (pinch to zoom)
+			else:
+				# scenery in its own close-up: a short line instead of silence
+				var line := {"chalkboard": "msg.chalkboard_dust", "poster": "msg.poster_table", "filing": "msg.filing_locked",
+					"window": "obj.window", "coat": "msg.coat_pockets", "radiator": "obj.radiator"}[hs] as String
+				hud.call("message", tr(line))
+				if hs == "filing":
+					AudioManager.sfx("drawer_locked", -14.0, 1.1)
+				else:
+					AudioManager.ui("ui_tap")
 		"bench":
 			_interact_bench(part)
 		"radio":
@@ -812,6 +853,9 @@ func _interact_desk(part: String, r: Dictionary) -> void:
 					return
 		elif s["rosette"]:
 			hud.call("message", tr("hint.key.1"))
+		else:
+			hud.call("message", tr("msg.desk_side"))
+			AudioManager.ui("ui_tap")
 		return
 	if cur == "lab":
 		cam.go("desk")
@@ -824,10 +868,17 @@ func _interact_desk(part: String, r: Dictionary) -> void:
 			cam.go("under_desk")
 		elif p.y < 0.76 and absf(p.x + 0.5) < 0.35:
 			cam.go("drawer")
+		else:
+			# the desk top and what she left on it (tea set, spectacles, magnifier)
+			hud.call("message", tr("msg.desk_clutter"))
+			AudioManager.ui("ui_tap")
 	elif cur == "drawer" and not s["drawer_open"]:
 		# the desk around the locked drawer: answer instead of ignoring the tap
 		hud.call("message", tr("msg.drawer_locked"))
 		AudioManager.sfx("drawer_locked")
+	elif cur in ["clock", "under_desk", "desk_side"]:
+		hud.call("message", tr("msg.desk_clutter" if cur == "clock" else ("msg.desk_side" if cur == "desk_side" else "obj.desk")))
+		AudioManager.ui("ui_tap")
 
 
 func _interact_bookshelf(part: String, _r: Dictionary) -> void:
@@ -860,13 +911,24 @@ func _interact_gearbox(part: String) -> void:
 		return
 	if part.begins_with("IA_knob_") or part.begins_with("IA_gear_"):
 		logic.press_gear(int(part.substr(part.length() - 1)))
+	else:
+		# the shut lid or the box body: it is locked, and the knobs below are what moves
+		hud.call("message", tr("msg.box_locked"))
+		AudioManager.sfx("drawer_locked", -10.0, 1.2)
 
 
 func _interact_bench(part: String) -> void:
 	if part.begins_with("IA_vial_") or part.begins_with("vial"):
-		cam.go("vials")
+		if cam.current() != "vials":
+			cam.go("vials")
+		else:
+			hud.call("message", tr("obj.vials"))
+			AudioManager.ui("ui_tap")
 	elif cam.current() == "lab":
 		cam.go("bench")
+	else:
+		hud.call("message", tr("msg.bench_glass"))
+		AudioManager.ui("ui_tap")
 
 
 func _interact_radio(part: String, r: Dictionary) -> void:
@@ -916,6 +978,10 @@ func _interact_safe(part: String) -> void:
 		var k := part.substr(7)
 		var map := {"clear": "C", "enter": "E"}
 		logic.safe_press(map.get(k, k))
+	else:
+		# the door, its handle or the body: locked until the keypad says otherwise
+		hud.call("message", tr("msg.safe_locked"))
+		AudioManager.sfx("drawer_locked", -8.0, 0.9)
 
 
 func _interact_panel(part: String) -> void:
@@ -926,6 +992,10 @@ func _interact_panel(part: String) -> void:
 		logic.toggle_switch(int(part.substr(10)))
 	elif part == "IA_main_lever" or part == "main_handle":
 		logic.toggle_main()
+	else:
+		# the lamps, the gauge or the plate: say what they are for
+		hud.call("message", tr("msg.panel_lamps"))
+		AudioManager.ui("ui_tap")
 
 
 func _interact_projector(part: String) -> void:
@@ -942,6 +1012,15 @@ func _interact_projector(part: String) -> void:
 		logic.pull_projector_lever()
 	elif part in ["IA_lens_socket", "lens_installed"] and s["lens_at"] == "projector":
 		logic.remove_lens()
+	elif cam.current() == "projector":
+		# the empty socket or the body: what the projector still lacks, or that it is running
+		if not s["power_on"]:
+			hud.call("message", tr("msg.projector_no_power"))
+		elif s["lens_at"] != "projector":
+			hud.call("message", tr("msg.projector_no_lens"))
+		else:
+			hud.call("caption", tr("cap.hum") if s["beam_on"] else tr("obj.projector"))
+		AudioManager.ui("ui_tap")
 
 
 func _interact_mirror(hs: String, part: String, r: Dictionary) -> void:
@@ -984,8 +1063,14 @@ func _interact_shadow(part: String) -> void:
 			logic.take("cabinet_mirror")
 		elif not s["cabinet_open"]:
 			hud.call("message", tr("obj.cabinet"))
+			AudioManager.sfx("drawer_locked", -8.0, 1.1)
 	elif cur == "darkroom":
 		cam.go("shadow")
+	elif cur == "shadow":
+		cam.go("sculpture") # the sculpture's table or lamp: come closer to the two knobs
+	elif cur == "sculpture":
+		hud.call("message", tr("obj.shadow"))
+		AudioManager.ui("ui_tap")
 
 
 func _tap_shard(id: String) -> void:
@@ -1098,6 +1183,10 @@ func _feedback(e: String) -> void:
 			hud.call("message", tr("ui.item_added") % tr(ItemDB.name_key(arg)))
 		"drawer_wheel":
 			AudioManager.sfx("wheel_tick", -3.0, randf_range(0.95, 1.05))
+		"drawer_static", "box_static", "safe_static":
+			AudioManager.sfx("wheel_tick", -12.0, 0.7) # a solved mechanism: it no longer moves, but it answers
+		"beam_already_on":
+			hud.call("caption", tr("cap.hum"))
 		"drawer_opened":
 			AudioManager.sfx("drawer_open")
 			hud.call("message", tr("msg.drawer_opened"))

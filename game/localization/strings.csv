@@ -114,6 +114,10 @@ ui.sec_sound,Sound,Звук,Tovush
 ui.sec_display,Display & comfort,Экран и комфорт,Ekran va qulaylik
 ui.sec_other,Other,Прочее,Boshqa
 ui.safe_graphics_desc,"Fewer effects and shadows: for older phones, or after a crash.",Меньше эффектов и теней: для старых телефонов или после сбоя.,Kamroq effekt va soya: eski telefonlar uchun yoki nosozlikdan soʻng.
+ui.text_normal,Normal,Обычный,Oddiy
+ui.text_large,Large,Крупный,Katta
+ui.text_xl,Extra large,Очень крупный,Juda katta
+ui.zoom_hint,Pinch or double-tap to zoom,"Сведите пальцы или дважды коснитесь, чтобы увеличить",Kattalashtirish uchun ikki barmoq bilan torting yoki ikki marta bosing
 item.notebook.name,Leyla's notebook,Блокнот Лейлы,Leylaning daftari
 item.notebook.desc,A lab journal in Leyla Rahimova's handwriting. One page looks oddly blank.,"Лабораторный журнал, исписанный рукой Лейлы Рахимовой. Одна страница странно пуста.",Leyla Rahimovaning qoʻli bilan yozilgan laboratoriya jurnali. Bir sahifasi negadir boʻm-boʻsh.
 item.uv_lamp_empty.name,UV lamp (empty),УФ-лампа (пустая),UB chiroq (boʻsh)
@@ -222,6 +226,18 @@ msg.mirror_mounted,The mirror clicks onto the stand.,Зеркало защёлк
 msg.lens_removed,You take the crystal lens back.,Вы забираете линзу обратно.,Billur linzani qaytarib olasiz.
 msg.book_pulled,"Volume %s tilts out, then springs back.",Том %s наклоняется и возвращается на место.,%s-jild egilib chiqdi va joyiga qaytdi.
 msg.needs_uv,Something here might show under the right light.,Здесь что-то может проявиться при нужном свете.,Bu yerda toʻgʻri yorugʻlikda nimadir koʻrinishi mumkin.
+msg.clock_stopped,Stopped at 03:17. Nothing will turn it.,Остановились на 03:17. Ничто их не сдвинет.,03:17 da toʻxtab qolgan. Hech narsa uni yurgizmaydi.
+msg.desk_clutter,"Cold tea, her spectacles, a magnifier. She left in a hurry.","Остывший чай, её очки, лупа. Она уходила в спешке.","Sovigan choy, uning koʻzoynagi, lupa. U shoshib ketgan."
+msg.desk_side,Carved oak panels and brass rosettes run along the side of the desk.,Вдоль боковины стола — резные дубовые панели и латунные розетки.,Stolning yon tomoni boʻylab oʻyma eman panellar va jez rozetkalar.
+msg.box_locked,The lid will not lift. Three gear wheels turn beneath it.,Крышка не поднимается. Под ней вращаются три шестерни.,Qopqoq koʻtarilmaydi. Uning ostida uchta tishli gʻildirak aylanadi.
+msg.safe_locked,Locked. Four digits on the keypad open it.,Заперто. Его открывают четыре цифры на клавиатуре.,Qulflangan. Uni klaviaturadagi toʻrtta raqam ochadi.
+msg.panel_lamps,Four indicator lamps. They answer the switches below.,Четыре индикаторные лампы. Они отвечают переключателям внизу.,Toʻrtta koʻrsatkich chiroq. Ular pastdagi tumblerlarga javob beradi.
+msg.bench_glass,"Glassware, a microscope and three stoppered samples.","Стеклянная посуда, микроскоп и три закупоренных образца.","Shisha idishlar, mikroskop va uchta tiqinlangan namuna."
+msg.coat_pockets,"A coat, still on its hook. The pockets look empty.",Пальто всё ещё на вешалке. Карманы кажутся пустыми.,Palto hamon ilgichda. Choʻntaklari boʻsh koʻrinadi.
+msg.filing_locked,The cabinet drawers are locked. Nothing rattles inside.,Ящики картотеки заперты. Внутри ничего не гремит.,Kartoteka tortmalari qulflangan. Ichida hech narsa shiqirlamaydi.
+msg.chalkboard_dust,Strand's hand. The formula has been rubbed out and rewritten more than once.,Почерк Странда. Формулу стирали и переписывали не раз.,"Strandning dastxati. Formula bir necha bor oʻchirilib, qayta yozilgan."
+msg.poster_table,Strand's table of resonances: each symbol has its own count of dots.,Таблица резонансов Странда: у каждого символа своё число точек.,Strandning rezonanslar jadvali: har bir belgining oʻz nuqtalar soni bor.
+msg.lock_dark,A glass eye set into the door. It waits for light.,"Стеклянный глаз, вделанный в дверь. Он ждёт света.",Eshikka oʻrnatilgan shisha koʻz. U yorugʻlikni kutadi.
 cap.maglock,[Magnetic lock clicks shut],[Щелчок магнитного замка],[Magnit qulf chiqillab yopildi]
 cap.beacon,[Radio beacon: %s],[Радиомаяк: %s],[Radiomayoq: %s]
 cap.static,[Radio static],[Радиопомехи],[Radio shovqini]
@@ -331,6 +347,18 @@ msg.c2_slide_drawer,Glass slides in velvet slots.,Стеклянные слай�
 msg.c2_echo_released,The echo turns to the light and is gone.,Эхо поворачивается к свету и исчезает.,Aks-sado yorugʻlikka yuzlandi va gʻoyib boʻldi.
 msg.c2_echo_count,Kept echoes released: %d / 3,Освобождено эхо: %d / 3,Ozod qilingan aks-sadolar: %d / 3
 msg.c2_receiver,Signal: %s,Сигнал: %s,Signal: %s
+msg.c2_catalogue_drawers,"Drawers of staff index cards, 00 to 09.","Ящики с карточками сотрудников, от 00 до 09.","Xodimlar kartochkalari solingan tortmalar, 00 dan 09 gacha."
+msg.c2_reading_table,"An open register under the banker's lamp, a magnifier and someone's spectacles.","Раскрытый журнал под лампой, лупа и чьи-то очки.","Chiroq ostida ochiq jurnal, lupa va kimningdir koʻzoynagi."
+msg.c2_stacks_boxes,"Boxes of records, shelf after shelf, year after year.","Коробки с документами, полка за полкой, год за годом.","Hujjat qutilari: javon ketidan javon, yil ketidan yil."
+msg.c2_chart_rule,A hand-painted routing chart: a request card goes to the book.,"Схема маршрутов, расписанная от руки: бланк запроса отправляется к книге.",Qoʻlda chizilgan yoʻnalishlar sxemasi: soʻrov kartasi kitobga yuboriladi.
+msg.c2_slide_gate_empty,The slide gate is empty.,Рамка для слайда пуста.,Slayd uyasi boʻsh.
+msg.c2_screen_dark,The screen is dark. Nothing is being projected.,Экран тёмный. Ничего не проецируется.,Ekran qorongʻi. Hech narsa koʻrsatilmayapti.
+msg.c2_port_empty,An empty crystal port. It wants a kept image.,Пустое гнездо для кристалла. Ему нужен запечатлённый образ.,Boʻsh billur uyachasi. Unga saqlangan tasvir kerak.
+msg.c2_vault_shut,Eight bolts hold the door. The glass disc above the wheel shows an engraving.,Дверь держат восемь засовов. На стеклянном диске над штурвалом — гравировка.,Eshikni sakkizta zulfin ushlab turibdi. Shturval ustidagi shisha diskda oʻyma naqsh bor.
+msg.c2_disc,Two images meet on the glass. They must match the engraving.,На стекле сходятся два образа. Они должны совпасть с гравировкой.,Shishada ikki tasvir uchrashadi. Ular oʻyma naqshga mos kelishi kerak.
+msg.c2_locker_empty,Locker 9. Nothing left inside.,Шкафчик 9. Внутри больше ничего нет.,9-shkafcha. Ichida boshqa hech narsa qolmagan.
+msg.c2_dial_lock,A rotary dial. Three digits open the latch.,Дисковый номеронабиратель. Защёлку открывают три цифры.,Diskli raqam tergich. Ilgakni uchta raqam ochadi.
+msg.c2_splicer_box,A light box for reading film strips.,Световой стол для просмотра кадров плёнки.,Lenta kadrlarini koʻrish uchun yorugʻlik stoli.
 cap2.compressor,[The compressor coughs and hums],[Компрессор кашляет и гудит],[Kompressor yoʻtalib gʻuvillaydi]
 cap2.whoosh,[A canister whooshes through the tubes],[По трубам со свистом летит капсула],[Quvurlardan kapsula shuvillab oʻtdi]
 cap2.static,[Receiver static],[Помехи в приёмнике],[Qabul qilgich shovqini]

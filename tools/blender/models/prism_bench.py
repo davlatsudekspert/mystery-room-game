@@ -234,7 +234,20 @@ def qa(parts, args):
         REST[n] = o.matrix_basis.copy()
     roots = D.roots()
     D.place(roots, D.BENCH_POS, 0.0, name="qa_place_bench")
-    D.room(extra=[("spectral_seal_door", D.SEAL_POS, 0.0, "qa_sd_")])
+    # every other group D model, so shot 6 is the Nursery with the whole group in place
+    D.room(extra=[("spectral_seal_door", D.SEAL_POS, 0.0, "qa_sd_"), ("autoclave", D.AC_POS, 0.0, "qa_ac_"),
+                  ("growth_log", D.world_point(D.AC_POS, 0.0, (0.30, 1.66, 0.40)), 0.0, "qa_log_"),
+                  ("seed_library", D.LIB_POS, D.LIB_YAW, "qa_lib_"), ("growth_chart", D.CHART_POS, D.CHART_YAW, "qa_gc_")]
+           + [("autoclave_dead", p, 0.0, f"qa_dead{k}_") for k, p in enumerate(D.DEAD_POS)])
+    for nm, img in (("qa_log_log_sketch", "log_sketch.png"), ("qa_gc_chart_image", "chart_image.png"),
+                    ("qa_lib_glyph_panel", "glyph_panel.png")):
+        o = next((o for o in bpy.data.objects if o.name.startswith(nm) and o.type == "MESH"), None)
+        m = D.preview_material("qa_prev_" + nm, img, rough=0.6)
+        if o is not None and m is not None:
+            K.override(o, m)
+    go = next((o for o in bpy.data.objects if o.name.startswith("qa_lib_glyph_open") and o.type == "MESH"), None)
+    if go is not None:
+        go.hide_render = True
     K.override(parts["lamp"], K.glow("qa_prism_lamp", "FFF4DC", 5.0))
     recs = [next((o for o in bpy.data.objects if o.name.startswith(f"qa_sd_receptor_{i}") and o.type == "MESH"), None)
             for i in range(3)]

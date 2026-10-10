@@ -256,7 +256,7 @@ func apply_state(animated: bool) -> void:
 	# door + maglock
 	var mag := part("door_lab7", "maglock_lamp") as MeshInstance3D
 	if mag:
-		ModelUtil.set_emission(mag, true, Color("5dff8a") if s["door_open"] else Color("ff3b2f"), 3.0)
+		ModelUtil.set_emission(mag, true, Color("5dff8a") if s["door_open"] else Color("ff3b2f"), LAMP_GLASS_ENERGY)
 	var ml: OmniLight3D = (room.get("lights") as Dictionary).get("maglock")
 	if ml:
 		ml.light_color = Color("5dff8a") if s["door_open"] else Color("ff3b2f")
@@ -305,10 +305,16 @@ func _to(n: Node3D, target: Transform3D, animated: bool, dur: float) -> void:
 	_tweens[k] = tw
 
 
+## Emissive energies: bright enough to read as lit glass, below the point where the glow pass turns a lamp into a
+## white blot (the panel's jewel lamps and the pendant bulbs did at 3.5–4.0).
+const LAMP_GLASS_ENERGY := 2.2
+const BULB_ENERGY := 2.6
+
+
 func _lamp(mi: Node3D, on: bool) -> void:
 	if mi == null or not mi is MeshInstance3D:
 		return
-	ModelUtil.set_emission(mi as MeshInstance3D, on, Color("ffb46b"), 3.5)
+	ModelUtil.set_emission(mi as MeshInstance3D, on, Color("ffb46b"), LAMP_GLASS_ENERGY)
 
 
 func _glow(n: Node3D, on: bool) -> void:
@@ -319,7 +325,7 @@ func _glow(n: Node3D, on: bool) -> void:
 		m.roughness = 0.05
 		m.emission_enabled = on
 		m.emission = Color("cff6ff")
-		m.emission_energy_multiplier = 2.5
+		m.emission_energy_multiplier = 1.7
 		mi.material_override = m if on else null
 
 
@@ -327,16 +333,16 @@ func set_power_emissives(on: bool) -> void:
 	for id in ["pendant_lamp", "pendant_lamp_2", "desk_lamp"]:
 		var b := part(id, "bulb") as MeshInstance3D
 		if b:
-			ModelUtil.set_emission(b, on or id == "desk_lamp", Color("ffc58a"), 4.0)
+			ModelUtil.set_emission(b, on or id == "desk_lamp", Color("ffc58a"), BULB_ENERGY)
 	var dial := part("radio", "radio_dial") as MeshInstance3D
 	if dial:
 		ModelUtil.set_emission(dial, on)
 	var spot_bulb := part("shadow_lock", "spot_bulb") as MeshInstance3D
 	if spot_bulb:
-		ModelUtil.set_emission(spot_bulb, on, Color("fff1d6"), 4.0)
+		ModelUtil.set_emission(spot_bulb, on, Color("fff1d6"), BULB_ENERGY)
 	var red_bulb := part("room_lab7", "darkroom_bulb") as MeshInstance3D
 	if red_bulb:
-		ModelUtil.set_emission(red_bulb, on, Color("ff2a1a"), 3.0)
+		ModelUtil.set_emission(red_bulb, on, Color("ff2a1a"), LAMP_GLASS_ENERGY)
 
 
 # ====================================================================== radio
@@ -505,6 +511,7 @@ func _update_beam() -> void:
 	var y := 1.15
 	var bm := ShaderMaterial.new()
 	bm.shader = load("res://src/fx/lumen_beam.gdshader")
+	bm.set_shader_parameter("energy", 1.05) # the shader's 1.6 blew the beam out to a flat white tube
 	for i in pts.size() - 1:
 		var a := Vector3(pts[i].x, y, pts[i].y)
 		var b := Vector3(pts[i + 1].x, y, pts[i + 1].y)
@@ -541,7 +548,7 @@ func _update_beam() -> void:
 		var d := Decal.new()
 		d.texture_albedo = load("res://assets/textures/decals/wall_emblem.png")
 		d.texture_emission = d.texture_albedo
-		d.emission_energy = 3.0
+		d.emission_energy = 2.2
 		d.modulate = Color("cff6ff")
 		d.size = Vector3(0.17, 0.1, 0.17)
 		_beam_root.add_child(d)

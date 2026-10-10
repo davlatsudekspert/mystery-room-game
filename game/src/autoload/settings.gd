@@ -20,7 +20,8 @@ const DEFAULTS := {
 	"safe_level": 0, # 0–3, raised by CrashGuard after a crash while a scene loads (not shown in the UI)
 	"safe_epoch": 0, # CrashGuard.EPOCH the level belongs to
 }
-const TEXT_SCALES: Array[float] = [0.9, 1.0, 1.15, 1.3]
+## Settings → Text size: Normal / Large / Extra large (ui.text_normal / ui.text_large / ui.text_xl).
+const TEXT_SCALES: Array[float] = [1.0, 1.25, 1.5]
 
 var values: Dictionary = DEFAULTS.duplicate()
 var path := PATH
@@ -45,7 +46,7 @@ func set_value(key: String, v: Variant) -> void:
 		push_warning("Bad type for setting " + key)
 		return
 	if key == "text_scale":
-		v = clampf(float(v), 0.8, 1.5)
+		v = nearest_text_scale(float(v))
 	elif key.ends_with("_volume") or key == "look_sensitivity":
 		v = clampf(float(v), 0.0, 2.0 if key == "look_sensitivity" else 1.0)
 	elif key == "render_scale":
@@ -66,6 +67,16 @@ func load_settings() -> void:
 		var v: Variant = cfg.get_value("settings", key, DEFAULTS[key])
 		if typeof(v) == typeof(DEFAULTS[key]) or (typeof(DEFAULTS[key]) == TYPE_FLOAT and typeof(v) == TYPE_INT):
 			values[key] = v
+	values["text_scale"] = nearest_text_scale(float(values["text_scale"])) # older saves used 0.9 / 1.15 / 1.3 steps
+
+
+## The preset closest to `v` (saved values from older builds, or out-of-range values, land on a real step).
+static func nearest_text_scale(v: float) -> float:
+	var best: float = TEXT_SCALES[0]
+	for s in TEXT_SCALES:
+		if absf(s - v) < absf(best - v):
+			best = s
+	return best
 
 
 func save_settings() -> void:
