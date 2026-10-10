@@ -48,7 +48,7 @@ RIGHT_MULL = [1.325, 2.05, 2.775]
 def steel_parts():
     s = F.MB(STEEL)
     # side and back walls (inner faces at z = ZB, x = +-HX), with raised panel frames
-    s.box((-HX - 0.10, 0.0, ZB - 0.10), (HX + 0.10, FLOOR, ZF + 0.05))                     # the cabin's floor frame / sill
+    s.box((-HX - 0.10, 0.0, ZB - 0.10), (HX + 0.10, FLOOR - 0.012, ZF + 0.05))              # the cabin's sill (its top stays 12 mm UNDER the chequer floor: no coplanar faces)
     s.box((-HX - 0.10, FLOOR, ZB - 0.10), (HX, CEIL, ZB))                                  # back wall
     s.box((-HX - 0.10, FLOOR, ZB), (-HX, CEIL, ZF))                                        # west side (local -X)
     s.box((HX, FLOOR, ZB), (HX + 0.10, CEIL, ZF))
