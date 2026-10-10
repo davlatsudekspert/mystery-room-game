@@ -12,10 +12,11 @@ const BAND := Color(0.02, 0.022, 0.028)
 
 var title_label: Label
 var subtitle_label: Label
-var icon: TextureRect
+var icon_texture: Texture2D # drawn by the banner itself (left of the text block)
 var band_alpha := 0.8 # over a white 3D frame: cream text 7:1, muted 4.9:1, brass 7:1
 var max_sub_lines := 0 # 0 = as many lines as the subtitle needs; otherwise it is cut there with an ellipsis
 var _title_rect := Rect2()
+var _icon_rect := Rect2() # where the icon is drawn (empty = none)
 var _fl := 0.0 # flourish length actually drawn (0 = none)
 var _rule_y := -1.0 # the rule between title and subtitle (-1 = none)
 
@@ -26,12 +27,6 @@ func _init() -> void:
 
 ## Creates the labels: the title in display small caps (`title_sz`), the subtitle in the body font (`sub_sz`).
 func setup(title_sz: int, sub_sz: int, sub_color: Color = UITheme.CREAM) -> void:
-	icon = TextureRect.new()
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.visible = false
-	add_child(icon)
 	title_label = UITheme.label("", title_sz, UITheme.BRASS_HI)
 	title_label.add_theme_font_override("font", UITheme.caps_font(true, 2))
 	title_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
@@ -62,7 +57,8 @@ func set_subtitle(t: String) -> void:
 
 
 func set_icon(tex: Texture2D) -> void:
-	icon.texture = tex
+	icon_texture = tex
+	queue_redraw()
 
 
 func _text_of(l: Label) -> String:
@@ -83,8 +79,7 @@ func fit(max_w: float) -> void:
 	var stext := _text_of(subtitle_label)
 	title_label.visible = ttext != ""
 	subtitle_label.visible = stext != ""
-	var has_icon := icon.texture != null
-	icon.visible = has_icon
+	var has_icon := icon_texture != null
 	var icon_px := roundf(2.6 * UITheme.size(28)) if has_icon else 0.0
 	var icon_gap := 20.0 if has_icon else 0.0
 	var inner_max := maxf(80.0, max_w - 2.0 * pad_x - icon_px - icon_gap)
@@ -132,9 +127,7 @@ func fit(max_w: float) -> void:
 	if subtitle_label.visible:
 		subtitle_label.position = Vector2(roundf(cx - sw * 0.5), y)
 		_resize(subtitle_label, Vector2(ceilf(sw), ceilf(sh) + 2.0))
-	if has_icon:
-		icon.position = Vector2(pad_x, roundf((h_total - icon_px) * 0.5))
-		icon.size = Vector2(icon_px, icon_px)
+	_icon_rect = Rect2(pad_x, roundf((h_total - icon_px) * 0.5), icon_px, icon_px) if has_icon else Rect2()
 	queue_redraw()
 
 
@@ -195,6 +188,13 @@ func _draw() -> void:
 	for yy: float in [0.5, size.y - 1.5]:
 		_grad(Rect2(fade * 0.5, yy, half - fade * 0.5, 1.0), Color(gold, 0.0), Color(gold, 0.42))
 		_grad(Rect2(half, yy, half - fade * 0.5, 1.0), Color(gold, 0.42), Color(gold, 0.0))
+	if icon_texture != null and _icon_rect.size.x > 0.0:
+		# the item's icon, kept square and centred in its slot
+		var ts := icon_texture.get_size()
+		if ts.x > 0.0 and ts.y > 0.0:
+			var kk := minf(_icon_rect.size.x / ts.x, _icon_rect.size.y / ts.y)
+			var ds := ts * kk
+			draw_texture_rect(icon_texture, Rect2(_icon_rect.position + (_icon_rect.size - ds) * 0.5, ds), false)
 	var th := maxf(1.0, roundf(1.4 * k))
 	if title_label.visible and _fl > 0.0:
 		# flourishes: a small diamond beside the title, then a rule running outward and fading away
