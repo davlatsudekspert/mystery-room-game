@@ -19,7 +19,8 @@ extends Node
 ##        [--notebook=4] (also shoot Leyla's notebook, page 4, as a player reads it: <out>/notebook_p4.png)
 ##        [--hud-check] (every control in the view — IA_*, Item_*, Shard_*, Echo_* — must have its tap point on
 ##        screen, clear of the HUD's input-blocking controls and at least EDGE_MM from the screen edge; a control
-##        under a banner that only covers it is a warning. The message and prompt banners are shown while it
+##        that only moves the camera to its own view when tapped here (RoomBase.in_reach) is not checked in this view;
+##        a control under a banner that only covers it is a warning. The message and prompt banners are shown while it
 ##        measures, as they are while a player works a mechanism with an item in hand. Exit 1 on any failure)
 ## Writes <view>.png and tap_map.txt (one line per orange or red part, and one per HUD failure or warning).
 
@@ -46,6 +47,7 @@ var cam_overrides: Array[String] = []
 var hud_controls := 0
 var hud_failures := 0
 var hud_warnings := 0
+var hud_focus_only := 0 # controls seen at a view's edge whose tap only moves the camera to their own view
 var _screen_name := ""
 
 
@@ -164,8 +166,9 @@ func _run() -> void:
 		get_viewport().get_texture().get_image().save_png("%s/doc_%s.png" % [out_dir, doc_name])
 	var qa_exit := 0
 	if hud_check:
-		lines.append("hud-check%s: %d controls in %d views, %d failures, %d banner warnings" % [
-			" (%s)" % _screen_name if _screen_name != "" else "", hud_controls, views.size(), hud_failures, hud_warnings])
+		lines.append("hud-check%s: %d controls in %d views, %d failures, %d banner warnings (%d focus-only controls not checked)" % [
+			" (%s)" % _screen_name if _screen_name != "" else "", hud_controls, views.size(), hud_failures, hud_warnings,
+			hud_focus_only])
 		qa_exit = 1 if hud_failures > 0 else 0
 	var f := FileAccess.open(out_dir + "/tap_map.txt", FileAccess.WRITE)
 	f.store_string("\n".join(lines) + "\n")
@@ -410,8 +413,12 @@ func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
 		var part: String = m["part"]
 		if not _is_control(part) or int(m["hits"]) == 0:
 			continue # scenery, or a part already reported as covered by the scene itself
-		hud_controls += 1
 		var p: Vector2 = m["pos"]
+		if not _operable_here(p):
+			hud_focus_only += 1 # seen from afar: a tap moves the camera to the object's own view, where it is checked
+			m["focus_only"] = true
+			continue
+		hud_controls += 1
 		var why := ""
 		if not vp.has_point(p):
 			why = "tap point off screen"
@@ -442,6 +449,21 @@ func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
 				lines.append("HUD[%s]: %s — covered by a banner (%s)" % [view_id, part, c["name"]])
 				break
 	return zones
+
+
+## Can the control at this screen point be worked from the current view, or does a tap on it only move the camera
+## to the object's own view (RoomBase.in_reach: a hotspot is operable from its own view and deeper ones)?
+func _operable_here(p: Vector2) -> bool:
+	var hit: Dictionary = room.call("raycast", p)
+	if hit.is_empty():
+		return true
+	var hs := str(room.call("resolve", hit)["hotspot"])
+	if hs == "":
+		return true
+	for fn in ["in_reach", "_in_reach"]:
+		if room.has_method(fn):
+			return bool(room.call(fn, hs))
+	return true
 
 
 static func _fmt_rect(r: Rect2) -> String:

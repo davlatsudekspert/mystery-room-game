@@ -11,6 +11,7 @@ var report: Array[String] = []
 var shot_n := 0
 var taps_ok := 0
 var taps_fallback := 0
+var taps_under_hud := 0 # taps whose point lies under a HUD control (a finger would hit the HUD, not the room)
 var _from := 1 # --from=pN: the solver plays everything before puzzle N, the 3D run starts there
 var _to := 99 # --to=pN: stop after puzzle N
 
@@ -171,8 +172,22 @@ func tap_part(model: String, part: String, frac: Vector2 = Vector2.ZERO) -> void
 	var sp := _tap_point(model, part, frac)
 	if sp.x < 0:
 		return
+	_note_hud(sp, "%s/%s" % [model, part])
 	room.call("_on_tap", sp)
 	await _settle(0.35)
+
+
+## The solver's taps go straight to the room, so a control under the HUD would still "work" here. Count the taps a
+## finger could not make: the point lies inside one of HUD.blocked_rects().
+func _note_hud(sp: Vector2, what: String) -> void:
+	var hud: Node = room.get("hud")
+	if hud == null or not hud.has_method("blocked_rects"):
+		return
+	for r: Rect2 in hud.call("blocked_rects"):
+		if r.has_point(sp):
+			taps_under_hud += 1
+			_log("  ! tap under the HUD: %s at %d,%d (view %s)" % [what, int(sp.x), int(sp.y), cam().current()])
+			return
 
 
 func _what_was_hit(model: String, part: String, frac: Vector2) -> String:
@@ -500,6 +515,7 @@ func run() -> void:
 
 func _finish() -> void:
 	_log("taps through 3D scene: %d, logic fallbacks (missing models/placeholders): %d" % [taps_ok, taps_fallback])
+	_log("taps under a HUD control: %d (window %dx%d)" % [taps_under_hud, get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y])
 	var f := FileAccess.open(out_dir + "/playthrough_report.txt", FileAccess.WRITE)
 	f.store_string("\n".join(report) + "\n")
 	SaveSystem.delete_game()

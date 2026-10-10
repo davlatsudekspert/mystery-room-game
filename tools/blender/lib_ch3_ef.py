@@ -240,6 +240,78 @@ def sausage(name, a, b, r, rings=8, sides=10, mat=FABRIC, squash=1.0):
     return o
 
 
+def jitter(obj, amp, seed=1, falloff=None) -> None:
+    """Move every vertex of a (G-frame) mesh by a small deterministic random offset (rumpled cloth, worn edges)."""
+    import random
+    rng = random.Random(seed)
+    for v in obj.data.vertices:
+        v.co += Vector((rng.uniform(-amp, amp), rng.uniform(-amp, amp), rng.uniform(-amp, amp)))
+    obj.data.update()
+
+
+def xform(obj, matrix):
+    """Apply a 4x4 matrix to the mesh data of a G-frame object (origin stays at 0)."""
+    obj.data.transform(matrix)
+    return obj
+
+
+def rot_about(angle_deg, axis, pivot=(0.0, 0.0, 0.0)):
+    """4x4 rotation of angle_deg about `axis` through `pivot` (G-frame)."""
+    return Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(angle_deg), 4, axis) @ Matrix.Translation(-Vector(pivot))
+
+
+def plank_crate(prefix, x0, x1, z0, z1, h, mat=PANEL, lid="slats", n_slats=3, seed=1):
+    """A slatted packing crate standing on the floor: 4 corner posts, n_slats boards per side, a base board and a lid
+    (lid = 'slats' | 'solid' | None). Returns the object list (12 tris per board, no bevels)."""
+    import random
+    rng = random.Random(seed)
+    post, t, base = 0.034, 0.016, 0.022
+    objs = []
+    for (px, pz) in ((x0, z0), (x1 - post, z0), (x0, z1 - post), (x1 - post, z1 - post)):
+        objs.append(K.gbox(prefix + "post", (px, 0.0, pz), (px + post, h, pz + post), mat, 0.0))
+    objs.append(K.gbox(prefix + "base", (x0 + 0.01, base, z0 + 0.01), (x1 - 0.01, base + t, z1 - 0.01), mat, 0.0))
+    top = h - 0.02
+    gap = 0.012
+    sh = (top - base - gap * (n_slats - 1) - 0.01) / n_slats
+    for k in range(n_slats):
+        y0 = base + 0.01 + k * (sh + gap) + rng.uniform(-0.002, 0.002)
+        objs.append(K.gbox(prefix + "side_s", (x0 + post * 0.5, y0, z0), (x1 - post * 0.5, y0 + sh, z0 + t), mat, 0.0))
+        objs.append(K.gbox(prefix + "side_n", (x0 + post * 0.5, y0, z1 - t), (x1 - post * 0.5, y0 + sh, z1), mat, 0.0))
+        objs.append(K.gbox(prefix + "end_w", (x0, y0, z0 + post), (x0 + t, y0 + sh, z1 - post), mat, 0.0))
+        objs.append(K.gbox(prefix + "end_e", (x1 - t, y0, z0 + post), (x1, y0 + sh, z1 - post), mat, 0.0))
+    if lid == "solid":
+        objs.append(K.gbox(prefix + "lid", (x0, h - 0.02, z0), (x1, h, z1), mat, 0.0015))
+    elif lid == "slats":
+        nb = 3
+        w = (z1 - z0 - gap * (nb - 1)) / nb
+        for k in range(nb):
+            a = z0 + k * (w + gap)
+            objs.append(K.gbox(prefix + "lid", (x0, h - 0.02, a), (x1, h, a + w), mat, 0.0))
+    return objs
+
+
+def pinned_sheet(name, centre, normal, w=0.21, h=0.30, tilt=0.0, mat=PAPER, pin_mat=STEEL):
+    """A blank sheet of paper (a 1.5 mm slab) lying on a wall at `centre` facing `normal`, turned `tilt` degrees in
+    its plane, with a tack at the top centre."""
+    o = K.gbox(name, (-w / 2, -h / 2, 0.0), (w / 2, h / 2, 0.0015), mat, 0.0)
+    o.data.transform(Matrix.Rotation(math.radians(tilt), 4, "Z"))
+    D.place_xz(o, centre, normal)
+    n = Vector(normal).normalized()
+    top = Vector((0.0, h / 2 - 0.02, 0.0))
+    top = Matrix.Rotation(math.radians(tilt), 3, "Z") @ top
+    # tack position in world: centre + (local top offset mapped through the same frame as place_xz)
+    nn = n
+    u = Vector((0, 1, 0))
+    x = u.cross(nn)
+    if x.length < 1e-6:
+        x = Vector((1, 0, 0))
+    x.normalize()
+    y = nn.cross(x).normalized()
+    pos = Vector(centre) + x * top.x + y * top.y + nn * 0.0019
+    pin = K.rivet(name + "_pin", 0.0055, tuple(pos), normal=tuple(n), mat=pin_mat, segs=6)
+    return [o, pin]
+
+
 # ====================================================================== GLB verification
 def verify(path, required=(), identity=(), expect=None, parents=None, rot_expect=None, tri_budget=0, surf_budget=0,
            mat_budget=4):

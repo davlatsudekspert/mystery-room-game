@@ -599,7 +599,8 @@ func _build_views() -> void:
 	V.call("window", Vector3(1.5, 1.85, -1.55), Vector3(1.5, 2.0, -2.7), 56.0)
 	V.call("radiator", Vector3(1.5, 0.95, -1.65), Vector3(1.6, 0.35, -2.45), 50.0)
 	V.call("evidence", Vector3(-3.45, 1.5, -0.6), Vector3(-4.8, 1.5, -0.6), 56.0)
-	V.call("shadow", Vector3(-3.45, 1.6, 0.32), Vector3(-4.0, 1.38, -1.45), 56.0)
+	# aimed lower so the sculpture's knobs sit above the prompt banner and 6 mm clear of the bottom edge; the emblem stays in view
+	V.call("shadow", Vector3(-3.45, 1.6, 0.32), Vector3(-4.0, 1.12, -1.45), 56.0)
 	V.call("sculpture", Vector3(-3.58, 1.3, -0.25), Vector3(-4.0, 1.08, -0.6), 40.0)
 	V.call("emblem", Vector3(-4.0, 1.5, -0.98), Vector3(-4.0, 1.5, -1.6), 50.0)
 	V.call("cabinet", Vector3(-3.95, 0.95, -0.95), Vector3(-4.0, 0.55, -1.58), 46.0)
