@@ -45,8 +45,9 @@ def tube(r):
             (R_TUBE, ring + 0.003),
             (R_TUBE, yt - 0.016), (R_CAP, yt - 0.010), (0.020, yt - 0.002), (0.0, yt)]
     body = B.glathe("body", prof, (0, 0, 0), (0, 1, 0), SEG, BRASS_P, smooth=50.0)
-    # hanging eye: a ring in the XY plane (a hook passes through it along Z); its top at y = 0
-    eye = M.torus("eye", EYE_R, EYE_W, loc=(0.0, -(EYE_R + EYE_W), 0.0), major_seg=10, minor_seg=4, mat=BRASS_P)
+    # hanging eye: a ring in the XY plane (a peg passes through it along Z); 12 major segments put a vertex exactly at
+    # the top, so the eye top is y = 0 (the hang point)
+    eye = M.torus("eye", EYE_R, EYE_W, loc=(0.0, -(EYE_R + EYE_W), 0.0), major_seg=12, minor_seg=4, mat=BRASS_P)
     M.apply_transform(eye)
     A.hint(eye, 70.0)
     return B.part(f"IA_tube_{r}", [body, eye], pivot=(0.0, 0.0, 0.0))
