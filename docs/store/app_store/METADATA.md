@@ -58,7 +58,7 @@ Laboratory 7. Please finish what I could not. — L.
 
 ◆ ——— ◆
 
-Chapter 1 is free to play in full. One purchase that unlocks the rest of the investigation, the later chapters, is planned and not on sale yet.
+Chapters 1 and 2 are free to play in full. One purchase that unlocks the rest of the investigation, Chapters 3 and 4, is planned and not on sale yet.
 
 • Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
 • One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
@@ -103,7 +103,7 @@ Mystery Room: Забытый институт
 
 ◆ ——— ◆
 
-Глава 1 бесплатна целиком. Одна покупка, открывающая остальное расследование — следующие главы, — запланирована и пока не продаётся.
+Главы 1 и 2 бесплатны целиком. Одна покупка, открывающая остальное расследование — главы 3 и 4, — запланирована и пока не продаётся.
 
 • Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
 • Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой

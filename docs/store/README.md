@@ -10,10 +10,10 @@
   - Hammasini bir varaqda koʻrish: `store_assets_sheet.jpg`.
 - **Sizning soʻrovingiz boʻyicha:**
   - Tavsif Leylaning oʻyinchiga yozgan qisqa xati bilan boshlanadi (EN/RU/UZ).
-  - Keyin ajratuvchi chiziq, biznes-model haqida bitta gap («1-bob bepul, qolgan boblar uchun bitta xarid rejalashtirilgan, hozircha sotuvda yoʻq») va 5 ta bandli roʻyxat keladi.
+  - Keyin ajratuvchi chiziq, biznes-model haqida bitta gap («1- va 2-boblar bepul, 3- va 4-boblar uchun bitta xarid rejalashtirilgan, hozircha sotuvda yoʻq») va 5 ta bandli roʻyxat keladi.
   - 1-skrinshot: qorongʻi xonadagi Strandning tishli qutisi (1-bob), pastida oltin chiziqli yozuv bor: «◆ —— Every clock stopped at 03:17 —— ◆» (RU: «Все часы остановились в 03:17»).
 - **Skrinshotlar** oʻyinning haqiqiy Godot renderlari (Blender emas). Ular boshqa variant seed bilan olingan, shuning uchun oʻyinchining javoblarini oshkor qilmaydi.
-- **Muhim:** 07–08 skrinshotlar 2-bobdan. Doʻkon buildida toʻlov oʻchiq va 2-bob yopiq turibdi. Shuning uchun hozircha faqat **01–06** ni yuklang. 07–08 ni 2-bobni ochish mumkin boʻlganda qoʻshing (Apple 2.3.1, Google Play metadata qoidasi).
+- **Muhim (2026-10-10 dan):** 2-bob endi bepul va doʻkon buildida ochiq. Shuning uchun 2-bobdan olingan 07–08 skrinshotlarni ham yuklash mumkin (01–08). 3–4-boblar chiqmaguncha ulardan skrinshot qoʻymang (Apple 2.3.1, Google Play metadata qoidasi).
 - **Sizdan kerak:**
   - support e-mail va Support URL;
   - TestFlight feedback e-mail va App Review kontakt maʼlumotlari;
@@ -49,7 +49,7 @@
 
 Smaller sizes are scaled from the larger ones. Upload 6.9" and 6.3", plus 6.5" if App Store Connect asks for it, and iPad 13".
 
-**Chapter 2 shots (07–08).** Store builds keep Chapter 2 locked ("coming soon") while `REAL_PAYMENTS_ENABLED = false`.
+**Chapter 2 shots (07–08).** Since 2026-10-10 Chapter 2 is free, so store builds open it and shots 07–08 may be uploaded. Never show Chapters 3–4 before they ship:
 - Apple: "marketing your app in a misleading way, such as by promoting content or services that it does not actually offer … is grounds for removal" (Guideline 2.3.1(a)) [A9].
 - Play's metadata policy has the same rule for screenshots [P4].
 - **Upload 01–06 now.** These six Chapter 1 shots cover Play's three-shot minimum for recommendations and Apple's one-shot minimum.

@@ -188,7 +188,7 @@ Privacy policy: https://sites.google.com/view/mysteryroom-privacy. In short: no 
 - Use the texts in `docs/store/PLAY_VA_APPSTORE_QOLLANMA.txt` §1.3: title ≤ 30, short description ≤ 80, full description ≤ 4,000 characters.
   - Default language **English (United States) – en-US**.
   - Translation **Russian – ru-RU**.
-  - While payments are disabled, use the "Chapter 1 is free. More chapters are coming." version, not "One fair purchase unlocks the rest" (`docs/STORE_LISTING.md`).
+  - While payments are disabled, use the "The first two chapters are free. More chapters are coming." version (Chapters 1–2 are free since 2026-10-10), not "One fair purchase unlocks the rest" (`docs/STORE_LISTING.md`).
 - **Uzbek:** Play Console's list of store-listing languages has 86 entries with codes. It includes Kazakh – kk, Kyrgyz – ky-KG and Russian – ru-RU, but **no Uzbek** [S5] (checked in the page source on 2026-10-09).
   - The UZ title and descriptions therefore cannot be entered.
   - Users who view an untranslated listing "can choose to view an automated translation" [S5].

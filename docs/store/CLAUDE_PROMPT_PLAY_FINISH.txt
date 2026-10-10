@@ -82,7 +82,7 @@ Decades later, a parcel arrives for you with an old lab badge and a single line:
 • Fully playable in English, Russian and Uzbek, and offline
 • No ads, no energy, no subscriptions
 
-Chapter 1 is free. More chapters are coming.
+The first two chapters are free. More chapters are coming.
 
 [ru-RU]
 Title: Mystery Room: Забытый институт
@@ -101,7 +101,7 @@ Full description:
 • Полностью на английском, русском и узбекском, работает без интернета
 • Без рекламы, энергии и подписок
 
-Первая глава бесплатна. Новые главы уже в работе.
+Первые две главы бесплатны. Новые главы уже в работе.
 
 [uz] (only if Play offers Uzbek)
 Title: Mystery Room: Sirli institut

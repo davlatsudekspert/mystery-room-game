@@ -1,13 +1,13 @@
 # Monetization: Fair Premium
 
-_Last updated: 2026-10-10. Owner decisions of 2026-10-10: one non-consumable product `full_game` unlocks Chapters 2–4
-at **US$4.99** (the stores' automatic regional equivalents elsewhere). Apple's Paid Apps agreement, banking (USD) and
+_Last updated: 2026-10-10. Owner decisions of 2026-10-10 (Monument Valley 3 style): **Chapters 1 and 2 are free**; one
+non-consumable product `full_game` unlocks **Chapters 3 and 4** at **US$4.99** (the stores' automatic regional equivalents elsewhere). Apple's Paid Apps agreement, banking (USD) and
 tax forms are active. **Real payments stay OFF** until the owner turns them on. The EU DSA trader status is deferred._
 
 | Rule | Implementation |
 |---|---|
-| Chapter 1 free | `Chapters.LIST[0].product == ""`, so `Premium.can_play("ch1")` is always true |
-| One-time full-game unlock | Product `full_game` (non-consumable) unlocks chapters 2–4 (`Premium.PRODUCTS`). Future chapters can join it or be sold separately (`product` field per chapter) |
+| Chapters 1 and 2 free | `product == ""` for ch1 and ch2 in `Chapters.LIST`, so `Premium.can_play()` opens them with no purchase. A Chapter 2 game saved while Chapter 2 was paid (tester builds) just opens. Tested: `test_business_model_chapters_1_2_free` |
+| One-time full-game unlock | Product `full_game` (non-consumable) unlocks chapters 3–4 (`Premium.PRODUCTS`, which a test keeps equal to the chapters' `product` fields). Chapters 3–4 are not released yet, so store builds sell nothing today (a store never sells a chapter that is not in the build). Future chapters can join it or be sold separately (`product` field per chapter) |
 | No ads, no subscriptions, no energy | None exist anywhere in the code. Hints are free and unlimited |
 | Restore Purchases | A visible **Restore purchases** button in Settings **and** on the purchase screen (App Store guideline 3.1.1). It calls `Premium.restore_purchases()`; the answer (restored / none found / error) is shown |
 | Real payments disabled | `Premium.REAL_PAYMENTS_ENABLED = false` (`game/src/autoload/premium.gd`). Release builds use `DisabledStoreProvider` unless the build carries the custom feature `store_sandbox` |
@@ -31,7 +31,7 @@ Providers never touch the scene tree or the file; every answer is a signal (`pro
 | Provider | When | Notes |
 |---|---|---|
 | `MockStoreProvider` | debug builds without a store | answers at once, nothing charged; QA can play pending/cancel/failure |
-| `DisabledStoreProvider` | release builds while payments are off | no purchase screen; the chapter list keeps "Coming soon"; Restore says the store is not available yet |
+| `DisabledStoreProvider` | release builds while payments are off | no purchase screen; paid chapters say "Coming soon"; Restore says the store is not available yet |
 | `GooglePlayStoreProvider` | Android, plugin present, and `REAL_PAYMENTS_ENABLED` or `store_sandbox` | GodotGooglePlayBilling JNI singleton. Connect → product details (price) + purchase list (silent sync). Every PURCHASED, unacknowledged purchase is acknowledged at once (Play refunds after 3 days); a failed acknowledgement is retried at the next purchase-list read (every start). PENDING grants nothing until Play reports PURCHASED. Tester reset consumes the test purchase |
 | `AppStoreProvider` | iOS, plugin present, and `REAL_PAYMENTS_ENABLED` or `store_sandbox` | StoreKit 2 via the plugin's `request()` / `response`. Start: `Transaction.updates` listener, prices, unfinished transactions, current entitlements. Restore = `AppStore.sync()` then current entitlements. Unverified transactions are never granted; refunds/revocations remove the entitlement. A `store_sandbox` build installed from the App Store (receipt file `StoreKit/receipt`) stays disabled |
 
@@ -86,12 +86,15 @@ purchases are processed by Google Play / Apple, and the game itself still collec
 | `ios-iap.yml` | `dry_run` (**true**), `territories` (app/all), `review_screenshot` (true: `docs/store/iap/full_game_review.png`) | Only with `dry_run=false`: creates/fixes `full_game` on our app. Never submits |
 | `play-iap.yml` | `dry_run` (**true**), `home_currency` (USD) | Only with `dry_run=false`: creates/fixes `full_game` of our package |
 
-`asc_iap.py` sets: NON_CONSUMABLE `full_game`, reference name "Full Game", review note; localizations en-US "Full
-Game" / "Unlocks Chapters 2 to 4. One-time purchase.", ru «Полная игра» / «Открывает главы 2–4. Разовая покупка.»
-(Uzbek is tried once; App Store Connect has no Uzbek locale); a price schedule based in the USA at the US$4.99 price
+`asc_iap.py` sets: NON_CONSUMABLE `full_game` (the record exists: id 6821386340), reference name "Full Game", review
+note; localizations en-US "Full Game" / "Unlocks Chapters 3 and 4. One-time purchase.", ru «Полная игра» / «Открывает
+главы 3 и 4. Разовая покупка.» (existing localizations are PATCHed when the text differs; Uzbek is tried once; App
+Store Connect has no Uzbek locale); a price schedule based in the USA at the US$4.99 price
 point (looked up through the API; Apple equalizes the rest); availability in the app's territories (the app's own
 availability is not set up yet, so it reports that and leaves it until then, or use `territories=all`); the review
-screenshot. It prints the state and what is still missing for "Ready to Submit".
+screenshot: a different file (by MD5 checksum, else size and name) replaces the current one. That is the only DELETE
+the script can send (`DELETE_OK`: `/v1/inAppPurchaseAppStoreReviewScreenshots/{id}`, the id read from our product).
+It prints the state and what is still missing for "Ready to Submit".
 
 `play_iap.py` first checks the service account's access and stops (exit 3) naming what is missing: the app permission
 "Manage in-app products" (it has only "Release apps to testing tracks"), the payments (merchant) profile, or an
@@ -102,7 +105,10 @@ uploaded build that declares BILLING. Owner steps in Uzbek: `docs/release/GOOGLE
 1. `ios-iap.yml` with `dry_run=true`, review the plan, then `dry_run=false` (director, after review).
 2. `ios.yml` with `store_sandbox=true`, `beta_unlock=false`, `upload_to_testflight=true` (with the owner's approval).
 3. Testers buy in the TestFlight build; TestFlight uses the sandbox automatically (no sandbox account needed).
-   Check: price shown, purchase, Chapter 2 opens, Restore on a second device, Reset purchase (test).
+   Until Chapters 3–4 ship, a `store_sandbox` build's chapter list offers **Unlock** on those unreleased chapters
+   (only in `store_sandbox` builds: `main_menu.purchase_button()`); after buying it shows "Unlocked" and reopens the
+   purchase screen. Check: price shown, purchase, entitlement kept after a restart, Restore on a second device, Reset
+   purchase (test). Chapters 1–2 play with no purchase.
 
 **Android (internal track, License testers only):**
 1. Owner: §11 of `GOOGLE_PLAY_TESTING.md` (permission, merchant profile, License testing list).

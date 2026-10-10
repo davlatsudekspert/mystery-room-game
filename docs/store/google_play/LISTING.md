@@ -13,7 +13,7 @@ Play Console → **Grow users → Store presence → Main store listing** (Russi
 
 The owner sent another game's App Store page as a structural reference only. No text, art or badges were taken from it.
 
-**Payments are still off** (`REAL_PAYMENTS_ENABLED = false`). Store builds show Chapter 2 as locked ("coming soon"). The business-model sentence therefore says the purchase is **planned and not on sale yet**, with no price.
+**Payments are still off** (`REAL_PAYMENTS_ENABLED = false`). Since 2026-10-10 Chapters 1 and 2 are free (owner decision); Chapters 3–4, which the purchase unlocks, are not released yet. The business-model sentence therefore says the purchase is **planned and not on sale yet**, with no price.
 
 Limits are from the Play Console Help (`../README.md`, sources P1–P4): app name ≤ 30 characters, short description ≤ 80, full description ≤ 4,000. The counts below were measured by `tools/store/make_store_graphics.py --check-text`.
 - The separator `◆ ——— ◆` is a single line. Play's special-character rule targets the title, icon and developer name [P4].
@@ -44,7 +44,7 @@ Laboratory 7. Please finish what I could not. — L.
 
 ◆ ——— ◆
 
-Chapter 1 is free to play in full. One purchase that unlocks the rest of the investigation, the later chapters, is planned and not on sale yet.
+Chapters 1 and 2 are free to play in full. One purchase that unlocks the rest of the investigation, Chapters 3 and 4, is planned and not on sale yet.
 
 • Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
 • One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
@@ -78,7 +78,7 @@ Mystery Room: Забытый институт
 
 ◆ ——— ◆
 
-Глава 1 бесплатна целиком. Одна покупка, открывающая остальное расследование — следующие главы, — запланирована и пока не продаётся.
+Главы 1 и 2 бесплатны целиком. Одна покупка, открывающая остальное расследование — главы 3 и 4, — запланирована и пока не продаётся.
 
 • Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
 • Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
@@ -102,7 +102,7 @@ Yorugʻlik eslaydi. Undan ehtiyotkorlik bilan soʻrang.
 
 ◆ ——— ◆
 
-1-bob toʻliq bepul. Tergovning qolgan qismini, yaʼni keyingi boblarni ochadigan bitta xarid rejalashtirilgan, hozircha sotuvda yoʻq.
+1- va 2-boblar toʻliq bepul. Tergovning qolgan qismini, yaʼni 3- va 4-boblarni ochadigan bitta xarid rejalashtirilgan, hozircha sotuvda yoʻq.
 
 • 1979-yildagi realistik 3D xonalar: yongʻoq panellar, jez mexanizmlar va qizil nurli fotolaboratoriya
 • Bir barmoq bilan boshqaruv: yaqindan koʻrish uchun bosing, dastakni burash yoki chiroq bilan yoritish uchun suring
@@ -115,9 +115,9 @@ Yorugʻlik eslaydi. Undan ehtiyotkorlik bilan soʻrang.
 
 ## When real payments are switched on (not before)
 Replace only the business-model sentence. Do this after the purchase works in the store build and the IARC questionnaire says "purchases: yes" (`docs/BUSINESS_STRATEGY.md` §9):
-- EN: `Chapter 1 is free to play in full. One purchase unlocks the rest of the investigation, the later chapters.`
-- RU: `Глава 1 бесплатна целиком. Одна покупка открывает остальное расследование — следующие главы.`
-- UZ: `1-bob toʻliq bepul. Bitta xarid tergovning qolgan qismini, yaʼni keyingi boblarni ochadi.`
+- EN: `Chapters 1 and 2 are free to play in full. One purchase unlocks the rest of the investigation, Chapters 3 and 4.`
+- RU: `Главы 1 и 2 бесплатны целиком. Одна покупка открывает остальное расследование — главы 3 и 4.`
+- UZ: `1- va 2-boblar toʻliq bepul. Bitta xarid tergovning qolgan qismini, yaʼni 3- va 4-boblarni ochadi.`
 
 ## Fact check of the bullets
 | Claim | Where it is true |

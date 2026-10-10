@@ -8,7 +8,7 @@ _Research date: 2026-10-09. Companion to [`BUSINESS_STRATEGY.md`](BUSINESS_STRAT
   - **Premium oʻyinlar:** The Room, Rusty Lake. Ularning bahosi yuqori, lekin oʻyin qisqa, The Room esa App Store-da faqat ingliz tilida.
 - **Bizning hisob:** reklamasiz premium oʻyinlarning Google Play-dagi oʻrtacha bahosi **4.76**, reklamali bepul oʻyinlarniki **4.54**. Bu bogʻliqlik, sabab emas.
 - **Daromad modellari:** 10k, 100k va 1M yuklab olish uchun beshta model solishtirildi. Barcha kiritilgan qiymatlar alohida koʻrsatilgan. Reklama narxi (eCPM) Oʻzbekiston va MDH uchun ishonchli manbada topilmadi, shuning uchun u taxmin.
-- **Tavsiya:** **1-bob bepul + 2–4-boblar bitta xarid ($4.99), reklamasiz.** Bu oʻyin atmosferasiga, doʻkondagi “reklama yoʻq” vaʼdasiga va maxfiylik siyosatiga mos keladi. Hech narsa yoqilmaydi: egasi qaror qilmaguncha reklama SDK ham, toʻlov ham yoʻq.
+- **Tavsiya:** **1-bob bepul + 2–4-boblar bitta xarid ($4.99), reklamasiz.** *Egasining qarori (2026-10-10): 1- va 2-boblar bepul, $4.99 lik bitta xarid 3–4-boblarni ochadi (Monument Valley 3 uslubi).* Bu oʻyin atmosferasiga, doʻkondagi “reklama yoʻq” vaʼdasiga va maxfiylik siyosatiga mos keladi. Hech narsa yoqilmaydi: egasi qaror qilmaguncha reklama SDK ham, toʻlov ham yoʻq.
 - **Mahsulot boʻyicha harakatlar:** telefonda unumdorlik, matn hajmi, kuchli 1-bob yakuni, bepul uch bosqichli maslahat, keyingi tillar (avval ES, PT-BR, DE, FR, soʻng TR, keyin JA/KO/ZH) va boblarni chiqarish rejasi.
 
 ---

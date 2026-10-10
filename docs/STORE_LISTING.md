@@ -24,7 +24,7 @@ Decades later, a parcel arrives for you with an old lab badge and a single line:
 - A haunting original story told through objects, handwriting and light
 - Choices that carry into later chapters
 - Fully playable in English, Russian and Uzbek, and offline
-- Chapter 1 is free. One fair purchase unlocks the rest. No ads, no energy, no subscriptions.
+- The first two chapters are free. One fair purchase unlocks the rest. No ads, no energy, no subscriptions.
 
 ### RU
 14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез.
@@ -38,7 +38,7 @@ Decades later, a parcel arrives for you with an old lab badge and a single line:
 - Оригинальная история, рассказанная через предметы, почерк и свет
 - Решения, которые влияют на следующие главы
 - Полностью на английском, русском и узбекском, работает без интернета
-- Первая глава бесплатна. Одна честная покупка открывает остальные. Без рекламы, энергии и подписок.
+- Первые две главы бесплатны. Одна честная покупка открывает остальные. Без рекламы, энергии и подписок.
 
 ### UZ
 1979-yil 14-noyabrda «Meridian» institutidagi barcha soatlar 03:17 da toʻxtadi va qirq bir olim izsiz gʻoyib boʻldi.
@@ -52,7 +52,7 @@ Oradan oʻn yillar oʻtib, sizga posilka keladi: eski laboratoriya guvohnomasi v
 - Buyumlar, qoʻlyozmalar va yorugʻlik orqali hikoya qilinadigan original syujet
 - Keyingi boblarga taʼsir qiladigan tanlovlar
 - Ingliz, rus va oʻzbek tillarida toʻliq, internetsiz ishlaydi
-- Birinchi bob bepul. Bitta adolatli xarid qolganlarini ochadi. Reklama, energiya va obuna yoʻq.
+- Dastlabki ikki bob bepul. Bitta adolatli xarid qolganlarini ochadi. Reklama, energiya va obuna yoʻq.
 
 ## Screenshots
 Generate them from real renders with `game/qa/playthrough.tscn` (1920×1080 landscape plus phone aspect 2340×1080), after final assets are in.

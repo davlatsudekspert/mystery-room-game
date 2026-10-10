@@ -36,7 +36,7 @@ _Last updated: 2026-10-10_
 - **QA scripts** use seed 0 (canonical) unless given `--seed=N`.
 
 ## Tester builds
-Exports with the custom feature `beta_unlock` open every released chapter without a purchase (`Premium.tester_build()`), so internal/closed testers and TestFlight testers can play Chapter 2+ while real payments stay disabled. Store releases never carry the feature.
+Exports with the custom feature `beta_unlock` open every released chapter without a purchase (`Premium.tester_build()`), so internal/closed testers and TestFlight testers can play the paid chapters (3+, once released; Chapters 1–2 are free since 2026-10-10) while real payments stay disabled. Store releases never carry the feature.
 Purchase test builds carry `store_sandbox` instead (never together with `beta_unlock`): the paid chapters stay locked and the real store's sandbox sells `full_game` (TestFlight: never charged; Play: only License testers are not charged). See `docs/MONETIZATION.md`.
 
 ## Organisation

@@ -38,4 +38,4 @@ cd game && godot --headless --export-debug "Android" ../build/android/mystery-ro
 - Mechanics: UV ink, a cipher, mechanisms, circuits, a radio beacon, a secret bookcase door, a shadow lock, **Light Memory** (record a shadow into a crystal), and steering a live **Lumen beam** with mirrors.
 - A finale choice and optional Lumen shards, both carried into Chapter 2.
 
-Chapter 1 is free. Later chapters are unlocked by one fair purchase: no ads, no energy, no subscriptions. Real payments stay disabled until the stores are configured.
+Chapters 1 and 2 are free. One fair purchase (`full_game`, US$4.99) unlocks Chapters 3 and 4: no ads, no energy, no subscriptions. Real payments stay disabled until the stores are configured.

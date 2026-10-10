@@ -43,7 +43,7 @@ skrinshotini menga yuboring: kerakli faylni tayyorlab beraman.
 Язык по умолчанию ............. English (United States) – en-US
 Приложение или игра ........... Игра
 Бесплатное или платное ........ Бесплатное
-   (1-bob bepul. Keyingi boblar ilova ichidagi xarid bilan ochiladi.
+   (1- va 2-boblar bepul. 3- va 4-boblar ilova ichidagi xarid bilan ochiladi.
     «Платное» tanlanmaydi.)
 Ikkala «Декларации» katagiga ✓ qoʻying (Program Policies, US export laws).
 → «Создать приложение».
@@ -73,7 +73,7 @@ Decades later, a parcel arrives for you with an old lab badge and a single line:
 • Fully playable in English, Russian and Uzbek, and offline
 • No ads, no energy, no subscriptions
 
-Chapter 1 is free. More chapters are coming.
+The first two chapters are free. More chapters are coming.
 
 [RU] Название (≤30):
 Mystery Room: Забытый институт
@@ -95,7 +95,7 @@ Mystery Room: Забытый институт
 • Полностью на английском, русском и узбекском, работает без интернета
 • Без рекламы, энергии и подписок
 
-Первая глава бесплатна. Новые главы уже в работе.
+Первые две главы бесплатны. Новые главы уже в работе.
 
 [UZ] Nomi (≤30):
 Mystery Room: Sirli institut

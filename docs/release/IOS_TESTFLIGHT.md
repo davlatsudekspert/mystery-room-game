@@ -174,7 +174,7 @@ Inputs:
   - the RU description from `docs/store/PLAY_VA_APPSTORE_QOLLANMA.txt`;
   - keywords "побег,квест,головоломка,загадка,тайна,детектив,лаборатория,приключение,оффлайн,комната" (86).
 - **Description:**
-  - Use the guide's text ("Chapter 1 is free. More chapters are coming.").
+  - Use the guide's text ("The first two chapters are free. More chapters are coming."; Chapters 1–2 are free since 2026-10-10).
   - Do not use `STORE_LISTING.md`'s "One fair purchase unlocks the rest" while real payments are disabled. Metadata must describe what the build does (Guideline 2.3).
 - **Required before App Store review** (not for internal TestFlight):
   - privacy policy URL `https://sites.google.com/view/mysteryroom-privacy`;

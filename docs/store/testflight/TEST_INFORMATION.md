@@ -4,7 +4,7 @@ Where it goes: App Store Connect → the app → **TestFlight** → Additional �
 - Internal testers (App Store Connect users of the team) do not need this page.
 - **External testers** do. The first build of a version also goes to TestFlight App Review, which reads this page and the review contact fields.
 - `<...>` marks a value the **owner** fills in. Do not invent e-mails or phone numbers.
-- Test builds are exported with `beta_unlock`: Chapter 2 opens without a purchase, and real payments stay disabled (`docs/release/IOS_TESTFLIGHT.md`). The texts below say so.
+- Chapters 1 and 2 are free (owner decision, 2026-10-10). Test builds are exported with `beta_unlock`, which opens the paid Chapters 3–4 once they are released, and real payments stay disabled (`docs/release/IOS_TESTFLIGHT.md`). The texts below say so.
 
 ---
 
@@ -15,7 +15,7 @@ Mystery Room: Lost Institute is a 3D escape-room mystery for iPhone and iPad, pl
 
 On 14 November 1979 every clock in the Meridian Institute stopped at 03:17, and forty-one scientists were never seen again. You explore their rooms, solve logical puzzles built from brass mechanisms, light and shadow, and slowly uncover what happened.
 
-This beta contains Chapter 1 "The Locked Laboratory" and Chapter 2 "The Missing Scientist". In test builds Chapter 2 is open without any purchase. There are no purchases, ads, accounts or network features in this build. The game is fully playable in English, Russian and Uzbek.
+This beta contains Chapter 1 "The Locked Laboratory" and Chapter 2 "The Missing Scientist". Both chapters are free. There are no purchases, ads, accounts or network features in this build. The game is fully playable in English, Russian and Uzbek.
 ```
 
 ### Russian (optional localization)
@@ -24,7 +24,7 @@ Mystery Room: Lost Institute — 3D-головоломка-побег для iPh
 
 14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез. Вы исследуете их комнаты, решаете логичные головоломки из латунных механизмов, света и тени и постепенно узнаёте, что произошло.
 
-В бета-версии есть Глава 1 «Запертая лаборатория» и Глава 2 «Пропавший учёный». В тестовых сборках Глава 2 открыта без покупки. В этой сборке нет покупок, рекламы, аккаунтов и сетевых функций. Игра полностью доступна на английском, русском и узбекском.
+В бета-версии есть Глава 1 «Запертая лаборатория» и Глава 2 «Пропавший учёный». Обе главы бесплатны. В этой сборке нет покупок, рекламы, аккаунтов и сетевых функций. Игра полностью доступна на английском, русском и узбекском.
 ```
 
 ## What to Test (per build)
@@ -68,5 +68,5 @@ To send feedback, take a screenshot in the game, or use the TestFlight app. Than
 | Review notes | see below |
 
 ```text
-No sign-in is needed and the game works fully offline. This is a test build: Chapter 2 is unlocked without a purchase, and all purchase code is disabled. The game is landscape only. The hint button (light bulb, top right) gives three levels of hints for the current puzzle; level 3 tells the answer. Chapter 1 takes about 30-60 minutes.
+No sign-in is needed and the game works fully offline. This is a test build: Chapters 1 and 2 are free, and all purchase code is disabled. The game is landscape only. The hint button (light bulb, top right) gives three levels of hints for the current puzzle; level 3 tells the answer. Chapter 1 takes about 30-60 minutes.
 ```

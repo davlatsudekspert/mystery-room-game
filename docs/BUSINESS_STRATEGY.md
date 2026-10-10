@@ -3,7 +3,7 @@
 _Draft for the owner. Research date: 2026-10-09. Companion document: [`MARKET_ANALYSIS.md`](MARKET_ANALYSIS.md) (deeper competitor review, revenue models compared, product actions). Technical monetization notes: [`MONETIZATION.md`](MONETIZATION.md)._
 
 ## Qisqacha mazmun (oʻzbekcha)
-- **Model:** 1-bob bepul. 2–4-boblar bitta xarid bilan ochiladi (narx koʻrib chiqilmoqda, taxminan $4.99). Reklama yoʻq, internetsiz ishlaydi, EN/RU/UZ. Haqiqiy toʻlovlar hali oʻchiq (`REAL_PAYMENTS_ENABLED = false`).
+- **Model (egasining qarori, 2026-10-10; Monument Valley 3 uslubida):** 1- va 2-boblar bepul. 3–4-boblar bitta xarid (`full_game`, $4.99, doʻkonlarning mintaqaviy narxlari) bilan ochiladi. Reklama yoʻq, internetsiz ishlaydi, EN/RU/UZ. Haqiqiy toʻlovlar hali oʻchiq (`REAL_PAYMENTS_ENABLED = false`).
 - **Raqobatchilar:** The Room, The House of Da Vinci, Rusty Lake, Monument Valley, Agent A. Monument Valley 3 aynan bizning modelni ishlatadi: dastlabki 2 bob bepul, toʻliq oʻyin bitta xarid, App Store-da $5.99.
 - **Doʻkon komissiyasi:** yiliga birinchi $1 mln daromad uchun ikkala doʻkonda 15%. Buning uchun Apple Small Business Program va Google Play 15% tier dasturlariga yozilish shart.
 - **Soliqlar:** Yevropa, AQSh va boshqa koʻp davlatlarda QQS yoki sales tax-ni doʻkonning oʻzi undiradi va toʻlaydi. Lekin **Oʻzbekistondagi xaridorlarga** sotuvda Oʻzbekistonda yashovchi dasturchi QQSni oʻzi hisoblashi va toʻlashi kerak (Google va Apple qoidalari). Bu yerda soliq boʻyicha maslahat berilmaydi: 3.5-boʻlimdagi savollarni mahalliy soliq maslahatchisi bilan aniqlang.
@@ -241,7 +241,7 @@ Effort figures are my estimates for one person.
 | Play short description | 80 characters [R25] | Existing EN/RU/UZ drafts in `docs/STORE_LISTING.md` fit |
 | App Store subtitle | 30 characters [R26] | For example “3D escape room mystery” (22 characters) and its RU/UZ versions |
 | App Store keywords | “up to 100 bytes”; “Names of other apps or companies aren't allowed” [R27] | Use genre words (escape room, 3D puzzle, mystery, detective, offline). RU keywords use Cyrillic, which takes 2 bytes per letter in UTF-8, so about 50 letters fit (my calculation). **Never use “The Room” or other titles** |
-| Description | 4,000 characters (both stores) [R25][R27] | Lead with “Chapter 1 free · one purchase unlocks Chapters 2–4 · no ads · offline · EN/RU/UZ”. Say how many chapters there are, which answers the “too short” complaint (2c) |
+| Description | 4,000 characters (both stores) [R25][R27] | Lead with “Chapters 1–2 free · one purchase unlocks Chapters 3–4 · no ads · offline · EN/RU/UZ”. Say how many chapters there are, which answers the “too short” complaint (2c) |
 | App Store promotional text | 170 characters, editable without a new build [R27] | Use it for launch and chapter news |
 | Screenshots and previews | Up to 3 app previews per localization and device size [R27] | Real captures from a phone (the dev container uses a software renderer). Show the WOW beats from `docs/DESIGN_PILLARS.md` §3: power returns, the bookcase swing, the Lumen beam, Leyla's echo |
 | Featuring | Apple: nominate in App Store Connect → Featuring → Nominations, at least 3 weeks ahead. “App Launch” is a nomination type; nothing is guaranteed [R28] | Nominate the Ch1 launch and the Ch2 release |
@@ -480,7 +480,7 @@ Do not ask for names, e-mails or phone numbers. Add a one-line privacy note at t
 - [ ] `REAL_PAYMENTS_ENABLED = true` only in the release build that passed all of the above.
 
 **Listing and privacy**
-- [ ] The listing says exactly what is free and what is paid: “Chapter 1 free · one purchase unlocks Chapters 2–4”.
+- [ ] The listing says exactly what is free and what is paid: “The first two chapters are free · one purchase unlocks Chapters 3–4”.
 - [ ] Privacy policy, Data safety and App privacy answers match the shipped build (section 7). If any analytics ships, all three are updated first.
 - [ ] A support contact and a refund FAQ are on the press and support page.
 
