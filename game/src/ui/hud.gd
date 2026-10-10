@@ -304,9 +304,19 @@ func _arrange() -> void:
 	_top_plate.max_title_lines = 2
 	_fit_plate(_top_plate)
 	if mr.has_area() and _top_plate.visible and _box(_top_plate).intersects(mr.grow(gap)):
-		_top_plate.set_meta("max_w", minf(top_w, 2.0 * meter_half))
+		# narrower, beside the meter, when the whole title still fits; otherwise the full width (which shows more
+		# of it) and the meter moves under the title, if it still clears the Pause button there
+		var narrow := minf(top_w, 2.0 * meter_half)
+		_top_plate.set_meta("max_w", narrow)
 		_fit_plate(_top_plate)
 		_top_plate.set_meta("max_w", top_w)
+		var pause_top := canvas.y - safe.w - PAD - _pause_btn.custom_minimum_size.y
+		if _top_plate.title_cut:
+			_fit_plate(_top_plate)
+			if _top_plate.position.y + _top_plate.size.y + gap + mr.size.y > pause_top - gap:
+				_top_plate.set_meta("max_w", narrow) # no room under it: beside the meter, cut
+				_fit_plate(_top_plate)
+				_top_plate.set_meta("max_w", top_w)
 		if _box(_top_plate).intersects(mr.grow(gap)):
 			mr.position.y = _top_plate.position.y + _top_plate.size.y + gap
 	if _meter != null:
