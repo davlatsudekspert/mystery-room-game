@@ -27,6 +27,10 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 4. Apple Small Business Program enrolment (15% commission), at developer.apple.com.
 5. EU DSA trader status, before any EU release.
 6. Closed testing invitations, production and public release: each needs a separate approval.
+7. The Chapter 2 cliffhanger (`docs/ENGAGEMENT.md` → "For the owner's judgment"):
+   - keep Strand's line on Leyla's tape, or end on hers?
+   - record real voices for the tape;
+   - the wording of the Chapter 3 card's hand-off, and whether its price shows on the card.
 
 ## Game
 1. **Chapter 2 release:** finish the player review (agent), fix its findings, then set `released: true` for ch2 in `game/src/core/chapters.gd` and update `test_premium_rules`. Tester builds already open it through the `beta_unlock` export feature.
@@ -35,7 +39,7 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 4. **Lighting (directive 1B):** before/after real renders of the over-bright spots (the splicer light box, the projector beam haze); storytelling props that never hide puzzle items (1C).
 5. **Chapter 1:** a full player review on the rendered build after the UI audit; minute-by-minute pacing notes (30 s, 1, 2, 3, 5, 10 min).
    - First minutes: check on a real phone how long the loading black lasts between the menu transition and the first card (the container cannot tell), whether the knob taps on the menu box feel right with a thumb, and the haptics on the slam; then play the end credits after the Chapter 4 finale (`CreditsScene.play(...)`, not wired yet).
-6. **Real-device test:** `docs/TESTING_ON_DEVICE.md` with the first tester build.
+6. **Real-device test:** `docs/TESTING_ON_DEVICE.md` with the first tester build. Engagement questions for the first playtest are in `docs/ENGAGEMENT.md` (the mirrors, the vault after the clunk, the whisper, the cliffhanger: watched through or tapped past).
 7. **Logo rights:** the owner confirms where the logo artwork came from and that it may be used commercially (`docs/ASSET_LICENSES.md`).
 
 ## Chapter 4 — The Experiment (the Array Hall)

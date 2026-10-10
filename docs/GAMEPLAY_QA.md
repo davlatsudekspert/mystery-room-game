@@ -21,6 +21,7 @@ How each chapter has been checked. The five status levels are never mixed:
 | 2026-10-09 | camera feel (smooth follow, glide, arcs), dust without shadows, merged shelf meshes, crash recovery, launch/name fixes | seed 4242: all steps ✓, 100 taps, 0 fallbacks | seed 4096, leave path: all steps ✓, 83 taps, 0 fallbacks |
 | 2026-10-10 | light pass (glow, emissives, beam haze, splicer box, camera fill), feedback for every tap, Panel 7 re-framed, radiator and sculpture tap areas, drawer / safe / dial / punch close-ups brought in | seed 4242: all steps ✓, 5/5 shards, 100 taps, 0 fallbacks (before and after the light changes) | seed 777, leave path: all steps ✓, 94 taps, 0 fallbacks (before and after) |
 | 2026-10-10 (owner feedback) | Panel 7 and the poster fitted to the HUD's free area, bag HUD, notebook page 4 icons, safe hints, shadow / radio-hatch reframes, story caption waits outside Panel 7 | seed 4242: all steps ✓, 5/5 shards, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`; seed 1337: all steps ✓, `taps through 3D scene: 101, logic fallbacks (missing models/placeholders): 0`; both `taps under a HUD control: 0 (window 1920x1080)` | seed 777 leave: all steps ✓, `taps through the 3D scene: 94, logic fallbacks: 0`; seed 777 take: all steps ✓, `taps through the 3D scene: 86, logic fallbacks: 0`; both `taps under a HUD control: 0 (window 1920x1080)` |
+| 2026-10-10 (engagement pass, `docs/ENGAGEMENT.md`) | Ch1: bookcase reveal staging, the corridor beyond the door, the second-mirror milestone, the corridor postmark epilogue, resume at the ending. Ch2: the reel reveal, the cliffhanger and the Chapter 3 card, the vault's answer, blank-crystal feedback, the whisper secret, resume at the ending | seed 4242: all steps ✓, 5/5 shards, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`; seed 1337: all steps ✓, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`; both `taps under a HUD control: 0 (window 1920x1080)` | seed 777 leave (Leyla's key): all steps ✓ including the cliffhanger, `taps through the 3D scene: 94, logic fallbacks: 0`; seed 777 take (Strand's key): all ✓, `taps through the 3D scene: 86, logic fallbacks: 0`; both `taps under a HUD control: 0 (window 1920x1080)` |
 
 All screenshots come from the software renderer in the dev container (lavapipe, no GPU), so colours and frame rate are only indicative of phones.
 
@@ -73,6 +74,23 @@ Before the check learned which controls a view can work, the first full run prin
 
 <!-- hud-check-ch1 -->
 
+### Engagement pass (2026-10-10): reveals, the hand-off to Chapter 2, resuming at the end
+`docs/ENGAGEMENT.md` has the minute-by-minute curve and the reasoning.
+
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| The bookcase reveal (P9 → the darkroom), the chapter's midpoint, was a message line and a door sound | The hidden room opened without light or air: told, not shown | As the case swings, the darkroom's red safelight flares through the gap (0.7 → 4.2 → back, reaching 1.6 m further for a moment), a breath of dust rolls into the lab, a low tone sounds and a caption reads *"[A cold draught breathes out from behind the shelves]"* (`_stage_bookcase_reveal`) |
+| The door opened onto the flat fog colour | The final image of 40 minutes was an empty rectangle, and nothing pointed on to Chapter 2 | A 9 m institute corridor beyond the door, built only when it opens: linoleum, green dado, three enamel pendants, and double doors under a lit **RECORDS ARCHIVE B** sign (it translates). The lamps flicker on one by one toward the sign: *"[Beyond the door, the corridor lamps wake one by one]"* |
+| The epilogue said *"On the train home…"* and Chapter 2 then opens *"Beyond Laboratory 7…"* | The free chapters contradicted each other at their seam | `epi1.postmark`: *"Under the corridor lamp you unfold the parcel's wrapper again. The postmark reads: 14 XI 1979."* |
+| The mirror stretch (P12) gave no sign of progress until the door opened | Eight clicks per stand with nothing new to see | The first time mirror A sends the beam on to mirror B: a bright tick and *"[The beam leaps to the second mirror]"*, once (`_beam_progress`). No rule changed |
+| Continue after the ending loaded a finished room: quitting on the chapter card left an open door, nothing to tap and no card. Quitting during the ending left the door open and the lens choice never offered | Stranded at the free-to-free hand-off, with only Pause → Main menu → Chapters as a way out | A finished save opens on the chapter card (its Play button starts Chapter 2) over the lit corridor; a save made between the door and the choice offers the choice again (`_resume_completed`, `_resume_choice`). `qa/transition_check.tscn` on the code before this pass printed `✗ Continue at the open door offers the choice again` and `✗ a finished Lab 7 opens on the chapter card (not an empty room)` |
+
+Checks (2026-10-10, after the changes):
+- `qa/playthrough.tscn --seed=4242`: all 15 steps ✓, 5/5 shards, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`, `taps under a HUD control: 0 (window 1920x1080)`; `--seed=1337`: all ✓ (safe 6803, books VII-III-IX), `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`, `taps under a HUD control: 0 (window 1920x1080)`. After these runs the red flare was made stronger and the corridor sign larger; these are presentation only, with no tap target or camera view changed, and are shown in the reveal shots below.
+- `qa/ch1_reveal_shots.tscn` (new; the bookcase at 0.3 / 0.9 / 1.8 s and the ending through the corridor), on the code before and after: `docs/previews/engagement/ch1_bookcase_reveal_before_after.jpg`, `ch1_door_corridor_before_after.jpg`, `ch1_epilogue_card_before_after.jpg`.
+- `tap_map --chapter=ch1 --until=shelf_open --views=bookshelf,darkroom,door,lock --hud-check --screen=phone61`: `hud-check (phone61): 4 controls in 4 views, 0 failures, 3 banner warnings (9 focus-only controls and 0 slivers not checked)`.
+- `qa/transition_check.tscn` (new, headless, seed 4242): Continue at the open door, Continue on the finished chapter, Play into Chapter 2 with the Chapter 1 choices, a midway save and Continue in Chapter 2: `transition checks failed: 0`. The same checks on the code before this pass (seed 0): 6 failed.
+
 ### Status
 | Area | Level | Evidence |
 |---|---|---|
@@ -104,6 +122,7 @@ Before the check learned which controls a view can work, the first full run prin
 4. **Mirror puzzle.** Is the one-click 45° turn clear without a tutorial?
 5. **Taps on small controls** (drawer wheels, radio knob) with a real finger.
 6. **Pacing.** Any stretch longer than 5 minutes without progress or a new discovery.
+7. **The ending.** Can testers say why they are going to the archive (the 1998 clipping on the evidence wall)? Do they notice the corridor and its sign before choosing?
 
 ---
 
@@ -153,6 +172,33 @@ Before the check learned which controls a view can work, the first full run prin
 
 <!-- hud-check-ch2 -->
 
+### Engagement pass (2026-10-10): the purchase moment, the 42nd figure, feedback and a secret
+Chapters 1 and 2 are free, so the end of this chapter is where a player decides to buy. `docs/ENGAGEMENT.md` has the curve and the reasoning; the cliffhanger is `game/src/rooms/archive/archive_teaser.gd`.
+
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| Straight after the key choice came the statistics card: *"To be continued…"* and Main Menu | The purchase moment showed nothing new and left no question open | **The cliffhanger.** The key comes off its hook. A lift motor wakes under the vault (shake, stuttering bulb, falling dust). A glimpse down the freight-lift shaft: eight lamps wake storey by storey, the cage climbs, the light of Level −2 breathes at the bottom, the transformer hum rises. On black: *"Somewhere below, a recorder clicks on"*, Leyla's 1998 voice captioned over a tape-head trace (the words are from Chapter 3's recorder), then a second voice under the hiss: *"Leyla?… Who is that with you?"* Then the **Chapter 3 card** (below) and the usual chapter card. A tap shortens every beat; the card waits for the player |
+| The twist, the 42nd silhouette, was one 7.5 s caption over a screen a quarter of the view wide | Easy to miss the chapter's reveal | The reel close-up, *"…Forty-one silhouettes in the light."*; then a reveal tone and a haptic pulse: the frame dims around the figure at the right edge, a cold halo grows around her (`vault_reel.gdshader`), the camera leans in, *"And a forty-second, at the edge of the frame. Leyla, 1998."* The choice opens over a cradle view framed high, clear of the dialog |
+| After a crystal is recorded, nothing pointed to the vault; the leave path then has six more device steps | The longest stretch of busywork, with the next goal across the hall | The vault answers: a far clunk, that port's light pipe on the vault door flares, *"[Across the hall, the vault door answers with a dull clunk]"* (once per image) |
+| A blank crystal that recorded nothing just sat in the socket; P11b's rule (film lamp off) was never said | A wrong idea and a dead tap looked the same | It says why: the screen is dark / the picture is blurred / two images overlap / *"It waits for one sharp image, alone on the screen."* Switching the slide lamp on over the running film: *"The slide's light and the film's light cross on the screen."* No answer is spoken |
+| Nothing off the main path rewarded curiosity except the echoes | — | **Secret "Forty-Two":** with all three reels found, select the receiver at the shut vault door: the needle twitches once more and a far voice counts *"…forty… forty-one… forty-two"* (achievement `forty_two`; no puzzle depends on it) |
+| Continue after the end loaded a finished Archive (or an open vault whose choice was never made) with nothing to do | Stranded | A finished save opens on the Chapter 3 card; a save between the vault and the choice offers the two keys again. Before this pass `qa/transition_check.tscn` printed `✗ Continue at the open vault offers the two keys again` and `✗ a finished Archive opens on a card (not an empty room)` |
+
+**The Chapter 3 card's hand-off** (`ArchiveTeaser.card_state()`; `purchase_panel.gd` is not touched):
+
+| State | When | The card shows |
+|---|---|---|
+| `unlock` | Chapter 3 released, not owned, the store open | *"Chapters 3 and 4 finish the story. One purchase unlocks both; no ads, ever."*, **Continue the story** (opens `PurchasePanel.open()` over the card), a quiet **Not now**. A completed purchase closes the card; the chapter card then offers Play |
+| `soon` | Chapter 3 not released, or no store (`REAL_PAYMENTS_ENABLED = false` in a release build) | *"Chapters 3 and 4 are on their way. Your key and your choices are saved for them."*, **Continue** |
+| `play` | Chapter 3 owned, or a tester build | **Continue** (the chapter card offers Play) |
+
+Checks (2026-10-10, after the changes):
+- `qa/playthrough_ch2.tscn --lens=leave --seed=777`: P1–P12, P11b, `✓ Finale: leyla_key → chapter complete`, `✓ Cliffhanger: lift shaft, recorder, Chapter 3 card (soon)`, `✓ Chapter 3 card → chapter card`, `taps through the 3D scene: 94, logic fallbacks: 0`, `taps under a HUD control: 0 (window 1920x1080)`. `--lens=take --seed=777`: the same with `strand_key`, `taps through the 3D scene: 86, logic fallbacks: 0`, `taps under a HUD control: 0 (window 1920x1080)`. Before this pass, the same leave run printed `taps through the 3D scene: 94, logic fallbacks: 0` and ended on the statistics card. The playthrough now plays Strand's key on the take path and Leyla's on the leave path, and presses the Chapter 3 card's button. After the leave run, the finale close-ups lost their title plate. After both runs, the shaft camera moved toward the middle of the shaft. Neither change touches a tap target; the final framing is in the teaser shots.
+- `qa/teaser_shots.tscn` (new; the solver plays to the unlocked vault, then the real scene runs the whisper, the finale, the cliffhanger and the card in its three store states): rendered on the leave path (Leyla's key) and on the take path (Strand's key, seed 31337), `teaser checks failed: 0` both times. Measured: the shaft view `draw calls 52, primitives 7554` with the HUD.
+- `tap_map --chapter=ch2 --until=vault_open --views=vault,vault_inside,vault_reel,vault_cradle --hud-check --screen=phone61`: `hud-check (phone61): 1 controls in 4 views, 0 failures, 1 banner warnings (10 focus-only controls and 0 slivers not checked)`. Its frames showed the view title covering the top of the key cradle at phone text size, so the finale close-ups have no title now.
+- `qa/transition_check.tscn` (headless): Continue at the open vault and on the finished chapter, see the Chapter 1 section.
+- Previews: `docs/previews/engagement/ch2_*.jpg`.
+
 ### Status
 | Area | Level | Evidence |
 |---|---|---|
@@ -179,7 +225,8 @@ Before the check learned which controls a view can work, the first full run prin
 3. **The tape voice and click counts (2, 8, 5).** Are they clear on a phone speaker? The VU needle and caption dots are the visual backup.
 4. **The film and recording.** Do players understand that the crystal must sit in the screen socket while only the sharp sign is shown?
 5. **The vault overlay.** Is "on its side, smaller" in the engraving clear enough?
-6. **Pacing.** Is the stretch from the booth to the vault too long without a hint of progress?
+6. **Pacing.** Is the stretch from the booth to the vault too long without a hint of progress? (Since the engagement pass the vault answers each recording.)
+7. **The cliffhanger and the Chapter 3 card.** Do testers watch it through or tap past it? Does the card feel like an invitation or a sales pitch? Does anyone find the receiver's whisper at the vault?
 
 ---
 

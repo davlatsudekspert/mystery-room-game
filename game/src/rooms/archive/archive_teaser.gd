@@ -25,13 +25,15 @@ const SHAFT_BOTTOM := -32.0
 const SEGMENT_M := 3.95
 ## Shaft lamps, top to bottom: [y, wall] (wall 0 north, 1 east, 2 south, 3 west); every other one carries a light.
 const LAMPS := [[-2.4, 0], [-6.2, 1], [-10.0, 3], [-13.8, 0], [-17.6, 1], [-21.4, 3], [-25.2, 0], [-29.0, 1]]
+const CABLE_X := 1.92 # the hoist ropes hang along the crosshead's east half, clear of the camera
 const CAGE_FROM := -27.5
 const CAGE_TO := -16.0
 const WARM := Color("ffc58a")
 const DEEP := Color("8fe6ff")
-## The shaft view (archive_room.gd adds it): from the landing sill, nearly straight down.
-const VIEW_POS := Vector3(1.5, -0.45, -3.85)
-const VIEW_TARGET := Vector3(1.58, -31.0, -5.0)
+## The shaft view (archive_room.gd adds it): from near the middle of the shaft, nearly straight down, so all four
+## walls fall away alike (from the south wall's edge the near wall read as a floor). The ropes hang east of it.
+const VIEW_POS := Vector3(1.32, -0.45, -4.32)
+const VIEW_TARGET := Vector3(1.4, -31.0, -4.78)
 
 var room: Node3D
 var running := false
@@ -565,7 +567,7 @@ func _build_shaft() -> void:
 	_box(_cage, "roof", Vector3(cw, 0.07, cw), Vector3.ZERO, painted)
 	_box(_cage, "hatch", Vector3(0.62, 0.025, 0.62), Vector3(-0.35, 0.045, 0.3), steel)
 	_box(_cage, "crosshead", Vector3(cw, 0.16, 0.16), Vector3(0, 0.11, 0), steel)
-	_cyl(_cage, "hitch", 0.08, 0.08, 0.1, Vector3(0, 0.24, 0), steel)
+	_cyl(_cage, "hitch", 0.08, 0.08, 0.1, Vector3(CABLE_X - SHAFT_X + 0.09, 0.24, 0), steel)
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			_box(_cage, "post", Vector3(0.07, 2.3, 0.07), Vector3(sx * (cw * 0.5 - 0.04), -1.15, sz * (cw * 0.5 - 0.04)), painted)
@@ -661,7 +663,7 @@ func _set_cage(cy: float) -> void:
 	for i in _cables.size():
 		var c := _cables[i]
 		c.scale = Vector3(1, len, 1)
-		c.position = Vector3(SHAFT_X - 0.09 + 0.06 * i, from + len * 0.5, SHAFT_Z + 0.02 * (i % 2))
+		c.position = Vector3(CABLE_X + 0.06 * i, from + len * 0.5, SHAFT_Z + 0.02 * (i % 2))
 
 
 func _climb(to: float, seconds: float) -> void:

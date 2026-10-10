@@ -151,7 +151,40 @@ Estimated length: 30–40 minutes. Free since 2026-10-10.
 
 ## Verification
 
-<!-- filled in from the runs below -->
+Every line below was printed by a run on 2026-10-10. Rendered runs use the software renderer in the dev container (`tools/qa_run.sh`).
+
+| Check | Result, as printed |
+|---|---|
+| `qa/playthrough.tscn --seed=4242` (Ch1) | all 15 steps ✓, 5/5 shards, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`, `taps under a HUD control: 0 (window 1920x1080)` |
+| `qa/playthrough.tscn --seed=1337` (Ch1) | all 15 steps ✓, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`, `taps under a HUD control: 0 (window 1920x1080)` |
+| `qa/playthrough_ch2.tscn --lens=leave --seed=777` (Leyla's key) | P1–P12, P11b, `✓ Cliffhanger: lift shaft, recorder, Chapter 3 card (soon)`, `✓ Chapter 3 card → chapter card`, `taps through the 3D scene: 94, logic fallbacks: 0`, `taps under a HUD control: 0 (window 1920x1080)` |
+| `qa/playthrough_ch2.tscn --lens=take --seed=777` (Strand's key) | the same, `taps through the 3D scene: 86, logic fallbacks: 0`, `taps under a HUD control: 0 (window 1920x1080)` |
+| `qa/teaser_shots.tscn` (new), leave path and take path with seed 31337 | `teaser checks failed: 0` (both). The shaft view: `perf[shaft]: draw calls 52, primitives 7554` |
+| `qa/ch1_reveal_shots.tscn` (new), the code before and after | `ch1 reveal checks failed: 0` (both). Frames below |
+| `qa/transition_check.tscn` (new, headless, seed 4242): Continue at the open door, on the finished Lab 7, Play into Chapter 2 with the Chapter 1 choices, a midway save and Continue, Continue at the open vault and on the finished Archive | `transition checks failed: 0`. The same checks on the code before this pass (seed 0): `transition checks failed: 6` |
+| `tap_map --chapter=ch1 --until=shelf_open --views=bookshelf,darkroom,door,lock --hud-check --screen=phone61` | `hud-check (phone61): 4 controls in 4 views, 0 failures, 3 banner warnings (9 focus-only controls and 0 slivers not checked)` |
+| `tap_map --chapter=ch2 --until=vault_open --views=vault,vault_inside,vault_reel,vault_cradle --hud-check --screen=phone61` | `hud-check (phone61): 1 controls in 4 views, 0 failures, 1 banner warnings (10 focus-only controls and 0 slivers not checked)`. Its frames showed the view title covering the key cradle at phone text size, so the finale close-ups now have no title |
+| `tools/run_tests.sh` (with the new `tests/test_engagement.gd`) and `qa/check_scripts.tscn` | see the commit messages; 0 failures and 0 broken at every commit of this pass |
+
+Presentation tweaks made after a verification run, which change no tap target and no camera view a control lives in:
+- after the Ch1 runs: the stronger red flare and the larger corridor sign;
+- after the Ch2 leave run: no title on the finale close-ups;
+- after both Ch2 runs: the shaft camera nearer the middle of the shaft.
+
+The final look of each is in the reveal and teaser shots.
+
+**Previews** (`docs/previews/engagement/`):
+
+| File | What it shows |
+|---|---|
+| `ch1_bookcase_reveal_before_after.jpg` | The bookcase opening, 0.3 / 0.9 / 1.8 s after the last book |
+| `ch1_door_corridor_before_after.jpg` | The door opening onto fog, then onto the corridor; the lens choice |
+| `ch1_epilogue_card_before_after.jpg` | The train-home line, then the corridor-lamp line |
+| `ch2_reel_reveal_before_after.jpg` | The reel and the 42nd figure; the choice framed over the cradle |
+| `ch2_ending_before_after.jpg` | The old jump to the statistics card, then the shaft, the recorder and the Chapter 3 card |
+| `ch2_cliffhanger_sequence.jpg` | The ten beats in order, and the card's unlock and play states |
+| `ch2_feedback_and_secret.jpg` | The vault answering a recording; the receiver's whisper |
+| `ch2_ch3_card_leyla_path.jpg` | The Chapter 3 card for each key |
 
 ---
 

@@ -70,6 +70,23 @@ The owner's brief: the game must captivate from the first moment (`docs/previews
 - **Credits:** Settings -> About (credits, then Licenses with `Engine.get_license_text()`, `get_copyright_info()`, the OFL of Noto Sans and Cormorant, the MIT notices of the two purchase plugins) and `CreditsScene.play(after)` for the end of Chapter 4 (slow rise, tap or Back skips, paged fades with reduce_motion). Strings live in `tools/localization/strings_menu.py` (build_csv.py regenerates strings.csv).
 - **Tests:** `test_menu_box.gd`, `test_lab7_intro.gd`, `test_credits_language.gd`; QA scenes `qa/menu_box_shots`, `qa/ui_extras_shots`, `qa/first_minute`.
 
+## Engagement pass on the free chapters (2026-10-10)
+Chapters 1 and 2 are free, and the end of Chapter 2 is the purchase moment. `docs/ENGAGEMENT.md` has the minute-by-minute curiosity curves, the weaknesses found, what was fixed and the exact verification lines; previews are in `docs/previews/engagement/`.
+- **Chapter 2's cliffhanger** (`archive_teaser.gd`):
+  - the 42nd figure is staged (close-up, sting, halo, lean-in);
+  - the chosen key comes off its hook and a lift motor wakes under the vault;
+  - a glimpse down the freight-lift shaft (lamps waking storey by storey, the cage climbing, the transformer hum);
+  - Leyla's 1998 recorder on black, with a second voice under the hiss;
+  - then the Chapter 3 card. It hands off to `PurchasePanel.open()` only when Chapter 3 is released and the store is open; otherwise it says "coming soon". Then the usual chapter card.
+- **Chapter 2 clarity:** the vault answers each recorded crystal; a blank crystal says why it stays clear. Secret: the receiver's whisper at the vault door (achievement `forty_two`).
+- **Chapter 1:**
+  - the bookcase reveal is staged with light, dust and sound;
+  - a lit corridor to Records Archive B lies beyond the door;
+  - a milestone halfway through the mirrors;
+  - the epilogue no longer sends the player home on a train before Chapter 2.
+- **Both chapters:** Continue after the ending (finished, or between the door/vault and the choice) no longer strands the player (`qa/transition_check.tscn`: 6 failures before, 0 after).
+- **Verified:** Ch1 seeds 4242 / 1337 (100 taps, 0 fallbacks each); Ch2 seed 777 leave / take (94 / 86 taps, 0 fallbacks, the cliffhanger included); `--hud-check` 0 failures on the touched views.
+
 ## Chapter 3
 Design: `docs/CHAPTER3_DESIGN.md`; model contract: `docs/models/ch3.md`. The logic is complete with per-game variants (102 tests). The scene (`game/src/rooms/underground/`) is integrated: layout, the 65 views with captions, zone culling and portal cards, lights, environment and zone tones, the lift-descent intro, hotspot routing for every puzzle, variant evidence surfaces, echoes, hints and Continue. `qa/playthrough_ch3` plays the whole chapter by real 3D taps on both Chapter 2 key paths; on 2026-10-10 every remaining fallback was for a model group not built yet (B, E, F and part of D). Draw calls are 27–90 per view without those groups. Unreleased (`released: false`). Details in `docs/GAMEPLAY_QA.md`, "Chapter 3".
 
