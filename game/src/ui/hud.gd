@@ -1277,7 +1277,7 @@ func show_inspect(id: String) -> void:
 ## The documents the reader can open (an item whose document is not listed here has no Read button).
 const DOCUMENTS: Array[String] = ["notebook", "letter", "photo", "evidence", "darkroom_note", "badge", "index_card",
 	"personnel_file", "tape_1996", "tape_1997", "tape_1998", "strand_letters", "strand_note", "growth_log", "poster",
-	"chalkboard", "routing_chart"]
+	"chalkboard", "routing_chart", "log4", "letter4", "watch4", "note4", "parcel4"]
 
 
 static func has_document(doc: String) -> bool:
@@ -1313,6 +1313,9 @@ func show_document(doc: String) -> void:
 			_show_paper(tr("doc3.note"), _doc_title(doc))
 		"growth_log":
 			_show_paper(tr("doc3.growth_log"), _doc_title(doc))
+		# Chapter 4: Strand's log (the collar's clue), his last letter, the watch's engraving, Leyla's note and the parcel
+		"log4", "letter4", "watch4", "note4", "parcel4":
+			_show_paper(tr("doc4." + doc.trim_suffix("4")), _doc_title(doc))
 		# inscriptions in the rooms: a second tap on their close-up opens the art full size (exactly as painted)
 		"poster":
 			_show_picture("res://assets/textures/decals/poster_resonance.jpg", tr("obj.poster"))

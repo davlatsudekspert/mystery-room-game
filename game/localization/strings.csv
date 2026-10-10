@@ -615,6 +615,14 @@ obj4.catwalk,Catwalk over the rings,Мостик над кольцами,Halqala
 obj4.hatch,Hatch over ring %s,Люк над кольцом %s,%s halqa ustidagi lyuk
 obj4.island,The Reliquary,Реликварий,Relikvariy
 obj4.gate,Cage gate %s,Ворота клетки %s,Qafas darvozasi %s
+obj4.hatch_1,Hatch over ring I,Люк над кольцом I,I halqa ustidagi lyuk
+obj4.hatch_2,Hatch over ring II,Люк над кольцом II,II halqa ustidagi lyuk
+obj4.hatch_3,Hatch over ring III,Люк над кольцом III,III halqa ustidagi lyuk
+obj4.hatch_4,Hatch over ring IV,Люк над кольцом IV,IV halqa ustidagi lyuk
+obj4.gate_1,Cage gate I,Ворота клетки I,Qafas darvozasi I
+obj4.gate_2,Cage gate II,Ворота клетки II,Qafas darvozasi II
+obj4.gate_3,Cage gate III,Ворота клетки III,Qafas darvozasi III
+obj4.gate_4,Cage gate IV,Ворота клетки IV,Qafas darvozasi IV
 obj4.collar,Collar lock,Замковое кольцо,Qulf halqasi
 obj4.core,The Core,Ядро,Oʻzak
 obj4.apse,The Sun apse,Апсида Солнца,Quyosh apsidasi
@@ -627,6 +635,7 @@ obj4.roll_board,Roll board — 41 tags,Доска переклички — 41 б
 obj4.locker,Locker 17,Шкафчик 17,17-shkafcha
 obj4.post_station,Pneumatic post station,Станция пневмопочты,Pnevmatik pochta stansiyasi
 obj4.oculus,The oculus,Окулюс,Gumbaz tuynugi
+msg.c4_gate_locked,Gate %s is locked. The keyhole is cut for one key only.,Ворота %s заперты. Замочная скважина рассчитана на один-единственный ключ.,%s darvoza qulflangan. Kalit teshigi faqat bitta kalit uchun oʻyilgan.
 msg.c4_gate_wrong_key,This gate takes the other key.,Эти ворота открывает другой ключ.,Bu darvozani boshqa kalit ochadi.
 msg.c4_booth_locked,The booth gate is locked.,Ворота кабины заперты.,Kabina darvozasi qulflangan.
 msg.c4_watch_locked,The grille is locked.,Решётка дежурной заперта.,Navbatchi xonasining panjarasi qulflangan.

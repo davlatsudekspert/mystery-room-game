@@ -1,6 +1,6 @@
 extends TestBase
-## Fail-safe UI paths while a chapter is still being built (Chapter 4: logic and items first, the scene later):
-## Continue never loads an empty scene path, and a document without a reader page opens nothing.
+## Fail-safe UI paths while a chapter is still being built: Continue never loads an unreleased or empty scene path, and a
+## document without a reader page opens nothing. (Chapter 4's scene and reader pages exist now; the chapter is unreleased.)
 
 const MENU := "res://src/ui/main_menu.gd"
 
@@ -8,7 +8,7 @@ const MENU := "res://src/ui/main_menu.gd"
 func test_continue_only_loads_a_playable_chapter() -> void:
 	var menu: GDScript = load(MENU)
 	check(bool(menu.call("playable", "ch1")), "Chapter 1 loads")
-	check(not bool(menu.call("playable", "ch4")), "Chapter 4 (no scene yet, unreleased) does not")
+	check(not bool(menu.call("playable", "ch4")), "Chapter 4 (unreleased) does not")
 	check(not bool(menu.call("playable", "no_such_chapter")), "an unknown chapter does not")
 	for ch: Dictionary in Chapters.LIST:
 		if str(ch.get("scene", "")) == "" or not bool(ch.get("released", false)):
@@ -36,21 +36,24 @@ func test_documents_without_a_reader_page_open_nothing() -> void:
 	GameState.start_new("ch1")
 	var r := HudTestRoom.create(GameState.logic, false)
 	await r.attach()
-	for doc in ["log4", "letter4", "watch4", "note4", "parcel4", ""]:
+	for doc in ["no_such_document", ""]:
 		r.hud.call("show_document", doc)
 		check(r.hud.get("_overlay") == null, "«%s» opens nothing" % doc)
+	# Chapter 4's documents have reader pages (Strand's log carries the collar's clue)
+	for doc in ["log4", "letter4", "watch4", "note4", "parcel4"]:
+		r.hud.call("show_document", doc)
+		check(r.hud.get("_overlay") != null, "«%s» opens its reader page" % doc)
+		r.hud.call("_close_overlay")
 	r.hud.call("show_document", "letter")
 	check(r.hud.get("_overlay") != null, "a known document still opens")
 	r.hud.call("_close_overlay")
-	# an item whose document has no page yet: the inspect view offers no Read button
-	for id in ["strand_log", "leyla_parcel"]:
-		if not ItemDB.ITEMS.has(id):
-			continue
+	# an item whose document has no page yet would offer no Read button; the Chapter 4 items all have one now
+	for id in ["strand_log", "leyla_parcel", "strand_last_letter", "leyla_note_1998", "pocket_watch"]:
 		r.hud.call("show_inspect", id)
 		var read := false
 		for b in (r.hud.get("_overlay") as Node).find_children("*", "Button", true, false):
 			read = read or (b as Button).text == "ui.read"
-		check(not read, "%s: no Read button without a reader page" % id)
+		check(read, "%s: a Read button, its reader page exists" % id)
 		r.hud.call("_close_overlay")
 	r.dispose()
 	await (Engine.get_main_loop() as SceneTree).process_frame
