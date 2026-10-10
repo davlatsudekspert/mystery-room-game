@@ -1711,13 +1711,14 @@ func _build_corridor() -> void:
 		_cbox(Vector3(0.05, 2.1, 0.66), Vector3(CORRIDOR_X1 - 0.03, 1.05, cz + side * 0.34), wood)
 		_cbox(Vector3(0.04, 0.03, 0.12), Vector3(CORRIDOR_X1 - 0.07, 1.05, cz + side * 0.08), brass)
 	_cbox(Vector3(0.06, 0.08, 1.48), Vector3(CORRIDOR_X1 - 0.03, 2.14, cz), wood)
-	var sign := _cbox(Vector3(0.02, 0.22, 0.96), Vector3(CORRIDOR_X1 - 0.07, 2.42, cz), load("res://assets/materials/M_Enamel_Green.tres"))
+	# large enough to read from the lab door, 9 m away
+	var sign := _cbox(Vector3(0.02, 0.3, 1.5), Vector3(CORRIDOR_X1 - 0.07, 2.42, cz), load("res://assets/materials/M_Enamel_Green.tres"))
 	sign.name = "archive_sign"
 	var text := Label3D.new()
 	text.text = "obj2.hall" # "Records Archive B": the sign translates with the language
 	text.font = load(UITheme.FONT_DISPLAY_BOLD)
-	text.font_size = 72
-	text.pixel_size = 0.0011
+	text.font_size = 62 # RU / UZ run to 20 letters: they still fit the plate
+	text.pixel_size = 0.0017
 	text.modulate = Color("efe6cf")
 	text.outline_size = 0
 	text.double_sided = false
@@ -1729,7 +1730,7 @@ func _build_corridor() -> void:
 	amber.emission_enabled = true
 	amber.emission = Color("ff9a3c")
 	amber.emission_energy_multiplier = 0.0
-	_cbox(Vector3(0.05, 0.08, 0.16), Vector3(CORRIDOR_X1 - 0.05, 2.6, cz), amber)
+	_cbox(Vector3(0.05, 0.06, 0.16), Vector3(CORRIDOR_X1 - 0.05, 2.63, cz), amber)
 	_corridor_bulbs.append(amber)
 	var em := OmniLight3D.new()
 	em.light_color = Color("ff9a3c")

@@ -51,8 +51,8 @@ Optional throughout: five Lumen shards under UV.
 1. **The bookcase opening (min 27), the chapter's midpoint reveal, was told rather than shown.** It had a message line and a door sound, and the camera stepped back. No light came from the hidden room and nothing happened in the air. *Fixed.*
 2. **The final image was empty.** The door opened onto the fog colour (`docs/previews/playthrough/` frame 34): the player's reward for 40 minutes was a blank rectangle, and nothing pointed on to Chapter 2. *Fixed.*
 3. **The epilogue contradicted the next chapter.** *"On the train home you look at the parcel again"* is followed at once by Chapter 2: *"Beyond Laboratory 7, a corridor leads to Records Archive B."* Now that both chapters are free and are played back to back, this is the seam players cross. *Fixed.*
-4. **Continue after the ending stranded the player.** Quit on the chapter card, choose Continue, and the game loaded a finished Lab 7: door open, nothing to tap, no card, no way to Chapter 2 except Pause, Main menu, Chapters. Shown by `qa/transition_check.tscn` on the code before this pass: `✗ a finished Lab 7 opens on the chapter card (not an empty room)`. *Fixed.*
-5. **The mirror stretch (min 37–42) risks being trial and error.** Each click turns a mirror 45°, and only one of eight positions is right per stand. The live beam is good feedback, but nothing new is seen while the player clicks. *Not changed:* the puzzle is fair as designed, and the hint H16 says which way to aim. If testers stall here, the cheapest lever is a soft tick when the beam reaches the second stand (`beam_path` event).
+4. **Continue after the ending stranded the player.** Quit on the chapter card, choose Continue, and the game loaded a finished Lab 7: door open, nothing to tap, no card, no way to Chapter 2 except Pause, Main menu, Chapters. Quitting during the ending, after the door opened and before the lens choice, left a room where the choice was never offered, so the chapter could not be finished. Shown by `qa/transition_check.tscn` on the code before this pass (seed 0): `✗ Continue at the open door offers the choice again` and `✗ a finished Lab 7 opens on the chapter card (not an empty room)`. *Fixed.*
+5. **The mirror stretch (min 37–42) risks being trial and error.** Each click turns a mirror 45°, and only one of eight positions is right per stand. The live beam is good feedback, but nothing new is seen while the player clicks. *Fixed in part:* the first time mirror A sends the beam on to mirror B, a bright tick sounds and a caption reads *"[The beam leaps to the second mirror]"*. This marks the halfway point without solving anything. The puzzle itself is unchanged; hint H16 still says which way to aim.
 6. **The gear box (min 6–9) is the one puzzle with no story payload.** It is short and teaches the "neighbour follows" idea. *Not changed.*
 7. **The evidence wall carries the 1998 clipping that sets up Chapter 2,** but reading it is optional (a document). *Not changed:* Chapter 2's intro restates the premise. A playtest should ask whether testers can say why they are going to the archive.
 8. **Panel 7 and the first three minutes** belong to other agents (Panel 7 variants; the menu, intro and first-run prompts). They are rated here for the curve only.
@@ -86,7 +86,7 @@ Estimated length: 30–40 minutes. Free since 2026-10-10.
 4. **Wrong tries in P11 were silent.** A blank crystal seated while the picture is blurred, the screen dark, the wrong frame showing, or the film and slide lamps both on just sat there. The player could not tell "wrong idea" from "this does nothing". P11b's hidden rule (the film lamp must be off) was also never said out loud. *Fixed:* each case now says why the crystal stays clear, without giving the answer.
 5. **The P3 punch is copying.** Eight keys from the index card. It is short, and the canister flight that follows is the reward. *Not changed.*
 6. **Nothing rewarded curiosity outside the main path, apart from the echoes.** *Fixed: one secret added* (below).
-7. **Continue after the ending stranded the player here too:** a finished Archive with nothing to tap. *Fixed:* it opens on the Chapter 3 card.
+7. **Continue after the ending stranded the player here too:** a finished Archive, or an open vault whose key choice was never made, with nothing to tap. Before this pass: `✗ Continue at the open vault offers the two keys again` and `✗ a finished Archive opens on a card (not an empty room)`. *Fixed:* a finished save opens on the Chapter 3 card, and an open vault offers the two keys again.
 
 ---
 
@@ -105,7 +105,8 @@ Estimated length: 30–40 minutes. Free since 2026-10-10.
    - We cut to the landing sill and look down 30 m of concrete shaft. Its eight caged lamps wake one storey at a time, each with a relay click.
    - The cage rises from the dark with its work lamp. At the bottom, the cold light of Level −2 breathes, and the ambience becomes the transformer hum.
    - Captions: *"[Floor by floor, the lamps of the lift shaft wake]"*, *"[Far below: the hum of the transformer halls]"*.
-   - The shaft is built from primitives and the shared materials (about 30 draw calls) only for this shot, and is freed afterwards.
+   - The shaft is built from primitives and the shared materials only for this shot, and is freed afterwards. It measured 52 draw calls and 7.5k primitives, HUD included, in `qa/teaser_shots`.
+   - The archive's own lights are switched off for the shot. In the first render, they pushed the shaft's top lamp over the Mobile renderer's limit of 8 lights per mesh, and the storey nearest the camera stayed dark.
 5. **The recorder, on black.**
    - *"Somewhere below, a recorder clicks on."* (the canonical epilogue line), with a deck click and tape hiss.
    - Then Leyla's 1998 voice, captioned line by line. The words are taken from Chapter 3's recorder text (`doc3.recorder`), so the teaser and Chapter 3 agree: *"If you hear this, the lift still works." "The Choir and the Nursery must sing together, or the Array stays deaf." "I am going down to them."*
@@ -124,7 +125,7 @@ Estimated length: 30–40 minutes. Free since 2026-10-10.
 
    **Continue** or **Not now** leads to the HUD's usual chapter card (time, puzzles, echoes, Chapter 3, Main menu). The card never times out and never pops anything up on its own. Back is swallowed, as on the finale choice. `purchase_panel.gd` is not touched.
 7. **Skippable.** A tap shortens each beat of the shaft and the recorder (about 45 s in all, unskipped). The card always waits for the player.
-8. **A finished save opens on the card.** Continue after the chapter ended shows the vault and the Chapter 3 card again.
+8. **A finished save opens on the card.** Continue after the chapter ended shows the vault and the Chapter 3 card again. A save made between the vault opening and the key choice offers the two keys again.
 
 ### Chapter 2: clarity, rewards and a secret
 - **The vault answers a recording.** About a second after a crystal records the sign (or Strand's mark), a far clunk sounds across the hall, the matching port's light pipe on the vault door flares, and a caption reads: *"[Across the hall, the vault door answers with a dull clunk]"*. The next goal announces itself, and the step gets a second payoff. This happens once per image.
@@ -132,14 +133,15 @@ Estimated length: 30–40 minutes. Free since 2026-10-10.
 - **Secret: "Forty-Two".** Once all three reels are found, select Leyla's receiver at the shut vault door. The needle twitches one last time and, under the static, a far voice counts *"…forty… forty-one… forty-two"*. This foreshadows the reel's twist before it is seen. It unlocks the achievement `forty_two` and touches no puzzle.
 
 ### Chapter 1
-`game/src/rooms/lab7/lab7_room.gd` (new functions at the end of the file, plus three call sites: one line in `_ready`, one in `shelf_opened` and one in `_play_ending`), `lab7_logic.gd` (`epilogue_keys` only), `tools/localization/strings_ch1.py`.
+`game/src/rooms/lab7/lab7_room.gd` (new functions at the end of the file, plus four call sites: `_ready`, `shelf_opened`, `beam_path` and `_play_ending`), `lab7_logic.gd` (`epilogue_keys` only), `tools/localization/strings_ch1.py`.
 - **The bookcase reveal is shown.** As the case swings:
   - the darkroom's red safelight flares through the gap (0.7 → 2.6 → back);
   - a breath of dust rolls out into the lab;
   - a low tone sounds and a caption reads: *"[A cold draught breathes out from behind the shelves]"*.
-- **Beyond the door, a corridor.** The door now opens onto a 9 m institute corridor: linoleum, green dado, plaster and three enamel pendants. At its far end are double doors under a lit enamel sign, **RECORDS ARCHIVE B** (it translates with the language), and an amber emergency lamp. As the door swings, the lamps flicker on one by one toward the sign: *"[Beyond the door, the corridor lamps wake one by one]"*. The chapter card now sits over a lit corridor that leads to Chapter 2. It is built only when the door opens.
+- **Beyond the door, a corridor.** The door now opens onto a 9 m institute corridor: linoleum, green dado, plaster and three enamel pendants. At its far end are double doors under a lit enamel sign, **RECORDS ARCHIVE B** (it translates with the language), and an amber emergency lamp. As the door swings, the lamps flicker on one by one toward the sign: *"[Beyond the door, the corridor lamps wake one by one]"*. The lens choice is now made looking down a lit corridor that leads to Chapter 2. The corridor is built only when the door opens.
+- **A milestone in the mirror stretch.** The first time the beam reaches the second mirror: a bright tick and *"[The beam leaps to the second mirror]"*, once.
 - **The epilogue agrees with Chapter 2:** *"Under the corridor lamp you unfold the parcel's wrapper again. The postmark reads: 14 XI 1979."* This is the new key `epi1.postmark`; the old `epi.postmark` stays in `strings_core.py`, unused, because that file is shared.
-- **A finished save opens on the chapter card,** with its Play button for Chapter 2, over the open door and the lit corridor.
+- **A finished save opens on the chapter card,** with its Play button for Chapter 2, over the open door and the lit corridor. A save made between the door opening and the lens choice offers the choice again.
 
 ### Not changed, on purpose
 - **Puzzle answers and difficulty are unchanged.** No logic rule changed. Every variant (docs/VARIANTS.md) still comes from the seed; the new messages describe the state and never speak an answer.

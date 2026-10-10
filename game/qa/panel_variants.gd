@@ -2,11 +2,13 @@ extends Node
 ## QA: the Panel 7 close-up of every wiring in Lab7Logic.PANEL_POOL, rendered from the real Lab 7 scene in one
 ## process (docs/VARIANTS.md). Each wiring is reached through a real game seed (the first seed that draws it; seed 0
 ## for the canonical one), the solver plays up to the breaker handle, and the camera goes to the "panel" view.
-## Run: tools/qa_run.sh -- --resolution 1560x720 res://qa/panel_variants.tscn -- --out=<dir>
+## Run: tools/qa_run.sh -- --resolution 1560x720 res://qa/panel_variants.tscn -- --out=<dir> [--only=6,7]
+##   (each room instance leaves several GB behind in the software renderer: render about six wirings per run)
 ##   (1560x720 = a 19.5:9 phone; QA_XVFB_ARGS="-screen 0 1700x900x24" gives Xvfb the room)
 ## Writes <dir>/panel_<n>_seed<s>.png and prints one line per wiring: the seed, the shortest answer, the decal.
 
 var out_dir := "/tmp"
+var only: Array[int] = []
 
 
 func _ready() -> void:
@@ -17,10 +19,15 @@ func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
+		elif a.begins_with("--only="):
+			for n in a.substr(7).split(",", false):
+				only.append(int(n))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_probe_save.json"
 	var failed := 0
 	for n in Lab7Logic.PANEL_POOL.size():
+		if not only.is_empty() and not only.has(n):
+			continue
 		var game_seed := _seed_for(n)
 		GameState.variant_seed = game_seed
 		GameState.start_new("ch1")
@@ -29,6 +36,7 @@ func _run() -> void:
 		while not logic.state["handle_installed"] and guard < 300:
 			guard += 1
 			Lab7Solver.step(logic, "leave_lens")
+		logic.select_item("") # no UV glow over the plate
 		if logic.panel_variant() != n or not logic.state["handle_installed"]:
 			failed += 1
 		var answer := ", ".join(logic.panel_solution().map(func(v: Variant) -> String: return Lab7Logic.roman(int(v) + 1)))
@@ -44,7 +52,7 @@ func _run() -> void:
 		room.queue_free()
 		await _settle(0.5)
 		SaveSystem.delete_game()
-	print("wirings rendered: %d, failed: %d" % [Lab7Logic.PANEL_POOL.size(), failed])
+	print("wirings rendered: %d, failed: %d" % [only.size() if not only.is_empty() else Lab7Logic.PANEL_POOL.size(), failed])
 	print("QA_DONE exit=%d" % (1 if failed > 0 else 0)) # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit(1 if failed > 0 else 0)
 
