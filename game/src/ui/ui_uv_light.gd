@@ -46,11 +46,16 @@ func _draw() -> void:
 	var sheet := Rect2(xf * paper.global_position, paper.size)
 	if sheet.size.x < 1.0 or sheet.size.y < 1.0:
 		return
-	# the pool lights the middle of the sheet, where the writing is; its halo (1.25 × the radius) ends inside the
-	# sheet, so no edge of the light is ever seen
+	# the light covers the writing and feathers out toward the sheet's edges (a tenth of its height), so no edge
+	# of the light is ever seen; its brightest part is where the lamp points: the hidden writing
 	var m := material as ShaderMaterial
-	m.set_shader_parameter("center", Vector2(0.5, 0.52))
-	m.set_shader_parameter("radius", Vector2(0.4, 0.38))
+	var c := Vector2(0.5, 0.5)
+	if is_instance_valid(focus) and focus.is_visible_in_tree():
+		c = ((focus.get_global_rect().get_center() - paper.global_position) / sheet.size).clamp(Vector2(0.3, 0.3), Vector2(0.7, 0.7))
+	m.set_shader_parameter("center", c)
+	m.set_shader_parameter("radius", Vector2(0.36, 0.34))
+	m.set_shader_parameter("size_px", sheet.size)
+	m.set_shader_parameter("feather", clampf(minf(sheet.size.x, sheet.size.y) * 0.1, 24.0, 160.0))
 	draw_rect(sheet, Color.WHITE)
 
 

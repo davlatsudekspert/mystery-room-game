@@ -1,6 +1,6 @@
 # Development Status
 
-_Last updated: 2026-10-09_
+_Last updated: 2026-10-10_
 
 | Phase | Status | Verified evidence |
 |---|---|---|
@@ -49,6 +49,16 @@ The owner's iPhone screenshots showed text that was too small, too dim or too cr
 - **Settings panel:** dark plate with a hairline gold frame, LANGUAGE / SOUND / DISPLAY & COMFORT / OTHER sections, one row height (9 mm), switches with their state in words, thin gold sliders with readouts, segmented language and text size, a pinned footer, a body that scrolls under soft fades. Built headless in `test_layout.gd` on the iPhone, a 16:9 phone and a tablet at Normal and Extra large in EN / RU / UZ.
 - **HUD:** banners (small-caps serif title between gold flourishes over a rule, subtitle below, soft dark band) for the view title, captions, messages, the prompt and "item found" (icon, name, description); the inventory as a column on the left beside a vertical gold rule, with Inspect / Combine beside the selected slot; bezel buttons: Back top left, Hint top right, Pause (roman II) bottom right; the intro between gold rules; dialogs with the title over a gold rule and small-caps buttons.
 - **Verification:** `qa/ui_screens.tscn` on the iPhone profile (2556×1179 @ 460 dpi, 177 / 63 px insets) at Normal, Large and Extra large in EN / RU / UZ (0 layout issues), the headless layout tests, and a Chapter 1 playthrough. Previews: `docs/previews/ui/settings_before_after.jpg`, `hud_before_after.jpg`, `settings_phone_{en,ru,uz}.jpg`, `hud_item_found_{en,ru,uz}.jpg`.
+
+## Owner feedback from the Chapter 1 phone session (2026-10-10)
+The owner played Chapter 1 on an Android phone (an older build). Each point is fixed and tested (`docs/UI_UX.md` → HUD; before/after previews in `docs/previews/ui/owner_feedback/`):
+- **"The main lever can't be tapped, the inventory gets the tap":** every HUD container, rule, banner, bar and picture lets taps through (`MOUSE_FILTER_IGNORE`); only buttons and slots take them. `hud.blocked_rects()` lists what does, in viewport px, for close-up framing and QA (`ui_screens --probe=panel7/IA_main_lever`: free to tap). `test_hud_bag.gd` taps through banners, the rule, the meter and the gaps.
+- **"A bag instead of items everywhere":** the inventory folds into a bag (bottom left, original line art); its tray slides out above it (0.22 s). Close-ups start collapsed, room views keep the player's choice (saved); picking an item in a close-up folds the tray; the collapsed bag shows the item in hand and a count; found items fly into it. Slots are 9 mm.
+- **"Back moves the camera when I want to put the item back":** Android back unwinds overlay → Combine / item in hand → open bag → camera → pause (`hud.consume_back()`, `RoomBase.handle_back()`, `test_hud_back.gd`).
+- **"Hints only help a little":** the dialog is a visible ladder (Hint 1 of 3 → Stronger hint (2/3) → Show the answer (3/3)), earlier levels stay above, smaller and muted; a goal reopens at its highest level (kept in the save). `test_hud_hints.gd`.
+- **UV page:** the flat violet rectangle is replaced by a feathered violet light with fluorescing paper and glowing ink (`UIUVLight`, two shaders). `test_hud_uv.gd`.
+- **Readability:** one overlap-free HUD layout pass (`_arrange()`): the view title two lines at most, the meter, message and caption placed around each other, the older line giving way. `test_hud_layout.gd` builds the HUD on 16:9, 19.5:9, 20:9 and 4:3 screens at Normal / Large / Extra large in EN / RU / UZ (36 combinations): no overlaps, everything inside the safe area, every button and slot ≥ 9 mm. The RU Extra-large overlaps on the iPhone (title × meter × item actions, caption × message × prompt) are gone.
+- Also: tests fail after 120 s instead of hanging the run; Continue never loads a chapter without a scene; documents without a reader page open nothing.
 
 ## Chapter 3
 Design: `docs/CHAPTER3_DESIGN.md`; model contract: `docs/models/ch3.md`. The logic is complete with per-game variants (102 tests). The scene (`game/src/rooms/underground/`) is integrated: layout, the 65 views with captions, zone culling and portal cards, lights, environment and zone tones, the lift-descent intro, hotspot routing for every puzzle, variant evidence surfaces, echoes, hints and Continue. `qa/playthrough_ch3` plays the whole chapter by real 3D taps on both Chapter 2 key paths; on 2026-10-10 every remaining fallback was for a model group not built yet (B, E, F and part of D). Draw calls are 27–90 per view without those groups. Unreleased (`released: false`). Details in `docs/GAMEPLAY_QA.md`, "Chapter 3".

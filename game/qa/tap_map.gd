@@ -34,6 +34,7 @@ const SCREENS := {
 	"phone55": {"size": Vector2i(1920, 1080), "dpi": 480.0, "insets": [0, 0, 0, 0]}, # 16:9
 	"tablet10": {"size": Vector2i(2048, 1536), "dpi": 264.0, "insets": [0, 0, 0, 0]}, # 4:3
 }
+const SLIVER_SHOWN := 0.4 # less of a control than this on screen: it only peeks in at the edge (not a target in this view)
 const EDGE_MM := 6.0 # a control's tap point keeps this far from the screen edge (thumbs and case bezels)
 const ASSUMED_COLUMN := 0.13 # until HUD.blocked_rects() lands: the inventory column is ~13 % of the width
 
@@ -47,6 +48,7 @@ var cam_overrides: Array[String] = []
 var hud_controls := 0
 var hud_failures := 0
 var hud_warnings := 0
+var hud_slivers := 0
 var hud_focus_only := 0 # controls seen at a view's edge whose tap only moves the camera to their own view
 var _screen_name := ""
 
@@ -166,9 +168,9 @@ func _run() -> void:
 		get_viewport().get_texture().get_image().save_png("%s/doc_%s.png" % [out_dir, doc_name])
 	var qa_exit := 0
 	if hud_check:
-		lines.append("hud-check%s: %d controls in %d views, %d failures, %d banner warnings (%d focus-only controls not checked)" % [
+		lines.append("hud-check%s: %d controls in %d views, %d failures, %d banner warnings (%d focus-only controls and %d slivers not checked)" % [
 			" (%s)" % _screen_name if _screen_name != "" else "", hud_controls, views.size(), hud_failures, hud_warnings,
-			hud_focus_only])
+			hud_focus_only, hud_slivers])
 		qa_exit = 1 if hud_failures > 0 else 0
 	var f := FileAccess.open(out_dir + "/tap_map.txt", FileAccess.WRITE)
 	f.store_string("\n".join(lines) + "\n")
@@ -424,6 +426,15 @@ func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
 			why = "tap point off screen"
 		else:
 			var d := minf(minf(p.x - vp.position.x, vp.end.x - p.x), minf(p.y - vp.position.y, vp.end.y - p.y))
+			var pr: Rect2 = m["rect"]
+			var shown := pr.intersection(vp).get_area() / maxf(pr.get_area(), 1.0)
+			if d < edge_px and shown < SLIVER_SHOWN:
+				# a neighbour's door or drawer peeking in at the screen edge: scenery here, a target in its own view
+				hud_slivers += 1
+				m["hud_warn"] = "sliver, %d %% shown" % int(shown * 100.0)
+				lines.append("HUD[%s]: %s — only %d %% of it is on screen, %.1f mm from the edge: scenery here, not checked" % [
+					view_id, part, int(shown * 100.0), d * UITheme.mm_per_px()])
+				continue
 			if d < edge_px:
 				why = "%.1f mm from the screen edge (min %.0f)" % [d * UITheme.mm_per_px(), EDGE_MM]
 			else:

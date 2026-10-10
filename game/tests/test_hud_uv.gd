@@ -56,10 +56,11 @@ func test_revealed_page_has_a_soft_light_and_glowing_ink() -> void:
 		check(is_equal_approx(light.strength, 1.0), "already lit")
 		var m := light.material as ShaderMaterial
 		var c: Vector2 = m.get_shader_parameter("center")
-		var rad: Vector2 = m.get_shader_parameter("radius")
-		# the pool and its halo (1.25 × the radius) stay inside the sheet: nothing is cut off by the sheet's edge
-		check(c.x - rad.x * 1.25 >= -0.001 and c.x + rad.x * 1.25 <= 1.001, "the pool fits the sheet sideways (%s ± %s)" % [c, rad])
-		check(c.y - rad.y * 1.25 >= -0.001 and c.y + rad.y * 1.25 <= 1.001, "the pool fits the sheet in height (%s ± %s)" % [c, rad])
+		var feather: float = m.get_shader_parameter("feather")
+		# the light feathers out before the sheet's edge (no edge of it is ever seen) and is brightest on the writing
+		var sheet := (light.paper as Control).size
+		check(feather >= 24.0 and feather <= minf(sheet.x, sheet.y) * 0.2, "the light has a soft border (%.0f px on a %s sheet)" % [feather, sheet])
+		check(c.x >= 0.3 and c.x <= 0.7 and c.y >= 0.3 and c.y <= 0.7, "the bright spot is on the page's middle (%s)" % c)
 	var glowing_text := 0
 	for n in o.find_children("*", "Label", true, false):
 		var l := n as Label

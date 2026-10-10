@@ -1268,6 +1268,16 @@ func _on_view_changed(id: String) -> void:
 	_uv_aim = get_viewport().get_visible_rect().size * 0.5
 
 
+## The story nudge after the power returns ("a faint red glow around the bookcase"). Its caption sits under the title,
+## which in Panel 7's close-up is exactly where the lamp icons are: it waits until the player steps away from the panel.
+func _nudge_red_glow() -> void:
+	if cam.current() == "panel":
+		await cam.view_changed
+		await get_tree().create_timer(0.8).timeout
+	if not logic.state["shelf_open"]:
+		hud.call("caption", tr("msg.red_glow"), 4.5)
+
+
 func _on_events(ev: Array[String]) -> void:
 	for e in ev:
 		_feedback(e)
@@ -1366,9 +1376,7 @@ func _feedback(e: String) -> void:
 			hud.call("message", tr("msg.power_restored"))
 			_update_lighting(true)
 			AudioManager.ambience("amb_power_hum", true, -8.0, 4.0)
-			get_tree().create_timer(4.0).timeout.connect(func() -> void:
-				if not logic.state["shelf_open"]:
-					hud.call("caption", tr("msg.red_glow"), 4.5))
+			get_tree().create_timer(4.0).timeout.connect(_nudge_red_glow)
 		"switches_locked":
 			hud.call("message", tr("msg.switches_locked"))
 		"main_locked":

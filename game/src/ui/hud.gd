@@ -1347,7 +1347,7 @@ func _show_notebook(page: int) -> void:
 		glyphs.alignment = BoxContainer.ALIGNMENT_CENTER
 		glyphs.add_theme_constant_override("separation", 0) # the glow's margin spaces them
 		for gid: Variant in l7.safe_glyphs(): # this game's cipher (docs/VARIANTS.md)
-			glyphs.add_child(UIUVLight.glow_picture(load("res://assets/ui/glyphs/%s.png" % gid), round(110 * UITheme.wscale())))
+			glyphs.add_child(UIUVLight.glow_picture(load("res://assets/ui/glyphs/%s.png" % gid), round(100 * UITheme.wscale())))
 		cipher.add_child(glyphs)
 		cipher.visible = l7.state["uv_page"]
 		if not l7.state["uv_page"] and l7.has_uv():
