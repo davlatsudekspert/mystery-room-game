@@ -140,3 +140,9 @@ The HUD has no per-button ShaderMaterial, no `clip_contents` outside the tray's 
 | after the message and caption have faded | 38 → 5 |
 
 Main gap: with the tray open each slot still costs 2 (its rounded frame, and its item icon, which is a texture of its own), so a player who leaves the bag open at room views has about 8 + 2 per item + 3 calls; the busiest state of `test_hud_layout` (everything at once) is 33. Merging the slot frames into one mesh layer and packing the item icons into one atlas would make the tray constant; not done, because it changes how slots take taps and `ItemIcons` renders each icon into its own texture. Font outlines cost one call per text line; they stay because the look must not change.
+
+### Checks on the final code
+- `tools/run_tests.sh`: `204 tests, 28581 checks, 0 failures (57993 ms)` (36 layout combinations, bag, back, hint and store tests included; `test_ui_mesh` is new). `godot --headless res://qa/check_scripts.tscn`: `checked 118 scripts, 0 broken`.
+- `tap_map --chapter=ch1 --hud-check --screen=phone61` on the 36 Chapter 1 views: `hud-check (phone61): 93 controls in 36 views, 0 failures, 13 banner warnings (80 focus-only controls and 0 slivers not checked)`, the same line as before the change.
+- Chapter 1 playthrough, seed 4242, on the final code: all steps pass, `Lumen shards 5/5`, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`, `taps under a HUD control: 0 (window 1920x1080)`.
+- Also fixed in this pass: `test_hud_uv.test_the_lamp_strikes_on_the_page` waited a fixed real-time 0.9 s for a 0.63 s tween and failed once at load average 12; it now waits for the light itself (`HudTestRoom.wait_until`, frame by frame, 20 s cap that only a hang reaches), passing 3 of 3 alone and under 8 busy loops.
