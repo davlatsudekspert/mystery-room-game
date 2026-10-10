@@ -152,6 +152,12 @@ func _run() -> void:
 		menu.call("_show_purchase")
 		await _settle(0.6)
 		await _shot("%s_purchase" % lang, host)
+		# the same screen as a store build shows it, without the tester reset: the App Review screenshot
+		for c in host.find_children("*", "", true, false):
+			if c is PurchasePanel and c.get("_reset") != null:
+				(c.get("_reset") as Control).visible = false
+		await _settle(0.3)
+		await _shot("%s_purchase_store" % lang, host)
 		menu.call("_confirm", "ui.new_game_confirm", func() -> void: pass)
 		await _settle(0.4)
 		await _shot("%s_confirm" % lang, host)
