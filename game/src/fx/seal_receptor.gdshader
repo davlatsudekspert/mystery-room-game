@@ -1,6 +1,6 @@
 shader_type spatial;
 // One receptor of the spectral seal (docs/models/ch3.md §6 / §11, E3). Bits: 1 ▲ red, 2 ● green, 4 ■ blue.
-// The rim ring (r 0.38–0.50 of the disc's bounding square) takes the additive colour of `rim` and shows one cream
+// The rim ring (r 0.38–0.50 of the disc's bounding square) takes the additive colour of `rim` and shows one dark
 // symbol per bit, so colour is never the only cue. The centre shows the light falling on it (`light`) in its additive
 // colour with its symbols in a row. `accepted` = the whole seal accepts. UV 0..1 over the disc's bounding square.
 render_mode cull_back;
@@ -53,7 +53,7 @@ void fragment() {
 		vec3 lc = additive(light);
 		float glow = accepted ? 1.6 : 1.0;
 		col = mix(col, lc, light != 0 ? 0.75 : 0.0);
-		emit = lc * (light != 0 ? 1.4 * glow : 0.0) * (1.0 - 0.35 * r);
+		emit = lc * (light != 0 ? 1.0 * glow : 0.0) * (1.0 - 0.35 * r);
 		int n = 0;
 		for (int k = 0; k < 3; k++) {
 			n += (light >> k) & 1;
@@ -69,7 +69,10 @@ void fragment() {
 	} else {
 		col = vec3(0.35, 0.28, 0.14); // the brass bezel line between rim and centre
 	}
-	ALBEDO = mix(col, cream, mark);
-	EMISSION = mix(emit, cream * (r < 0.72 && light != 0 ? 1.2 : 0.35), mark);
-	ROUGHNESS = 0.25;
+	// symbols are dark engravings: they sit on bright additive colours (a yellow or white rim, a lit centre that is
+	// white when all three beams arrive), where cream symbols vanished (rendered QA); colour is still never the only cue
+	ALBEDO = mix(col, vec3(0.05), mark);
+	EMISSION = mix(emit, vec3(0.0), mark);
+	ROUGHNESS = 0.6; // glossy 0.25 gave the prism lamp's glare a hot spot on the disc
+	SPECULAR = 0.3;
 }

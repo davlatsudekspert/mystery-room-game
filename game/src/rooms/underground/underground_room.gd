@@ -252,8 +252,8 @@ func _build_lights() -> void:
 	# a shroud lamp in front of each drum lock: the drums sit 5 cm behind the plate, where no room light reaches
 	for side: String in ["west", "east"]:
 		var door := models.get("door_" + side) as Node3D
-		var at := door.global_transform * Vector3(-1.16, 1.55, 0.58) if door else Vector3(-3.1 if side == "west" else 3.1, 1.55, 1.16 if side == "west" else -1.16)
-		_light("drum_light_" + side, "omni", at, Color("ffd9a8"), 1.3, 1.1, "G")
+		var at := door.global_transform * Vector3(-1.16, 1.4, 0.95) if door else Vector3(-3.1 if side == "west" else 3.1, 1.55, 1.16 if side == "west" else -1.16)
+		_light("drum_light_" + side, "omni", at, Color("ffd9a8"), 1.0, 1.9, "G") # closer and stronger blew single windows out
 	# Nursery
 	_spot("key_nursery", Vector3(9.8, 3.9, 0.2), Vector3(9.8, 0.0, -3.4), 60.0, cold, 2.4, 8.0, "N", true)
 	_light("fill_0", "omni", Vector3(6.8, 3.6, 1.2), cold, 0.9, 5.0, "N")
@@ -967,14 +967,16 @@ func _process(_delta: float) -> void:
 # ====================================================================== view changes
 ## Close-ups whose dark metal must be read (drum symbols, lock faces, the cam drum, the socket) get a stronger
 ## camera fill: at 0.9 the east drum lock stayed near black in the rendered QA.
-const BRIGHT_CLOSEUPS: Array[String] = ["drum_west", "drum_east", "cabinet_0", "cabinet_1", "cabinet_2", "meter_case",
-	"cam_drum", "growth_log", "seed_drawer", "socket_42", "recorder", "interlock_plate"]
+const BRIGHT_CLOSEUPS: Array[String] = ["cabinet_0", "cabinet_1", "cabinet_2", "meter_case",
+	"cam_drum", "growth_log", "seed_drawer", "socket_42", "interlock_plate"]
 
 
 func view_changed_hook(id: String) -> void:
 	apply_culling(id)
 	var fill: OmniLight3D = lights["focus_fill"]
 	var e := 0.0 if cam.is_root() or id.ends_with("_mem") else (1.5 if id in BRIGHT_CLOSEUPS else 0.9)
+	if id == "meter_case":
+		e = 1.15 # the dials are cream tiles on black: 1.5 blew the letter beside the case out to flat white
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	_frost.visible = id.ends_with("_mem")
 	_place_eyepiece(id)

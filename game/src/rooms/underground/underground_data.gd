@@ -126,7 +126,9 @@ const VIEWS := {
 	"seal": [Vector3(6.1, 1.3, -0.3), Vector3(6.1, 1.15, -0.97), 44.0, false, "N", "camp_open", "K"],
 	"camp": [Vector3(7.25, 1.6, -1.5), Vector3(4.9, 1.2, -2.8), 62.0, false, "K", "shutter_open", "GS"],
 	"shutter": [Vector3(6.55, 1.55, -2.6), Vector3(4.66, 1.6, -2.6), 50.0, false, "K", "shutter_open", "GS"],
-	"recorder": [Vector3(5.3, 1.32, -2.55), Vector3(5.0, 0.84, -1.55), 46.0, false, "K", "camp_open", "N"],
+	# from the north-east and higher than the first framing: the scope's screen faces that way, and its top no longer
+	# hides the recorder's two ivory keys (their ◀◀ / ▶ were foreshortened to slivers from 25 degrees)
+	"recorder": [Vector3(5.3, 1.38, -2.2), Vector3(5.0, 0.84, -1.68), 34.0, false, "K", "camp_open", "N"],
 	# cinematic only
 	"hall_start": [Vector3(-5.8, 2.2, 2.9), Vector3(-10.0, 2.4, -2.0), 64.0, false, "C", "", ""],
 	"grow": [Vector3(8.4, 1.3, -2.3), Vector3(8.4, 1.2, -3.1), 40.0, false, "N", "", ""],

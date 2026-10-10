@@ -296,6 +296,16 @@ func _build_evidence() -> void:
 	for side: String in ["west", "east"]:
 		for i in 4:
 			_set_slot(part("door_" + side, "IA_drum_%d" % i) as MeshInstance3D, "M_Steel_Dark", cream)
+	# the recorder's two piano keys: dark Bakelite on the dark leather body hid the raised ◀◀ / ▶ from the recorder view,
+	# so they are ivory like piano keys, with a trace of emission against the dim camp
+	var ivory := StandardMaterial3D.new()
+	ivory.albedo_color = Color(0.9, 0.85, 0.7)
+	ivory.roughness = 0.45
+	ivory.emission_enabled = true
+	ivory.emission = Color(1.0, 0.92, 0.75)
+	ivory.emission_energy_multiplier = 0.2
+	for key_name: String in ["IA_rec_rewind", "IA_rec_play"]:
+		_set_slot(part("field_recorder", key_name) as MeshInstance3D, "M_Bakelite", ivory)
 
 
 static func _glyph_bits(g: String) -> int:
@@ -514,6 +524,7 @@ func _build_rising() -> void:
 	_rising.multimesh = mm
 	_rising.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_rising.visible = false
+	_rising.set_meta("present", false) # until the Array answers (set_present)
 	room.add_child(_rising)
 	_cull_tag(_rising, "GS")
 
@@ -728,14 +739,16 @@ func _apply_gallery(animated: bool) -> void:
 	for r in 4:
 		var m := _mats.get("ring_%d" % r) as BaseMaterial3D
 		if m:
-			m.emission_energy_multiplier = 2.2 if array else (0.55 if awake else 0.15)
-			m.albedo_color = Color(0.81, 0.96, 1.0) if array else (Color(0.55, 0.7, 0.78) if awake else Color(0.4, 0.48, 0.53))
+			# answering: a cyan glow, not flat white (2.2 on near-white glass clipped the rings and their symbols to white)
+			m.emission = Color(0.25, 0.7, 1.0) if array else Color(0.8118, 0.9647, 1.0) # the library lumen: x1.5 clipped to white
+			m.emission_energy_multiplier = 1.3 if array else (0.55 if awake else 0.15)
+			m.albedo_color = Color(0.4, 0.75, 0.92) if array else (Color(0.55, 0.7, 0.78) if awake else Color(0.4, 0.48, 0.53))
 		var sym := _mats.get("ring_sym_%d" % r) as BaseMaterial3D
 		if sym:
 			sym.albedo_color = Color(LUMEN, 1.0) * (1.0 if awake else 0.45)
 	var up := (room.get("lights") as Dictionary).get("array_up") as Light3D
 	if up:
-		up.light_energy = 3.0 if array else (2.0 if awake else 1.0)
+		up.light_energy = 2.2 if array else (2.0 if awake else 1.0)
 	for k in 5:
 		_lamp(part("shell_gallery", "lamp_glass_%d" % k), true, Color("ffe6c4"), 2.2)
 	# console
@@ -755,12 +768,12 @@ func _apply_gallery(animated: bool) -> void:
 	var choice: String = s["choice"]
 	_held_item("choice", "strand_fork" if choice == "strand" else "nursery_crystal", part("gallery_console", "choice_mount"), choice != "")
 	# memorial
-	_lamp(part("memorial_wall", "memorial_crystals"), true, LUMEN, 2.8 if array else 0.7)
-	_lamp(part("memorial_wall", "socket_42_ring"), s["secret"], LUMEN, 2.4)
+	_lamp(part("memorial_wall", "memorial_crystals"), true, LUMEN, 1.7 if array else 0.7)
+	_lamp(part("memorial_wall", "socket_42_ring"), s["secret"], LUMEN, 1.5)
 	var sock: String = s["socket_42"]
 	_held_item("socket_42", sock, part("memorial_wall", "socket_42_mount"), sock != "", "Item_socket_42")
 	if _rising:
-		_rising.visible = array
+		room.call("set_present", _rising, array) # not .visible: zone culling rewrites that on every view change
 
 
 func _apply_nursery(animated: bool) -> void:
