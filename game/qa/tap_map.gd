@@ -7,7 +7,8 @@ extends Node
 ## Run: xvfb-run -a godot --path game res://qa/tap_map.tscn -- --chapter=ch2 --views=cat_drawer,splicer --out=<dir>
 ##        [--steps=N] (solver steps first) [--do=open_cat_drawer:4,pick_divider:1] (logic calls; an argument that
 ##        is not an int is passed as a string, e.g. turn_freq:x:1) [--until=booth_open] (solver steps until that
-##        state key is true) [--lens=take|leave] [--key=strand|leyla] (ch3: the Chapter 2 key path)
+##        state key is true) [--lens=take|leave] [--key=strand|leyla] (ch3, ch4: the Chapter 2 key path)
+##        [--trust=strand|leyla] [--secret] (ch4: the Chapter 3 choice and its true-ending flag)
 ##        [--perf] (no tap marks: log draw calls / primitives / objects per view instead)
 ##        [--breakdown] (with --perf: the draw calls each model, effect node and light shadow adds to the view)
 ##        [--hud-breakdown] (with --perf: the HUD alone: the view's calls with the HUD shown / hidden, the HUD with the
@@ -26,10 +27,17 @@ extends Node
 ##        that only moves the camera to its own view when tapped here (RoomBase.in_reach) is not checked in this view;
 ##        a control under a banner that only covers it is a warning. The message and prompt banners are shown while it
 ##        measures, as they are while a player works a mechanism with an item in hand. Exit 1 on any failure)
+##        [--tap-size] (the effective tap size of every control that can be worked in the view, in millimetres on the
+##        player's screen (use --screen=phone61): how far a tap resolves to the control along x and along y through its
+##        middle, once as the exact ray sees it (raw) and once with the finger-sized tap assist (TapAssist, as a
+##        player's tap goes through RoomBase.pick; IA_x and Item_x count as one control); a control under 9 mm on both
+##        sides is flagged "UNDER 9 mm". Needs
+##        no extra steps; adds `size[view]:` lines and a `tap-size:` summary. It does not change the exit code)
 ## Writes <view>.png and tap_map.txt (one line per orange or red part, and one per HUD failure or warning).
+## With `godot --headless` there is no renderer: no PNGs, but the lines (and --tap-size, --hud-check) are the same.
 
 const SCENES := {"ch1": "res://src/rooms/lab7/lab7.tscn", "ch2": "res://src/rooms/archive/archive.tscn",
-	"ch3": "res://src/rooms/underground/underground.tscn"}
+	"ch3": "res://src/rooms/underground/underground.tscn", "ch4": "res://src/rooms/array_hall/array_hall.tscn"}
 
 ## Emulated screens (device px, dpi, safe insets l/t/r/b in device px): the phones the HUD check runs at.
 const SCREENS := {
@@ -41,11 +49,18 @@ const SCREENS := {
 const SLIVER_SHOWN := 0.4 # less of a control than this on screen: it only peeks in at the edge (not a target in this view)
 const EDGE_MM := 6.0 # a control's tap point keeps this far from the screen edge (thumbs and case bezels)
 const ASSUMED_COLUMN := 0.13 # until HUD.blocked_rects() lands: the inventory column is ~13 % of the width
+const SIZE_STEP_MM := 0.5 # --tap-size: the sampling pitch
+const SIZE_CAP_MM := 12.0 # --tap-size: how far each way from the middle a control is followed (24 mm wide at most)
 
 var out_dir := "/tmp/tap_map"
 var room: Node3D
 var lines: Array[String] = []
 var hud_check := false
+var tap_size := false
+var size_views: Dictionary = {} # --tap-size: "view part" -> {raw: Vector2, eff: Vector2} (mm)
+var size_parts: Dictionary = {} # --tap-size: part -> its best size over the views {raw: Vector2, eff: Vector2}
+var size_focus_only := 0
+var _stops: PackedStringArray = [] # --tap-size: what ended the last _tap_extent() scan in each direction
 var notebook_page := 0
 var doc_name := ""
 var cam_overrides: Array[String] = []
@@ -69,6 +84,8 @@ func _run() -> void:
 	var lens := "leave"
 	var key := "strand"
 	var until := ""
+	var trust := "leyla" # ch4: the Chapter 3 choice (--trust=strand) and its true-ending flag (--secret)
+	var secret := false
 	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
@@ -87,6 +104,10 @@ func _run() -> void:
 			key = a.substr(6)
 		elif a.begins_with("--until="):
 			until = a.substr(8)
+		elif a.begins_with("--trust="):
+			trust = a.substr(8)
+		elif a == "--secret":
+			secret = true
 		elif a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7))
 		elif a.begins_with("--brightness="):
@@ -97,6 +118,8 @@ func _run() -> void:
 			Settings.values["text_scale"] = clampf(float(a.substr(13)), 0.9, 1.3)
 		elif a == "--hud-check":
 			hud_check = true
+		elif a == "--tap-size":
+			tap_size = true
 		elif a.begins_with("--lang="):
 			TranslationServer.set_locale(a.substr(7))
 		elif a.begins_with("--doc="):
@@ -111,7 +134,8 @@ func _run() -> void:
 	SaveSystem.save_path = "user://qa_tapmap_save.json"
 	SaveSystem.profile_path = "user://qa_tapmap_profile.json"
 	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens == "take" else "leave_lens", "ch1_shards": 5,
-		"ch2_key": key + "_key", "ch2_echoes": 3}}
+		"ch2_key": key + "_key", "ch2_echoes": 3,
+		"ch3_trust": trust, "ch3_true_ending": secret}}
 	GameState.start_new(chapter)
 	var logic := GameState.logic
 	for _i in steps:
@@ -175,6 +199,8 @@ func _run() -> void:
 		await RenderingServer.frame_post_draw
 		get_viewport().get_texture().get_image().save_png("%s/doc_%s.png" % [out_dir, doc_name])
 	var qa_exit := 0
+	if tap_size:
+		_tap_size_summary()
 	if hud_check:
 		lines.append("hud-check%s: %d controls in %d views, %d failures, %d banner warnings (%d focus-only controls and %d slivers not checked)" % [
 			" (%s)" % _screen_name if _screen_name != "" else "", hud_controls, views.size(), hud_failures, hud_warnings,
@@ -229,6 +255,8 @@ func _apply_screen(spec: String) -> void:
 ## One solver step of the chapter's scripted solver (the same ones the no-softlock tests use).
 static func _solve_step(chapter: String, logic: RoomLogic) -> void:
 	match chapter:
+		"ch4":
+			ArrayHallSolver.step(logic as ArrayHallLogic, "leave_lens")
 		"ch3":
 			UndergroundSolver.step(logic as UndergroundLogic, "leyla")
 		"ch2":
@@ -476,6 +504,7 @@ func _map(view_id: String) -> void:
 		var hits := 0
 		var total := 0
 		var centroid := Vector2.ZERO
+		var hit_pts: Array[Vector2] = []
 		var others: Dictionary = {}
 		var inner := r.grow_individual(-r.size.x * 0.1, -r.size.y * 0.1, -r.size.x * 0.1, -r.size.y * 0.1)
 		for gy in 5:
@@ -489,6 +518,7 @@ func _map(view_id: String) -> void:
 				if got == part:
 					hits += 1
 					centroid += sp
+					hit_pts.append(sp)
 				else:
 					others[got] = int(others.get(got, 0)) + 1
 		if total == 0:
@@ -517,13 +547,20 @@ func _map(view_id: String) -> void:
 			elif hits < 3:
 				hits = 3 # its label is a sure target, even if most of its body is covered
 		var hs := str(room.call("resolve", {"collider": b, "position": b.global_position}).get("hotspot", ""))
-		marks.append({"pos": pos, "part": part, "hits": hits, "got": top, "rect": r, "hotspot": hs})
+		marks.append({"pos": pos, "part": part, "hits": hits, "got": top, "rect": r, "hotspot": hs, "pts": hit_pts})
 		if hits < 3:
 			lines.append("%s: %s reachable at %d/%d sample points (mostly hits %s)" % [view_id, part, hits, total,
 				top if top != "" else "(nothing)"])
+	if tap_size:
+		_tap_sizes(view_id, marks, rect)
 	var zones: Array[Dictionary] = []
 	if hud_check:
 		zones = await _hud_check(view_id, marks)
+	if DisplayServer.get_name() == "headless":
+		# no renderer: nothing to shoot (--tap-size and the reports work without one)
+		if hud_check:
+			_hud_restore()
+		return
 	var layer := CanvasLayer.new()
 	layer.layer = 100
 	var canvas := _Marks.new()
@@ -539,6 +576,133 @@ func _map(view_id: String) -> void:
 	layer.queue_free()
 	if hud_check:
 		_hud_restore()
+
+
+# ====================================================================== --tap-size
+## The effective tap size of every control that can be worked in this view (see the header): lines `size[view]:`.
+func _tap_sizes(view_id: String, marks: Array[Dictionary], vp: Rect2) -> void:
+	var blocked := _hud_blocked(vp)
+	for m in marks:
+		var part: String = m["part"]
+		if not _is_control(part) or int(m["hits"]) == 0:
+			continue
+		var r: Rect2 = m["rect"]
+		if r.intersection(vp).get_area() / maxf(r.get_area(), 1.0) < SLIVER_SHOWN:
+			continue # only peeks in at the edge: scenery here
+		if not _operable_here(str(m.get("hotspot", ""))):
+			size_focus_only += 1 # a tap here only moves the camera to the object's own view
+			continue
+		var p: Vector2 = m["pos"]
+		for q: Vector2 in m["pts"]: # the centroid of a ring or a frame is not on the part: start at a sample that is
+			if q.distance_squared_to(m["pos"]) < p.distance_squared_to(m["pos"]) or not _tap_gets(p, part, false):
+				if _tap_gets(q, part, false):
+					p = q
+		var raw := _tap_extent(p, part, false, blocked, vp)
+		var eff := _tap_extent(p, part, true, blocked, vp)
+		var stops := ", ".join(_stops)
+		m["raw_mm"] = raw
+		m["eff_mm"] = eff
+		size_views["%s %s" % [view_id, part]] = {"raw": raw, "eff": eff}
+		var best: Dictionary = size_parts.get(part, {"raw": Vector2.ZERO, "eff": Vector2.ZERO})
+		if maxf(raw.x, raw.y) > maxf((best["raw"] as Vector2).x, (best["raw"] as Vector2).y):
+			best["raw"] = raw
+		if maxf(eff.x, eff.y) > maxf((best["eff"] as Vector2).x, (best["eff"] as Vector2).y):
+			best["eff"] = eff
+		size_parts[part] = best
+		var flag := ""
+		if maxf(eff.x, eff.y) < UITheme.TOUCH_MM:
+			flag = "  UNDER %.0f mm (the assist stops at: %s)" % [UITheme.TOUCH_MM, stops]
+		elif maxf(raw.x, raw.y) < UITheme.TOUCH_MM:
+			flag = "  (raw under %.0f mm, the assist makes it)" % UITheme.TOUCH_MM
+		lines.append("size[%s]: %s  raw %.1f x %.1f mm  with assist %.1f x %.1f mm%s" % [view_id, part, raw.x, raw.y, eff.x, eff.y, flag])
+
+
+## How far (mm) a tap resolves to `part` around `p` on the screen: along x and along y through p. 0 x 0 when a tap at p
+## does not. `assist` goes through the room's pick (what a player's tap does), else through the exact raycast.
+func _tap_extent(p: Vector2, part: String, assist: bool, blocked: Array[Rect2], vp: Rect2) -> Vector2:
+	if not _tap_gets(p, part, assist):
+		return Vector2.ZERO
+	var step := SIZE_STEP_MM / UITheme.mm_per_px()
+	var n := int(SIZE_CAP_MM / SIZE_STEP_MM)
+	var out := Vector2.ZERO
+	_stops = []
+	for axis in 2:
+		var dir := Vector2(1.0, 0.0) if axis == 0 else Vector2(0.0, 1.0)
+		var count := 1 # the middle sample
+		for sgn in [-1.0, 1.0]:
+			var why := "%d mm reach" % int(SIZE_CAP_MM)
+			for k in range(1, n + 1):
+				var q: Vector2 = p + dir * float(sgn) * step * float(k)
+				if not vp.has_point(q):
+					why = "the screen edge"
+					break
+				if _in_any(q, blocked):
+					why = "a HUD control"
+					break
+				if not _tap_gets(q, part, assist):
+					var hit: Dictionary = room.call("pick" if assist and room.has_method("pick") else "raycast", q)
+					why = "nothing" if hit.is_empty() else (str(room.call("resolve", hit)["part"]) if str(room.call("resolve", hit)["part"]) != "" else "a plain surface")
+					break
+				count += 1
+			_stops.append("%s %s" % [["left", "right"][int(sgn > 0.0)] if axis == 0 else ["up", "down"][int(sgn > 0.0)], why])
+		out[axis] = count * SIZE_STEP_MM
+	return out
+
+
+func _tap_gets(q: Vector2, part: String, assist: bool) -> bool:
+	var fn := "pick" if assist and room.has_method("pick") else "raycast"
+	var hit: Dictionary = room.call(fn, q)
+	return not hit.is_empty() and _control_name(str(room.call("resolve", hit)["part"])) == _control_name(part)
+
+
+## A socket and the item that sits in it (IA_x and Item_x) answer a tap the same way: one control.
+static func _control_name(part: String) -> String:
+	if part.begins_with("IA_"):
+		return part.substr(3)
+	if part.begins_with("Item_"):
+		return part.substr(5)
+	return part
+
+
+static func _in_any(q: Vector2, rects: Array[Rect2]) -> bool:
+	for r in rects:
+		if r.has_point(q):
+			return true
+	return false
+
+
+## The HUD rects a tap never gets through (the HUD's blocked_rects()).
+func _hud_blocked(_vp: Rect2) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var hud: Variant = room.get("hud")
+	if hud != null and (hud as Object).has_method("blocked_rects"):
+		out.assign((hud as Object).call("blocked_rects"))
+	return out
+
+
+func _tap_size_summary() -> void:
+	var under_raw := 0
+	var under_eff := 0
+	for k: String in size_views:
+		var d: Dictionary = size_views[k]
+		under_raw += 1 if maxf((d["raw"] as Vector2).x, (d["raw"] as Vector2).y) < UITheme.TOUCH_MM else 0
+		under_eff += 1 if maxf((d["eff"] as Vector2).x, (d["eff"] as Vector2).y) < UITheme.TOUCH_MM else 0
+	var p_raw := 0
+	var p_eff := 0
+	var still: PackedStringArray = []
+	for k: String in size_parts:
+		var d: Dictionary = size_parts[k]
+		if maxf((d["raw"] as Vector2).x, (d["raw"] as Vector2).y) < UITheme.TOUCH_MM:
+			p_raw += 1
+		if maxf((d["eff"] as Vector2).x, (d["eff"] as Vector2).y) < UITheme.TOUCH_MM:
+			p_eff += 1
+			still.append(k)
+	still.sort()
+	lines.append("tap-size%s: %d controls (view, part) measured, under %.0f mm on both sides: %d raw, %d with assist (%d focus-only controls skipped)" % [
+		" (%s)" % _screen_name if _screen_name != "" else " (no --screen: the mm are those of this window)", size_views.size(), UITheme.TOUCH_MM,
+		under_raw, under_eff, size_focus_only])
+	lines.append("tap-size: %d different parts, each at its best view: under %.0f mm: %d raw, %d with assist%s" % [
+		size_parts.size(), UITheme.TOUCH_MM, p_raw, p_eff, (" (" + ", ".join(still) + ")") if p_eff > 0 else ""])
 
 
 ## Is this part a control a player must be able to tap (not scenery that merely answers a tap)?

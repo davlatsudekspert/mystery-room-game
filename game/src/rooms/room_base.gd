@@ -3,7 +3,7 @@ extends Node3D
 ## Shared machinery for chapter rooms from Chapter 2 on:
 ## - spawning models with hotspots;
 ## - the view-stack camera and touch input;
-## - raycast tap resolution that prefers the smallest interactive part;
+## - raycast tap resolution that prefers the smallest interactive part, with a finger-sized tap assist (TapAssist);
 ## - reach and focus rules, using items on hotspots;
 ## - Android back handling and the HUD binding.
 ## A chapter room overrides the hooks in the "hooks" section and renders its logic state itself.
@@ -23,6 +23,7 @@ var hud: Node
 var lights: Dictionary = {}
 var env: Environment
 var capture_mode := false # set by QA capture scripts: no intro, no input
+var assisted_taps := 0 # taps that TapAssist moved onto a nearby small part (QA reports it)
 var _ending := false
 
 
@@ -205,7 +206,7 @@ func _on_drag_started(pos: Vector2) -> void:
 	_drag_captured = false
 	if cam.transitioning:
 		return
-	var hit := raycast(pos)
+	var hit := pick(pos)
 	if not hit.is_empty():
 		_drag_captured = drag_part_started(resolve(hit)["part"])
 
@@ -255,6 +256,36 @@ func raycast(screen: Vector2) -> Dictionary:
 	return best
 
 
+## What a finger at `screen` means: the exact ray's hit (raycast), or, when that found no interactive part, the
+## nearest small part within the finger's reach (TapAssist). Taps and drag starts use this; raycast() stays exact.
+func pick(screen: Vector2) -> Dictionary:
+	var hit := raycast(screen)
+	return TapAssist.pick(self, cam, screen, hit, _hud_blocked_rects(), -1.0, _assist_accepts)
+
+
+## The HUD controls that take a tap (the room never sees a touch there).
+func _hud_blocked_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if hud != null and hud.has_method("blocked_rects"):
+		out.assign(hud.call("blocked_rects"))
+	return out
+
+
+## The assist only helps with what the player can already work from here: it never moves the camera to a far object
+## because a tap landed near one of its small parts (a tap on the object itself still does). And a finger that is on
+## a surface of another object keeps what it touched (the notebook lying on the desk is not the drawer below it):
+## the part must belong to the same hotspot as the touched surface, unless the finger is on nothing or on a
+## surface without a hotspot (a wall, the floor).
+func _assist_accepts(body: Node, touched: Dictionary) -> bool:
+	var hs: String = resolve({"collider": body, "position": Vector3.ZERO})["hotspot"]
+	if hs != "" and not in_reach(hs):
+		return false
+	if touched.is_empty():
+		return true
+	var on: String = resolve(touched)["hotspot"]
+	return on == "" or on == hs
+
+
 func _collider_volume(col: Node) -> float:
 	for c in col.get_children():
 		if c is CollisionShape3D and (c as CollisionShape3D).shape is BoxShape3D:
@@ -286,9 +317,11 @@ func resolve(hit: Dictionary) -> Dictionary:
 func _on_tap(screen: Vector2) -> void:
 	if cam.transitioning or _ending:
 		return
-	var hit := raycast(screen)
+	var hit := pick(screen)
 	if hit.is_empty():
 		return
+	if hit.get("assisted", false):
+		assisted_taps += 1
 	var r := resolve(hit)
 	var p: String = r["part"]
 	var hs: String = r["hotspot"]

@@ -83,6 +83,7 @@ var _roots: Dictionary = {} # Node3D -> id
 var cam: RoomCamera
 var touch: TouchInput
 var hud: Node
+var assisted_taps := 0 # taps that TapAssist moved onto a nearby small part
 var visuals: Lab7Visuals
 var lights: Dictionary = {}
 var env: Environment
@@ -673,7 +674,7 @@ func _on_drag_started(pos: Vector2) -> void:
 	_knob_acc = 0.0
 	if cam.transitioning or cam.current() not in ["radio", "radio_hatch"]:
 		return
-	var hit := _raycast(pos)
+	var hit := pick(pos)
 	if not hit.is_empty() and _resolve(hit)["part"] == "IA_tuning_knob":
 		_knob_drag = true
 
@@ -751,6 +752,27 @@ func raycast(screen: Vector2) -> Dictionary:
 	return _raycast(screen)
 
 
+## What a finger at `screen` means: the exact ray's hit, or the nearest small part within the finger's reach when
+## that found no interactive part (TapAssist; the same rules as RoomBase.pick).
+func pick(screen: Vector2) -> Dictionary:
+	var blocked: Array[Rect2] = []
+	if hud != null and hud.has_method("blocked_rects"):
+		blocked.assign(hud.call("blocked_rects"))
+	return TapAssist.pick(self, cam, screen, _raycast(screen), blocked, -1.0, _assist_accepts)
+
+
+## The same rules as RoomBase._assist_accepts: reachable parts of the object the finger is on (the notebook lying on
+## the desk keeps its tap, it does not become the drawer below it).
+func _assist_accepts(body: Node, touched: Dictionary) -> bool:
+	var hs: String = _resolve({"collider": body, "position": Vector3.ZERO})["hotspot"]
+	if hs != "" and not _in_reach(hs):
+		return false
+	if touched.is_empty():
+		return true
+	var on: String = _resolve(touched)["hotspot"]
+	return on == "" or on == hs
+
+
 func resolve(hit: Dictionary) -> Dictionary:
 	return _resolve(hit)
 
@@ -780,9 +802,11 @@ func _on_tap(screen: Vector2) -> void:
 		return
 	if logic.selected == "uv_lamp":
 		_uv_aim = screen
-	var hit := _raycast(screen)
+	var hit := pick(screen)
 	if hit.is_empty():
 		return
+	if hit.get("assisted", false):
+		assisted_taps += 1
 	var r := _resolve(hit)
 	var part: String = r["part"]
 	var hs: String = r["hotspot"]
