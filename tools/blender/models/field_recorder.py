@@ -136,7 +136,7 @@ def reel(side):
 # ====================================================================== keys and needle
 def key(kind):
     glyph = "rewind" if kind == "rewind" else "play"
-    return E.piano_key(f"IA_rec_{kind}", KEY_PIVOT[kind], KEY_W, KEY_LEN, KEY_T, BAKE, glyph=glyph, glyph_h=0.013, depth=0.0014)
+    return E.piano_key(f"IA_rec_{kind}", KEY_PIVOT[kind], KEY_W, KEY_LEN, KEY_T, BAKE, glyph=glyph, glyph_h=0.017, depth=0.0018, stretch=1.5)
 
 
 def needle():

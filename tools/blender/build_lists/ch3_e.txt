@@ -1,3 +1,5 @@
 # Chapter 3 group E: Leyla's camp and the shutter (lib_ch3_ef.py). docs/models/ch3_e.md
 crystal_shutter.py
 oscillograph.py
+leyla_camp.py
+field_recorder.py

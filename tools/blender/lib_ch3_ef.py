@@ -120,16 +120,18 @@ def arrow_loops(kind, h):
     raise ValueError(kind)
 
 
-def piano_key(name, pivot, w, length, thick, mat, glyph=None, glyph_h=0.008, depth=0.0012):
+def piano_key(name, pivot, w, length, thick, mat, glyph=None, glyph_h=0.008, depth=0.0012, stretch=1.0):
     """A piano key hinged at its BACK edge (the pivot, at the key's top-back centre): the body runs from the pivot
     toward +Z (the player) by `length`, `thick` below the pivot plane, with a raised pictogram on top. The
-    object's origin is `pivot`; press = a negative angle about local +X dips the front end."""
+    object's origin is `pivot`; press = a negative angle about local +X dips the front end. `stretch` lengthens the
+    pictogram along the key (it is read at a low angle from the front, so it is foreshortened)."""
     px, py, pz = pivot
     body = K.gbox("kbody", (px - w / 2, py - thick, pz), (px + w / 2, py, pz + length), mat, 0.0012, 1)
     parts = [body]
     if glyph:
         g = L.curve_solid("kglyph", arrow_loops(glyph, glyph_h), depth, bevel=0.0002, mat=mat, drop_bottom=True)
-        g.data.transform(Matrix.Translation((px, py, pz + length * 0.55)) @ Matrix.Rotation(math.radians(-90), 4, "X"))
+        g.data.transform(Matrix.Translation((px, py, pz + length * 0.55)) @ Matrix.Diagonal((1.0, 1.0, stretch, 1.0)) @
+                         Matrix.Rotation(math.radians(-90), 4, "X"))
         parts.append(g)
     return K.part(name, parts, pivot=pivot)
 
