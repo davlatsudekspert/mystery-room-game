@@ -352,7 +352,8 @@ func _map(view_id: String) -> void:
 					lgot if lgot != "" else "(nothing)"])
 			elif hits < 3:
 				hits = 3 # its label is a sure target, even if most of its body is covered
-		marks.append({"pos": pos, "part": part, "hits": hits, "got": top, "rect": r})
+		var hs := str(room.call("resolve", {"collider": b, "position": b.global_position}).get("hotspot", ""))
+		marks.append({"pos": pos, "part": part, "hits": hits, "got": top, "rect": r, "hotspot": hs})
 		if hits < 3:
 			lines.append("%s: %s reachable at %d/%d sample points (mostly hits %s)" % [view_id, part, hits, total,
 				top if top != "" else "(nothing)"])
@@ -416,7 +417,7 @@ func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
 		if not _is_control(part) or int(m["hits"]) == 0:
 			continue # scenery, or a part already reported as covered by the scene itself
 		var p: Vector2 = m["pos"]
-		if not _operable_here(p):
+		if not _operable_here(str(m.get("hotspot", ""))):
 			hud_focus_only += 1 # seen from afar: a tap moves the camera to the object's own view, where it is checked
 			m["focus_only"] = true
 			continue
@@ -464,11 +465,7 @@ func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
 
 ## Can the control at this screen point be worked from the current view, or does a tap on it only move the camera
 ## to the object's own view (RoomBase.in_reach: a hotspot is operable from its own view and deeper ones)?
-func _operable_here(p: Vector2) -> bool:
-	var hit: Dictionary = room.call("raycast", p)
-	if hit.is_empty():
-		return true
-	var hs := str(room.call("resolve", hit)["hotspot"])
+func _operable_here(hs: String) -> bool:
 	if hs == "":
 		return true
 	for fn in ["in_reach", "_in_reach"]:
