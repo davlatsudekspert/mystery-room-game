@@ -82,6 +82,45 @@ def bm_polar_box(bm, r0, r1, a_deg, t_w, y0, y1, bottom=False):
         bm.faces.new(list(reversed(lo)))
 
 
+def bm_bar(bm, a, b, w, ref=(0.0, 1.0, 0.0), caps=True):
+    """A square-section bar of side w from point a to point b (closed solid; call recalc_face_normals on the whole bmesh)."""
+    a, b = Vector(a), Vector(b)
+    d = (b - a).normalized()
+    ref = Vector(ref)
+    if abs(d.dot(ref)) > 0.99:
+        ref = Vector((1.0, 0.0, 0.0))
+    u = d.cross(ref).normalized() * (w / 2.0)
+    v = d.cross(u).normalized() * (w / 2.0)
+    cs = ((-1, -1), (1, -1), (1, 1), (-1, 1))
+    A = [bm.verts.new(a + u * cu + v * cv) for cu, cv in cs]
+    B = [bm.verts.new(b + u * cu + v * cv) for cu, cv in cs]
+    for i in range(4):
+        j = (i + 1) % 4
+        bm.faces.new((A[i], A[j], B[j], B[i]))
+    if caps:
+        bm.faces.new(list(reversed(A)))
+        bm.faces.new(B)
+
+
+def bm_boss(bm, c, normal, r, h, sides=6, phase=0.0):
+    """A flat prism (a rosette / boss) of `sides` faces, radius r, height h along `normal` from point c (closed solid)."""
+    n = Vector(normal).normalized()
+    ref = Vector((0, 1, 0)) if abs(n.y) < 0.9 else Vector((1, 0, 0))
+    u = n.cross(ref).normalized()
+    w = n.cross(u).normalized()
+    lo, hi = [], []
+    for i in range(sides):
+        ang = phase + 2.0 * math.pi * i / sides
+        d = u * math.cos(ang) + w * math.sin(ang)
+        lo.append(bm.verts.new(Vector(c) + d * r))
+        hi.append(bm.verts.new(Vector(c) + d * r * 0.86 + n * h))
+    for i in range(sides):
+        j = (i + 1) % sides
+        bm.faces.new((lo[i], lo[j], hi[j], hi[i]))
+    bm.faces.new(hi)
+    bm.faces.new(list(reversed(lo)))
+
+
 def bm_dome(bm, c, r, h, segs=5, normal=(0.0, 1.0, 0.0)):
     """A low rivet head on a surface with outward `normal`: base ring r, shoulder 0.62 r at 0.85 h, flat cap. 3 * segs - 2 + segs tris."""
     n = Vector(normal).normalized()
@@ -298,6 +337,34 @@ def gem(name, centre, r, h_body, h_tip, mat, sides=6, phase_deg=0.0, twist=0.0, 
     return o
 
 
+def gem2(name, centre, r, h_body, h_tip, mat, sides=6, phase_deg=0.0, shoulder=0.5, shoulder_at=0.55, twist=30.0):
+    """A double-terminated crystal with a rhombic termination: a prism of `sides` faces (circumradius r, height h_body), then a
+    shoulder ring (radius shoulder * r, turned by `twist` deg, shoulder_at * h_tip beyond the body) and the apex h_tip beyond the
+    body, at both ends. Flat shaded faces; 8 * sides tris."""
+    bm = bmesh.new()
+    cx, cy, cz = centre
+    ring = lambda rr, y, ph: [bm.verts.new((cx + rr * math.cos(math.radians(ph + 360.0 * i / sides)), y,
+                                            cz + rr * math.sin(math.radians(ph + 360.0 * i / sides)))) for i in range(sides)]
+    yt, yb = cy + h_body / 2.0, cy - h_body / 2.0
+    top_body, bot_body = ring(r, yt, phase_deg), ring(r, yb, phase_deg)
+    top_sh = ring(shoulder * r, yt + shoulder_at * h_tip, phase_deg + twist)
+    bot_sh = ring(shoulder * r, yb - shoulder_at * h_tip, phase_deg + twist)
+    apex_t = bm.verts.new((cx, yt + h_tip, cz))
+    apex_b = bm.verts.new((cx, yb - h_tip, cz))
+    for i in range(sides):
+        j = (i + 1) % sides
+        bm.faces.new((bot_body[i], bot_body[j], top_body[j], top_body[i]))
+        # upper termination: body edge (i, j) meets shoulder vertices (i, j) alternately
+        bm.faces.new((top_body[i], top_body[j], top_sh[i]))
+        bm.faces.new((top_body[j], top_sh[j], top_sh[i]))
+        bm.faces.new((top_sh[i], top_sh[j], apex_t))
+        bm.faces.new((bot_body[j], bot_body[i], bot_sh[i]))
+        bm.faces.new((bot_body[j], bot_sh[i], bot_sh[j]))
+        bm.faces.new((bot_sh[j], bot_sh[i], apex_b))
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    return K.obj_from_bm(name, bm, mat)
+
+
 # ---------------------------------------------------------------------- QA helpers
 def qa_core(strength=10.0, r=0.55, name="qa_core"):
     core = M.sphere(name, r, loc=K.G(*C.CORE_C), segments=24, rings=12)
@@ -321,3 +388,55 @@ def qa_env(extra=()):
     C.qa_hall(shell=True, extra=list(extra))
     C.qa_floor_nonormal("qa_sh_hall_floor")
     qa_shutters_open()
+
+
+# ---------------------------------------------------------------------- QA: the island (group D)
+ORBIT_R = 0.75
+
+
+def qa_orbit_points(n=42):
+    """QA layout of the Core's light sprites: three bands (circles of radius 0.75 through the Core centre) tilted 62 deg about X and
+    spun 120 deg apart about Y, n / 3 sprites each (the 42nd is the 'Leyla' light). Island-local points."""
+    pts = []
+    for b in range(3):
+        spin = math.radians(120.0 * b)
+        tilt = math.radians(62.0)
+        for i in range(n // 3):
+            a = 2.0 * math.pi * i / (n // 3) + 0.5 * b
+            p = Vector((ORBIT_R * math.cos(a), 0.0, ORBIT_R * math.sin(a)))
+            p = Matrix.Rotation(spin, 3, "Y") @ (Matrix.Rotation(tilt, 3, "X") @ p)
+            pts.append(Vector((0.0, 1.6, 0.0)) + p)
+    return pts
+
+
+def qa_island() -> None:
+    """QA stand-in for the island platform (not exported): a drum r 2.7 and a top slab r 3.0, top at world y 2.5."""
+    for r_, y0, y1 in ((2.7, 0.0, 2.44), (3.0, 2.44, 2.5)):
+        bm = bmesh.new()
+        bm_revolve(bm, [(r_, y0), (r_, y1), (0.0, y1)], 48)
+        fix_dir(bm, up=True)
+        o = K.obj_from_bm("qa_island", bm, "M_Concrete")
+        o.data.transform(K.V.C)
+
+
+def qa_sprites() -> None:
+    for i, p in enumerate(qa_orbit_points()):
+        s = M.sphere(f"qa_spr_{i}", 0.035, loc=K.G(p.x, p.y + 2.5, p.z), segments=8, rings=4)
+        K.override(s, K.glow("qa_spr", "D8F6FF", 14.0))
+        s.visible_shadow = False
+
+
+def qa_reliquary(skip=(), sprites=False) -> None:
+    """The island stand-in plus every group D GLB that exists (except `skip`) at the island origin (0, 2.5, 0)."""
+    qa_island()
+    for name in ("core_crystal", "cage", "glass_tower", "cradle", "heart_drawer"):
+        if name not in skip and os.path.exists(K.V.model_glb(name)):
+            C.qa_import(name, (0.0, 2.5, 0.0), 0.0, prefix=f"qa_{name}_")
+    if sprites:
+        qa_sprites()
+
+
+def qa_place_island(objs) -> None:
+    """Put the freshly built objects of the model under test at the island origin."""
+    K.qa_place(list(objs), (0.0, 2.5, 0.0), 0.0, name="qa_island_root")
+    M.refresh()
