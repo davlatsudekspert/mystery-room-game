@@ -36,6 +36,15 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 | Tap map | `tools/qa_run.sh -- res://qa/tap_map.tscn -- --chapter=ch1 --views=… [--until=shelf_open] [--perf --brightness=0.7]` | Marks every tappable part in a view: green = reachable, orange = small, red = covered, and names what a tap hits instead (works for Chapter 1 since 2026-10-10: the room exposes `raycast`/`resolve` like RoomBase). `--brightness` renders at a Settings slider value |
 | Feedback audit | `godot --headless --path game res://qa/feedback_audit.tscn -- --chapter=ch1` | Taps 48 mechanisms and pieces of scenery in their own views, in the puzzle state each belongs to (locked, not yet, solved, emptied), through the real raycast, and checks that each tap answered with a message, caption, sound, camera move, document or state change. Headless: no render slot needed |
 
+### What the 3D QA found and fixed (2026-10-10, light and feedback pass)
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| Panel 7 close-up framed from 0.88 m: the main lever's handle sat under the bottom HUD bar and the lamps under the title plates | A finger could not reach the main lever in its own view (the solver's taps bypass the HUD, so earlier runs passed) | The camera stands 1.15 m back at fov 54: handle and lamps clear the HUD at both ends (`docs/previews/quality/ch1_panel_before_after.jpg`) |
+| The shadow sculpture's ring and rod had no collider | A tap on the sculpture itself fell through to the wall; only its two small knobs reacted | Box tap areas on the ring and the rod; from the shadow view they open the sculpture close-up |
+| The radiator was part of the static shell | No way to reach the low radiator view, where a Lumen shard hides between its feet, except a lucky UV sweep from across the room | A tap area on the radiator with its own view and caption |
+| 17 taps answered with nothing: the stopped clock, the desk top and its side, the shut gear-box lid, the shut safe door, the panel's lamps, the bench, the coat, the filing cabinet, the window, the door's eye, the projector's empty socket, the sculpture body, emptied containers, solved wheels and keys, the bookcase after it swung open, the projector lever while the beam is on | The player could not tell a wrong idea from a tap that did not register | Each answers with a short line (13 new EN/RU/UZ keys) and/or a sound; emptied containers say "Empty now."; solved wheels and keys tick quietly. Checked by the feedback audit: 48 taps, 0 silent |
+| Glow 0.6 / bloom 0.05 / threshold 1.1 with emissives at 3.5–4.0 | The panel's jewel lamps, the pendant bulbs, the projector lens and the beam bloomed into white patches; the radio dial clipped white (8 % of the frame) | Glow 0.4 / 0 / 1.35; lamp glass 2.2, bulbs 2.6, beam energy 0.75 (the shader's 1.6), emblem decal 2.2; the camera fill drops to 0.45 at the radio, poster and lock close-ups, where it clipped the cream dial, the glossy glass and the pale eye |
+
 ### Status
 | Area | Level | Evidence |
 |---|---|---|
@@ -89,6 +98,15 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 | Locker 9 view off-centre; the open locker door covered the floor hatch | The hidden 1998 reel was blocked, and taps went to the locker | Views re-aimed |
 | Vault overlay and slide rotation turned counter-clockwise | At the logic's solution the sign did not match the engraving | The shader turns the images clockwise |
 | English words baked into decals (badge, cards, rules, tape labels) | RU/UZ players saw English text | EN/RU/UZ variants, swapped at runtime |
+
+### What the 3D QA found and fixed (2026-10-10, light and feedback pass)
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| The splicer's light box at emission 1.1 | A pure white blank (10–12 % of the splicer frame clipped) next to the strips the player must read | Emission 0.4, warm tint: frosted glass with a lamp behind it |
+| The film beam haze at energy 0.16 | A quarter of the film view was a white wedge; the picture on the screen was the dimmest thing in the frame | 0.06 and a narrower cone; the picture is the brightest thing again |
+| Pendant bulbs and shade linings at 3.0 / 0.55, lamp glass 3.0 everywhere, glow 0.6 / 0.05 / 1.1 | Every pendant in the hall was a white blot | Glow 0.4 / 0 / 1.35, lamp glass 2.2, shade glow 0.35 |
+| The screen shader's lit field at 1.25 | The slide view was a clipped white field (21 % of the frame) with no screen weave left | 1.05 |
+| 14 taps answered with nothing: the catalogue carcass, the gauges, the chart, the reading table, the stacks, the dial's centre, the dark screen, the empty screen socket, an empty crystal port, the vault door body, locker 9 once emptied, the slide gate and its turn knob without a slide, Eject with no reel, the splicer's light box, emptied grille / ledger / hatch / lens case / receive tray | As in Chapter 1 | Short lines (14 new EN/RU/UZ keys) and sounds; a tap on the vault door in the ports close-up now describes the disc instead of jumping back to the vault view. Checked by the feedback audit: 40 taps, 0 silent |
 
 ### Status
 | Area | Level | Evidence |
