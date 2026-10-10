@@ -33,11 +33,16 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 | Weekly store statistics report | after the public release |
 | Closed testing, production, public release | each needs a separate approval |
 
-**Queued fixes (found by QA, 2026-10-10):**
-- Chapter 3 ring-shaped symbol marks: control_desk's mark caps only the right half of the ring, and gallery_console's is a solid disc. The cause is closed loops extruded in tools/blender/lib_ch3_symbols. See docs/previews/ch3/bug_mark_*.jpg. Fix and rebuild after the echo-figure Blender job.
-- Chapter 3 glass-floor ring signs are 3–5 mm on a phone. Enlarge them in the Blender model.
-- Chapter 2 hall view is 154 draw calls (budget 150). Merge static meshes (ModelUtil.merge_static).
-- Small 3D controls: a tap-assist radius is being built in RoomBase. It covers 28 of 62 Chapter 3 parts, which are under 9 mm.
+**QA fixes (2026-10-10):**
+- Done:
+  - Chapter 3 ring marks are proper outlines (lib_ch3_symbols holes; 7 models rebuilt).
+  - Glass-floor signs are about 8.5 mm on a phone.
+  - Chapter 2 hall: 153 → 133 draw calls.
+  - Tap assist: Chapter 3 controls under 9 mm, 54 → 7.
+- Open:
+  - The shutter crystals 1–3 sit on the large IA_tunnel_shutter, so the assist's no-steal rule keeps them at 7–8.5 mm. Give the crystals their own priority or reframe.
+  - The glass-floor star is pale on pale glass; darken it or add a rim.
+  - The prism knobs at the screen edge are 8.5 mm.
 - The Chapter 3 release candidate is ready for closed testing (hud-check 0 failures on phone and tablet, rendered strand and leyla runs with 0 fallbacks, Continue passes, 300-game logic sweep clean). It is not yet ready for a public release until a phone check of the desk levers, the hook key and Continue.
 
 **Running now:**
