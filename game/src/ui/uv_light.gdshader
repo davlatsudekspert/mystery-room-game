@@ -8,6 +8,7 @@ uniform vec2 center = vec2(0.5, 0.5); // where the lamp points, in UV of the she
 uniform vec2 radius = vec2(0.36, 0.34); // the bright spot's radii, in UV of the sheet
 uniform vec2 size_px = vec2(1600.0, 900.0); // the sheet's size
 uniform float feather = 90.0; // px: the soft border toward the sheet's edges (and the rounding of its corners)
+uniform float top_px = 0.0; // px: where the light begins (below the page's printed header, which stays readable)
 uniform float strength : hint_range(0.0, 1.0) = 1.0; // the lamp coming on
 uniform float darken : hint_range(0.0, 1.0) = 0.78; // how far the paper sinks toward violet in the middle
 uniform vec4 deep : source_color = vec4(0.07, 0.035, 0.17, 1.0); // the dark of the room the lamp shines into
@@ -27,8 +28,9 @@ float noise(vec2 p) {
 
 void fragment() {
 	// the covered area: the sheet less a soft border, with rounded corners (a rounded-box distance in px)
-	vec2 p = (UV - vec2(0.5)) * size_px;
-	vec2 dq = abs(p) - (size_px * 0.5 - vec2(feather));
+	vec2 lo = vec2(0.0, top_px);
+	vec2 p = UV * size_px - (lo + size_px) * 0.5;
+	vec2 dq = abs(p) - ((size_px - lo) * 0.5 - vec2(feather));
 	float sdf = length(max(dq, vec2(0.0))) + min(max(dq.x, dq.y), 0.0) - feather;
 	// light has no straight edge: the border wanders a little, and the falloff is gentle
 	sdf += (noise(UV * vec2(3.0, 2.2) + vec2(1.7, 0.4)) - 0.5) * feather * 0.9;

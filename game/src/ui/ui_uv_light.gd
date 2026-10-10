@@ -50,12 +50,18 @@ func _draw() -> void:
 	# of the light is ever seen; its brightest part is where the lamp points: the hidden writing
 	var m := material as ShaderMaterial
 	var c := Vector2(0.5, 0.5)
+	var feather := clampf(minf(sheet.size.x, sheet.size.y) * 0.1, 24.0, 160.0)
+	var top := 0.0
 	if is_instance_valid(focus) and focus.is_visible_in_tree():
-		c = ((focus.get_global_rect().get_center() - paper.global_position) / sheet.size).clamp(Vector2(0.3, 0.3), Vector2(0.7, 0.7))
+		var fr := focus.get_global_rect()
+		c = ((fr.get_center() - paper.global_position) / sheet.size).clamp(Vector2(0.3, 0.3), Vector2(0.7, 0.7))
+		# the light begins just above the hidden writing: the page's printed header stays on plain paper
+		top = clampf(fr.position.y - paper.global_position.y - feather * 0.9, 0.0, sheet.size.y * 0.4)
 	m.set_shader_parameter("center", c)
 	m.set_shader_parameter("radius", Vector2(0.36, 0.34))
 	m.set_shader_parameter("size_px", sheet.size)
-	m.set_shader_parameter("feather", clampf(minf(sheet.size.x, sheet.size.y) * 0.1, 24.0, 160.0))
+	m.set_shader_parameter("feather", feather)
+	m.set_shader_parameter("top_px", top)
 	draw_rect(sheet, Color.WHITE)
 
 
