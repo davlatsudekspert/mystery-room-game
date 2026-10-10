@@ -655,7 +655,7 @@ func _continue_check(label: String = "") -> void:
 	var before := _snap(logic)
 	var sig_before := ""
 	if label != "":
-		sig_before = await _scene_sig()
+		sig_before = await _stable_sig()
 	var saved := GameState.save_now()
 	room.queue_free()
 	await get_tree().process_frame
@@ -682,7 +682,7 @@ func _continue_check(label: String = "") -> void:
 	_reload_checks += 1
 	var diff := ""
 	if ok:
-		var sig_after := await _scene_sig()
+		var sig_after := await _stable_sig()
 		if sig_after != sig_before:
 			ok = false
 			diff = _sig_diff(sig_before, sig_after)
@@ -690,6 +690,18 @@ func _continue_check(label: String = "") -> void:
 		_reload_failed += 1
 		_log("✗ continue %s: state %s, opens at %s, gate %s%s" % [label, "kept" if same else "DIFFERS", start,
 			"open" if gate else "SHUT", diff])
+
+
+## The signature once nothing moves any more (a blast door slides for several seconds after the handle is pulled).
+func _stable_sig() -> String:
+	var sig := await _scene_sig()
+	for _i in 12:
+		await _settle(0.6)
+		var again := await _scene_sig()
+		if again == sig:
+			return sig
+		sig = again
+	return sig
 
 
 ## Every tappable part the player can see (own collider on, visible in the tree), with its position and orientation,

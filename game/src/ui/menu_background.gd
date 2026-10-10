@@ -1,9 +1,10 @@
 class_name MenuBackground
 extends Node3D
 ## Animated 3D backdrop of the main menu: Prof. Strand's brass gear box (Chapter 1) on Leyla's desk is the hero of
-## the frame, warmly lit by the desk lamp in a dark room. Its three wheels turn slowly (neighbours in opposite
-## directions, as meshing wheels do), the lamp flickers faintly, and the camera drifts slowly around the box while
-## always keeping it at the same place on screen (set_frame(): right of the menu column).
+## the frame, warmly lit by the desk lamp in a dark room. The box is alive (MenuBox: it fidgets, glints, can be played
+## and opens on a warm light; the start transition pushes the camera into that light), the lamp flickers faintly, and
+## the camera drifts slowly around the box while always keeping it at the same place on screen (set_frame(): right of
+## the menu column).
 ## Phone GPU budget (the menu must render on every phone): one shadowed omni (the lamp; unshadowed with safe
 ## graphics), one unshadowed directional fill, the dust motes (off with safe graphics), standard materials only:
 ## no reflection probes, decals, sky or custom 3D shaders.
@@ -15,14 +16,18 @@ const BOX_SPAN := 0.34 # m: the box's apparent width (with its top and side in v
 const FOV_H := 36.0 # horizontal (KEEP_WIDTH): the box keeps its share of the width on any aspect ratio
 const AZIMUTH := 32.0 # camera bearing, degrees right of the box front
 const ELEVATION := 24.0
-const GEAR_DEG_S := 3.0 # wheel speed, degrees per second
+const PUSH_DIST := 0.34 # the start transition ends this share of the resting camera distance from the glow
+const PUSH_ELEVATION := 30.0 # ... and looks this many degrees steeper down into the open box
+const GLOW_FOCUS := Vector3(0.0, 0.09, 0.0) # the glow's point above the box origin
 const LAMP_ENERGY := 1.0
 const BRASS_METALLIC := 0.35 # no reflection probe here: half-metallic brass shows its gold under the lamp
 
+signal start_goto # the start transition wants the loading flow now (once)
+
 var _cam: Camera3D
 var _lamp: OmniLight3D
-var _gears: Array[Node3D] = []
-var _gear_rest: Array[Basis] = []
+var box: MenuBox
+var manual := false # QA / tests drive advance() themselves
 var _t := 0.0
 var _screen := Vector2(0.7, 0.55) # where the box centre sits (fractions of the frame)
 var _share := 0.28 # share of the frame width the box spans
@@ -52,14 +57,14 @@ func _ready() -> void:
 	if desk != null:
 		for mi in ModelUtil.find_meshes(desk):
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF # the lamp's shadow pass skips the big desk
-	var box := ModelUtil.spawn("gear_box", self, Transform3D(Basis(Vector3.UP, deg_to_rad(BOX_YAW_DEG)), BOX_POS), "none")
-	if box != null:
-		_half_metal(box)
-		for i in 3:
-			var g := ModelUtil.find(box, "IA_gear_%d" % i)
-			if g != null:
-				_gears.append(g)
-				_gear_rest.append(g.transform.basis)
+	box = MenuBox.new()
+	box.name = "gear_box_menu"
+	box.transform = Transform3D(Basis(Vector3.UP, deg_to_rad(BOX_YAW_DEG)), BOX_POS)
+	add_child(box)
+	var model := box.setup(CrashGuard.safe_level(), 0)
+	box.start_goto.connect(func() -> void: start_goto.emit())
+	if model != null:
+		_half_metal(model)
 	# storytelling around the hero, kept clear of it: the stopped clock, Leyla's tea and spectacles
 	ModelUtil.spawn("flip_clock", self, Transform3D(Basis(Vector3.UP, deg_to_rad(36.0)), Vector3(-0.29, 0.78, -0.13)), "none")
 	# (the tea set waits just right of the frame; the drift brings its cup to the edge now and then)
@@ -99,11 +104,16 @@ func set_frame(screen: Vector2, share: float) -> void:
 
 
 func _process(delta: float) -> void:
+	if not manual:
+		advance(delta)
+
+
+## One step of the backdrop (the box, the lamp, the camera). _process calls it; QA and tests call it with a fixed
+## step when `manual` is set.
+func advance(delta: float) -> void:
 	_t += delta
 	var still := bool(Settings.get_value("reduce_motion"))
-	var turn := deg_to_rad(GEAR_DEG_S) * _t
-	for i in _gears.size():
-		_gears[i].transform.basis = _gear_rest[i] * Basis(Vector3.UP, turn * (-1.0 if i == 1 else 1.0))
+	box.advance(delta, still)
 	if still:
 		_lamp.light_energy = LAMP_ENERGY
 		_place_camera(0.0)
@@ -114,20 +124,43 @@ func _process(delta: float) -> void:
 		_place_camera(_t)
 
 
+## A tap at `vp_pos` (this SubViewport's pixels): presses a knob under the finger, or closes an open lid.
+## Returns true when the box did something.
+func tap(vp_pos: Vector2) -> bool:
+	if box.logic.phase != MenuBoxLogic.Phase.CLOSED:
+		return box.tap_anywhere()
+	var vp_w := maxf(1.0, get_viewport().get_visible_rect().size.x)
+	var px_m := 2.0 * tan(deg_to_rad(FOV_H) * 0.5) / vp_w # metres one pixel covers, per metre of distance
+	return box.tap_ray(_cam.project_ray_origin(vp_pos), _cam.project_ray_normal(vp_pos), px_m)
+
+
+## New Game / Continue: wheels spin into line, the lid opens, the camera pushes into the light (see MenuBoxLogic).
+func begin_start() -> void:
+	box.begin_start(bool(Settings.get_value("reduce_motion")))
+
+
+## 0..1: how black the transition has made the frame.
+func fade() -> float:
+	return box.logic.fade()
+
+
 ## The camera orbits the box slowly (bearing, height and distance drift on long, unrelated periods) and is aimed
 ## so that the box centre lands exactly on `_screen`: yaw and pitch only, the horizon stays level.
 func _place_camera(t: float) -> void:
+	var push := box.push() if box != null else 0.0
+	var pe := push * push * (3.0 - 2.0 * push) # the start transition: in toward the glow
 	var bearing := deg_to_rad(AZIMUTH + BOX_YAW_DEG + 7.0 * sin(t * TAU / 46.0))
-	var el := deg_to_rad(ELEVATION + 2.5 * sin(t * TAU / 33.0 + 1.0))
+	var el := deg_to_rad(ELEVATION + 2.5 * sin(t * TAU / 33.0 + 1.0) + PUSH_ELEVATION * pe)
 	var tan_h := tan(deg_to_rad(FOV_H) * 0.5)
-	var dist := BOX_SPAN / (2.0 * tan_h * _share) * (1.0 + 0.03 * sin(t * TAU / 39.0 + 2.0))
-	var focus := BOX_POS + Vector3(0.0, FOCUS_UP, 0.0)
+	var dist := BOX_SPAN / (2.0 * tan_h * _share) * (1.0 + 0.03 * sin(t * TAU / 39.0 + 2.0)) * lerpf(1.0, PUSH_DIST, pe)
+	var focus := (BOX_POS + Vector3(0.0, FOCUS_UP, 0.0)).lerp(box.to_global(GLOW_FOCUS), pe)
+	var screen := _screen.lerp(Vector2(0.5, 0.5), pe)
 	var pos := focus + Vector3(sin(bearing) * cos(el), sin(el), cos(bearing) * cos(el)) * dist
 	var vp := get_viewport().get_visible_rect().size
 	var aspect := vp.x / maxf(1.0, vp.y)
 	# the focus must appear at camera-space direction (a, b, -1)
-	var a := (2.0 * _screen.x - 1.0) * tan_h
-	var b := (1.0 - 2.0 * _screen.y) * tan_h / aspect
+	var a := (2.0 * screen.x - 1.0) * tan_h
+	var b := (1.0 - 2.0 * screen.y) * tan_h / aspect
 	var u := (focus - pos).normalized()
 	var pitch := asin(clampf(u.y * sqrt(a * a + b * b + 1.0) / sqrt(1.0 + b * b), -1.0, 1.0)) - atan(b)
 	var zp := b * sin(pitch) - cos(pitch)
