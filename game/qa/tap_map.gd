@@ -13,6 +13,7 @@ extends Node
 ##        [--screen=phone61|phone20|phone55|tablet10|WxH@dpi[:l,t,r,b]] (render as that phone: its aspect, dpi and
 ##        safe insets drive the HUD's size and the mm checks; the window takes the same aspect)
 ##        [--text-scale=1.15] (the player's Settings → Text size)
+##        [--lang=ru|uz] (the game's language; the notebook and document shots follow it)
 ##        [--doc=poster] (also shoot that reader document, e.g. poster, chalkboard, evidence: <out>/doc_poster.png)
 ##        [--cam=name:x,y,z:tx,ty,tz:fov] (replace that view's camera, e.g. to shoot the old framing as "before")
 ##        [--notebook=4] (also shoot Leyla's notebook, page 4, as a player reads it: <out>/notebook_p4.png)
@@ -88,6 +89,8 @@ func _run() -> void:
 			Settings.values["text_scale"] = clampf(float(a.substr(13)), 0.9, 1.3)
 		elif a == "--hud-check":
 			hud_check = true
+		elif a.begins_with("--lang="):
+			TranslationServer.set_locale(a.substr(7))
 		elif a.begins_with("--doc="):
 			doc_name = a.substr(6)
 		elif a.begins_with("--cam="):

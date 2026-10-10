@@ -4,12 +4,12 @@
 H = {
 "notebook": [
     ("Someone left a notebook behind.", "Кто-то оставил блокнот.", "Kimdir daftar qoldirib ketgan."),
-    ("Look at the desk under the window.", "Посмотрите на стол под окном.", "Deraza ostidagi stolga qarang."),
+    ("Look at Leyla's desk, against the wall you face when the lab opens.", "Посмотрите на стол Лейлы у стены, к которой вы обращены в начале.", "Leylaning stoliga qarang: u boshida roʻparangizdagi devor yonida turibdi."),
     ("Tap the desk, then take Leyla's notebook.", "Нажмите на стол и возьмите блокнот Лейлы.", "Stolga bosing va Leylaning daftarini oling."),
 ],
 "drawer": [
-    ("Leyla wrote about a moment she must never forget.", "Лейла писала о мгновении, которое нельзя забыть.", "Leyla hech qachon unutmasligi kerak boʻlgan lahza haqida yozgan."),
-    ("The clock on her desk stopped at that very moment.", "Часы на её столе остановились именно в это мгновение.", "Uning stolidagi soat aynan oʻsha lahzada toʻxtagan."),
+    ("The desk drawer has four brass wheels. Leyla's notebook says what she set them to.", "У ящика стола четыре латунных колеса. В блокноте Лейла записала, на что их поставила.", "Stol tortmasida toʻrtta jez gʻildirak bor. Leyla daftarida ularni nimaga qoʻyganini yozgan."),
+    ("That moment is on the stopped flip clock on her desk.", "Это мгновение — на остановившихся перекидных часах на её столе.", "Bu lahza uning stolidagi toʻxtab qolgan varaqli soatda."),
     ("Set the drawer wheels to 0-3-1-7.", "Установите колёса ящика на 0-3-1-7.", "Tortma gʻildiraklarini 0-3-1-7 ga qoʻying."),
 ],
 "take_lamp": [
@@ -18,7 +18,7 @@ H = {
     ("Tap the lamp inside the drawer to take it.", "Нажмите на лампу в ящике, чтобы взять её.", "Olish uchun tortmadagi chiroqqa bosing."),
 ],
 "gearbox": [
-    ("Strand's box: each knob drags a neighbour along.", "Шкатулка Странда: каждая ручка тянет за собой соседа.", "Strandning qutichasi: har bir murvat qoʻshnisini ham aylantiradi."),
+    ("Strand's gear box stands to the left of Leyla's desk: each knob drags a neighbour along.", "Шкатулка Странда стоит левее стола Лейлы: каждая ручка тянет за собой соседа.", "Strandning qutichasi Leylaning stolidan chaproqda turibdi: har bir murvat qoʻshnisini ham aylantiradi."),
     ("Bring every gear's pointer to the mark at the back. Count how far each one is.", "Наведите стрелки всех шестерней на метку сзади. Посчитайте, сколько шагов до неё.", "Har bir gʻildirak koʻrsatkichini orqadagi belgiga keltiring. Har biri necha qadam uzoqligini sanang."),
     ("Press the knobs: left ×%d, middle ×%d, right ×%d.", "Нажмите ручки: левую ×%d, среднюю ×%d, правую ×%d.", "Murvatlarni bosing: chap ×%d, oʻrta ×%d, oʻng ×%d."),
 ],
@@ -29,17 +29,17 @@ H = {
 ],
 "lamp": [
     ("The lamp is dead.", "Лампа не работает.", "Chiroq ishlamayapti."),
-    ("Its battery bay fits something you carry.", "К её отсеку подойдёт кое-что из ваших вещей.", "Uning batareya joyiga yoningizdagi bir narsa mos keladi."),
+    ("Its battery bay fits the cell from Strand's gear box. Combine the two from your bag.", "К её отсеку подходит батарея из шкатулки Странда. Соедините их в сумке.", "Uning batareya joyiga Strand qutichasidagi batareya mos keladi. Ikkalasini sumkada birlashtiring."),
     ("Select the UV lamp, press Combine, then tap the battery cell.", "Выберите УФ-лампу, нажмите «Объединить», затем батарею.", "UB chiroqni tanlang, «Birlashtirish»ni bosing, soʻng batareyani tanlang."),
 ],
 "cipher": [
     ("One page of the notebook looks empty.", "Одна страница блокнота кажется пустой.", "Daftarning bir sahifasi boʻsh koʻrinadi."),
-    ("Some inks only show under ultraviolet light.", "Некоторые чернила видны только в ультрафиолете.", "Ayrim siyohlar faqat ultrabinafsha nurda koʻrinadi."),
+    ("Some inks only show under ultraviolet light. Your UV lamp can reveal them.", "Некоторые чернила видны только в ультрафиолете. Ваша УФ-лампа может их показать.", "Ayrim siyohlar faqat ultrabinafsha nurda koʻrinadi. UB chiroqingiz ularni koʻrsata oladi."),
     ("Open the notebook at the blank page and press the UV button.", "Откройте блокнот на пустой странице и нажмите кнопку УФ.", "Daftarni boʻsh sahifada oching va UB tugmasini bosing."),
 ],
 "safe": [
-    ("The symbols on the page stand for numbers.", "Символы на странице означают числа.", "Sahifadagi belgilar sonlarni bildiradi."),
-    ("The poster on the wall counts dots beside each symbol.", "Плакат на стене показывает число точек рядом с каждым символом.", "Devordagi plakat har bir belgi yonida nuqtalar sonini koʻrsatadi."),
+    ("The symbols on the page match Strand's poster, Tabula Resonantiarum, on the same wall as the safe.", "Символы на странице совпадают с плакатом Странда «Tabula Resonantiarum» на той же стене, что и сейф.", "Sahifadagi belgilar seyf bilan bir devordagi Strandning «Tabula Resonantiarum» plakatiga mos keladi."),
+    ("On the poster each symbol has dots beside it: the number of dots is one digit (none is 0). Read the page's symbols in order.", "На плакате рядом с каждым символом стоят точки: их число — одна цифра (нет точек — 0). Читайте символы со страницы по порядку.", "Plakatda har bir belgi yonida nuqtalar bor: ularning soni bitta raqam (nuqtasiz — 0). Sahifadagi belgilarni tartib bilan oʻqing."),
     ("Enter %s-%s-%s-%s on the safe keypad, then press the enter key (bottom right).", "Введите на сейфе %s-%s-%s-%s и нажмите клавишу ввода (внизу справа).", "Seyf tugmalarida %s-%s-%s-%s ni tering va kiritish tugmasini bosing (pastki oʻngda)."),
 ],
 "take_safe": [
@@ -53,7 +53,7 @@ H = {
     ("Shine UV on the right side of the desk, then press the carved rosette.", "Посветите УФ на правую боковину стола и нажмите на резную розетку.", "Stolning oʻng yon tomonini UB bilan yoriting va oʻyma gul naqshni bosing."),
 ],
 "key": [
-    ("A keyhole has appeared.", "Появилась замочная скважина.", "Kalit teshigi paydo boʻldi."),
+    ("A keyhole has appeared in Leyla's desk.", "В столе Лейлы появилась замочная скважина.", "Leylaning stolida kalit teshigi paydo boʻldi."),
     ("The safe held a small brass key.", "В сейфе был маленький латунный ключ.", "Seyfda kichkina jez kalit bor edi."),
     ("Select the brass key and tap the keyhole in the desk.", "Выберите латунный ключ и нажмите на скважину в столе.", "Jez kalitni tanlang va stoldagi kalit teshigiga bosing."),
 ],
@@ -63,18 +63,18 @@ H = {
     ("Take the breaker handle (and the photograph) from the compartment.", "Возьмите из тайника рукоять рубильника (и фотографию).", "Boʻlmadan uzgich dastasini (va suratni) oling."),
 ],
 "handle": [
-    ("The main breaker can't be moved.", "Главный рубильник не двигается.", "Asosiy uzgich qimirlamaydi."),
-    ("Its handle is missing — you have it.", "У него нет рукояти — она у вас.", "Uning dastasi yoʻq — u sizda."),
+    ("The main lever on Panel 7 can't be moved.", "Главный рубильник на щите 7 не двигается.", "7-paneldagi asosiy uzgich qimirlamaydi."),
+    ("Its handle is missing, and you carry it. Select the handle and tap the lever.", "У него нет рукояти, и она у вас. Выберите рукоять и нажмите на рубильник.", "Uning dastasi yoʻq, u sizda. Dastani tanlab, uzgichga bosing."),
     ("Select the breaker handle and tap the main lever on Panel 7.", "Выберите рукоять и нажмите на главный рычаг щита 7.", "Uzgich dastasini tanlang va 7-paneldagi asosiy dastakka bosing."),
 ],
 "circuits": [
-    ("Leyla listed which lines must be live.", "Лейла записала, какие линии должны быть под током.", "Leyla qaysi liniyalar tok ostida boʻlishi kerakligini yozib qoldirgan."),
-    ("LOCK, LIGHT and ARRAY on; VENT off. Follow the copper traces from each switch to the lamps.", "ЗАМОК, СВЕТ и РЕШЁТКА — вкл., ВЕНТИЛЯЦИЯ — выкл. Проследите медные дорожки от переключателей к лампам.", "QULF, YORUGʻLIK va PANJARA yoqilgan, SHAMOLLATISH oʻchiq. Har bir ulagichdan lampalargacha mis yoʻlakchalarni kuzating."),
+    ("Panel 7's four lamps need the right lines. Leyla's notebook says which must be live.", "Четыре лампы щита 7 требуют нужных линий. В блокноте Лейлы сказано, какие должны быть под током.", "7-panelning toʻrtta chirogʻiga toʻgʻri liniyalar kerak. Leylaning daftarida qaysilari tok ostida boʻlishi yozilgan."),
+    ("The icons over the lamps are the ones in her notebook: LOCK, LIGHT and ARRAY on; VENT off. Follow the copper traces from each switch to the lamps.", "Значки над лампами — те же, что в её блокноте: ЗАМОК, СВЕТ и РЕШЁТКА — вкл., ВЕНТИЛЯЦИЯ — выкл. Проследите медные дорожки от переключателей к лампам.", "Lampalar tepasidagi belgilar daftardagilar bilan bir xil: QULF, YORUGʻLIK va PANJARA yoqilgan, SHAMOLLATISH oʻchiq. Har bir ulagichdan lampalargacha mis yoʻlakchalarni kuzating."),
     ("Raise switches I, II and III only, then raise the main lever.", "Поднимите только переключатели I, II и III, затем главный рычаг.", "Faqat I, II va III ulagichlarni koʻtaring, soʻng asosiy dastakni koʻtaring."),
 ],
 "valve": [
     ("The radio is silent.", "Радио молчит.", "Radio jim."),
-    ("Open its hatch: a valve is missing.", "Откройте крышку: не хватает лампы.", "Qopqogʻini oching: lampa yetishmayapti."),
+    ("Open the radio's hatch: a valve is missing. You found one in the safe.", "Откройте крышку радио: не хватает лампы. Вы нашли её в сейфе.", "Radio qopqogʻini oching: lampa yetishmayapti. Uni seyfdan topgan edingiz."),
     ("Select the radio valve from the safe and tap the radio.", "Выберите радиолампу из сейфа и нажмите на радио.", "Seyfdan olingan radiolampani tanlang va radioga bosing."),
 ],
 "tune": [
@@ -84,7 +84,7 @@ H = {
 ],
 "books": [
     ("The beacon repeats three numbers.", "Маяк повторяет три числа.", "Mayoq uchta sonni takrorlaydi."),
-    ("Count its pulses: %d, %d, %d. Leyla's encyclopedia “remembers them”.", "Посчитайте импульсы: %d, %d, %d. Энциклопедия Лейлы «их помнит».", "Impulslarni sanang: %d, %d, %d. Leylaning ensiklopediyasi «ularni eslaydi»."),
+    ("Count its pulses: %d, %d, %d. Leyla's encyclopedia on the bookcase “remembers them”.", "Посчитайте импульсы: %d, %d, %d. Энциклопедия Лейлы на книжном шкафу «их помнит».", "Impulslarni sanang: %d, %d, %d. Kitob javonidagi Leylaning ensiklopediyasi «ularni eslaydi»."),
     ("Pull volumes %s, %s, then %s.", "Потяните тома %s, %s, затем %s.", "%s, %s, soʻng %s jildlarni torting."),
 ],
 "shadow": [
@@ -114,7 +114,7 @@ H = {
 ],
 "projector": [
     ("Strand's letter tells how to tune it.", "Письмо Странда говорит, как его настроить.", "Strandning maktubi uni qanday sozlashni aytadi."),
-    ("“The heaviest first.” Compare the samples' density (ρ).", "«Начиная с самого тяжёлого». Сравните плотность (ρ) образцов.", "«Eng ogʻiridan boshlab». Namunalarning zichligini (ρ) solishtiring."),
+    ("“The heaviest first.” Compare the density (ρ) of the three samples on the lab bench.", "«Начиная с самого тяжёлого». Сравните плотность (ρ) трёх образцов на лабораторном столе.", "«Eng ogʻiridan boshlab». Laboratoriya stolidagi uchta namunaning zichligini (ρ) solishtiring."),
     ("Set the rings to crimson, cobalt, green — then pull the lever.", "Установите кольца: малиновый, кобальтовый, зелёный — и потяните рычаг.", "Halqalarni toʻq qizil, kobalt, yashilga qoʻying — soʻng dastakni torting."),
 ],
 "mount_mirror": [

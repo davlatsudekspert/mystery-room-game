@@ -170,8 +170,8 @@ H = {
     ("Drawer 04, divider 1–, card 17.", "Ящик 04, разделитель 1–, карточка 17.", "04-tortma, 1– ajratgich, 17-kartochka."),
 ],
 "c2_compressor": [
-    ("The tube station is dead: there is no pressure.", "Станция пневмопочты не работает: нет давления.", "Pnevmatik pochta ishlamayapti: bosim yoʻq."),
-    ("The plate shows which valve feeds which gauge. Both needles need their green marks.", "Табличка показывает, какой вентиль питает какой манометр. Обе стрелки должны встать на зелёные метки.", "Lavhada qaysi ventil qaysi manometrga ulangani koʻrsatilgan. Ikkala mil ham yashil belgiga kelishi kerak."),
+    ("The tube station is dead: there is no pressure. The tube compressor makes it.", "Станция пневмопочты не работает: нет давления. Его создаёт компрессор.", "Pnevmatik pochta ishlamayapti: bosim yoʻq. Bosimni kompressor beradi."),
+    ("The compressor's plate shows which valve feeds which gauge. Both needles need their green marks.", "Табличка на компрессоре показывает, какой вентиль питает какой манометр. Обе стрелки должны встать на зелёные метки.", "Kompressor lavhasida qaysi ventil qaysi manometrga ulangani koʻrsatilgan. Ikkala mil ham yashil belgiga kelishi kerak."),
     ("Valves: A %d, B %d, C %d.", "Вентили: A %d, B %d, C %d.", "Ventillar: A %d, B %d, C %d."),
 ],
 "c2_punch": [
@@ -215,7 +215,7 @@ H = {
     ("Dial %d, %d, %d.", "Наберите %d, %d, %d.", "%d, %d, %d ni tering."),
 ],
 "c2_splice": [
-    ("The film is in pieces.", "Плёнка разорвана на кусочки.", "Lenta boʻlaklarga boʻlingan."),
+    ("The film is in pieces. Put it together on the film splicer in the booth.", "Плёнка разорвана на кусочки. Соберите её на склеечном прессе в кинобудке.", "Lenta boʻlaklarga boʻlingan. Uni kinobudkadagi yelimlagichda yigʻing."),
     ("The can's lid shows the day running from dawn to noon. Shadows shorten.", "На крышке коробки день идёт от рассвета к полудню. Тени укорачиваются.", "Quti qopqogʻida kun tongdan tushgacha davom etadi. Soyalar qisqaradi."),
     ("Order the frames from the longest shadow to the shortest.", "Расположите кадры от самой длинной тени к самой короткой.", "Kadrlarni eng uzun soyadan eng qisqasigacha joylang."),
 ],
