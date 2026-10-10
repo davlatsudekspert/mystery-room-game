@@ -93,11 +93,15 @@ func _about() -> void:
 					b.pressed.emit()
 			await _settle(1.5)
 			await _shot("licenses_en")
-			var scroll := host.find_children("*", "ScrollContainer", true, false)
-			if not scroll.is_empty():
-				(scroll[0] as ScrollContainer).scroll_vertical = 900
-				await _settle(0.4)
-				await _shot("licenses_en_2")
+			var sc: ScrollContainer = null
+			for c in host.find_children("*", "ScrollContainer", true, false):
+				if (c as Control).is_visible_in_tree():
+					sc = c
+			if sc != null:
+				for off in [1500, 2900]:
+					sc.scroll_vertical = off
+					await _settle(0.5)
+					await _shot("licenses_en_%d" % off)
 		host.queue_free()
 		await _settle(0.2)
 
