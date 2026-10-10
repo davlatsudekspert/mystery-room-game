@@ -186,6 +186,7 @@ def bm_revolve(bm, prof, nseg, centre=(0.0, 0.0), phase_deg=0.0, a0=0.0, a1=360.
 def fix_dir(bm, up=True):
     """Flip every face of an open revolved strip so its highest flat face looks up (or down when up=False)."""
     best, by = None, -1e9
+    bm.normal_update()                                # fresh faces carry no normal until this call
     for f in bm.faces:
         if abs(f.normal.y) > 0.9:
             y = f.calc_center_median().y
