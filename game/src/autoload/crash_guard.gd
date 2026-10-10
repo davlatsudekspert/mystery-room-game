@@ -46,7 +46,14 @@ static func detail(what: String) -> void:
 static func safe_level() -> int:
 	if bool(Settings.get_value("safe_graphics")):
 		return MAX_LEVEL
-	return clampi(int(Settings.get_value("safe_level")), 0, MAX_LEVEL)
+	return maxi(clampi(int(Settings.get_value("safe_level")), 0, MAX_LEVEL), min_level_for(OS.get_name()))
+
+
+## The level a platform starts at. On the owner's iPhone (Metal), New Game crashed while drawing the room's first
+## frames until the automatic level 1 (no MSAA) was reached; with it the room plays (TestFlight 7: "safe 1" and a
+## saved game). So iOS starts at level 1 and a crash there still raises it to 2.
+static func min_level_for(os_name: String) -> int:
+	return 1 if os_name == "iOS" else 0
 
 
 ## Called once at launch after read_previous(): resets levels from an older epoch, then raises the level after a

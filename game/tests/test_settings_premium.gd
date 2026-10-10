@@ -193,3 +193,10 @@ func test_safe_level_escalates() -> void:
 	Settings.set_value("safe_graphics", keep[0])
 	Settings.set_value("safe_level", keep[1])
 	Settings.set_value("safe_epoch", keep[2])
+
+
+## iPhones start without MSAA (Metal crashed drawing the room's first frames with it); other platforms keep it.
+func test_ios_starts_without_msaa() -> void:
+	eq(CrashGuard.min_level_for("iOS"), 1, "iOS starts at safe level 1 (no MSAA)")
+	eq(CrashGuard.min_level_for("Android"), 0, "Android keeps MSAA")
+	eq(CrashGuard.min_level_for("Linux"), 0, "desktop and QA keep MSAA")
