@@ -86,13 +86,17 @@ def qa_instance(a, b, name):
 def qa(args, parts):
     X.qa_env(extra=[("bridge", (0, 0, 0), 0.0), ("catwalk", (0, 0, 0), 0.0), ("shell_lift4", (0, 0, 0), 0.0),
                     ("ring_rails", (0, 0, 0), 0.0), ("array_rings", (0, 0, 0), 0.0)])
-    X.qa_core()
-    parts["beam"].hide_render = True
+    X.qa_island()
+    C.qa_import("core_crystal", (0.0, 2.5, 0.0), 0.0, prefix="qa_core_")
+    for n_, r_ in enumerate(C.RING_R, start=1):                       # the four towers' heads (stand-ins) where the beam turns
+        K.V._qbox(f"qa_head{n_}", (-0.12, 1.7, r_ - 0.12), (0.12, 1.9, r_ + 0.12), "M_Chrome")
+    K.V._qbox("qa_sunport", (-12.0, 1.4, -0.4), (-11.8, 2.2, 0.4), "M_Brass_Aged")
     # a plausible path: the Sun axis -> tower I (mark 1) -> tower II -> tower III -> tower IV -> up to the Core
     pts = [(-11.8, 1.8, 0.0), (0.0, 1.8, 10.5), (0.0, 1.8, 8.5), (0.0, 1.8, 6.5), (0.0, 1.8, 4.5), (0.0, 4.1, 0.0)]
     # (QA path is only to read the ribbon; the game decides the real folds)
     for i in range(len(pts) - 1):
         qa_instance(pts[i], pts[i + 1], f"qa_beam_{i}")
+    parts["beam"].hide_render = True                         # (after the copies: a copy inherits the flag)
     S = int(os.environ.get("MR_S", "24"))
     RES = (int(os.environ.get("MR_W", "960")), int(os.environ.get("MR_H", "640")))
 
