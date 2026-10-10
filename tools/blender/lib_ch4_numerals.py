@@ -102,10 +102,10 @@ def roman_obj(name: str, n: int, h: float, depth: float = 0.0, mat: str = "M_Bra
     return o
 
 
-def digit_obj(name: str, d: int, h: float, depth: float = 0.0, mat: str = "M_Brass_Aged", loc=(0.0, 0.0, 0.0)):
+def digit_obj(name: str, d: int, h: float, depth: float = 0.0, mat: str = "M_Brass_Aged", loc=(0.0, 0.0, 0.0), res: int = 2):
     """A digit 0..9 (DejaVu Sans Bold, low-poly) centred on its glyph bounds, h tall, local XY facing +Z."""
     import lib_mech as L
     import lib_ch2_vault as V
-    o = V.text(name, str(d), h / 0.72, (0.0, 0.0), 0.0, font=V.FONT_SANS_B, mat=mat, depth=depth, res=2)
+    o = V.text(name, str(d), h / 0.72, (0.0, 0.0), 0.0, font=V.FONT_SANS_B, mat=mat, depth=depth, res=res)
     o.location = loc
     return o

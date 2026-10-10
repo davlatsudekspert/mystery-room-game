@@ -8,7 +8,8 @@ bundle id / version / build number / team / automatic signing in project.pbxproj
 Info.plist keys (export compliance, full screen on iPad, landscape, launch storyboard, non-empty purpose
 strings), localized InfoPlist.strings (each with the home-screen name), the game's own launch-screen images (not
 the engine logo), the privacy manifest and its Resources entry, and icons without
-alpha. The team id is compared with the env var, never printed. Exit 1 on any failure.
+alpha, and the StoreKit plugin + In-App Purchase capability exactly when --storekit is given. The team id is
+compared with the env var, never printed. Exit 1 on any failure.
 """
 from __future__ import annotations
 
@@ -59,6 +60,8 @@ def main() -> int:
 	ap.add_argument("--display-name", default="Mystery Room", help="the home-screen name in every InfoPlist.strings")
 	ap.add_argument("--launch-images", default="game/platform/ios", help="folder with launch@2x.png and launch@3x.png")
 	ap.add_argument("--custom-features", default="", help="comma list expected in the pck's project settings ('' = none)")
+	ap.add_argument("--storekit", action="store_true", help="a build with in-app purchases: the StoreKit plugin and the "
+		"In-App Purchase capability must be in the project (without this flag they must be absent)")
 	a = ap.parse_args()
 	root, n = Path(a.export_dir), a.name
 
@@ -147,6 +150,22 @@ def main() -> int:
 	ent_path = root / n / f"{n}.entitlements"
 	ent = plistlib.loads(ent_path.read_bytes()) if ent_path.exists() else {}
 	print(f"        {sorted(ent) or 'none (no capabilities that need a provisioning-profile entitlement)'}")
+
+	print("In-app purchases (StoreKit)")
+	plugin_linked = "ios-in-app-purchase" in pbx
+	storekit = "StoreKit.framework" in pbx
+	capability = bool(re.search(r"com\.apple\.InAppPurchase = \{\s*enabled = 1;", pbx))
+	registered = any("ios_in_app_purchase_init" in f.read_text(encoding="utf-8", errors="replace")
+		for f in (root / n).glob("*.*") if f.suffix in (".cpp", ".mm", ".m", ".h") and f.is_file())
+	if a.storekit:
+		ok(plugin_linked, "the StoreKit plugin (ios-in-app-purchase.xcframework) is in the project")
+		ok((root / n / "dylibs").exists() or plugin_linked, "plugin files copied")
+		ok(registered, "the plugin's ios_in_app_purchase_init is registered at start-up")
+		ok(storekit, "StoreKit.framework is linked")
+		ok(capability, "In-App Purchase capability (com.apple.InAppPurchase) is on")
+	else:
+		ok(not plugin_linked and not registered, "no StoreKit plugin (real payments off, no store_sandbox)")
+		ok(not capability, "no In-App Purchase capability")
 
 	print("App icons")
 	icon_dir = root / n / "Images.xcassets/AppIcon.appiconset"
