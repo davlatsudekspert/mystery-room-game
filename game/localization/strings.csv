@@ -270,6 +270,7 @@ cap.sparks,[Sparks crackle],[Треск искр],[Uchqunlar chirsillaydi]
 cap.door,[The heavy door creaks open],[Тяжёлая дверь со скрипом открывается],[Ogʻir eshik gʻiyqillab ochildi]
 cap1.draught,[A cold draught breathes out from behind the shelves],[Из-за полок тянет холодным сквозняком],[Javonlar ortidan sovuq shabada esdi]
 cap1.corridor,"[Beyond the door, the corridor lamps wake one by one]",[За дверью одна за другой загораются лампы коридора],[Eshik ortida yoʻlak chiroqlari birin-ketin yonmoqda]
+cap1.beam_b,[The beam leaps to the second mirror],[Луч перескакивает на второе зеркало],[Nur ikkinchi koʻzguga sakrab oʻtdi]
 epi1.postmark,Under the corridor lamp you unfold the parcel's wrapper again. The postmark reads: 14 XI 1979.,Под лампой в коридоре вы снова разворачиваете обёртку посылки. На штемпеле: 14 XI 1979.,Yoʻlak chirogʻi ostida posilka oʻramini yana ochasiz. Shtempelda: 14 XI 1979.
 item.leyla_badge.name,Leyla's lab badge,Пропуск Лейлы,Leylaning guvohnomasi
 item.leyla_badge.desc,Laboratory 7 · Staff no. 0417 · Dr. L. Rahimova. It came in the parcel.,Лаборатория 7 · Табельный № 0417 · Д-р Л. Рахимова. Он был в посылке.,7-laboratoriya · Xodim № 0417 · Dr. L. Rahimova. U posilkada kelgan.
@@ -940,3 +941,17 @@ hint.c4_reversal.3,"Lever at 03:17. Then at 03:1%d %s, at 03:1%d %s, at 03:1%d %
 hint.c4_finale.1,The lens is still in the cradle.,Линза всё ещё в гнезде.,Linza hali ham uyachada.
 hint.c4_finale.2,"Take it, or leave it.",Заберите её — или оставьте.,Oling — yoki qoldiring.
 hint.c4_finale.3,Choose.,Выбирайте.,Tanlang.
+ui.about,About,Об игре,Oʻyin haqida
+ui.licenses,Licenses,Лицензии,Litsenziyalar
+ui.tap_to_skip,Tap to skip,"Нажмите, чтобы пропустить",Oʻtkazib yuborish uchun bosing
+credits.created_by,Created by,Создатели,Yaratuvchilar
+credits.testers,Thanks to our testers,Благодарим наших тестировщиков,Sinovchilarimizga rahmat
+credits.made_with,Made with,Сделано на движке,Yaratishda foydalanilgan dvigatel
+credits.cc0,"Thanks to the artists who shared their props, textures and sounds as CC0.","Спасибо авторам, поделившимся моделями, текстурами и звуками под лицензией CC0.","Model, tekstura va tovushlarini CC0 sifatida ulashgan mualliflarga rahmat."
+credits.thanks,Thank you for playing.,"Спасибо, что играли.",Oʻynaganingiz uchun rahmat.
+licenses.godot,Godot Engine,Godot Engine,Godot Engine
+licenses.fonts,Fonts,Шрифты,Shriftlar
+licenses.plugins,Purchase plugins,Плагины покупок,Xarid plaginlari
+licenses.components,Third-party components in Godot,Сторонние компоненты Godot,Godot ichidagi uchinchi tomon komponentlari
+licenses.texts,License texts,Тексты лицензий,Litsenziya matnlari
+tut.first,Something rests in the lamplight on the desk. Tap it.,"На столе, в свете лампы, что-то лежит. Нажмите на это.","Stolda, chiroq nurida, nimadir turibdi. Unga bosing."
