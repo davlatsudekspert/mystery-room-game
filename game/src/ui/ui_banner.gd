@@ -21,6 +21,7 @@ var title_lines := 0
 var title_cut := false # the title needed more lines than max_title_lines (it ends with an ellipsis)
 var _title_rect := Rect2()
 var _icon_rect := Rect2() # where the icon is drawn (empty = none)
+var _mesh := UIMesh.new() # the band and its ornaments: one draw call
 var _fl := 0.0 # flourish length actually drawn (0 = none)
 var _rule_y := -1.0 # the rule between title and subtitle (-1 = none)
 
@@ -181,39 +182,24 @@ static func _resize(l: Label, s: Vector2) -> void:
 	l.size = s
 
 
-func _grad(r: Rect2, from: Color, to: Color) -> void:
-	if r.size.x <= 0.0 or r.size.y <= 0.0:
-		return
-	draw_polygon(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]),
-		PackedColorArray([from, to, to, from]))
-
-
-func _diamond(c: Vector2, dx: float, dy: float, col: Color) -> void:
-	draw_colored_polygon(PackedVector2Array([c + Vector2(-dx, 0), c + Vector2(0, -dy), c + Vector2(dx, 0), c + Vector2(0, dy)]), col)
-
-
 func _draw() -> void:
+	# The band, hairlines, flourishes and rule are one mesh (one draw call; they were 7 to 13 polygons, each its own)
 	var k := UIOrnament.scale_k()
 	var gold := UITheme.BRASS
+	var m := _mesh
+	m.clear()
 	# the band: solid in the middle, fading out toward both ends
 	var fade := minf(80.0 * k, size.x * 0.16)
 	var band := Color(BAND, band_alpha)
 	var clear := Color(BAND, 0.0)
-	_grad(Rect2(0, 0, fade, size.y), clear, band)
-	draw_rect(Rect2(fade, 0, size.x - 2.0 * fade, size.y), band)
-	_grad(Rect2(size.x - fade, 0, fade, size.y), band, clear)
+	m.gradient_rect(Rect2(0, 0, fade, size.y), clear, band)
+	m.rect(Rect2(fade, 0, size.x - 2.0 * fade, size.y), band)
+	m.gradient_rect(Rect2(size.x - fade, 0, fade, size.y), band, clear)
 	# hairlines along the top and bottom edges, fading with the band
 	var half := size.x * 0.5
 	for yy: float in [0.5, size.y - 1.5]:
-		_grad(Rect2(fade * 0.5, yy, half - fade * 0.5, 1.0), Color(gold, 0.0), Color(gold, 0.42))
-		_grad(Rect2(half, yy, half - fade * 0.5, 1.0), Color(gold, 0.42), Color(gold, 0.0))
-	if icon_texture != null and _icon_rect.size.x > 0.0:
-		# the item's icon, kept square and centred in its slot
-		var ts := icon_texture.get_size()
-		if ts.x > 0.0 and ts.y > 0.0:
-			var kk := minf(_icon_rect.size.x / ts.x, _icon_rect.size.y / ts.y)
-			var ds := ts * kk
-			draw_texture_rect(icon_texture, Rect2(_icon_rect.position + (_icon_rect.size - ds) * 0.5, ds), false)
+		m.gradient_rect(Rect2(fade * 0.5, yy, half - fade * 0.5, 1.0), Color(gold, 0.0), Color(gold, 0.42))
+		m.gradient_rect(Rect2(half, yy, half - fade * 0.5, 1.0), Color(gold, 0.42), Color(gold, 0.0))
 	var th := maxf(1.0, roundf(1.4 * k))
 	if title_label.visible and _fl > 0.0:
 		# flourishes: a small diamond beside the title, then a rule running outward and fading away
@@ -223,15 +209,23 @@ func _draw() -> void:
 		var lx := _title_rect.position.x - 12.0 * k
 		var rx := _title_rect.end.x + 12.0 * k
 		var hi := Color(UITheme.BRASS_HI, 0.95)
-		_diamond(Vector2(lx - dx, ty), dx, dy, hi)
-		_diamond(Vector2(rx + dx, ty), dx, dy, hi)
+		m.diamond(Vector2(lx - dx, ty), dx, dy, hi)
+		m.diamond(Vector2(rx + dx, ty), dx, dy, hi)
 		var l_end := lx - 2.0 * dx - 4.0 * k
 		var r_start := rx + 2.0 * dx + 4.0 * k
-		_grad(Rect2(l_end - _fl, ty - th * 0.5, _fl, th), Color(gold, 0.0), Color(gold, 0.9))
-		_grad(Rect2(r_start, ty - th * 0.5, _fl, th), Color(gold, 0.9), Color(gold, 0.0))
+		m.gradient_rect(Rect2(l_end - _fl, ty - th * 0.5, _fl, th), Color(gold, 0.0), Color(gold, 0.9))
+		m.gradient_rect(Rect2(r_start, ty - th * 0.5, _fl, th), Color(gold, 0.9), Color(gold, 0.0))
 	if _rule_y >= 0.0:
 		# the rule between the title and the subtitle: solid under the words, fading at both ends
 		var rw := _title_rect.size.x + 2.0 * maxf(_fl * 0.8, 24.0 * k)
 		var cx := _title_rect.get_center().x
-		_grad(Rect2(cx - rw * 0.5, _rule_y, rw * 0.5, th), Color(gold, 0.0), Color(gold, 0.85))
-		_grad(Rect2(cx, _rule_y, rw * 0.5, th), Color(gold, 0.85), Color(gold, 0.0))
+		m.gradient_rect(Rect2(cx - rw * 0.5, _rule_y, rw * 0.5, th), Color(gold, 0.0), Color(gold, 0.85))
+		m.gradient_rect(Rect2(cx, _rule_y, rw * 0.5, th), Color(gold, 0.85), Color(gold, 0.0))
+	m.draw(self)
+	if icon_texture != null and _icon_rect.size.x > 0.0:
+		# the item's icon, kept square and centred in its slot (the flourishes and the rule never reach it)
+		var ts := icon_texture.get_size()
+		if ts.x > 0.0 and ts.y > 0.0:
+			var kk := minf(_icon_rect.size.x / ts.x, _icon_rect.size.y / ts.y)
+			var ds := ts * kk
+			draw_texture_rect(icon_texture, Rect2(_icon_rect.position + (_icon_rect.size - ds) * 0.5, ds), false)

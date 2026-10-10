@@ -12,6 +12,8 @@ extends Node
 ##        [--breakdown] (with --perf: the draw calls each model, effect node and light shadow adds to the view)
 ##        [--hud-breakdown] (with --perf: the HUD alone: the view's calls with the HUD shown / hidden, the HUD with the
 ##        3D room hidden, and the calls each HUD node adds; plus the nodes that break 2D batching)
+##        [--hud-states] (with --perf: the HUD alone in the states a player meets: as it is, a message, a found-item
+##        banner, a caption, a prompt with an item in hand, the bag open, and all at once; use --steps=N to have items)
 ##        [--screen=phone61|phone20|phone55|tablet10|WxH@dpi[:l,t,r,b]] (render as that phone: its aspect, dpi and
 ##        safe insets drive the HUD's size and the mm checks; the window takes the same aspect)
 ##        [--text-scale=1.15] (the player's Settings → Text size)
@@ -156,6 +158,8 @@ func _run() -> void:
 				await _breakdown(v)
 			if OS.get_cmdline_user_args().has("--hud-breakdown"):
 				await _hud_breakdown(v)
+			if OS.get_cmdline_user_args().has("--hud-states"):
+				await _hud_states(v)
 			continue
 		print("tap_map: view %s" % v) # progress: tools/qa_run.sh kills a run whose log stops growing
 		await _map(v)
@@ -351,6 +355,51 @@ func _hud_breakdown(view_id: String) -> void:
 	_batch_breakers(root, "", breakers)
 	for b in breakers:
 		lines.append("  %s breaker: %s" % [view_id, b])
+	room.visible = true
+
+
+## The HUD's draw calls (3D room hidden) in the states a player meets, one line each. Tweens are given time to finish.
+func _hud_states(view_id: String) -> void:
+	var hud := room.get("hud") as CanvasLayer
+	var logic: RoomLogic = GameState.logic
+	if hud == null:
+		return
+	room.visible = false
+	var inv: Array = logic.inventory.duplicate()
+	var out: Array[String] = []
+	hud.call("message", "", 0.01)
+	hud.call("caption", "", 0.01)
+	await _settle(0.8)
+	out.append("as it is (%d items in the bag) %d" % [inv.size(), await _draw_calls()])
+	var found: String = str(inv[0]) if not inv.is_empty() else ""
+	hud.call("message", "A plain message that is long enough to take a second look at the banner", 60.0)
+	await _settle(0.8)
+	out.append("+ a message %d" % await _draw_calls())
+	if found != "":
+		hud.call("message", tr("ui.item_added") % tr(ItemDB.name_key(found)), 60.0)
+		await _settle(1.0)
+		out.append("found-item banner instead of the message %d" % await _draw_calls())
+	hud.call("caption", "A story caption under the view title", 60.0)
+	await _settle(0.8)
+	out.append("+ a caption %d" % await _draw_calls())
+	if found != "":
+		logic.select_item(found)
+		await _settle(0.5)
+		out.append("+ a prompt, item %s in hand %d" % [found, await _draw_calls()])
+	hud.call("set_bag_open", true)
+	await _settle(0.8)
+	out.append("+ the bag open (tray) %d" % await _draw_calls())
+	hud.call("set_bag_open", false)
+	logic.select_item("")
+	hud.call("message", "A short message", 0.2)
+	hud.call("caption", "A short caption", 0.2)
+	await _settle(2.5) # shown, then faded out
+	out.append("a message and a caption after they faded %d" % await _draw_calls())
+	hud.call("message", "", 0.01)
+	hud.call("caption", "", 0.01)
+	await _settle(0.5)
+	for o in out:
+		lines.append("  states[%s] %s" % [view_id, o])
 	room.visible = true
 
 

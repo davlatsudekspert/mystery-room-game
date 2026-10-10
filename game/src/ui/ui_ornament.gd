@@ -12,6 +12,7 @@ var color := UITheme.BRASS
 var alpha := 0.85
 var thickness := 1.5
 var diamond := true
+var _mesh := UIMesh.new()
 
 
 ## A centred rule with a diamond, as wide as its container (or `width` px), `height` px tall.
@@ -51,18 +52,10 @@ static func scale_k() -> float:
 	return clampf(1.0 + (float(UITheme.size(26)) / 26.0 - 1.0) * 0.6, 1.0, 1.8)
 
 
-func _fade_rect(r: Rect2, from: Color, to: Color) -> void:
-	if r.size.x <= 0.0 or r.size.y <= 0.0:
-		return
-	var pts := PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
-	draw_polygon(pts, PackedColorArray([from, to, to, from]))
-
-
-func _diamond(c: Vector2, dx: float, dy: float, col: Color) -> void:
-	draw_colored_polygon(PackedVector2Array([c + Vector2(-dx, 0), c + Vector2(0, -dy), c + Vector2(dx, 0), c + Vector2(0, dy)]), col)
-
-
 func _draw() -> void:
+	# one mesh, one draw call (the diamond rule was 4 polygons and 2 circles, the vertical rule 7 calls)
+	var m := _mesh
+	m.clear()
 	var k := scale_k()
 	var th := maxf(1.0, roundf(thickness * k))
 	var col := Color(color, alpha)
@@ -75,24 +68,25 @@ func _draw() -> void:
 			var gap := (dx + 7.0 * k) if diamond else 0.0
 			# solid near the diamond, fading out toward both ends
 			var half := cx - gap
-			_fade_rect(Rect2(cx - gap - half, y - th * 0.5, half, th), clear, col)
-			_fade_rect(Rect2(cx + gap, y - th * 0.5, half, th), col, clear)
+			m.gradient_rect(Rect2(cx - gap - half, y - th * 0.5, half, th), clear, col)
+			m.gradient_rect(Rect2(cx + gap, y - th * 0.5, half, th), col, clear)
 			if diamond:
-				_diamond(Vector2(cx, y), dx, 4.0 * k, Color(UITheme.BRASS_HI, alpha))
+				m.diamond(Vector2(cx, y), dx, 4.0 * k, Color(UITheme.BRASS_HI, alpha))
 				# two small dots flanking the diamond
-				draw_circle(Vector2(cx - gap - 10.0 * k, y), 1.6 * k, Color(UITheme.BRASS_HI, alpha * 0.8))
-				draw_circle(Vector2(cx + gap + 10.0 * k, y), 1.6 * k, Color(UITheme.BRASS_HI, alpha * 0.8))
+				m.disc(Vector2(cx - gap - 10.0 * k, y), 1.6 * k, Color(UITheme.BRASS_HI, alpha * 0.8), false, 16)
+				m.disc(Vector2(cx + gap + 10.0 * k, y), 1.6 * k, Color(UITheme.BRASS_HI, alpha * 0.8), false, 16)
 		Kind.HEADER:
 			var y := roundf(size.y * 0.5)
-			_fade_rect(Rect2(0, y - th * 0.5, size.x, th), col, Color(color, alpha * 0.25))
+			m.gradient_rect(Rect2(0, y - th * 0.5, size.x, th), col, Color(color, alpha * 0.25))
 		Kind.VRULE:
 			var x := roundf(size.x * 0.5)
 			var tip := 9.0 * k
 			var inset := tip + 4.0 * k
 			if size.y > 2.0 * inset:
-				draw_rect(Rect2(x - th * 0.5, inset, th, size.y - 2.0 * inset), col)
+				m.rect(Rect2(x - th * 0.5, inset, th, size.y - 2.0 * inset), col)
 			# arrow tips: a small chevron at each end
 			var w := 4.5 * k
 			var hi := Color(UITheme.BRASS_HI, alpha)
-			draw_polyline(PackedVector2Array([Vector2(x - w, tip), Vector2(x, 1.0), Vector2(x + w, tip)]), hi, th, true)
-			draw_polyline(PackedVector2Array([Vector2(x - w, size.y - tip), Vector2(x, size.y - 1.0), Vector2(x + w, size.y - tip)]), hi, th, true)
+			m.stroke(PackedVector2Array([Vector2(x - w, tip), Vector2(x, 1.0), Vector2(x + w, tip)]), th, hi)
+			m.stroke(PackedVector2Array([Vector2(x - w, size.y - tip), Vector2(x, size.y - 1.0), Vector2(x + w, size.y - tip)]), th, hi)
+	m.draw(self)
