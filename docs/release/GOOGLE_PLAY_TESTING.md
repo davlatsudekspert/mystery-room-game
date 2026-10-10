@@ -34,6 +34,8 @@ _Last updated: 2026-10-09. Package `com.mysteryroom.forgotteninstitute`. Sources
 | Release notes | empty in this first release. Later releases take docs/release/whatsnew/ |
 | Not touched | the NFCSTORE app, other tracks, store listing, pricing |
 
+**Automatic upload works (2026-10-10).** `PLAY_SERVICE_ACCOUNT_JSON` is set. android.yml run 8 (versionCode 8, release, beta_unlock) built, verified and uploaded the AAB to Internal testing as a **draft** in 4 minutes, with no download on anyone's computer ("Upload to Google Play (internal, draft)": success). From now on, test builds go: dispatch android.yml with `upload_to_play=true`, `play_track=internal`, and `play_status=completed` to roll out to the internal testers, or `draft` to review first. versionCode = the run number.
+
 Next: the owner tests New Game on his own Android phone before sharing the link. iOS crashes there (Metal), and Android uses Vulkan, which is a different driver. Then create `PLAY_SERVICE_ACCOUNT_JSON` (§7), so that CI uploads every later test build itself.
 
 ## First manual upload (2026-10-09)
