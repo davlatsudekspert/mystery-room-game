@@ -56,6 +56,10 @@ account's purchase history in App Store Connect (Users and Access â†’ Sandbox â†
 | Android | [GodotGooglePlayBilling](https://github.com/godot-sdk-integrations/godot-google-play-billing) (godot-sdk-integrations, the official one) | 3.3.0 (2026-07-26), Play Billing Library 9.1.0, Android plugin v2 | MIT | Official, maintained, Godot 4.2+. Release zip SHA-256 `20d75623d6f337f08d8283c83098b73678d5f575e39247af5a8eb80588b18568` (its scripts are identical to tag 3.3.0) |
 | iOS | [Godot iOS plugin for In-App purchase](https://github.com/hrk4649/godot_ios_plugin_iap) (hrk4649) | 0.4.0 (2026-06-19), built for Godot 4.7 | MIT | StoreKit 2 in Swift; `.gdip` + static xcframework (debug/release), so only iOS exports are affected; iOS 15 minimum like the game; the author tested Godot 4.7 + Xcode 26.5. Release zip SHA-256 `578800e79f2bcd8719eb00e4f80d036960518ec1b113c7b47626f95a8aeda87a` |
 
+The Android plugin pulls Google's Play Billing Library 9.1.0 at build time. That library (and play-services) is under
+Google's "Android Software Development Kit License": free of charge but not open source. Google Play requires it for
+any in-app purchase, so there is no open-source alternative; it is recorded in `docs/ASSET_LICENSES.md`.
+
 iOS options considered: the official `godot-ios-plugins/inappstore` (StoreKit **1**, and it needs a full Godot iOS
 build to compile); Miguel de Icaza's GodotApplePlugins (StoreKit 2 GDExtension, MIT, very active, but iOS **17**
 minimum and a SwiftGodot runtime); hyodotdev's godot-iap (needs a post-export embed script, 27 MB). The chosen plugin

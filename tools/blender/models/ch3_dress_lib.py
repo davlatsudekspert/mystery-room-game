@@ -37,7 +37,7 @@ GRIME = "M_Dress_Grime"
 WOOL, PLASTER_DARK, STONE_DARK = "M_Dress_Wool", "M_Dress_Plaster_Dark", "M_Dress_Stone_Dark"
 STEEL, BRASS, PAINT, WOOD = "M_Steel_Dark", "M_Brass_Aged", "M_Steel_Painted", "M_Wood_Panel"
 PAPER, LEATHER, STRING = "M_Paper", "M_Leather", "M_String_Red"
-GLASS, FLAME, CRIMSON = "M_Glass", "M_Emissive_Warm", "M_Enamel_Crimson"
+GLASS, FLAME, CRIMSON = "M_Glass", "M_Dress_Flame", "M_Enamel_Crimson"
 CREAM, WALNUT, STONE = "M_Enamel_Cream", "M_Wood_Walnut", "M_Stone"
 RUBBER, GREEN, LINEN, VELVET = "M_Rubber", "M_Paint_Green", "M_Linen", "M_Velvet"
 with open(CELLS_JSON) as _f:
@@ -64,10 +64,11 @@ def ensure_materials() -> None:
     tex = next((n for n in nt.nodes if n.type == "TEX_IMAGE"), None)
     if bsdf is not None and tex is not None and not bsdf.inputs["Alpha"].links:
         nt.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
-    M.material(WOOL, color="8A4034", rough=0.95)
+    M.material(WOOL, color="54362B", rough=0.95)
+    M.material(FLAME, color="FFBC70", rough=0.6, emission="FFB868", emission_strength=1.6)
     M.material(PLASTER_DARK, color="2C3436", rough=0.95)
     M.material(STONE_DARK, color="4A4844", rough=0.8)
-    for name in (WOOD, STEEL, BRASS, PAINT, PAPER, LEATHER, STRING, GLASS, FLAME, CRIMSON, CREAM, WALNUT, STONE, RUBBER, GREEN, LINEN, VELVET):
+    for name in (WOOD, STEEL, BRASS, PAINT, PAPER, LEATHER, STRING, GLASS, CRIMSON, CREAM, WALNUT, STONE, RUBBER, GREEN, LINEN, VELVET):
         M.material(name)
 
 

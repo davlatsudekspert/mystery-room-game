@@ -11,14 +11,14 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 **Running now:**
 - Ch3 set dressing (camp, shutter corridor, memorial gallery, grime): Sonnet agent;
 - Ch4 models, groups A and B (shell, bridge, catwalk, master desk, panel 0): Sonnet agent;
-- store purchases: StoreKit 2 and Play Billing plugins, `full_game` workflows for App Store Connect and Play written with `dry_run` (the director reviews and dispatches them), REAL_PAYMENTS_ENABLED stays false: Opus agent.
+- store purchases: done on main (2026-10-10, `docs/MONETIZATION.md`). StoreKit 2 + Play Billing providers, purchase screen, `store_sandbox` builds; `ios-iap.yml` and `play-iap.yml` written with `dry_run` default true and **not dispatched**; REAL_PAYMENTS_ENABLED stays false.
 
 **Next in the queue:**
 1. The owner's device check of Android (10) and TestFlight 7. On iOS: does New Game reach the room? If not, get a screenshot of the menu's "safe N / last stop" line.
 2. HUD draw calls: the HUD costs about 60 draw calls in every view, which leaves choir_s 5 calls of margin. Batch the HUD (shared StyleBoxes, fewer separate CanvasItems, no per-button shader) before Chapter 4's hall.
 3. Chapter 4: models C–I, then the scene (`array_hall_room.gd`, views, culling, lights) and `playthrough_ch4` across the 16 profile paths.
 4. Chapter 3 release candidate: a rendered playthrough on both paths after the set dressing, the phone-brightness check, then `released: true`.
-5. The store purchase flow, tested in the TestFlight sandbox, and on Play with License testers only.
+5. The store purchase flow (`docs/MONETIZATION.md` → "Testing purchases"): `ios-iap.yml` dry run → review → `dry_run=false`; `ios.yml store_sandbox=true beta_unlock=false` (first macOS run with the StoreKit plugin) → TestFlight sandbox test. Play: after the owner's §11 steps (`docs/release/GOOGLE_PLAY_TESTING.md`), one `android.yml include_billing=true` draft upload, `play-iap.yml` dry run → apply, then a `store_sandbox` build for License testers only.
 
 **Waiting on the owner:**
 1. The app icon variant: A, B or C. B is recommended (`docs/brand/icon_variants/`).

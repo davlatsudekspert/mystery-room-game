@@ -349,7 +349,7 @@ def st_stripes(w, h, seed):
     # yellow ground behind the black stripes
     ground = Image.new("RGBA", im.size, YEL + (255,))
     ground.alpha_composite(im)
-    return finish_stencil(ground, w, h, seed, 0.65)
+    return finish_stencil(ground, w, h, seed, 0.82)
 
 
 def st_keepclear(w, h, seed):
@@ -648,7 +648,7 @@ normal_texture = ExtResource("2")
 ao_enabled = true
 uv1_scale = Vector3(1.4, 1.4, 1.4)
 """,
-    # a faded wool blanket: plain brick red (the fabric scan's albedo is too dark to tint), the weave kept in normal and ORM
+    # a worn wool blanket: faded brick-brown (darker and less saturated than the first pass) (the fabric scan's albedo is too dark to tint), the weave kept in normal and ORM
     "M_Dress_Wool": """[gd_resource type="ORMMaterial3D" load_steps=3 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/fabric/normal.png" id="2"]
@@ -660,10 +660,22 @@ orm_texture = ExtResource("3")
 metallic = 0
 roughness = 1.0
 normal_enabled = true
-albedo_color = Color(0.42, 0.17, 0.13, 1)
+albedo_color = Color(0.30, 0.205, 0.165, 1)
 normal_texture = ExtResource("2")
 ao_enabled = true
 uv1_scale = Vector3(3.7037, 3.7037, 3.7037)
+""",
+    # candle / lantern / heater-window flames: emission kept below the environment's glow threshold (1.1), so a phone shows a
+    # warm point of light and no bloom halo (M_Emissive_Warm is 3.0 and blooms)
+    "M_Dress_Flame": """[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Dress_Flame"
+albedo_color = Color(1, 0.74, 0.44, 1)
+roughness = 0.6
+emission_enabled = true
+emission = Color(1, 0.72, 0.4, 1)
+emission_energy_multiplier = 0.95
 """,
 }
 

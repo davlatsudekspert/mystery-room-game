@@ -12,7 +12,7 @@ _Last updated: 2026-10-10_
 | 5 — Localization & tests | ✅ Done for Chapter 1 | 299 keys EN → RU → UZ. The validator checks Uzbek Latin only, placeholders and font coverage. Layout-fit test at text scale 1.3. UI screenshots in all three languages (`qa/ui_screens.tscn`) |
 | 6 — Android build | 🔶 Ready for device testing | Debug APK from CI. Checked on the exported APK: target SDK 36 (the Play requirement since 2026-08-31), 16 KB native alignment, VIBRATE as the only permission, Vulkan optional with GL fallback, adaptive and monochrome icons, landscape. The back button never quits. PerfGuard scales the 3D resolution on slow phones. The upload key exists (outside the repo); the release AAB uses Gradle. **Not yet tested on a physical device**: see `docs/TESTING_ON_DEVICE.md` |
 | 7 — iOS preparation | ✅ First TestFlight build | **2026-10-09:**<br>• build 0.1.0 (2), with `beta_unlock`, was uploaded to TestFlight (`ios.yml` run 37941801214) after the owner's approval;<br>• Apple processing: `VALID`;<br>• internal testers are added by the owner;<br>• details and the owner's next steps: `docs/release/IOS_TESTFLIGHT.md`.<br>The pipeline: ubuntu (ASC gate, tests, Godot Xcode export + static checks), then macOS (Xcode 26.3 / iOS 26.2 SDK, unsigned archive, cloud-signed App Store export) |
-| 8 — Store & monetization | 🔶 Partly | Purchase abstraction (mock/disabled providers), real payments disabled. `docs/MONETIZATION.md`, `docs/STORE_LISTING.md` (EN/RU/UZ), `docs/RELEASE_PIPELINE.md` |
+| 8 — Store & monetization | 🔶 Purchase system ready, payments OFF | **2026-10-10:** StoreKit 2 (`AppStoreProvider`, plugin hrk4649 0.4.0, MIT) and Play Billing (`GooglePlayStoreProvider`, GodotGooglePlayBilling 3.3.0, MIT): price, purchase, pending, cancel/errors, restore, Play acknowledgement, local entitlement, tester reset; purchase screen with Restore (EN/RU/UZ). `REAL_PAYMENTS_ENABLED = false`; the custom feature `store_sandbox` turns the real store on in test builds only. `tests/test_store.gd` (12 tests, fake singletons). Local exports verified: billing AAB (permissions BILLING + INTERNET + ACCESS_NETWORK_STATE, the workflow's verify step), iOS Xcode project with StoreKit + In-App Purchase capability. Not yet: CI/macOS runs, device purchases. Store setup workflows `ios-iap.yml` / `play-iap.yml` (dry run by default) written, not dispatched. `docs/MONETIZATION.md` |
 
 ## Chapter 2 (in progress)
 - **Logic:** P1–P12, both Chapter 1 lens paths, and the solver and no-softlock tests in `tools/run_tests.sh`.
@@ -37,6 +37,7 @@ _Last updated: 2026-10-10_
 
 ## Tester builds
 Exports with the custom feature `beta_unlock` open every released chapter without a purchase (`Premium.tester_build()`), so internal/closed testers and TestFlight testers can play Chapter 2+ while real payments stay disabled. Store releases never carry the feature.
+Purchase test builds carry `store_sandbox` instead (never together with `beta_unlock`): the paid chapters stay locked and the real store's sandbox sells `full_game` (TestFlight: never charged; Play: only License testers are not charged). See `docs/MONETIZATION.md`.
 
 ## Organisation
 The director plus parallel agents: Android/Google Play, iOS/TestFlight, QA and visual/UI. See `NEXT_STEPS.md`. Nothing is uploaded to a store and no tester is invited without the owner's approval.
