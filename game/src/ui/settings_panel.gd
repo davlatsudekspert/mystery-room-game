@@ -127,7 +127,9 @@ func _build() -> void:
 	# the three on one line when they fit (large text on a small phone: Restore and Privacy become the last rows
 	# of the body, so the footer stays one touch target tall and the body keeps its room)
 	var inner_w := custom_minimum_size.x - 48.0
-	var need := restore.get_combined_minimum_size().x + privacy.get_combined_minimum_size().x + close.get_combined_minimum_size().x + 2.0 * 28.0
+	var need := 2.0 * 28.0 # (the buttons are not in the tree yet, so their own minimum size has no theme)
+	for b: Button in [restore, privacy, close]:
+		need += maxf(b.custom_minimum_size.x, _button_text_width(b.text) + 2.0 * (30.0 if b == close else 18.0))
 	if need <= inner_w:
 		actions.add_child(restore)
 		actions.add_child(privacy)
@@ -371,6 +373,13 @@ func _toggle(setting: String) -> Control:
 	h.add_child(state)
 	h.add_child(sw)
 	return h
+
+
+## Width of a button's translated text in the theme's button font (small-caps display serif).
+func _button_text_width(key: String) -> float:
+	var f := theme.get_font("font", "Button")
+	var fs := theme.get_font_size("font_size", "Button")
+	return f.get_string_size(tr(key), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 
 
 # ====================================================================== fit and state

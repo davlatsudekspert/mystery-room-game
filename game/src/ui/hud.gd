@@ -1,6 +1,10 @@
 extends CanvasLayer
-## In-game HUD for room chapters: inventory, item actions, hints, documents (with UV page), inspect view,
-## captions/messages, pause, intro, finale choice and chapter-complete screen.
+## In-game HUD for room chapters, in the main menu's visual language (docs/UI_UX.md → HUD): centred banners
+## (a small-caps serif title between gold flourishes over a thin rule, a subtitle below, on a soft dark band)
+## for the view title, captions, messages, prompts and "item found"; the inventory as a column on the left
+## beside a thin vertical gold rule; round bezel buttons (Back top left, Hint top right, Pause with a roman II
+## bottom right); hints, documents (with UV page), the inspect view, pause, intro, finale choice and the
+## chapter-complete screen as dialogs in the same style.
 ## Sizing follows UITheme (screen-based text scale × the player's text size, touch targets in mm, safe area);
 ## _layout() places everything and runs again when the window or the text size changes.
 
@@ -9,23 +13,25 @@ var logic: RoomLogic
 var icons: ItemIcons
 
 var _root: Control
-var _top_plate: PanelContainer # view title
+var _top_plate: UIBanner # view title
 var _top_caption: Label
-var _cap_plate: PanelContainer # caption / subtitle line under the title
+var _cap_plate: UIBanner # caption / subtitle line under the title
 var _caption_line: Label
-var _msg_plate: PanelContainer # feedback message above the inventory
+var _msg_plate: UIBanner # feedback message, or the found item (icon, name, description), at the bottom
 var _message: Label
-var _prompt_plate: PanelContainer # "Use X on…" above the inventory
+var _prompt_plate: UIBanner # "Use X on…" at the bottom
 var _prompt: Label
 var _back_btn: IconButton
 var _hint_btn: IconButton
 var _pause_btn: IconButton
-var _inv_panel: PanelContainer
-var _inv_box: HBoxContainer
+var _inv_panel: Control # the inventory column: slots, the vertical rule, the item actions beside the selection
+var _inv_box: VBoxContainer
 var _inv_scroll: ScrollContainer
+var _inv_rule: UIOrnament
+var _inv_span := Rect2() # where the column may be (set by _layout)
+var _actions: HBoxContainer # inspect / combine, beside the selected slot
 var _meter: PanelContainer
 var _meter_bars: Array[ColorRect] = []
-var _inv_max_w := 1180.0 # wider inventories scroll sideways (set by _layout from the screen width)
 var _act_inspect: IconButton
 var _act_combine: IconButton
 var _combine_mode := false
@@ -38,9 +44,11 @@ var _tips_shown: Dictionary = {}
 var _last_progress_ms := 0
 var _safe_seen := Vector4.ZERO
 var _safe_poll := 0.0
+var _found_id := "" # the item the message banner announces (its icon may be rendered a moment later)
 
 const PAD := UITheme.HUD_PAD # gap between HUD controls and the safe-area edge
 const INV_SEP := 10
+const ACTION_GAP := 12.0 # between the inventory rule and the item actions
 
 
 func bind(r: Node3D) -> void:
@@ -50,7 +58,11 @@ func bind(r: Node3D) -> void:
 	icons = ItemIcons.new()
 	icons.logic = logic
 	add_child(icons)
-	icons.icon_ready.connect(func(_id: String, _t: Texture2D) -> void: _refresh_inventory())
+	icons.icon_ready.connect(func(id: String, t: Texture2D) -> void:
+		_refresh_inventory()
+		if id == _found_id and _msg_plate != null:
+			_msg_plate.set_icon(t)
+			_stack_bottom())
 	_build()
 	GameState.events.connect(_on_events)
 	Settings.changed.connect(_on_setting_changed)
@@ -71,9 +83,7 @@ func _on_setting_changed(key: String) -> void:
 
 
 func _on_language_changed(_code: String) -> void:
-	for p in [_top_plate, _msg_plate, _prompt_plate]:
-		_fit_plate(p)
-	_stack_top()
+	_layout()
 
 
 # ====================================================================== layout
@@ -84,108 +94,78 @@ func _build() -> void:
 	_root.theme = UITheme.build()
 	add_child(_root)
 
-	_pause_btn = IconButton.make("pause", 92)
-	_root.add_child(_pause_btn)
-	_pause_btn.pressed.connect(show_pause)
-	_hint_btn = IconButton.make("hint", 92)
-	_root.add_child(_hint_btn)
-	_hint_btn.pressed.connect(show_hint)
-
-	_top_plate = _plate(30, UITheme.BRASS_HI, false, UITheme.display_font(true))
-	_top_caption = _top_plate.get_meta("label")
-	_cap_plate = _plate(26, UITheme.CREAM, false) # subtitles are reading text: body size
-	_caption_line = _cap_plate.get_meta("label")
-	_cap_plate.modulate.a = 0.0
-	_msg_plate = _plate(28, UITheme.CREAM, true)
-	_message = _msg_plate.get_meta("label")
-	_msg_plate.modulate.a = 0.0
-	_prompt_plate = _plate(26, UITheme.BRASS_HI, true)
-	_prompt = _prompt_plate.get_meta("label")
-
 	_back_btn = IconButton.make("back", int(UITheme.HUD_BACK_PX))
 	_root.add_child(_back_btn)
 	_back_btn.pressed.connect(func() -> void: room.call("go_back"))
+	_hint_btn = IconButton.make("hint", int(UITheme.HUD_BTN_PX))
+	_root.add_child(_hint_btn)
+	_hint_btn.pressed.connect(show_hint)
+	_pause_btn = IconButton.make("pause", int(UITheme.HUD_BTN_PX))
+	_root.add_child(_pause_btn)
+	_pause_btn.pressed.connect(show_pause)
 
-	_inv_panel = PanelContainer.new()
-	var sb := UITheme.panel_box(0.82, 18)
-	sb.set_content_margin_all(12)
-	_inv_panel.add_theme_stylebox_override("panel", sb)
-	_inv_panel.anchor_left = 0.5
-	_inv_panel.anchor_right = 0.5
-	_inv_panel.anchor_top = 1.0
-	_inv_panel.anchor_bottom = 1.0
-	_inv_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_inv_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_top_plate = _plate(30, 26, UITheme.CREAM)
+	_top_caption = _top_plate.title_label
+	_cap_plate = _plate(30, 26, UITheme.CREAM) # subtitles are reading text: body size
+	_caption_line = _cap_plate.subtitle_label
+	_cap_plate.modulate.a = 0.0
+	_msg_plate = _plate(30, 28, UITheme.CREAM)
+	_message = _msg_plate.subtitle_label
+	_msg_plate.modulate.a = 0.0
+	_prompt_plate = _plate(30, 26, UITheme.BRASS_HI)
+	_prompt = _prompt_plate.subtitle_label
+
+	# the inventory column: a scrolling stack of slots, a vertical rule with arrow tips, the actions flyout
+	_inv_panel = Control.new()
+	_inv_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_inv_panel)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	_inv_panel.add_child(row)
 	_inv_scroll = ScrollContainer.new()
-	_inv_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_inv_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	row.add_child(_inv_scroll)
-	_inv_box = HBoxContainer.new()
+	_inv_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_inv_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_inv_panel.add_child(_inv_scroll)
+	_inv_box = VBoxContainer.new()
 	_inv_box.add_theme_constant_override("separation", INV_SEP)
 	_inv_scroll.add_child(_inv_box)
-	_act_inspect = IconButton.make("inspect", 104)
+	_inv_scroll.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _place_actions())
+	_inv_rule = UIOrnament.vrule(UITheme.HUD_RULE_W)
+	_inv_panel.add_child(_inv_rule)
+	_actions = HBoxContainer.new()
+	_actions.add_theme_constant_override("separation", 6)
+	_actions.visible = false
+	_inv_panel.add_child(_actions)
+	_act_inspect = IconButton.make("inspect", 96)
 	_act_inspect.pressed.connect(func() -> void: show_inspect(logic.selected))
-	row.add_child(_act_inspect)
-	_act_combine = IconButton.make("combine", 104)
+	_actions.add_child(_act_inspect)
+	_act_combine = IconButton.make("combine", 96)
 	_act_combine.pressed.connect(_toggle_combine)
-	row.add_child(_act_combine)
+	_actions.add_child(_act_combine)
 	_layout()
 
 
-## A caption line on a dark plate: readable over any 3D frame (≥ 4.5:1 even over white), hugging its text.
-func _plate(sz: int, color: Color, from_bottom: bool, font: Font = null) -> PanelContainer:
-	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UITheme.caption_plate())
-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p.anchor_left = 0.5
-	p.anchor_right = 0.5
-	p.anchor_top = 1.0 if from_bottom else 0.0
-	p.anchor_bottom = p.anchor_top
-	p.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	p.grow_vertical = Control.GROW_DIRECTION_BEGIN if from_bottom else Control.GROW_DIRECTION_END
-	p.visible = false
-	var l := UITheme.label("", sz, color)
-	if font != null:
-		l.add_theme_font_override("font", font)
-	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
-	l.add_theme_constant_override("outline_size", 4)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p.add_child(l)
-	p.set_meta("label", l)
-	_root.add_child(p)
-	return p
+## A banner for one HUD line: the title in display small caps (`title_sz`), the subtitle in the body font.
+func _plate(title_sz: int, sub_sz: int, sub_color: Color) -> UIBanner:
+	var b := UIBanner.new()
+	b.setup(title_sz, sub_sz, sub_color)
+	b.visible = false
+	_root.add_child(b)
+	return b
 
 
-## Fits a plate to its (translated) text: one line when it fits `max_w`, otherwise wrapped at `max_w`.
-func _fit_plate(p: PanelContainer) -> void:
-	var l: Label = p.get_meta("label")
-	var text := tr(l.text) if l.auto_translate_mode != Node.AUTO_TRANSLATE_MODE_DISABLED else l.text
-	var max_w: float = p.get_meta("max_w", 1200.0)
-	var inner := max_w - p.get_theme_stylebox("panel").get_minimum_size().x
-	var w := l.get_theme_font("font").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, l.get_theme_font_size("font_size")).x + 4.0
-	var font := l.get_theme_font("font")
-	var fs := l.get_theme_font_size("font_size")
-	var text_h := font.get_height(fs)
-	if w <= inner:
-		l.autowrap_mode = TextServer.AUTOWRAP_OFF
-		l.custom_minimum_size.x = 0.0
-	else:
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.custom_minimum_size.x = inner
-		text_h = font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, inner, fs).y
-	p.set_meta("h", text_h + p.get_theme_stylebox("panel").get_minimum_size().y + 6.0)
+## Fits a banner to its (translated) texts within its `max_w` and places it: centred on `cx` (the screen's
+## centre by default), top edge at `y`, or bottom edge at `y` when `from_bottom`; `row_h` centres it on a
+## button row.
+func _fit_plate(p: UIBanner) -> void:
+	var canvas: Vector2 = UITheme.metrics()["canvas"]
+	p.fit(float(p.get_meta("max_w", 1200.0)))
+	var cx: float = p.get_meta("cx", canvas.x * 0.5)
 	var y: float = p.get_meta("y", 0.0)
-	# zero-width offsets at the anchor: the plate takes its minimum size and grows around the anchor point
-	p.offset_left = 0.0
-	p.offset_right = 0.0
-	p.offset_top = y
-	p.offset_bottom = y
-	p.visible = text.strip_edges() != "" and not (p == _prompt_plate and _busy)
+	var row_h: float = p.get_meta("row_h", 0.0)
+	if bool(p.get_meta("from_bottom", false)):
+		y -= p.size.y
+	elif row_h > 0.0:
+		y += maxf(0.0, (row_h - p.size.y) * 0.5)
+	p.position = Vector2(roundf(cx - p.size.x * 0.5), roundf(y))
+	p.visible = p.has_text() and not (p == _prompt_plate and _busy)
 
 
 func _pin(c: Control, preset: int, offset: Vector2) -> void:
@@ -205,47 +185,43 @@ func _layout() -> void:
 	var canvas: Vector2 = UITheme.metrics()["canvas"]
 	var side := maxf(safe.x, safe.z) # keep centred elements symmetric
 	var cb := _pause_btn.custom_minimum_size.x
-	_pin(_pause_btn, Control.PRESET_TOP_LEFT, Vector2(safe.x + PAD, safe.y + PAD))
-	_pin(_hint_btn, Control.PRESET_TOP_RIGHT, Vector2(-(safe.z + PAD + cb), safe.y + PAD))
 	var bd := _back_btn.custom_minimum_size.x
-	_pin(_back_btn, Control.PRESET_BOTTOM_LEFT, Vector2(safe.x + PAD, -(safe.w + PAD + bd)))
-	# top: view title between the corner buttons, caption line below the button row
-	var top_w := canvas.x - 2.0 * (side + PAD + cb + 20.0)
+	var corner := maxf(cb, bd)
+	_pin(_back_btn, Control.PRESET_TOP_LEFT, Vector2(safe.x + PAD, safe.y + PAD))
+	_pin(_hint_btn, Control.PRESET_TOP_RIGHT, Vector2(-(safe.z + PAD + cb), safe.y + PAD))
+	_pin(_pause_btn, Control.PRESET_BOTTOM_RIGHT, Vector2(-(safe.z + PAD + cb), -(safe.w + PAD + cb)))
+	# top: the view title between the corner buttons (centred on their row), the caption line below
+	var top_w := canvas.x - 2.0 * (side + PAD + corner + 20.0)
 	_top_plate.set_meta("max_w", minf(top_w, 1400.0 * UITheme.wscale()))
-	var title_h := UITheme.display_font(true).get_height(UITheme.size(30)) + 14.0
-	_top_plate.set_meta("y", safe.y + PAD + maxf(0.0, (cb - title_h) * 0.5))
+	_top_plate.set_meta("y", safe.y + PAD)
+	_top_plate.set_meta("row_h", corner)
 	var meter_w := _meter.get_combined_minimum_size().x if _meter != null and _meter.visible else 0.0
-	_cap_plate.set_meta("max_w", minf(canvas.x - 2.0 * (side + PAD + maxf(cb, meter_w) + 20.0), 1500.0 * UITheme.wscale()))
-	# bottom: inventory bar, then the prompt and the message stacked above it
-	var slot := UITheme.target(112, UITheme.SLOT_MM)
-	var act := _act_inspect.custom_minimum_size.x
-	var inv_h := maxf(slot, act) + 24.0
-	_inv_panel.offset_bottom = -(safe.w + PAD)
-	_inv_panel.offset_top = _inv_panel.offset_bottom - inv_h
-	_inv_panel.offset_left = 0.0
-	_inv_panel.offset_right = 0.0
-	var bottom_w := canvas.x - 2.0 * (side + PAD + bd + 20.0) # clear of the back button on both sides
-	_inv_max_w = maxf(slot, bottom_w - 2.0 * (act + 12.0) - 24.0)
+	_cap_plate.set_meta("max_w", minf(canvas.x - 2.0 * (side + PAD + maxf(corner, meter_w) + 20.0), 1500.0 * UITheme.wscale()))
+	# left: the inventory column, from under the Back button down to the bottom safe edge
+	var col_top := safe.y + PAD + bd + 16.0
+	_inv_span = Rect2(safe.x + PAD, col_top, UITheme.hud_column_width(), canvas.y - safe.w - PAD - col_top)
+	_inv_panel.position = _inv_span.position
+	_inv_panel.size = _inv_span.size
+	# bottom centre: the prompt, with the message above it; both clear of the column and the pause button
 	var text_w := UITheme.hud_text_width()
-	var prompt_y := _inv_panel.offset_top - 10.0
 	_prompt_plate.set_meta("max_w", text_w)
-	_prompt_plate.set_meta("y", prompt_y)
-	var prompt_h := UITheme.ui_font().get_height(UITheme.size(26)) + 16.0
+	_prompt_plate.set_meta("from_bottom", true)
 	_msg_plate.set_meta("max_w", text_w)
-	_msg_plate.set_meta("y", prompt_y - prompt_h - 10.0)
-	for p in [_top_plate, _msg_plate, _prompt_plate]:
-		_fit_plate(p)
+	_msg_plate.set_meta("from_bottom", true)
+	_fit_plate(_top_plate)
 	_stack_top()
+	_stack_bottom()
+	_inventory_geometry()
 
 
 ## Caption line and receiver meter go below the corner buttons and below the view title, however many lines
 ## the title wrapped to (large text sizes).
 func _stack_top() -> void:
 	var safe := UITheme.safe_margins()
-	var cb := _pause_btn.custom_minimum_size.x
-	var y := safe.y + PAD + cb + 10.0
+	var corner := maxf(_pause_btn.custom_minimum_size.x, _back_btn.custom_minimum_size.x)
+	var y := safe.y + PAD + corner + 10.0
 	if _top_plate.visible:
-		y = maxf(y, float(_top_plate.get_meta("y", 0.0)) + float(_top_plate.get_meta("h", 0.0)) + 8.0)
+		y = maxf(y, _top_plate.position.y + _top_plate.size.y + 6.0)
 	_cap_plate.set_meta("y", y)
 	_fit_plate(_cap_plate)
 	if _meter != null:
@@ -253,6 +229,19 @@ func _stack_top() -> void:
 		_meter.offset_left = _meter.offset_right
 		_meter.offset_top = y
 		_meter.offset_bottom = _meter.offset_top
+
+
+## The prompt sits at the bottom safe edge; the message above it (or in its place while there is no prompt).
+func _stack_bottom() -> void:
+	var safe := UITheme.safe_margins()
+	var canvas: Vector2 = UITheme.metrics()["canvas"]
+	var bottom := canvas.y - safe.w - PAD
+	_prompt_plate.set_meta("y", bottom)
+	_fit_plate(_prompt_plate)
+	if _prompt_plate.visible:
+		bottom = _prompt_plate.position.y - 10.0
+	_msg_plate.set_meta("y", bottom)
+	_fit_plate(_msg_plate)
 
 
 ## Safe-area insets in viewport units: x=left y=top z=right w=bottom.
@@ -264,23 +253,74 @@ func _safe_margins() -> Vector4:
 func _refresh_inventory() -> void:
 	for c in _inv_box.get_children():
 		c.queue_free() # (not remove_child: this runs inside a slot's own pressed signal)
-	var slot := UITheme.target(112, UITheme.SLOT_MM)
+	var slot := UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM)
 	if logic.inventory.is_empty():
-		var l := UITheme.label("ui.inventory_empty", 22, UITheme.MUTED)
-		l.custom_minimum_size = Vector2(round(360 * UITheme.wscale()), slot)
-		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_inv_box.add_child(l)
+		_inv_box.add_child(_empty_slot(slot))
 	for id in logic.inventory:
 		_inv_box.add_child(_slot(id, slot))
-	var n := maxi(1, logic.inventory.size())
-	_inv_scroll.custom_minimum_size = Vector2(
-		minf(n * (slot + INV_SEP) - INV_SEP, _inv_max_w) if not logic.inventory.is_empty() else round(360 * UITheme.wscale()), slot)
+	_inventory_geometry()
 	var has_sel := logic.selected != ""
 	_act_inspect.visible = has_sel
 	_act_combine.visible = has_sel and logic.inventory.size() > 1 and logic.selected != "uv_lamp"
 	_act_combine.active = _combine_mode
+	_actions.visible = has_sel
+	_place_actions.call_deferred()
 	_update_prompt()
+
+
+## The slots, centred vertically in the column's span; they scroll when there are more than fit. The rule runs
+## beside them with its arrow tips just beyond the first and the last slot.
+func _inventory_geometry() -> void:
+	var slot := UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM)
+	var n := maxi(1, logic.inventory.size())
+	var content_h := n * slot + (n - 1) * INV_SEP
+	var h := minf(content_h, _inv_span.size.y)
+	var y0 := roundf((_inv_span.size.y - h) * 0.5)
+	_inv_scroll.position = Vector2(0, y0)
+	_inv_scroll.custom_minimum_size = Vector2(slot, h)
+	_inv_scroll.size = Vector2(slot, h)
+	var tip := 16.0 * UIOrnament.scale_k()
+	_inv_rule.position = Vector2(slot + UITheme.HUD_COL_GAP, y0 - tip)
+	_inv_rule.size = Vector2(UITheme.HUD_RULE_W, h + 2.0 * tip)
+	_inv_rule.queue_redraw()
+
+
+## The inspect / combine buttons sit right of the rule, level with the selected slot (clamped to the column).
+func _place_actions() -> void:
+	if not is_instance_valid(_actions) or not _actions.visible:
+		return
+	var idx := logic.inventory.find(logic.selected)
+	if idx < 0:
+		_actions.visible = false
+		return
+	var slot := UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM)
+	var slot_y := _inv_scroll.position.y + idx * (slot + INV_SEP) - _inv_scroll.scroll_vertical
+	var sz := _actions.get_combined_minimum_size()
+	_actions.size = sz
+	_actions.position = Vector2(_inv_rule.position.x + _inv_rule.size.x + ACTION_GAP,
+		clampf(slot_y + (slot - sz.y) * 0.5, 0.0, maxf(0.0, _inv_span.size.y - sz.y)))
+
+
+func _slot_style(selected: bool, hover: bool = false) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.17, 0.135, 0.075, 0.92) if selected else Color(0.04, 0.042, 0.05, 0.8)
+	sb.border_color = UITheme.BRASS_HI if selected else Color(UITheme.BRASS, 0.85 if hover else 0.45)
+	sb.set_border_width_all(2 if selected else 1)
+	sb.set_corner_radius_all(10)
+	return sb
+
+
+## The placeholder shown while the pockets are empty: a faint slot frame where the items will appear.
+func _empty_slot(slot: float) -> Control:
+	var p := Panel.new()
+	p.custom_minimum_size = Vector2(slot, slot)
+	var sb := _slot_style(false)
+	sb.bg_color.a = 0.45
+	sb.border_color.a = 0.25
+	p.add_theme_stylebox_override("panel", sb)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.tooltip_text = tr("ui.inventory_empty")
+	return p
 
 
 func _slot(id: String, slot: float) -> Button:
@@ -289,13 +329,11 @@ func _slot(id: String, slot: float) -> Button:
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = tr(ItemDB.name_key(id))
 	var sel := id == logic.selected
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.1, 0.09, 0.08, 0.9) if not sel else Color(0.24, 0.19, 0.11, 0.95)
-	sb.border_color = UITheme.BRASS_HI if sel else Color(UITheme.BRASS, 0.35)
-	sb.set_border_width_all(3 if sel else 1)
-	sb.set_corner_radius_all(12)
-	for st in ["normal", "hover", "pressed"]:
-		b.add_theme_stylebox_override(st, sb)
+	b.add_theme_stylebox_override("normal", _slot_style(sel))
+	b.add_theme_stylebox_override("hover", _slot_style(sel, true))
+	b.add_theme_stylebox_override("pressed", _slot_style(true))
+	b.add_theme_stylebox_override("hover_pressed", _slot_style(true))
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	var tex := icons.get_icon(id)
 	if tex:
 		var tr_ := TextureRect.new()
@@ -303,10 +341,10 @@ func _slot(id: String, slot: float) -> Button:
 		tr_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tr_.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tr_.set_anchors_preset(Control.PRESET_FULL_RECT)
-		tr_.offset_left = 6
-		tr_.offset_top = 6
-		tr_.offset_right = -6
-		tr_.offset_bottom = -6
+		tr_.offset_left = 8
+		tr_.offset_top = 8
+		tr_.offset_right = -8
+		tr_.offset_bottom = -8
 		tr_.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.add_child(tr_)
 	else:
@@ -350,13 +388,33 @@ func _update_prompt() -> void:
 		_prompt.text = tr("ui.uv_drag")
 	else:
 		_prompt.text = tr("ui.use_prompt") % tr(ItemDB.name_key(logic.selected))
-	_fit_plate(_prompt_plate)
+	_stack_bottom()
 
 
 # ====================================================================== feedback
+## The item a "Found: X" message (room_base's item_added feedback) is about, or "".
+func _found_item(text: String) -> String:
+	for id: String in logic.inventory:
+		if text == tr("ui.item_added") % tr(ItemDB.name_key(id)):
+			return id
+	return ""
+
+
+## A message at the bottom. A found item gets the full banner: its icon, its name in small caps and its
+## one-line description.
 func message(text: String, seconds: float = 2.8) -> void:
-	_message.text = text
-	_fit_plate(_msg_plate)
+	_found_id = _found_item(text)
+	if _found_id != "":
+		_msg_plate.set_title(tr(ItemDB.name_key(_found_id)))
+		_msg_plate.set_icon(icons.get_icon(_found_id))
+		_message.text = tr(logic.item_desc_key(_found_id))
+		seconds = maxf(seconds, 4.5)
+	else:
+		_msg_plate.set_title("")
+		_msg_plate.set_icon(null)
+		_message.text = text
+	_message.modulate.a = 1.0 # (QA scripts blank the label itself to detect the next message as new)
+	_stack_bottom()
 	if _msg_tween and _msg_tween.is_valid():
 		_msg_tween.kill()
 	_msg_tween = create_tween()
@@ -367,7 +425,7 @@ func message(text: String, seconds: float = 2.8) -> void:
 
 func caption(text: String, seconds: float = 3.5) -> void:
 	_caption_line.text = text
-	_fit_plate(_cap_plate)
+	_stack_top()
 	if _cap_tween and _cap_tween.is_valid():
 		_cap_tween.kill()
 	_cap_tween = create_tween()
@@ -519,6 +577,7 @@ func show_hint() -> void:
 	var d := UITheme.dialog(o, 980, "ui.hint", 46)
 	var v: VBoxContainer = d["body"]
 	var lvl_label := UITheme.label("", 22, UITheme.MUTED)
+	lvl_label.add_theme_font_override("font", UITheme.caps_font(false, 1))
 	lvl_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(lvl_label)
 	var text := UITheme.label("", 30)
@@ -549,10 +608,11 @@ func show_pause() -> void:
 	var o := _open_overlay(0.6)
 	var d := UITheme.dialog(o, 620, "ui.pause", 50)
 	var v: VBoxContainer = d["body"]
-	v.add_theme_constant_override("separation", 16)
+	v.add_theme_constant_override("separation", 14)
 	(d["footer"] as Control).visible = false
 	var ch := Chapters.get_chapter(GameState.chapter_id)
 	var sub := UITheme.label((tr("chapter.label") % int(ch.get("number", 1))) + " · " + tr(str(ch.get("title", ""))), 24, UITheme.MUTED)
+	sub.add_theme_font_override("font", UITheme.caps_font(false, 1))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)
 	var resume := UITheme.button("ui.resume", 520)
@@ -664,11 +724,12 @@ func show_inspect(id: String) -> void:
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.alignment = BoxContainer.ALIGNMENT_CENTER
-	info.add_theme_constant_override("separation", 22)
+	info.add_theme_constant_override("separation", 18)
 	h.add_child(info)
 	var t := UITheme.title(tr(ItemDB.name_key(id)), 52)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	info.add_child(t)
+	info.add_child(UIOrnament.header_rule(14.0)) # a gold rule running out from under the name
 	var d := UITheme.label(logic.item_desc_key(id), 28)
 	info.add_child(UITheme.scroll_fit(d, info, u.size.y)) # long descriptions scroll instead of pushing the buttons off
 	var row := UITheme.button_row(16)
@@ -922,7 +983,7 @@ func _show_picture(path: String, design: Vector2) -> void:
 func set_meter(level: int) -> void:
 	if _meter == null:
 		_meter = PanelContainer.new()
-		var sb := UITheme.panel_box(0.8, 14)
+		var sb := UITheme.panel_box(0.8, 6)
 		sb.set_content_margin_all(14)
 		_meter.add_theme_stylebox_override("panel", sb)
 		_meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -935,6 +996,7 @@ func set_meter(level: int) -> void:
 		v.add_theme_constant_override("separation", 8)
 		_meter.add_child(v)
 		var t := UITheme.label("item.pocket_receiver.name", 22, UITheme.MUTED)
+		t.add_theme_font_override("font", UITheme.caps_font(false, 1))
 		t.autowrap_mode = TextServer.AUTOWRAP_OFF
 		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(t)
@@ -963,9 +1025,12 @@ func _close_button_bottom(o: Control) -> void:
 
 
 # ====================================================================== intro
+## The chapter's opening cards: each line in the display serif between two gold rules on black, "Tap to
+## continue" in small caps at the bottom. (QA reads the card text from the overlay's own Label children.)
 func play_intro() -> void:
 	set_busy(true)
 	var safe := UITheme.safe_margins()
+	var canvas: Vector2 = UITheme.metrics()["canvas"]
 	var o := ColorRect.new()
 	o.color = Color(0.03, 0.035, 0.04, 1.0)
 	o.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -980,7 +1045,12 @@ func play_intro() -> void:
 	lbl.offset_top = safe.y + 40
 	lbl.offset_bottom = -(safe.w + 140)
 	o.add_child(lbl)
-	var tap := UITheme.label("ui.tap_to_continue", 24, UITheme.MUTED)
+	var rule_top := UIOrnament.rule(0.0, 24.0)
+	var rule_bottom := UIOrnament.rule(0.0, 24.0)
+	o.add_child(rule_top)
+	o.add_child(rule_bottom)
+	var tap := UITheme.label("ui.tap_to_continue", 22, UITheme.MUTED)
+	tap.add_theme_font_override("font", UITheme.caps_font(false, 2))
 	tap.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	tap.offset_top = -(safe.w + 120)
 	tap.offset_bottom = -(safe.w + 50)
@@ -994,12 +1064,19 @@ func play_intro() -> void:
 		AudioManager.ambience("amb_lab_dark", true, -6.0, 3.0)
 	for key in logic.intro_keys():
 		lbl.text = tr(key)
+		_intro_rules(lbl, rule_top, rule_bottom, canvas)
 		lbl.modulate.a = 0.0
-		var tw := create_tween()
+		rule_top.modulate.a = 0.0
+		rule_bottom.modulate.a = 0.0
+		var tw := create_tween().set_parallel(true)
 		tw.tween_property(lbl, "modulate:a", 1.0, 1.0)
+		tw.tween_property(rule_top, "modulate:a", 1.0, 1.2)
+		tw.tween_property(rule_bottom, "modulate:a", 1.0, 1.2)
 		await _wait_tap_or(o, 6.0)
-		var tw2 := create_tween()
+		var tw2 := create_tween().set_parallel(true)
 		tw2.tween_property(lbl, "modulate:a", 0.0, 0.6)
+		tw2.tween_property(rule_top, "modulate:a", 0.0, 0.6)
+		tw2.tween_property(rule_bottom, "modulate:a", 0.0, 0.6)
 		await tw2.finished
 	# a room whose opening runs longer than the fade (Chapter 3's lift descent) keeps input locked until it ends
 	var hold: float = float(room.call("opening_seconds")) if room.has_method("opening_seconds") else 0.0
@@ -1019,6 +1096,24 @@ func play_intro() -> void:
 		caption(tr(logic.intro_caption_key()))
 	await get_tree().create_timer(1.2).timeout
 	caption(tr("tut.look") + "  " + tr("tut.tap"), 5.0)
+
+
+## Places the two rules just above and below the card's text block (which is centred in the label's rect).
+func _intro_rules(lbl: Label, top: UIOrnament, bottom: UIOrnament, canvas: Vector2) -> void:
+	var f := lbl.get_theme_font("font")
+	var fs := lbl.get_theme_font_size("font_size")
+	var w := lbl.offset_right - lbl.offset_left + canvas.x # the label's width (offsets are from both edges)
+	var txt := f.get_multiline_string_size(lbl.text, HORIZONTAL_ALIGNMENT_CENTER, w, fs)
+	var cy := (lbl.offset_top + canvas.y + lbl.offset_bottom) * 0.5
+	var k := UIOrnament.scale_k()
+	var rw := clampf(txt.x + 220.0 * k, 420.0, w)
+	var gap := 34.0 * k
+	for r: UIOrnament in [top, bottom]:
+		r.size = Vector2(rw, 24.0)
+		r.custom_minimum_size = r.size
+		r.position.x = roundf((canvas.x - rw) * 0.5)
+	top.position.y = roundf(cy - txt.y * 0.5 - gap - 24.0)
+	bottom.position.y = roundf(cy + txt.y * 0.5 + gap)
 
 
 func _wait_tap_or(o: Control, seconds: float) -> void:
@@ -1063,9 +1158,11 @@ func show_chapter_complete() -> void:
 	var d := UITheme.dialog(o, 1200)
 	var v: VBoxContainer = d["body"]
 	var head := UITheme.label("ui.chapter_complete", 28, UITheme.MUTED)
+	head.add_theme_font_override("font", UITheme.caps_font(false, 2))
 	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(head)
 	v.add_child(UITheme.title("chapter.%s.title" % GameState.chapter_id, 60))
+	v.add_child(UIOrnament.rule())
 	for line in logic.epilogue_keys():
 		var l := UITheme.label(line, 26)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1083,8 +1180,10 @@ func show_chapter_complete() -> void:
 		var col := VBoxContainer.new()
 		col.custom_minimum_size = Vector2(round(230 * UITheme.wscale()), 0) # labels wrap; without a width they collapse
 		var a := UITheme.label(pair[0], 22, UITheme.MUTED)
+		a.add_theme_font_override("font", UITheme.caps_font(false, 1))
 		a.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var b := UITheme.label(pair[1], 34, UITheme.BRASS_HI)
+		b.add_theme_font_override("font", UITheme.display_font(true))
 		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		col.add_child(a)
