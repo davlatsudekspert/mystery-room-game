@@ -227,23 +227,21 @@ func _build_models() -> void:
 	_build_aisle_sign()
 
 
-## Static furniture, trim and shell pieces the player never touches and the visuals never move, light or hide: each
-## group below draws as one mesh instead of one per piece (the hall view was 146 scene draw calls, 153 with the HUD,
-## budget 150). ModelUtil.merge_static keeps the originals, hidden, so their colliders still take taps. Nothing here is
-## an IA_ part, a lamp or lamp glass (the emergency lamps' glass flickers, the pendants' and reading lamp's bulbs
-## light up), the fire shutter, the tube markers or anything a state changes.
+## Static furniture pieces the player never touches and the visuals never move, light or hide: each group below draws
+## as one mesh instead of one per piece (the hall view was 146 scene draw calls, 153 with the HUD, budget 150).
+## ModelUtil.merge_static keeps the originals, hidden, so their colliders still take taps. Only pieces of ONE model
+## are folded: the Mobile renderer lights each mesh with a limited number of lights, so a mesh that spans the room
+## (the shell's walls, ceiling and floor, the three chairs, the emergency lamps) would lose some of the hall's lamps
+## (a first try that merged them changed the lit walls and chairs). Nothing here is an IA_ part, a lamp or lamp glass,
+## or anything a state changes.
 func _merge_hall_decor() -> void:
-	var shell := models.get("room_archive") as Node3D
-	# the shell's outer faces: their shadows are off already (see _build_models), so the merged mesh casts none
-	_merge_named(shell, ["wall_e", "wall_n", "wall_s", "wall_w", "wall_dressing", "ceiling", "trim", "corridor"])
-	_merge_named(shell, ["floor", "tube_run", "film_cans", "shutter_frame", "booth_walls", "booth_ceiling", "booth_fixture"])
-	_merge_named(shell, ["elamp_0", "elamp_1", "elamp_2", "elamp_3", "elamp_4", "elamp_5", "elamp_6", "elamp_7", "elamp_8", "elamp_9"])
 	_merge_named(models.get("card_catalogue"), ["carcass", "carcass_row_0", "carcass_row_1", "carcass_row_2", "carcass_row_3", "carcass_row_4", "stand"])
 	ModelUtil.merge_static(models.get("stacks_shelving"), "stacks_") # frame, terminal, the two ledger shelves
-	_merge_named(models.get("reading_table"), ["table", "table_dressing", "banker_lamp", "lamp_shade"])
+	_merge_named(models.get("reading_table"), ["table", "table_dressing", "banker_lamp", "lamp_shade"]) # not the bulb
 	_merge_named(models.get("archivist_desk"), ["desk", "desk_dressing", "gallery"])
 	_merge_named(models.get("vent_grille"), ["grille_duct", "grille_frame"])
-	ModelUtil.merge_static(self, "chair_body") # the three chairs, across their models
+	_merge_named(models.get("desk_lamp"), ["desk_lamp_body", "lamp_shade", "bulb"]) # always on: its light is a separate node
+	_merge_named(models.get("tape_deck"), ["deck_body", "tape_path", "vu_face", "vu_scale"]) # not the reels, the needle or IA_ keys
 
 
 ## ModelUtil.merge_static takes one name prefix; this folds the meshes called exactly `names` (anywhere under `root`)

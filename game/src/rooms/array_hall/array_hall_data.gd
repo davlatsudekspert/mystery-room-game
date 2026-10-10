@@ -101,19 +101,20 @@ const VIEWS := {
 	"hatch_3": [Vector3(0.0, 3.35, 6.85), Vector3(0.0, 0.65, 6.45), 50.0, false, "KR", "", ""],
 	"hatch_4": [Vector3(0.0, 3.35, 4.85), Vector3(0.0, 0.65, 4.45), 50.0, false, "KR", "", ""],
 	# the island: cage, collar, Core, cradle and drawer
-	"island": [Vector3(0.0, 5.0, 6.4), Vector3(0.0, 3.5, 0.0), 62.0, true, "HKRI", "", ""],
+	"island": [Vector3(0.0, 5.2, 7.3), Vector3(0.0, 3.6, 0.0), 62.0, true, "HKRI", "", ""],
 	"gate_1": [Vector3(0.40, 3.9, 4.18), Vector3(0.40, 3.62, 2.38), 46.0, false, "RI", "", ""],
 	"gate_2": [Vector3(-4.18, 3.9, 0.40), Vector3(-2.38, 3.62, 0.40), 46.0, false, "RI", "", ""],
 	"gate_3": [Vector3(-0.40, 3.9, -4.18), Vector3(-0.40, 3.62, -2.38), 46.0, false, "RI", "", ""],
 	"gate_4": [Vector3(4.18, 3.9, -0.40), Vector3(2.38, 3.62, -0.40), 46.0, false, "RI", "", ""],
 	"collar": [Vector3(0.0, 3.85, 2.7), Vector3(0.0, 3.7, 1.22), 40.0, false, "I", "", ""],
 	"core": [Vector3(0.0, 4.9, 2.7), Vector3(0.0, 3.95, 0.3), 52.0, false, "I", "", ""],
-	# the open drawer's pads lie behind its front panel and under the collar's digit housing: only a camera high above sees them
-	"drawer": [Vector3(0.45, 6.4, 1.8), Vector3(0.0, 3.1, 0.95), 34.0, false, "I", "", ""],
+	# the open drawer's pads lie behind its front panel and under the collar's digit housing (no camera sees them): the three
+	# things hover in front of the housing once the drawer is open
+	"drawer": [Vector3(0.0, 3.88, 2.5), Vector3(0.0, 3.44, 1.56), 34.0, false, "I", "", ""],
 	"drawer_mark": [Vector3(0.5, 3.75, 2.4), Vector3(0.0, 3.15, 0.7), 46.0, false, "I", "", ""],
 	# the Sun apse
 	"apse": [Vector3(-5.5, 1.7, 0.3), Vector3(-12.5, 1.8, 0.0), 62.0, true, "HSR", "", ""],
-	"sun_pedestal": [Vector3(-10.2, 1.5, 2.8), Vector3(-12.0, 1.1, 2.4), 46.0, false, "HS", "", ""],
+	"sun_pedestal": [Vector3(-10.2, 1.5, 2.8), Vector3(-12.0, 1.1, 2.4), 52.0, false, "HS", "", ""],
 	"iris": [Vector3(-8.8, 1.8, 0.0), Vector3(-11.8, 1.8, 0.0), 40.0, false, "HS", "", ""],
 	# Strand's booth
 	"booth": [Vector3(0.0, 1.7, -6.5), Vector3(0.0, 3.2, -13.0), 62.0, true, "HTt", "", ""],

@@ -19,6 +19,8 @@ const CAGE_GATE_DEG := -95.0
 const GLASS_SINK := -3.6
 const COLLAR_STEP_DEG := -36.0
 const DRAWER_TRAVEL := 0.55
+const DRAWER_HOVER_UP := 0.42
+const DRAWER_HOVER_FWD := 0.62
 const FEED_STEP_DEG := -27.0
 const NEEDLE_STEP_DEG := -11.0
 const SUN_LEVER_ON_DEG := 50.0
@@ -858,12 +860,21 @@ func _held_item(key: String, item_id: String, mount: Node3D, show: bool, part_na
 	return cur[1]
 
 
+## An item over the open drawer: lifted out of the tray and forward, clear of the digit housing, tilted toward the player.
+func _hover(n: Node3D, extra: Vector3, euler_deg: Vector3, on: bool) -> void:
+	if n == null or not on:
+		return
+	n.position = Vector3(extra.x, DRAWER_HOVER_UP, DRAWER_HOVER_FWD)
+	n.rotation_degrees = euler_deg
+
+
 func _add_item_collider(n: Node3D, part_name: String) -> void:
 	var aabb := ItemIcons._aabb(n)
 	var body := StaticBody3D.new()
 	var cs := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = (aabb.size + Vector3.ONE * 0.03).max(Vector3.ONE * 0.06)
+	var floor_size := 0.16 if part_name.begins_with("Item_heart_") else 0.06 # the three things over the drawer: a finger-sized box each
+	box.size = (aabb.size + Vector3.ONE * 0.03).max(Vector3.ONE * floor_size)
 	cs.shape = box
 	cs.position = n.global_transform.affine_inverse() * aabb.get_center() if n.is_inside_tree() else aabb.get_center()
 	body.add_child(cs)
@@ -1011,12 +1022,19 @@ func _apply_island(animated: bool) -> void:
 	var hopen: bool = s["heart_open"] and not defer_drawer
 	_slide(part("heart_drawer", "IA_heart_drawer"), Vector3(0, 0, DRAWER_TRAVEL if hopen else 0.0), animated, 1.1)
 	var taken: Dictionary = s["taken"]
-	_held_item("heart_watch", "pocket_watch", part("heart_drawer", "watch_mount"), hopen and not taken.get("heart_watch", false),
+	# the pads lie under the digit housing (no camera could see them): when the drawer is open the three things rise from
+	# the velvet and hover in front of it, tilted to the player
+	var hovering := hopen
+	var watch := _held_item("heart_watch", "pocket_watch", part("heart_drawer", "watch_mount"), hopen and not taken.get("heart_watch", false),
 		"Item_heart_watch", Vector3(-90, 0, 0), 0.0077)
-	_held_item("heart_letter", "strand_last_letter", part("heart_drawer", "letter_mount"), hopen and not taken.get("heart_letter", false),
+	_hover(watch, Vector3(-0.07, 0.0, 0.0), Vector3(-35, 0, 0), hovering)
+	var letter := _held_item("heart_letter", "strand_last_letter", part("heart_drawer", "letter_mount"), hopen and not taken.get("heart_letter", false),
 		"Item_heart_letter", Vector3.ZERO, 0.005)
-	_held_item("heart_pawl", "reverse_pawl", part("heart_drawer", "pawl_item_mount"), hopen and not taken.get("heart_pawl", false),
+	_hover(letter, Vector3(0.0, 0.0, 0.0), Vector3(55, 0, 0), hovering)
+	var pawl := _held_item("heart_pawl", "reverse_pawl", part("heart_drawer", "pawl_item_mount"), hopen and not taken.get("heart_pawl", false),
 		"Item_heart_pawl", Vector3.ZERO, 0.006)
+	_hover(pawl, Vector3(0.07, 0.0, 0.0), Vector3(55, 0, 0), hovering)
+	_light_to("drawer_glow", 1.0 if hopen else 0.0, 1.4 if animated else 0.0)
 	# the Core itself
 	var light := part("core_crystal", "core_light") as MeshInstance3D
 	if light:
@@ -1288,7 +1306,7 @@ func _apply_lights(animated: bool) -> void:
 	_light_to("shaft", (3.8 if s["night_undone"] else 2.6) if s["power"] else 0.0, dur * 2.0)
 	_light_to("bridge_lamp", 1.7 if s["power"] else 0.7, dur)
 	# the zone lamps of the apse, the booth and the watch room: dim until they have current (power, or the right key)
-	_light_to("apse_lamp", 1.3 if s["power"] else 0.3, dur)
+	_light_to("apse_lamp", 1.3 if s["power"] else 0.8, dur)
 	_light_to("booth_lamp", 1.2 if (s["power"] or s["booth_gate"]) else 0.35, dur)
 	_light_to("watch_lamp", 1.2 if (s["power"] or s["watch_gate"]) else 0.35, dur)
 	var arc := int(s["arc"])

@@ -329,6 +329,7 @@ func _build_lights() -> void:
 	_light("watch_front", "omni", Vector3(9.6, 2.3, 0.0), Color("ffd7a8"), 0.9, 5.5, "W")
 	_light("booth_front", "omni", Vector3(0.0, 2.5, -9.4), Color("ffd7a8"), 0.8, 5.5, "T")
 	_light("bay_lamp", "omni", Vector3(0.0, 2.7, 10.4), Color("ffd29a"), 0.9, 7.5, "l")
+	_light("drawer_glow", "omni", Vector3(0.0, 3.62, 1.72), lumen, 0.0, 1.8, "I")
 	_light("lift_lamp", "omni", _at("shell_lift4", "lift_light", Vector3(0.0, 5.8, 16.4)), Color("ffd29a"), 0.9, 8.0, "l")
 	_light("lift_spill", "omni", Vector3(4.6, 3.8, 13.6), Color("9fd8ff"), 1.6, 8.0, "l") # the hall's cold glow over the bridge
 	_light("lift_pass", "omni", Vector3(3.2, -3.0, 16.4), Color("ffcf8a"), 0.0, 6.0, "l")
