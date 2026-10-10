@@ -33,13 +33,14 @@ ONLY = ARGS[ARGS.index("--only") + 1].split(",") if "--only" in ARGS else None
 POSE_BUDGET, FILE_BUDGET = 450, 1400
 VOXEL = 0.020
 
-S = C.spec(z_hip=0.89, z_neck=1.42, w=1.0, d=1.0, grow=0.004, hair="shag", head=1.0, hand=1.0, coat_seg=18)
+S = C.spec(z_hip=0.89, z_neck=1.42, w=0.94, d=0.96, grow=0.004, hair="shag", head=1.08, hand=1.0, coat_seg=18,
+           leg=(0.074, 0.056, 0.058), shoe=1.05)               # bell-bottom trousers: the hem is the widest part
 
 
 def board(c, size=(0.24, 0.030, 0.32), tilt=-18.0, roll=0.0):
     def make(ctx):
         rm = Matrix.Rotation(math.radians(tilt), 3, "X") @ Matrix.Rotation(math.radians(roll), 3, "Y")
-        return [E.ellipsoid("board", c, (size[0] / 2 * 1.15, size[1] / 2 * 1.4, size[2] / 2 * 1.12), rot=rm, seg=10, rings=6)]
+        return [L.rounded_box("board", size, c, rm, bevel=0.006, segments=1)]
     return make
 
 
@@ -65,8 +66,8 @@ def pose_b():
 def pose_c():
     return C.pose(hip_xy=(0.0, -0.040), neck_xy=(0.0, -0.040), yaw_hip=-10.0, yaw_chest=-34.0,
                   feet={1: (0.11, -0.150, -12.0), -1: (-0.10, 0.100, 18.0)},
-                  wrist={1: R(0.020, 0.215, 1.640), -1: R(-0.400, 0.060, 1.000)},
-                  hint={1: (0.55, 0.15, -0.10), -1: (-0.40, -0.40, -0.20)},
+                  wrist={1: R(0.070, 0.205, 1.560), -1: R(-0.400, 0.060, 1.000)},
+                  hint={1: (0.60, 0.10, 0.25), -1: (-0.40, -0.40, -0.20)},
                   head=(-26.0, -8.0, 0.0), tilt=-4.0)
 
 
@@ -94,11 +95,12 @@ def renders(objs):
     names = [n for n in POSES if n in by]
     # 1: the three poses in a row (ghost look, front 3/4)
     C.ghost_row(f"echo_crowd", [by[n] for n in names], [(-0.9, 0.0, 0.9)[i] for i in range(len(names))],
-                (0.0, -4.2, 1.35), (0.0, 0.0, 0.95), lens=42, res=(1000, 560))
+                (0.0, -4.2, 1.35), (0.0, 0.0, 0.95), lens=42, res=(1000, 560), everything=objs)
     # 2: the room: 33 instances with scale jitter on the rings, seen from the bridge camera (0, 4.4, 14.6)
     if len(names) == 3:
         import random
         rnd = random.Random(4)
+        C.show_only(objs, [])                          # the three sources stay out of the room view
         inst = []
         for i, (x, z, r) in enumerate(crowd_positions()):
             src = by[names[1]]       # one pose at a time in the room: pose_b here
@@ -110,13 +112,16 @@ def renders(objs):
             o.scale = (sc * rnd.uniform(0.94, 1.06), sc * rnd.uniform(0.94, 1.06), sc)
             inst.append(o)
         # QA material on the instances, then the render
-        saved = C.L._with_material(inst, C.L.game_ghost_material())
+        src_data = by[names[1]].data
+        keep = list(src_data.materials)
+        saved = C.L._with_material(inst[:1], C.L.game_ghost_material())
         mrlib.QA_DIR = C.QA_DIR
-        mrlib.render_preview("echo_crowd_2", L.g2b(0.0, 4.4, 14.6), L.g2b(0.0, 1.2, 4.0), lens=26.0, res=(1200, 675),
+        mrlib.render_preview("echo_crowd_2", L.g2b(0.0, 4.4, 14.6), L.g2b(0.0, 3.4, 0.0), lens=H.fov_lens(66, (1280, 720)),
+                             res=(1280, 720),
                              samples=20, world_strength=0.02, lights=[((0, 0, 1), 1, "FFFFFF", 1.0)])
-        C.L._restore(inst, saved)
-        for o in inst:
-            bpy.data.objects.remove(o, do_unlink=True)
+        src_data.materials.clear()
+        for m in keep:
+            src_data.materials.append(m)
 
 
 def main():
@@ -127,6 +132,7 @@ def main():
             continue
         o, _ctx = C.lp_figure(nm, S, fn(), voxel=VOXEL, tris=POSE_BUDGET)
         H.turn(o)
+        o.data.name = o.name
         objs.append(o)
         print(f"[echo4] {nm}: {C.E.tris(o)} tris, {E.mesh_report(o)}")
     path = mrlib.export_glb(NAME)

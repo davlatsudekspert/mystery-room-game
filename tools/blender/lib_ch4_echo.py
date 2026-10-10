@@ -90,11 +90,11 @@ def _hair(kind: str, s: float):
     def e(c, r, rot=None):
         k.append(("e", tuple(x * s for x in c), tuple(x * s for x in r), rot))
     if kind == "shag":                         # 1970s feathered, collar-length, sideburns
-        e((0, -0.008, 0.118), (0.088, 0.098, 0.100))
-        e((0, -0.058, 0.080), (0.083, 0.062, 0.088))
-        e((0, -0.074, 0.030), (0.072, 0.042, 0.064))
+        e((0, -0.008, 0.120), (0.092, 0.102, 0.104))
+        e((0, -0.062, 0.078), (0.092, 0.070, 0.092))
+        e((0, -0.080, 0.020), (0.086, 0.050, 0.078))
         for sx in (1, -1):
-            e((sx * 0.080, 0.012, 0.082), (0.020, 0.046, 0.050))
+            e((sx * 0.084, 0.012, 0.078), (0.024, 0.050, 0.056))
     elif kind == "short":                      # short back and sides, side parting
         e((0, -0.006, 0.120), (0.083, 0.094, 0.090))
         e((0, -0.046, 0.090), (0.078, 0.052, 0.070))
@@ -247,7 +247,7 @@ def lp_figure(key, S, Pz, voxel=0.012, tris=1200, hand_w=1.0):
         c = sp.point(zn - 0.012, (0, 0.0, 0))
         for sx in (1, -1):
             wing = E.ellipsoid(f"{key}_collar{sx}", c + sp.right(zn) * (sx * 0.050) + sp.front(zn) * 0.060,
-                               (0.040, 0.036, 0.016), rot=Matrix.Rotation(math.radians(-sx * 28 + Pz["yaw_chest"]), 3, "Z"),
+                               (0.048, 0.042, 0.018), rot=Matrix.Rotation(math.radians(-sx * 28 + Pz["yaw_chest"]), 3, "Z"),
                                seg=10, rings=6)
             parts.append(wing)
     ctx = dict(sp=sp, sh=sh, el=el, wr=wr, pivot=pivot, head=(hy, hp, hr), zn=zn, zh=zh, S=S, Pz=Pz, key=key)
@@ -261,17 +261,25 @@ def lp_figure(key, S, Pz, voxel=0.012, tris=1200, hand_w=1.0):
     wfn = L.gauss_w(centres, 0.09)
     E.decimate(obj, tris, vgroup_weights=wfn, vg_factor=0.6 * hand_w)
     E.clean_mesh(obj)
+    low = min(v.co.z for v in obj.data.vertices)           # the feet stand exactly on the floor (y = 0 in Godot)
+    obj.data.transform(Matrix.Translation((0.0, 0.0, -low)))
+    ctx["lift"] = -low
     return obj, ctx
 
 
 # ------------------------------------------------------------------ QA helpers
-def ghost_row(name, objs, xs, cam, target, lens=40.0, res=(1200, 560), samples=20):
-    """Ghost-look render of several figures standing at x offsets (build +X = right). Restores the positions."""
+def ghost_row(name, objs, xs, cam, target, lens=40.0, res=(1200, 560), samples=20, everything=None):
+    """Ghost-look render of several figures standing at x offsets (build +X = right). Restores the positions;
+    `everything` = every figure of the scene (those not in `objs` are hidden from the render)."""
+    if everything is not None:
+        show_only(everything, objs)
     for o, x in zip(objs, xs):
         o.location.x = x
     path = H.L.ghost(name, objs, cam, target, lens=lens, res=res, samples=samples)
     for o in objs:
         o.location.x = 0.0
+    if everything is not None:
+        show_only(everything, everything)
     return path
 
 
