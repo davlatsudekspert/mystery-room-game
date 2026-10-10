@@ -511,7 +511,7 @@ func _update_beam() -> void:
 	var y := 1.15
 	var bm := ShaderMaterial.new()
 	bm.shader = load("res://src/fx/lumen_beam.gdshader")
-	bm.set_shader_parameter("energy", 1.05) # the shader's 1.6 blew the beam out to a flat white tube
+	bm.set_shader_parameter("energy", 0.75) # the shader's 1.6 blew the beam out to a flat white tube (1.05 still did)
 	for i in pts.size() - 1:
 		var a := Vector3(pts[i].x, y, pts[i].y)
 		var b := Vector3(pts[i + 1].x, y, pts[i + 1].y)

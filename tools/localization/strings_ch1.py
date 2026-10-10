@@ -130,6 +130,7 @@ S = [
 ("msg.filing_locked", "The cabinet drawers are locked. Nothing rattles inside.", "Ящики картотеки заперты. Внутри ничего не гремит.", "Kartoteka tortmalari qulflangan. Ichida hech narsa shiqirlamaydi."),
 ("msg.chalkboard_dust", "Strand's hand. The formula has been rubbed out and rewritten more than once.", "Почерк Странда. Формулу стирали и переписывали не раз.", "Strandning dastxati. Formula bir necha bor oʻchirilib, qayta yozilgan."),
 ("msg.poster_table", "Strand's table of resonances: each symbol has its own count of dots.", "Таблица резонансов Странда: у каждого символа своё число точек.", "Strandning rezonanslar jadvali: har bir belgining oʻz nuqtalar soni bor."),
+("msg.empty_now", "Empty now.", "Теперь пусто.", "Endi boʻsh."),
 ("msg.lock_dark", "A glass eye set into the door. It waits for light.", "Стеклянный глаз, вделанный в дверь. Он ждёт света.", "Eshikka oʻrnatilgan shisha koʻz. U yorugʻlikni kutadi."),
 
 # ---------------------------------------------------------------- captions (sound → text, accessibility)

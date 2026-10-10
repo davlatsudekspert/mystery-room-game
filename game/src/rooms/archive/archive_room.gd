@@ -582,6 +582,8 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 					l.open_hiding_place("ledger")
 				elif l.can_take("ledger_reel"):
 					l.take("ledger_reel")
+				else:
+					_empty_now()
 			elif cur == "hall" or cur == "west":
 				cam.go("stacks")
 			else:
@@ -594,6 +596,8 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 				l.open_hiding_place("grille")
 			elif l.can_take("grille_reel"):
 				l.take("grille_reel")
+			else:
+				_empty_now()
 		"hatch":
 			if cur != "hatch":
 				cam.go("hatch")
@@ -601,6 +605,8 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 				l.open_hiding_place("hatch")
 			elif l.can_take("hatch_reel"):
 				l.take("hatch_reel")
+			else:
+				_empty_now()
 		"reading":
 			if cur != "reading":
 				cam.go("reading")
@@ -633,6 +639,7 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 					if l.can_take(spot):
 						l.take(spot)
 						return
+				_empty_now()
 		"screen":
 			if p in ["IA_screen_socket", "socket_ring"] or p.begins_with("Item_socket"):
 				if cur != "socket":
@@ -724,6 +731,7 @@ func _interact_station(p: String) -> void:
 			if l.can_take(spot):
 				l.take(spot)
 				return
+		_empty_now() # the receive tray: nothing has come back yet, or it was already taken
 	else:
 		# the send port, its flap or the station body: where the dispatch stands
 		if s["canister"] != "":
@@ -849,6 +857,9 @@ func _interact_splicer(p: String) -> void:
 	if s["reel_repaired"]:
 		if l.can_take("splicer_reel"):
 			l.take("splicer_reel")
+		else:
+			hud.call("message", tr("msg.c2_splicer_box"))
+			AudioManager.ui("ui_tap")
 		return
 	if p.begins_with("IA_frame_"):
 		var k := int(p.substr(9))
@@ -953,6 +964,12 @@ func _interact_vault(p: String) -> void:
 				# the door body or a bolt: shut until the overlay matches, then the wheel opens it
 				hud.call("message", tr("msg.c2_vault_shut" if not s["vault_unlocked"] else "msg.c2_vault_unlocked"))
 				AudioManager.sfx("locker_rattle", -8.0, 0.7)
+
+
+## A container the player has already emptied: say so instead of ignoring the tap.
+func _empty_now() -> void:
+	hud.call("message", tr("msg.empty_now"))
+	AudioManager.ui("ui_tap")
 
 
 # ====================================================================== per-frame

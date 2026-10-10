@@ -839,6 +839,8 @@ func _interact_desk(part: String, r: Dictionary) -> void:
 		elif not s["drawer_open"]:
 			hud.call("message", tr("msg.drawer_locked"))
 			AudioManager.sfx("drawer_locked")
+		else:
+			_empty_now()
 		return
 	if part in ["IA_rosette", "IA_secret_panel", "IA_keyhole", "IA_compartment", "UV_desk_mark"] or part.begins_with("Item_comp"):
 		if cur != "desk_side":
@@ -851,6 +853,7 @@ func _interact_desk(part: String, r: Dictionary) -> void:
 				if logic.can_take(spot):
 					logic.take(spot)
 					return
+			_empty_now()
 		elif s["rosette"]:
 			hud.call("message", tr("hint.key.1"))
 		else:
@@ -898,6 +901,16 @@ func _interact_bookshelf(part: String, _r: Dictionary) -> void:
 		cam.go("bookshelf")
 	elif cur == "bookshelf":
 		cam.go("books")
+	else:
+		# the shelves or the carcass in a close-up
+		hud.call("message", tr("obj.bookshelf_open" if s["shelf_open"] else "obj.bookshelf"))
+		AudioManager.ui("ui_tap")
+
+
+## A container the player has already emptied: say so instead of ignoring the tap.
+func _empty_now() -> void:
+	hud.call("message", tr("msg.empty_now"))
+	AudioManager.ui("ui_tap")
 
 
 func _interact_gearbox(part: String) -> void:
@@ -908,6 +921,8 @@ func _interact_gearbox(part: String) -> void:
 	if s["box_open"]:
 		if logic.can_take("box_cell"):
 			logic.take("box_cell")
+		else:
+			_empty_now()
 		return
 	if part.begins_with("IA_knob_") or part.begins_with("IA_gear_"):
 		logic.press_gear(int(part.substr(part.length() - 1)))
@@ -973,6 +988,7 @@ func _interact_safe(part: String) -> void:
 			if logic.can_take(spot):
 				logic.take(spot)
 				return
+		_empty_now()
 		return
 	if part.begins_with("IA_key_"):
 		var k := part.substr(7)
@@ -1061,6 +1077,8 @@ func _interact_shadow(part: String) -> void:
 			cam.go("cabinet")
 		elif s["cabinet_open"] and logic.can_take("cabinet_mirror"):
 			logic.take("cabinet_mirror")
+		elif s["cabinet_open"]:
+			_empty_now()
 		elif not s["cabinet_open"]:
 			hud.call("message", tr("obj.cabinet"))
 			AudioManager.sfx("drawer_locked", -8.0, 1.1)
@@ -1139,7 +1157,8 @@ func _on_view_changed(id: String) -> void:
 	hud.call("set_view", id, cam.is_root(), _view_caption(id))
 	var fill: OmniLight3D = lights["focus_fill"]
 	var bright_views := ["bookshelf", "books", "projector", "chalkboard", "coat", "filing", "mirror_a", "mirror_b", "lock"]
-	var e := 0.0 if cam.is_root() else (1.5 if id in bright_views else 1.0)
+	var dim_views := ["radio", "radio_hatch", "poster"] # a cream dial / glossy glass 60 cm from the lens: the full fill clips it white
+	var e := 0.0 if cam.is_root() else (1.5 if id in bright_views else (0.45 if id in dim_views else 1.0))
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	var in_dark := id in ["darkroom", "shadow", "emblem", "cabinet", "evidence", "darkroom_floor", "sculpture"]
 	if id == "darkroom" and not _darkroom_seen:

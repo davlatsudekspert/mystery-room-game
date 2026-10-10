@@ -121,7 +121,12 @@ static func _solve_step(chapter: String, logic: RoomLogic) -> void:
 ## The draw calls each part of the room adds to this view: hide it (or switch its light's shadow off), measure,
 ## restore. Hiding removes both its colour pass and its shadow pass draws.
 func _breakdown(view_id: String) -> void:
+	# the HUD animates (captions fade, badges blink): hide it while measuring, or every delta carries its noise
+	var hud := room.get("hud") as CanvasLayer
+	if hud:
+		hud.visible = false
 	var base := await _draw_calls()
+	lines.append("  %s scene only (HUD hidden): %d draw calls" % [view_id, base])
 	var rows: Array = []
 	var nodes: Array[Node3D] = []
 	for n in room.get_children():
@@ -157,6 +162,8 @@ func _breakdown(view_id: String) -> void:
 		var c := await _draw_calls()
 		light.shadow_enabled = true
 		rows.append([base - c, "shadow of " + str(light.name)])
+	if hud:
+		hud.visible = true
 	rows.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) > int(b[0]))
 	for r: Array in rows:
 		lines.append("  %s %4d  %s" % [view_id, int(r[0]), str(r[1])])

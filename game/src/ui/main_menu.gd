@@ -191,8 +191,8 @@ func _layout() -> void:
 	_left.offset_bottom = -(canvas.y - col_bottom)
 	var avail := col_bottom - u.position.y
 	var n := _menu.get_child_count()
-	# rows: a touch target at least, and airy enough for display type on a big screen
-	var btn_h := maxf(UITheme.target(78), roundf(UITheme.size(MenuItem.SIZE_NORMAL) * 1.8))
+	# rows: a touch target at least, and airy enough for display type (1.5 em: on a phone the logo keeps its room)
+	var btn_h := maxf(UITheme.target(78), roundf(UITheme.size(MenuItem.SIZE_NORMAL) * 1.5))
 	for b: Control in _menu.get_children():
 		b.custom_minimum_size.y = btn_h
 		btn_h = maxf(btn_h, b.get_combined_minimum_size().y)
