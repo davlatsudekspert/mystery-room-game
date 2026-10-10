@@ -716,13 +716,13 @@ func _apply_gallery(animated: bool) -> void:
 	var s := logic.state
 	var awake: bool = s["gallery_awake"]
 	var array: bool = s["array_awake"]
-	# asleep the rings are dormant glass (a cool grey tint, almost no emission), awake they glow, and the answering
-	# Array shines without blowing out into bloom
+	# asleep the rings are dormant glass (a cool grey tint, almost no emission); awake they glow but stay under the
+	# glow threshold (1.1, RoomBase.make_environment), so only the answering Array blooms
 	for r in 4:
 		var m := _mats.get("ring_%d" % r) as BaseMaterial3D
 		if m:
-			m.emission_energy_multiplier = 3.0 if array else (1.2 if awake else 0.15)
-			m.albedo_color = Color(0.81, 0.96, 1.0) if array else (Color(0.62, 0.78, 0.85) if awake else Color(0.4, 0.48, 0.53))
+			m.emission_energy_multiplier = 2.2 if array else (0.55 if awake else 0.15)
+			m.albedo_color = Color(0.81, 0.96, 1.0) if array else (Color(0.55, 0.7, 0.78) if awake else Color(0.4, 0.48, 0.53))
 		var sym := _mats.get("ring_sym_%d" % r) as BaseMaterial3D
 		if sym:
 			sym.albedo_color = Color(LUMEN, 1.0) * (1.0 if awake else 0.45)
