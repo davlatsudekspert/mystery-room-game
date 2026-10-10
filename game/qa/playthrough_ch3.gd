@@ -438,7 +438,7 @@ func _walk_to(zone: String) -> void:
 		else:
 			var why := _hit(edge[3], edge[4])
 			taps_fallback += 1
-			_count_missing(why, "walk", "walk %s -> %s" % [here, edge[1]])
+			_count_missing(why, "walk", "walk %s -> %s" % [here, edge[1]], str(edge[3]))
 			_log("  fallback: walk %s -> %s (%s/%s, view %s, hit %s)" % [here, edge[1], edge[3], edge[4], cam().current(), why])
 			cam().go(edge[5])
 			await _settle(0.9)
@@ -455,12 +455,26 @@ func goto(id: String) -> void:
 	await view(id)
 
 
-func _count_missing(why: String, puzzle: String, label: String) -> void:
-	if why in ["model missing", "part missing"]:
-		fallback_missing += 1
-		var l: Array = missing_by_puzzle.get(puzzle, [])
-		l.append(label)
-		missing_by_puzzle[puzzle] = l
+## True when a failed tap is only because the model's GLB is not built yet (the room lists it in missing_models); a
+## part that is missing from a built model is a wiring bug and is reported as a fallback.
+func _unbuilt(why: String, model: String) -> bool:
+	if why not in ["model missing", "part missing"]:
+		return false
+	var glb := model
+	if UndergroundData.LAYOUT.has(model):
+		glb = str(UndergroundData.LAYOUT[model][0])
+	return glb in (room.get("missing_models") as Array)
+
+
+## Counts a fallback caused by an unbuilt model; returns true then (nothing more to log).
+func _count_missing(why: String, puzzle: String, label: String, model: String = "") -> bool:
+	if not _unbuilt(why, model):
+		return false
+	fallback_missing += 1
+	var l: Array = missing_by_puzzle.get(puzzle, [])
+	l.append(label)
+	missing_by_puzzle[puzzle] = l
+	return true
 
 
 # ====================================================================== the chapter
@@ -588,11 +602,12 @@ func _do(m: String, a: Array) -> bool:
 		return true
 	if now == before:
 		var why := _hit(t[1], t[2])
+		var held: Dictionary = (room.get("visuals") as UndergroundVisuals)._held
+		var info := "chamber %s, closed %s, held %s" % [str(logic.state.get("chamber")), str(logic.state.get("ac_closed")), str(held.get("chamber"))]
 		logic.callv(m, a)
 		taps_fallback += 1
-		_count_missing(why, t[4], label)
-		if why not in ["model missing", "part missing"]:
-			_log("  fallback: %s (%s/%s, view %s, hit %s)" % [label, t[1], t[2], cam().current(), why])
+		if not _count_missing(why, t[4], label, str(t[1])):
+			_log("  fallback: %s (%s/%s, view %s, hit %s, %s)" % [label, t[1], t[2], cam().current(), why, info])
 		await wait_idle()
 		return true
 	taps_fallback += 1
@@ -640,8 +655,7 @@ func _release_echoes() -> void:
 			if not ok or not cam().current().ends_with("_mem"):
 				var hr: Dictionary = room.call("raycast", rim)
 				var why := "nothing" if hr.is_empty() else str(room.call("resolve", hr)["part"])
-				_count_missing(why, "echoes", "port ring " + p[1])
-				if why not in ["model missing", "part missing"]:
+				if not _count_missing(why, "echoes", "port ring " + p[1]):
 					_log("  fallback: port ring %s (view %s, hit %s)" % [p[1], cam().current(), why])
 				taps_fallback += 1
 				cam().go(p[1] + "_mem")

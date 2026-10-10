@@ -207,6 +207,8 @@ func _build_evidence() -> void:
 	_set_slot(part("choir_rack", "stair_quad") as MeshInstance3D, "M_Shader_Quad", stair)
 	# W4 step globes
 	var globes := _shader("res://src/fx/step_globes.gdshader")
+	# at the shader's default 2.6 the lit opal globes bloom to white blobs on a phone; 1.05 keeps them warm and clear
+	globes.set_shader_parameter("energy", 1.05)
 	_mats["globes"] = globes
 	_set_slot(part("control_desk", "step_globes") as MeshInstance3D, "M_Enamel_Cream", globes)
 	# E1 glyph panel, the open drawer's glyph, the log sketch
@@ -522,7 +524,12 @@ func _held_item(key: String, item_id: String, mount: Node3D, show: bool, part_na
 	var want := item_id if show else ""
 	if not cur.is_empty() and (cur[0] != want or not is_instance_valid(cur[1])):
 		if is_instance_valid(cur[1]):
-			(cur[1] as Node3D).queue_free()
+			# leave the tree now: a node that is only queued for freeing keeps its name, and its replacement would be
+			# renamed "Item_chamber2", which no hotspot or QA tap finds
+			var old := cur[1] as Node3D
+			if old.get_parent():
+				old.get_parent().remove_child(old)
+			old.queue_free()
 		_held.erase(key)
 		cur = []
 	if want == "" or mount == null:
@@ -740,8 +747,8 @@ func _apply_gallery(animated: bool) -> void:
 		scope.set_shader_parameter("fa", int(s["freq_x"]))
 		scope.set_shader_parameter("fb", int(s["freq_y"]))
 		scope.set_shader_parameter("live", logic.scope_live())
-	_lamp(part("gallery_console", "lamp_choir"), s["hall_started"], WARM, 2.5)
-	_lamp(part("gallery_console", "lamp_nursery"), s["shutter_open"], LUMEN, 2.5)
+	_lamp(part("gallery_console", "lamp_choir"), s["hall_started"], AMBER, 1.5)
+	_lamp(part("gallery_console", "lamp_nursery"), s["shutter_open"], LUMEN, 1.5)
 	var cradled: String = s["cradle"]
 	_held_item("cradle", cradled, part("gallery_console", "cradle_mount"), cradled != "", "Item_cradle")
 	_lamp(part("gallery_console", "cradle_ring"), cradled != "", LUMEN, 2.0)

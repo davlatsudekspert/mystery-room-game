@@ -124,7 +124,7 @@ const VIEWS := {
 	"seed_drawer": [Vector3(11.85, 1.6, -0.6), Vector3(12.25, 1.2, -0.6), 42.0, false, "N", "", ""], # framed per drawer
 	"prisms": [Vector3(6.1, 1.75, 1.65), Vector3(6.1, 1.0, -0.55), 56.0, false, "N", "camp_open", "K"],
 	"seal": [Vector3(6.1, 1.3, -0.3), Vector3(6.1, 1.15, -0.97), 44.0, false, "N", "camp_open", "K"],
-	"camp": [Vector3(7.25, 1.6, -1.5), Vector3(4.9, 1.2, -2.8), 62.0, false, "K", "", ""],
+	"camp": [Vector3(7.25, 1.6, -1.5), Vector3(4.9, 1.2, -2.8), 62.0, false, "K", "shutter_open", "GS"],
 	"shutter": [Vector3(6.55, 1.55, -2.6), Vector3(4.66, 1.6, -2.6), 50.0, false, "K", "shutter_open", "GS"],
 	"recorder": [Vector3(5.3, 1.32, -2.55), Vector3(5.0, 0.84, -1.55), 46.0, false, "K", "camp_open", "N"],
 	# cinematic only
