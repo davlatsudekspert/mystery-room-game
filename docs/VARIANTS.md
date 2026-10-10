@@ -6,6 +6,7 @@
 - Chapter 1 varies the gear box, the safe cipher, the beacon, the book order and Panel 7's wiring.
 - Chapter 2 varies the valves, the punch card, the tape clicks/dial, the splice order, the focus and the vault overlay.
 - Both chapters have been played to the end through the real 3D scene on a non-canonical seed: Ch1 seed 4242 (safe 1204, books IV-II-VIII, 100 taps, 0 fallbacks) and Ch2 seed 777 (94 taps, 0 fallbacks). The on-screen evidence matches the answers, for example `docs/previews/variants/ch1_seed4242_safe_evidence.jpg`.
+- Chapter 1 with Panel 7's wiring drawn per game, played through the real 3D scene: seed 4242 (wiring 3, answer I, II, V: 100 taps, 0 logic fallbacks) and seed 777 (wiring 2, answer I, IV: 101 taps, 0 logic fallbacks), both exit 0.
 
 **Rules.**
 - **Story anchors never change.** These are 03:17, 14 November 1979, Leyla's staff number 0417, "41 staff" and the symbols ✦ ☾. They are the lore; changing them would break the story and the other chapters.
