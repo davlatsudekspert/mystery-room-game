@@ -65,8 +65,8 @@ def flash(zn, side=1, both=False, turn=-34.0, box_c=None, box_size=None):
     w = {s: R(s * 0.070, 0.205, eye), -s: R(-s * 0.400, 0.060, zn - 0.45)}
     h = {s: (s * 0.60, 0.10, 0.25), -s: (-s * 0.40, -0.40, -0.20)}
     if both:
-        w = {s: R(s * 0.055, 0.215, eye - 0.02), -s: R(-s * 0.070, 0.225, eye - 0.07)}
-        h = {s: (s * 0.55, 0.10, 0.20), -s: (-s * 0.55, 0.10, 0.10)}
+        w = {s: R(s * 0.040, 0.215, eye - 0.02), -s: R(-s * 0.060, 0.230, eye - 0.07)}
+        h = {s: (s * 0.22, 0.40, -0.35), -s: (-s * 0.22, 0.40, -0.35)}
     return C.pose(hip_xy=(0.0, -0.040), neck_xy=(0.0, -0.040), yaw_hip=-turn * 0.3, yaw_chest=turn * s,
                   feet={1: (0.11, -0.150 if s == 1 else 0.100, -12.0), -1: (-0.10, 0.100 if s == 1 else -0.150, 18.0)},
                   wrist=w, hint=h, head=(turn * 0.8 * s, -8.0, 0.0), tilt=-4.0)
@@ -112,7 +112,7 @@ def fig_archivist():
                long_hem=(0.380, 0.220, 0.218, 0.160, 0.155, 2.2, 0.010, 0.020), hand=0.95,
                leg=(0.066, 0.052, 0.044), shoe=0.98, sleeve=(0.046, 0.042, 0.038))
     book = box(R(0.0, 0.250, 1.020), (0.22, 0.034, 0.30), (-10.0, 0.0, 0.0))
-    a = C.pose(hip_xy=(0.0, -0.06), neck_xy=(0.0, 0.150), yaw_chest=0.0, head=(8.0, -34.0, 0.0), tilt=22.0,
+    a = C.pose(hip_xy=(0.0, -0.08), neck_xy=(0.0, 0.200), yaw_chest=0.0, head=(8.0, -30.0, 0.0), tilt=28.0,
                feet={1: (0.09, 0.0, -8.0), -1: (-0.10, 0.02, 10.0)},
                wrist={1: R(0.130, 0.230, 1.010), -1: R(-0.130, 0.230, 0.990)},
                hint={1: (0.4, -0.3, -0.4), -1: (-0.4, -0.3, -0.4)}, props=[book])
@@ -227,13 +227,14 @@ def renders(by):
     names = [n for n in FIGURES if f"{n}_a" in by]
     k = len(names)
     xs = [(i - (k - 1) / 2) * 0.95 for i in range(k)]
-    for tag, suf in (("echo_named", "a"), ("echo_named_2", "c")):
+    for tag, suf in (("echo_named", "a"), ("echo_named_2", "b"), ("echo_named_3", "c")):
         objs = [by[f"{n}_{suf}"] for n in names]
         C.ghost_row(tag, objs, xs, (0.0, -9.5, 1.45), (0.0, 0.0, 0.88), lens=34, res=(1600, 640), samples=18,
                     everything=list(by.values()))
-    objs = [by[f"{n}_b"] for n in names]
-    C.ghost_row("echo_named_3", objs, xs, (0.0, -9.5, 1.45), (0.0, 0.0, 0.88), lens=34, res=(1600, 640), samples=18,
-                    everything=list(by.values()))
+    # from behind and the side: the room's catwalk views see the figures facing the Core, i.e. from the back
+    objs = [by[f"{n}_a"] for n in names]
+    C.ghost_row("echo_named_4", objs, xs, (7.5, 8.5, 2.1), (0.0, 0.0, 0.85), lens=34, res=(1600, 640), samples=18,
+                everything=list(by.values()))
 
 
 def main():

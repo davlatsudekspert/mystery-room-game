@@ -1,0 +1,9 @@
+# Chapter 4 group I: the light echoes (lib_ch4_echo.py, lib_ch4_echo_staff.py on top of lib_echo / lib_ch2_echoes / lib_ch3_echoes). docs/models/ch4_i.md
+echo_crowd.py
+echo_named.py
+echo_strand_desk.py
+echo_leyla_1998_lift.py
+echo_leyla_1998_lens.py
+echo_tech_panel.py
+echo_tech_wheels.py
+echo_clerk_post.py

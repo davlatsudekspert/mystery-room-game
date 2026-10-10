@@ -132,8 +132,8 @@ def _gear(kind: str, s: float):
         e((0, 0.084, 0.166), (0.088, 0.064, 0.009), ("x", -14))
         e((0, 0.000, 0.152), (0.090, 0.103, 0.014))
     elif kind == "mask":                       # welding mask flipped up on the head
-        e((0, 0.014, 0.196), (0.112, 0.112, 0.074))
-        e((0, 0.088, 0.160), (0.100, 0.026, 0.066), ("x", 18))
+        e((0, 0.014, 0.200), (0.126, 0.122, 0.090))
+        e((0, 0.100, 0.176), (0.112, 0.034, 0.082), ("x", 22))
     elif kind == "headphones":                 # round the neck, the cups on the collar
         k.append(("t", (0, 0.0, -0.005), 0.088, 0.014))
         for sx in (1, -1):
@@ -265,6 +265,90 @@ def lp_figure(key, S, Pz, voxel=0.012, tris=1200, hand_w=1.0):
     obj.data.transform(Matrix.Translation((0.0, 0.0, -low)))
     ctx["lift"] = -low
     return obj, ctx
+
+
+# ------------------------------------------------------------------ detailed pipeline: a retrying boolean union
+def union_safe(base, others, name):
+    """lib_ch2_echoes.bool_union with a retry: the exact solver sometimes returns an EMPTY mesh for a shell pair
+    (seen for the head of a leaning figure). The failed union is rolled back and the shell nudged by a fraction of
+    a millimetre before the next try."""
+    import random
+    rnd = random.Random(7)
+    for o in others:
+        ok = False
+        for attempt in range(8):
+            backup = base.data.copy()
+            if attempt:
+                o.location += Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(-1, 1))) * 0.0006 * attempt
+                mrlib.refresh()
+            m = base.modifiers.new("u", "BOOLEAN")
+            m.operation = "UNION"
+            m.object = o
+            m.solver = "EXACT"
+            mrlib.apply_modifiers(base)
+            if len(base.data.polygons) > 0:
+                bpy.data.meshes.remove(backup)
+                ok = True
+                if attempt:
+                    print(f"[echo4] union of {o.name} needed {attempt} retries")
+                break
+            base.data = backup
+        if not ok:
+            raise RuntimeError(f"boolean union of {o.name} into {base.name} failed")
+        bpy.data.objects.remove(o, do_unlink=True)
+    E.clean_mesh(base)
+    base.name = base.data.name = name
+    return base
+
+
+def make_pose(name, parts, hands, head, tris, voxel=0.0036, folds=None, flutes=None, hand_sigma=0.04, late=None):
+    """lib_ch3_echoes.make_pose with union_safe."""
+    body = L.finish_body(parts, voxel=voxel, tris=tris["body"], hand_centres=[c for (_p, c) in hands],
+                         hand_sigma=hand_sigma, folds_fn=folds, post_fn=flutes, name=name + "_body")
+    shells = [L.hand_shell(hp, f"{name}_hand{i}", tris["hand"]) for i, (hp, _c) in enumerate(hands)]
+    hd = dict(head)
+    h = L.build_head(hd.pop("P"), hd.pop("pivot"), hd.pop("nd"), hd.pop("yaw"), hd.pop("pitch"), hd.pop("roll"),
+                     hd.pop("hair_fn"), tris["head"], **hd)
+    obj = union_safe(body, shells + [h] + (late or []), name)
+    dropped = L.drop_small_islands(obj, min_verts=60)
+    if dropped:
+        E.clean_mesh(obj)
+        print(f"[echo4] {name}: dropped {dropped} boolean crumb island(s)")
+    rep = E.mesh_report(obj)
+    print(f"[echo4] {name}: {rep}")
+    if rep["shells"] > 1:
+        H.islands(obj)
+    return obj
+
+
+def inside(tree, p, d=(0.31, 0.77, 0.56)) -> bool:
+    """True if build-space point p lies inside the closed mesh of `tree` (ray parity)."""
+    d = Vector(d).normalized()
+    o = Vector(p)
+    n = 0
+    for _ in range(64):
+        hit = tree.ray_cast(o, d)
+        if hit[0] is None:
+            break
+        n += 1
+        o = hit[0] + d * 1e-5
+    return n % 2 == 1
+
+
+def grip_report(label, obj, centre_g, axis_g, half=0.06, r=0.018):
+    """Samples along a held bar (Godot figure-frame centre and axis; export orientation of `obj`): how far each sample is
+    from the surface and whether it lies inside the solid (it must not: the bar passes through the fist's hole)."""
+    mrlib.refresh()
+    tree = E.bvh(obj)
+    c = Vector((centre_g[0], -centre_g[2], centre_g[1]))
+    a = Vector((axis_g[0], -axis_g[2], axis_g[1])).normalized()
+    out = []
+    for t in (-half, -half / 2, 0.0, half / 2, half):
+        p = c + a * t
+        _l, _n, _i, d = tree.find_nearest(p)
+        out.append((round(t, 3), round(d * 100, 1), inside(tree, p)))
+    print(f"[echo4] grip {label} (bar r {r * 100:.1f} cm): (t, nearest cm, inside) {out}")
+    return out
 
 
 # ------------------------------------------------------------------ QA helpers
