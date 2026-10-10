@@ -10,7 +10,8 @@ Contract: docs/models/ch3.md §6 seed_library (+ §2 seed_library / seed_drawer,
   IA_seed_drawer_<i>      i = 4 r + c: drawer 0.30 x 0.22 x 0.40 with a turned walnut knob and a turned cup inside
                           (one material); pivot = front-face centre (x_c, y_r, 0.45), x_c = (c - 1.5) 0.33,
                           y_r = 1.50 - 0.26 r; open = slide +0.24 along local +Z
-    seed_mount_<i>        (child) (0, -0.05, -0.12) from the pivot: seed_crystal stands upright in the cup
+    seed_mount_<i>        (child) (0, -0.05, -0.22) from the pivot (contract -0.12, see SEED_DEPTH): seed_crystal
+                          stands upright in the turned cup
   glyph_panel             ONE mesh of 12 quads 0.13 x 0.13 at (x_c, y_r + 0.02, 0.452); quad i covers the UV cell
                           u ∈ [c/4, (c+1)/4], v ∈ [(2-r)/3, (3-r)/3] (M_Shader_Quad, hex_glyph shader)
   glyph_open              one 0.13 x 0.13 quad, UV 0..1, M_Shader_Quad; child of IA_seed_drawer_0 at local
@@ -46,6 +47,11 @@ OPEN_D = 0.24
 GAP = 0.002                                   # clearance round each drawer front in its opening
 GLYPH = 0.13
 SEAT_DROP = 0.0088                            # seed_crystal collar bottom below its origin (ch3_g.md)
+# The cup / seed_mount depth behind the drawer front. The contract says 0.12, but from the §2 seed_drawer camera
+# (0.30 in front of and 0.36 above the open front, aimed 0.10 inside) the sight line over the 0.22 front's top
+# edge only reaches the seed's height 0.173 behind the front: at 0.12 the seed is hidden and cannot be tapped.
+# At 0.22 the seed's top clears the edge by 2.3 cm and its base by 8 mm (ch3_d.md, deviations).
+SEED_DEPTH = 0.22
 LEDGE = (0.815, 0.845, 0.505)                 # y0, y1, front z of the waist ledge
 
 
@@ -153,7 +159,7 @@ def drawer(r, c):
     # the turned cup (a goblet: foot, stem, cup with a shallow recess for the seed collar)
     seat = y - 0.05 - SEAT_DROP
     fl = y - hh + 0.012
-    mz = zf - 0.12
+    mz = zf - SEED_DEPTH
     p.append(K.glathe("cup", [(0.020, fl), (0.020, fl + 0.006), (0.009, fl + 0.012), (0.008, seat - 0.016),
                               (0.015, seat - 0.006), (0.015, seat + 0.004), (0.0095, seat + 0.004), (0.0095, seat),
                               (0.0, seat)], (x, 0.0, mz), (0, 1, 0), 8, WALNUT, smooth=50.0, cap_bottom=False))
@@ -161,7 +167,7 @@ def drawer(r, c):
     p.append(K.glathe("knob", [(0.010, 0.0), (0.0065, 0.008), (0.0065, 0.013), (0.013, 0.022), (0.011, 0.030),
                                (0.0, 0.032)], (x, y - 0.075, zf), (0, 0, 1), 8, WALNUT, smooth=50.0, cap_bottom=False))
     d = K.part(f"IA_seed_drawer_{i}", p, pivot=(x, y, zf))
-    m = K.empty(f"seed_mount_{i}", (x, y - 0.05, zf - 0.12))
+    m = K.empty(f"seed_mount_{i}", (x, y - 0.05, zf - SEED_DEPTH))
     return d, m
 
 
@@ -219,7 +225,7 @@ def verify(path):
         for c in range(4):
             i = drawer_index(r, c)
             expect[f"IA_seed_drawer_{i}"] = (xc(c), yr(r), FRONT)
-            expect[f"seed_mount_{i}"] = (xc(c), yr(r) - 0.05, FRONT - 0.12)
+            expect[f"seed_mount_{i}"] = (xc(c), yr(r) - 0.05, FRONT - SEED_DEPTH)
             parents[f"IA_seed_drawer_{i}"] = None
             parents[f"seed_mount_{i}"] = f"IA_seed_drawer_{i}"
     expect["glyph_open"] = (xc(0), yr(0) + 0.02, FRONT + 0.0025)
@@ -332,6 +338,7 @@ def qa(parts, args):
     D.qa_begin()
     for o in parts["drawers"]:
         REST[o.name] = o.matrix_basis.copy()
+    REST["open"] = parts["open"].matrix_basis.copy()
     roots = D.roots()
     D.place(roots, D.LIB_POS, D.LIB_YAW, name="qa_place_lib")
     D.room()
@@ -359,42 +366,40 @@ def qa(parts, args):
         pose(parts)
         D.lights(V_CAM, fill=10.0)
         D.shoot(NAME, V_CAM, V_TGT, 50)
-    # 2 drawer 6 open (row 1, column 2): the seed_drawer view, glyph_open on it, cell 6 blanked
+    def open6(on):
+        """Dress drawer 6 as the open drawer: the seed in its cup, glyph_open on its front (reparented with its
+        local transform kept, as the code does), cell 6 of the panel blanked."""
+        go = parts["open"]
+        keep = REST["open"]
+        show(seed_objs, on)
+        go.hide_render = not on
+        go.parent = parts["drawers"][6 if on else 0]
+        go.matrix_parent_inverse = Matrix.Identity(4)
+        go.matrix_basis = keep.copy()
+        M.refresh()
+        if on and pan_open6 is not None:
+            REST["panel_old"] = K.override(parts["panel"], pan_open6)
+        elif REST.get("panel_old") is not None:
+            K.restore(parts["panel"], REST.pop("panel_old"))
+
+    # 2 drawer 6 open (row 1, column 2): the seed_drawer view, glyph_open on it, cell 6 blanked, the seed in its cup
     if K.want(args, "2"):
         pose(parts, 6)
-        show(seed_objs, True)
-        parts["open"].hide_render = False
-        old = K.override(parts["panel"], pan_open6) if pan_open6 is not None else None
-        # glyph_open reparented to drawer 6 with its local transform kept (as the code does)
-        go = parts["open"]
-        keep = go.matrix_basis.copy()
-        go.parent = parts["drawers"][6]
-        go.matrix_parent_inverse = parts["drawers"][0].matrix_basis.inverted() @ parts["drawers"][0].matrix_basis
-        go.matrix_basis = keep
-        M.refresh()
+        open6(True)
         F = W((xc(2), yr(1), FRONT + OPEN_D))
         cam = (F[0] - 0.30, F[1] + 0.36, F[2])
         tgt = (F[0] + 0.10, F[1] - 0.04, F[2])
         D.lights(cam, fill=6.0)
         D.shoot(NAME + "_2", cam, tgt, 42)
-        go.parent = parts["drawers"][0]
-        go.matrix_basis = keep
-        M.refresh()
-        if old is not None:
-            K.restore(parts["panel"], old)
-        show(seed_objs, False)
-        parts["open"].hide_render = True
+        open6(False)
     # 3 hero: three-quarter from the south-west, drawer 6 open
     if K.want(args, "3"):
         pose(parts, 6)
-        show(seed_objs, True)
-        old = K.override(parts["panel"], pan_open6) if pan_open6 is not None else None
+        open6(True)
         cam = W((-1.35, 1.55, 2.25))
         D.lights(cam, fill=12.0)
         D.shoot(NAME + "_3", cam, W((0.0, 1.10, 0.30)), 50)
-        if old is not None:
-            K.restore(parts["panel"], old)
-        show(seed_objs, False)
+        open6(False)
     # 4 Leyla's echo (leave path): pose_touch_1 at echo_touch_mount_2 = drawer 6, the seed_library view
     if K.want(args, "4"):
         pose(parts)
@@ -422,11 +427,11 @@ def qa(parts, args):
     #   model is prism_bench_6.png)
     if K.want(args, "8"):
         pose(parts, 6)
-        show(seed_objs, True)
+        open6(True)
         cam = W((xc(2) + 0.55, yr(1) + 0.30, FRONT + 0.60))
         D.lights(cam, fill=6.0)
         D.shoot(NAME + "_8", cam, W((xc(2), yr(1) - 0.04, FRONT + 0.15)), 40)
-        show(seed_objs, False)
+        open6(False)
 
 
 def main():

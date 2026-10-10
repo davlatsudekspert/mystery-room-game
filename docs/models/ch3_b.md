@@ -30,7 +30,7 @@ All coordinates are **Godot, model-local, metres**; models face +Z; angles follo
 | `choir_tube` | 2,352 (2,800) | 7 (7) | 1 | `choir_tube.glb` | `choir_tube.png`, `_2` |
 | `tube_bench` | 1,438 (2,500) | 5 (5) | 3 | `tube_bench.glb` | `tube_bench.png`, `_2` |
 | `strand_office` | 5,608 (9,000) | 7 (7) | 4 | `strand_office.glb` | `strand_office.png`, `_2` … `_5` |
-| `office_desk` | TBD (5,000) | TBD (6) | 4 | `office_desk.glb` | `office_desk.png`, `_2` … `_4` |
+| `office_desk` | 3,234 (5,000) | 6 (6) | 4 | `office_desk.glb` | `office_desk.png`, `_2` … `_4` |
 | `meter_case` | TBD (2,500) | TBD (7) | 4 | `meter_case.glb` | `meter_case.png`, `_2`, `_3` |
 
 ---
@@ -154,7 +154,7 @@ hall).
 
 ---
 
-## office_desk.glb (TBD tris, 6 surfaces)
+## office_desk.glb (3,234 tris, 6 surfaces)
 
 **Shape.** A walnut pedestal desk 1.30 × 0.65 (top 0.76): moulded top, two drawer pedestals with three drawers each
 on the sitter's side (brass pulls), modesty panel, plinth. Dressing: a paper blotter with walnut corners and brass
@@ -166,7 +166,7 @@ coordinates (world (−10.663, 1.76, 3.587)) because `strand_office` has no crea
 
 | Node | Pivot / position | Materials | Notes |
 |---|---|---|---|
-| `office_desk` | (0, 0, 0) | Wood_Walnut, Brass_Aged, Paper | static |
+| `office_desk` | (0, 0, 0) | Wood_Walnut, Brass_Aged, Paper | static, 2,380 tris; bounds x −0.805 … 0.66, y 0 … 1.76, z −0.335 … 2.105 (the coat on the stand) |
 | `IA_office_lamp` | (0.50, 1.11, −0.08) | Brass_Aged | ball joint, arm, bell shade (rim y 1.06, r 0.05, front at z −0.03) and the strip clip on the rim's front; pick-up target for the strip |
 | `office_bulb` / `office_light` | (0.50, 1.085, −0.08) | Paper / — | frosted bulb inside the shade (code emission) and the light empty |
 | `ecg_mount` | (0.50, 1.06, −0.02) | — | rot (90, 0, 0): `ecg_strip` hangs by its top edge, face toward +Z (east); its clip hole lands at (0.50, 1.0822, −0.0239), on the clip's pin |
