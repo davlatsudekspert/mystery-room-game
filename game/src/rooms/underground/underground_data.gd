@@ -56,6 +56,14 @@ const LAYOUT := {
 ## the camp door never draw it, they already sit at the draw-call budget.
 const DRESS := {
 	"dress_camp": ["ch3_dress_camp", "J"],
+	"dress_corridor": ["ch3_dress_corridor", "J"],
+	"dress_memorial": ["ch3_dress_memorial", "G"],
+}
+## CC0 props (docs/CC0_PROPS.md, Poly Haven) placed as dressing: id -> [glb, position, yaw degrees, culling groups]. They are
+## merged into one mesh by ModelUtil.merge_static. The gas mask's origin is its hook point.
+const DRESS_CC0 := {
+	"dress_gas_mask": ["res://assets/models/cc0/old_gas_mask/old_gas_mask.glb", Vector3(4.585, 1.80, -3.40), 90.0, "J"],
+	"dress_compass": ["res://assets/models/cc0/seadogs_compass/seadogs_compass.glb", Vector3(6.09, 0.42, -2.93), 25.0, "J"],
 }
 ## Extra rotation about the model's own X after the yaw (degrees): port C looks down from the gantry.
 const PITCH := {"port_c": 60.0}

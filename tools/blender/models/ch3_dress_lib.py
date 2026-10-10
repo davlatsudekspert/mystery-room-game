@@ -39,10 +39,20 @@ STEEL, BRASS, PAINT, WOOD = "M_Steel_Dark", "M_Brass_Aged", "M_Steel_Painted", "
 PAPER, LEATHER, STRING = "M_Paper", "M_Leather", "M_String_Red"
 GLASS, FLAME, CRIMSON = "M_Glass", "M_Emissive_Warm", "M_Enamel_Crimson"
 CREAM, WALNUT, STONE = "M_Enamel_Cream", "M_Wood_Walnut", "M_Stone"
-RUBBER, GREEN = "M_Rubber", "M_Paint_Green"
+RUBBER, GREEN, LINEN, VELVET = "M_Rubber", "M_Paint_Green", "M_Linen", "M_Velvet"
 with open(CELLS_JSON) as _f:
     CELLS = json.load(_f)
 TILE = 0.15
+# the camp's interior faces (docs/models/ch3.md §1.1; the tile faces of shell_nursery's camp_walls)
+WALL_N, WALL_W, WALL_S, WALL_E = -3.965, 4.535, -1.203, 7.6
+CAMP_LO = (WALL_W + 0.002, 0.0, WALL_N + 0.002)
+CAMP_HI = (WALL_E - 0.002, 2.9, WALL_S - 0.002)
+WALLS = {   # name: (normal into the room, point(a, y)); a = x on the north / south wall, z on the west / east wall
+    "N": ((0, 0, 1), lambda a, y: (a, y, WALL_N)),
+    "S": ((0, 0, -1), lambda a, y: (a, y, WALL_S)),
+    "W": ((1, 0, 0), lambda a, y: (WALL_W, y, a)),
+    "E": ((-1, 0, 0), lambda a, y: (WALL_E, y, a)),
+}
 
 
 def ensure_materials() -> None:
@@ -52,7 +62,7 @@ def ensure_materials() -> None:
     M.material(WOOL, color="8A4034", rough=0.95)
     M.material(PLASTER_DARK, color="2C3436", rough=0.95)
     M.material(STONE_DARK, color="4A4844", rough=0.8)
-    for name in (WOOD, STEEL, BRASS, PAINT, PAPER, LEATHER, STRING, GLASS, FLAME, CRIMSON, CREAM, WALNUT, STONE, RUBBER, GREEN):
+    for name in (WOOD, STEEL, BRASS, PAINT, PAPER, LEATHER, STRING, GLASS, FLAME, CRIMSON, CREAM, WALNUT, STONE, RUBBER, GREEN, LINEN, VELVET):
         M.material(name)
 
 
@@ -151,6 +161,58 @@ def report_outside(objs, lo, hi, tol=0.012):
             n += 1
             print(f"{TAG} OUTSIDE {o.name}: {tuple(round(c, 3) for c in a)} .. {tuple(round(c, 3) for c in b)}")
     return n
+
+
+def at(x, y, z, rot_y=0.0):
+    return Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(rot_y), 4, "Y")
+
+
+def place(objs, matrix):
+    for o in objs:
+        o.data.transform(matrix)
+    return objs
+
+
+class Decals:
+    """Collects atlas quads: on(cell, wall, a, y, w, h, tilt) for a wall, floor(cell, x, z, w, h, tilt) for the floor."""
+
+    def __init__(self):
+        self.items = []
+
+    def on(self, cell, wall, a, y, w, h, tilt=0.0, off=0.004, flip=False):
+        n, pt = WALLS[wall]
+        self.items.append(decal(cell, pt(a, y), n, w, h, tilt, off, flip=flip))
+
+    def floor(self, cell, x, z, w, h, tilt=0.0, off=0.0035):
+        self.items.append(decal(cell, (x, 0.0, z), (0, 1, 0), w, h, tilt, off))
+
+
+def polar(r, phi_deg, y=0.0):
+    """World point at radius r, angle phi from NORTH (-Z) clockwise seen from above (toward +X)."""
+    return K.polar(r, phi_deg, y)
+
+
+def arc_solid(name, prof, a0, a1, n, mat, drop=()):
+    """A prism swept round the Y axis: closed profile [(r, y)] between angles a0..a1 (degrees from north, clockwise), end
+    caps included; the profile edges listed in `drop` (edge k joins point k and k + 1) are left open (they lie against
+    another solid)."""
+    bm = bmesh.new()
+    rings = []
+    for i in range(n + 1):
+        a = math.radians(a0 + (a1 - a0) * i / n)
+        rings.append([bm.verts.new((r * math.sin(a), y, -r * math.cos(a))) for (r, y) in prof])
+    m = len(prof)
+    side = {}
+    for i in range(n):
+        for k in range(m):
+            f = bm.faces.new((rings[i][k], rings[i][(k + 1) % m], rings[i + 1][(k + 1) % m], rings[i + 1][k]))
+            side.setdefault(k, []).append(f)
+    bm.faces.new(rings[0])
+    bm.faces.new(list(reversed(rings[n])))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    for k in drop:
+        bmesh.ops.delete(bm, geom=[f for f in side[k] if f.is_valid], context="FACES")
+    return K.obj_from_bm(name, bm, mat)
 
 
 def snap(v: float, step: float = TILE, phase: float = 0.0) -> float:

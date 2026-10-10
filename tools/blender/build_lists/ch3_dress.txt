@@ -1,0 +1,6 @@
+# Chapter 3 set dressing (art pass): original models of the camp, the crystal shutter's wall and the memorial niche.
+# ch3_dress_lib.py is their shared helper (not a model). The shared grime atlas and the dressing materials are made first by
+# plain python (not Blender): python3 tools/blender/models/ch3_dress_textures.py   (game/assets/textures/dress/ch3_grime.png).
+ch3_dress_camp.py
+ch3_dress_corridor.py
+ch3_dress_memorial.py

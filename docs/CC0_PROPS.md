@@ -40,6 +40,11 @@ All values are in **Godot axes** (Y up, metres). The bounding box is **W (X) × 
 - Godot generates mesh LODs on import, which cuts the distant cost further.
 - Targets are one value per prop in `ASSETS` in the fetch script.
 
+## Chapter 3 placements
+Two of these props also dress Leyla's camp in Chapter 3 (placed by `UndergroundData.DRESS_CC0`, merged into one mesh by `ModelUtil.merge_static`, no colliders, no shadows, drawn only in the camp's own views):
+- `old_gas_mask` at (4.585, 1.80, −3.40), yaw 90 (its hook point on the camp's west wall, north of the crystal shutter; the hose hangs to y 0.67);
+- `seadogs_compass` at (6.09, 0.42, −2.93), yaw 25 (on the crate table beside the storm lantern).
+
 ## Orientation, pivots and scale
 - **Scale:** real-world metres. Dimensions match Poly Haven's published `dimensions` to within 1 mm. glTF +Y is up.
 - **Front:** the authored front faces glTF +Z (Blender −Y), matching the `ROOM_LAYOUT.md` convention.

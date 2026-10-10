@@ -58,7 +58,7 @@ CELLS = {
 }
 
 GRIME = np.array([34, 25, 16], np.float32)
-DAMP = np.array([26, 34, 28], np.float32)
+DAMP = np.array([32, 31, 24], np.float32)
 RUST = np.array([128, 62, 26], np.float32)
 SOOT = np.array([14, 11, 9], np.float32)
 
@@ -200,12 +200,12 @@ def crack_mask(w, h, seed, branches=5):
                 walk(x, y, ang + r.choice([-1, 1]) * r.uniform(0.5, 1.1), steps // 2, max(1, width - 1))
         d.line(pts, fill=255, width=width * 2, joint="curve")
 
-    walk(w * r.uniform(0.2, 0.5) * 2, 0, np.pi / 2 + r.uniform(-0.3, 0.3), 14, 3)
+    walk(w * r.uniform(0.2, 0.5) * 2, 0, np.pi / 2 + r.uniform(-0.3, 0.3), 14, 2)
     for _ in range(branches - 1):
         walk(w * r.uniform(0.2, 0.8) * 2, h * r.uniform(0.2, 0.7) * 2, r.uniform(0, 6.28), 6, 2)
     im = im.resize((w, h), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.6))
     a = np.asarray(im, np.float32) / 255.0
-    return np.clip(a * 0.9, 0, 1)
+    return np.clip(a * 0.55, 0, 1)
 
 
 def paint_cell(atlas, name, rgb_fill, alpha):
@@ -216,40 +216,48 @@ def paint_cell(atlas, name, rgb_fill, alpha):
 
 # ====================================================================== tile damage (opaque patch with soft edge)
 def tile_patch(w, h, seed):
-    """Missing tiles: an irregular hole in a 4 x 4 tile grid (tile = 64 px = 0.15 m). Colours: exposed plaster and
-    mortar bed with a dark inner shadow on the upper and left edges, chipped glaze on the rim. Returns rgb, alpha."""
+    """Missing tiles: an irregular hole in a 4 x 4 tile grid (tile = 64 px = 0.15 m). Exposed grey-brown plaster and mortar bed
+    with a dark inner shadow on the upper and left edges, chipped pale glaze on the rim, a broken, jagged outline.
+    Returns rgb, alpha."""
     r = np.random.RandomState(seed)
     n = fbm(h, w, 8, 4, seed + 1)
-    mask_im = Image.new("L", (w * 2, h * 2), 0)
+    ss = 3
+    mask_im = Image.new("L", (w * ss, h * ss), 0)
     d = ImageDraw.Draw(mask_im)
     cells = [(1, 1), (2, 1), (1, 2)] if seed % 2 == 0 else [(1, 0), (1, 1), (2, 1), (2, 2)]
     for (cx, cy) in cells:
-        x0, y0 = cx * 64 * 2, cy * 64 * 2
+        x0, y0 = cx * 64 * ss, cy * 64 * ss
         pts = []
-        for (ux, uy) in [(0, 0), (0.5, 0), (1, 0), (1, 0.5), (1, 1), (0.5, 1), (0, 1), (0, 0.5)]:
-            pts.append((x0 + ux * 128 + r.uniform(-9, 9), y0 + uy * 128 + r.uniform(-9, 9)))
+        steps = 5
+        for side in range(4):
+            for k in range(steps):
+                t = k / steps
+                if side == 0:
+                    ux, uy = t, 0.0
+                elif side == 1:
+                    ux, uy = 1.0, t
+                elif side == 2:
+                    ux, uy = 1.0 - t, 1.0
+                else:
+                    ux, uy = 0.0, 1.0 - t
+                pts.append((x0 + (ux * 68 - 2) * ss + r.uniform(-7, 7) * ss * 0.45, y0 + (uy * 68 - 2) * ss + r.uniform(-7, 7) * ss * 0.45))
         d.polygon(pts, fill=255)
     m = mask_im.resize((w, h), Image.LANCZOS)
     mask = np.asarray(m, np.float32) / 255.0
     mask = np.clip(mask * (0.9 + 0.2 * smoothstep(0.35, 0.65, n)), 0, 1)
-    hole = mask > 0.5
-    # light direction: shadow on the top / left inside edge
-    sh = np.zeros_like(mask)
-    sh = np.maximum(sh, np.roll(mask, 5, axis=0) * 0 + (mask - np.roll(mask, 6, axis=0)).clip(0, 1))
-    sh = np.maximum(sh, (mask - np.roll(mask, 6, axis=1)).clip(0, 1))
-    sh = blur(sh, 2.0)
-    base = np.array([112, 96, 78], np.float32) * (0.62 + 0.55 * fbm(h, w, 18, 4, seed + 3))[..., None]
-    bed = base * (1.0 - 0.75 * sh[..., None])
-    bed = bed * (1.0 - 0.35 * (1.0 - fbm(h, w, 30, 2, seed + 8))[..., None] * 0.6)
-    # grime on the rim of the glaze, a pale chipped line round the hole
-    rim = blur(mask, 1.2) - blur(mask, 4.0) * 0.0
-    edge = np.clip(blur(mask, 1.5) * (1 - blur(mask, 1.5)) * 4.0, 0, 1)
-    chip = np.array([196, 188, 166], np.float32)
-    rgb = bed * (1 - edge[..., None] * 0.7) + chip * edge[..., None] * 0.7
-    alpha = np.clip(blur(mask, 0.8), 0, 1)
-    # padding colour outside the hole so no halo
-    rgb = np.where(alpha[..., None] > 0.02, rgb, np.array([100, 88, 72], np.float32))
-    # grime smudge round the hole
+    # shadow: the hole's top and left inside edge sit in the shadow of the surrounding tiles
+    sh = np.maximum((mask - np.roll(mask, 7, axis=0)).clip(0, 1), (mask - np.roll(mask, 7, axis=1)).clip(0, 1))
+    sh = blur(sh, 2.2)
+    base = np.array([66, 57, 47], np.float32) * (0.55 + 0.6 * fbm(h, w, 18, 4, seed + 3))[..., None]
+    bed = base * (1.0 - 0.9 * sh[..., None])
+    # darker pockets (deep plaster), a few lighter flecks (lime)
+    deep = smoothstep(0.55, 0.8, fbm(h, w, 10, 3, seed + 11))
+    bed = bed * (1.0 - 0.45 * deep[..., None])
+    edge = np.clip(blur(mask, 1.4) * (1 - blur(mask, 1.4)) * 4.0, 0, 1)
+    chip = np.array([188, 180, 158], np.float32)
+    rgb = bed * (1 - edge[..., None] * 0.55) + chip * edge[..., None] * 0.55
+    alpha = np.clip(blur(mask, 0.7), 0, 1)
+    rgb = np.where(alpha[..., None] > 0.02, rgb, np.array([84, 74, 62], np.float32))
     return rgb, alpha
 
 
@@ -640,21 +648,19 @@ normal_texture = ExtResource("2")
 ao_enabled = true
 uv1_scale = Vector3(1.4, 1.4, 1.4)
 """,
-    # a faded wool blanket: the fabric scan, tinted brick red (the cot's own M_Fabric is dark grey-brown)
-    "M_Dress_Wool": """[gd_resource type="ORMMaterial3D" load_steps=4 format=3]
+    # a faded wool blanket: plain brick red (the fabric scan's albedo is too dark to tint), the weave kept in normal and ORM
+    "M_Dress_Wool": """[gd_resource type="ORMMaterial3D" load_steps=3 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/textures/fabric/albedo.jpg" id="1"]
 [ext_resource type="Texture2D" path="res://assets/textures/fabric/normal.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/textures/fabric/orm.jpg" id="3"]
 
 [resource]
 resource_name = "M_Dress_Wool"
-albedo_texture = ExtResource("1")
 orm_texture = ExtResource("3")
 metallic = 0
 roughness = 1.0
 normal_enabled = true
-albedo_color = Color(0.82, 0.38, 0.28, 1)
+albedo_color = Color(0.42, 0.17, 0.13, 1)
 normal_texture = ExtResource("2")
 ao_enabled = true
 uv1_scale = Vector3(3.7037, 3.7037, 3.7037)

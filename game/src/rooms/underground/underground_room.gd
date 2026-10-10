@@ -26,6 +26,7 @@ var _dirs: Dictionary = {} # knob / turntable -> tap direction (+1 / -1), turnin
 var _drag_kind := ""
 var _knob_acc := 0.0
 var _lantern_t := 0.0
+var _dress := true # the set dressing (models, its lights); QA renders "before" shots with --no-dress
 var _recording := 0 # playback generation of Leyla's recorder (a rewind restarts it)
 ## The brass rim of a crystal port framing the port views: in a port view the camera sits at the lens, so the
 ## port's own ring is behind it; tapping this rim (IA_port_ring) switches between now and the kept memory.
@@ -155,6 +156,9 @@ func _build_models() -> void:
 ## Set dressing (UndergroundData.DRESS): story props, wall services and grime. No colliders (no tap can reach them), no
 ## shadow casting (they would only add draw calls to the shadow pass); a model that is not built yet is skipped quietly.
 func _build_dressing() -> void:
+	_dress = not OS.get_cmdline_user_args().has("--no-dress")
+	if not _dress:
+		return
 	for id: String in UndergroundData.DRESS:
 		var e: Array = UndergroundData.DRESS[id]
 		var n: Node3D = null
@@ -165,6 +169,26 @@ func _build_dressing() -> void:
 		for mi in ModelUtil.find_meshes(n):
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		tag_cull(n, e[1])
+	# the CC0 props of one culling group become ONE mesh (a surface per material)
+	var by_group: Dictionary = {}
+	for id: String in UndergroundData.DRESS_CC0:
+		var e: Array = UndergroundData.DRESS_CC0[id]
+		if not ResourceLoader.exists(e[0]):
+			continue
+		if not by_group.has(e[3]):
+			var holder := Node3D.new()
+			holder.name = "dress_cc0_" + str(e[3])
+			add_child(holder)
+			by_group[e[3]] = holder
+		var p := ModelUtil.spawn(e[0], by_group[e[3]], Transform3D(Basis(Vector3.UP, deg_to_rad(float(e[2]))), e[1]), "none")
+		if p:
+			p.name = id
+	for g: String in by_group:
+		var holder: Node3D = by_group[g]
+		ModelUtil.merge_static(holder, "")
+		for mi in ModelUtil.find_meshes(holder):
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		tag_cull(holder, g)
 
 
 ## Give one part (and only its own collider) a hotspot of its own.
@@ -265,7 +289,14 @@ func _build_lights() -> void:
 	# the key spot's cone ends short of the console (z 2.6) and the memorial arc (z -3.9): one unshadowed lamp over each,
 	# or the console's dials and the stone figures read dark on a phone (docs/models/ch3_f.md, integration notes)
 	_light("console_lamp", "omni", Vector3(0.0, 2.15, 3.5), Color("ffd9a8"), 1.5, 3.6, "G")
-	_light("memorial_lamp", "omni", Vector3(0.0, 2.7, -1.6), Color("ffe0b8"), 2.0, 5.5, "G")
+	# a soft cone, not an omni: the band and its crystals are lit, the dark niche around them falls off (dressing pass)
+	if _dress:
+		_spot("memorial_lamp", Vector3(0.0, 3.0, -1.0), Vector3(0.0, 1.5, -3.95), 72.0, Color("ffe0b8"), 2.6, 6.5, "G", false)
+	else:
+		_light("memorial_lamp", "omni", Vector3(0.0, 2.7, -1.6), Color("ffe0b8"), 2.0, 5.5, "G")
+	# the candles Leyla left on the memorial's ledge (dressing): a small warm pool on the stone below the band
+	if _dress:
+		_light("memorial_candles", "omni", _at("dress_memorial", "memorial_candles", Vector3(-0.54, 0.72, -3.82)), Color("ffa860"), 0.8, 1.9, "G")
 	# a shroud lamp in front of each drum lock: the drums sit 5 cm behind the plate, where no room light reaches
 	for side: String in ["west", "east"]:
 		var door := models.get("door_" + side) as Node3D
@@ -278,8 +309,9 @@ func _build_lights() -> void:
 	_spot("prism_lamp", Vector3(6.1, 1.0, 0.55), Vector3(6.1, 1.15, -1.0), 25.0, Color("fff2d8"), 1.2, 2.5, "N", false)
 	# Leyla's camp and the lift
 	# the bare bulb is only a weak fill now: the storm lantern on the crate table is the camp's key light (dressing)
-	_light("camp_lamp", "omni", _at("leyla_camp", "camp_light", Vector3(6.2, 2.45, -2.6)), Color("ffc27a"), 0.45, 3.0, "K")
-	_light("camp_kero", "omni", _at("dress_camp", "camp_lamp_flame", Vector3(6.49, 0.535, -3.03)), Color("ffae55"), 2.3, 4.6, "KJ")
+	_light("camp_lamp", "omni", _at("leyla_camp", "camp_light", Vector3(6.2, 2.45, -2.6)), Color("ffc27a"), 0.35 if _dress else 1.0, 3.0, "K")
+	if _dress:
+		_light("camp_kero", "omni", _at("dress_camp", "camp_lamp_flame", Vector3(5.78, 0.535, -3.13)), Color("ffb868"), 1.5, 4.2, "KJ")
 	_light("cage_lamp", "omni", _at("freight_lift", "cage_light", Vector3(0.0, 2.36, 6.0)), Color("ffd29a"), 1.0, 3.0, "L")
 	# the lobby beyond the cage: a lamp over each passage mouth, or the way out of the lift is a black hole
 	_light("lobby_w", "omni", Vector3(-4.6, 2.8, 5.3), warm, 1.1, 6.0, "L")
