@@ -23,6 +23,19 @@ _Last updated: 2026-10-09. Package `com.mysteryroom.forgotteninstitute`. Sources
 
 ---
 
+## Internal testing is live (2026-10-10)
+| | |
+|---|---|
+| Status | «Доступен внутренним тестировщикам», since 2026-10-10 11:14 (Tashkent) |
+| Build | `com.mysteryroom.forgotteninstitute`, versionCode **7**, versionName 0.1.0, release name "0.1.0 (7)". This is CI run 7 (android.yml, release, beta_unlock): signed with the MYSTERY ROOM upload key, uploaded by hand as the app's first AAB |
+| Testers | the list "MYSTERY ROOM internal" (39 people, chosen by the owner) |
+| Opt-in link | https://play.google.com/apps/internaltest/4701293031736439424 (testers on the list open it on the phone, accept, then install from Play) |
+| Console warnings | only the usual two: no deobfuscation file, no native debug symbols. No errors; App Signing was not asked again |
+| Release notes | empty in this first release. Later releases take docs/release/whatsnew/ |
+| Not touched | the NFCSTORE app, other tracks, store listing, pricing |
+
+Next: the owner tests New Game on his own Android phone before sharing the link. iOS crashes there (Metal), and Android uses Vulkan, which is a different driver. Then create `PLAY_SERVICE_ACCOUNT_JSON` (§7), so that CI uploads every later test build itself.
+
 ## First manual upload (2026-10-09)
 **Use the CI build (recommended).** After the owner added the three `ANDROID_*` secrets, `android.yml` run #6 (37942708580, release, `upload_to_play=false`, `beta_unlock=true`) built and verified the AAB on CI: versionCode **6**, versionName 0.1.0, targetSdk 36, VIBRATE only, signer SHA-256 = the upload key (`E5:D8:…:D1:3E`), `beta_unlock` present, 193,592,852 bytes. Download it from the run page → Artifacts → `mystery-room-android-release` (kept 7 days): https://github.com/davlatsudekspert/mystery-room-game/actions/runs/37942708580. Once versionCode 6 is on Play, the local versionCode 2 build below can no longer be uploaded and is only a fallback.
 
