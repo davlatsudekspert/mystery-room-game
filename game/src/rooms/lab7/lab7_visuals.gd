@@ -47,6 +47,7 @@ func _ready() -> void:
 	_attach_bookshelf_children()
 	_spawn_container_items()
 	_build_safe_display()
+	_dress_panel_diagram()
 	_beam_root = Node3D.new()
 	_beam_root.name = "Beam"
 	room.add_child(_beam_root)
@@ -156,6 +157,25 @@ func _spawn_container_items() -> void:
 		_spawn_item("cabinet_mirror", "mirror_item", spot, Vector3.ZERO, 0.0)
 	elif sl and cab:
 		_spawn_item("cabinet_mirror", "mirror_item", sl, cab.position + Vector3(0.178, 0.0, -0.101), 0.0)
+
+
+## Panel 7's back plate shows the copper traces of this game's wiring (docs/VARIANTS.md): one pre-rendered plate per
+## PANEL_POOL entry (tools/textures/make_decals.py), laid over the baked default on the plate's decal surface.
+func _dress_panel_diagram() -> void:
+	var plate := part("panel7", "panel_plate") as MeshInstance3D
+	var n := logic.panel_variant()
+	if plate == null or plate.mesh == null or n < 0:
+		return
+	var tex := load("res://assets/textures/decals/panel_diagram_%d.jpg" % n) as Texture2D
+	var base := ModelUtil.load_material("M_Decal_PanelDiagram") as StandardMaterial3D
+	if tex == null or base == null:
+		return
+	var mat := base.duplicate() as StandardMaterial3D
+	mat.albedo_texture = tex
+	for i in plate.mesh.get_surface_count():
+		var src := plate.mesh.surface_get_material(i)
+		if src != null and src.resource_name.begins_with("M_Decal_PanelDiagram"):
+			plate.set_surface_override_material(i, mat)
 
 
 func _build_safe_display() -> void:

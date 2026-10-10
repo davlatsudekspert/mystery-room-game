@@ -430,3 +430,50 @@ func test_panel_solver_reads_the_answer_from_the_state() -> void:
 		var p := Lab7Logic.new()
 		p.state["v_panel"] = Lab7Logic.flat_panel(Lab7Logic.PANEL_POOL[n])
 		check(Lab7Solver.solve(p, "leave_lens"), "entry %d: the solver finishes Chapter 1" % n)
+
+
+## The copper traces on every plate show the wiring the logic uses: the evidence on screen matches the state.
+## Each switch's trace is followed up from its plate to its row; a connection is a solid dot where the row meets a
+## lamp's column (a crossing has none: the row hops over it).
+func test_panel_diagram_plates_match_the_wiring() -> void:
+	var sw_x := [120, 285, 450, 615, 780]
+	var lamp_x := [157, 352, 547, 742]
+	for n in Lab7Logic.PANEL_POOL.size():
+		var img := Image.load_from_file(ProjectSettings.globalize_path("res://assets/textures/decals/panel_diagram_%d.jpg" % n))
+		check(img != null and img.get_width() == 900 and img.get_height() == 1200, "plate %d exists, 900x1200" % n)
+		if img == null:
+			continue
+		var m: Array = Lab7Logic.PANEL_POOL[n]
+		var rows := {}
+		for i in 5:
+			var y := 630
+			while y > 210 and _copper(img, sw_x[i], y - 1):
+				y -= 1
+			# the trace ends in its row's dot: the dot's centre is 13 px under the topmost copper pixel
+			var row_y := y + 13
+			rows[i] = row_y
+			check(row_y >= 300 and row_y <= 610, "plate %d: switch %d's trace ends on a row (y %d)" % [n, i, row_y])
+			for j in 4:
+				var wired := int(m[i][j]) == 1
+				check(_dot(img, lamp_x[j], row_y) == wired,
+					"plate %d: switch %s %s lamp %d (%s)" % [n, ROMAN_JOIN[i], "feeds" if wired else "must not feed", j, "dot" if wired else "no dot"])
+		var seen := {}
+		for i in 5:
+			check(not seen.has(rows[i]), "plate %d: switches %d share a row" % [n, i])
+			seen[rows[i]] = true
+		check(int(rows[0]) >= 440, "plate %d: switch I's row clears the voltmeter" % n)
+
+
+func _copper(img: Image, x: int, y: int) -> bool:
+	var c := img.get_pixel(x, y)
+	return c.r - c.b > 0.25 and c.g < 0.55 and c.r > 0.5
+
+
+## A solid junction dot: a 21 x 21 patch nearly all copper (a plain wire crossing fills about half of it).
+func _dot(img: Image, cx: int, cy: int) -> bool:
+	var hit := 0
+	for dy in range(-10, 11):
+		for dx in range(-10, 11):
+			if _copper(img, cx + dx, cy + dy):
+				hit += 1
+	return hit >= 21 * 21 * 0.85

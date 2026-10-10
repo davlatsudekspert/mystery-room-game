@@ -23,7 +23,7 @@
 | P3 | A | **Lamp assembly** | Combination | Lamp has an empty cell bay | UV lamp + cell | Working UV lamp |
 | P4 | B Hidden ink | **Cipher → safe** | Hidden info + decoding | UV on the blank notebook page shows `sun · wave · spiral · delta`. The poster *Tabula Resonantiarum* gives each glyph a dot count | Keypad `7 2 9 4` | Brass key, crystal lens, Strand's letter, radio valve |
 | P5 | B | **Desk secret compartment** | Hidden info + key | Notebook p.6 "where only my lamp can show the way". UV reveals a circle and arrow on the desk side at the rosette. Press the rosette and a keyhole appears | Brass key in the keyhole | Breaker handle + Leyla's photograph (story) |
-| P6 | C Power | **Panel 7 circuits** | Logic | Notebook p.4: LOCK, LIGHT, ARRAY live; VENT dead. The engraved traces show which lamps each switch feeds | Main lever ON with lamps L, G, A on and V off (switches I+II+III or I+V). VENT live trips the breaker safely | Power: lights on, radio and the darkroom lamp live, projector hums |
+| P6 | C Power | **Panel 7 circuits** | Logic | Notebook p.4: LOCK, LIGHT, ARRAY live; VENT dead. The engraved traces show which lamps each switch feeds | Main lever ON with lamps L, G, A on and V off. The wiring is drawn per game from a pool of 8 (docs/VARIANTS.md); the canonical one takes I+II+III or I+V. VENT live trips the breaker safely | Power: lights on, radio and the darkroom lamp live, projector hums |
 | P7 | C | **Radio repair** | Instrument repair | Radio hatch shows an empty valve socket. The valve came from the safe | Insert the valve | Radio works |
 | P8 | C Signals | **Beacon tuning** | Sound / radio frequency | Chalkboard: antenna doodle with a circled "λ = 41 m". The dial has wavelength bands. As you approach the band, static turns into a signal (audio and the magic-eye glow) | Dial on the 41 m band (value 36 ± 2) | Signal: pulses `•• / •••••• / •••` repeating (2-6-3), with blinking lamp and caption dots |
 | P9 | D Secrets | **Encyclopedia door** | Code application | Notebook p.8: "the beacon repeats three numbers; my encyclopedia remembers them". Volumes I–IX on the shelf | Pull II → VI → III | Bookcase swings open: secret darkroom |
@@ -46,6 +46,8 @@
 | V | | ✓ | ✓ | ✓ |
 
 The kernel is {II, III, V}, so exactly two switch sets solve it: {I, II, III} and {I, V}.
+
+This is the canonical wiring (entry 0 of `Lab7Logic.PANEL_POOL`). Every game draws one of 8 wirings, each with rank 4 and exactly two answers; see docs/VARIANTS.md.
 
 **P4 glyph dots:**
 
@@ -164,7 +166,7 @@ The hint system shows the first unmet goal whose prerequisites are met:
 | H6 compartment | safe open, keyhole hidden | "Where only my lamp can show the way." | Shine the UV lamp along the desk. | UV the desk's right side, then press the carved rosette. |
 | H7 key | keyhole shown, compartment closed | A keyhole needs a key. | The safe held a small brass key. | Use the brass key on the desk keyhole. |
 | H8 handle | have handle, not installed | The main breaker can't be moved. | Its handle is missing. | Use the breaker handle on Panel 7's main lever. |
-| H9 circuits | handle installed, no power | Leyla listed which lines must be live. | LOCK, LIGHT, ARRAY on; VENT off. Follow the copper traces. | Switches I, II and III up, then raise the main lever. |
+| H9 circuits | handle installed, no power | Leyla listed which lines must be live. | LOCK, LIGHT, ARRAY on; VENT off. Follow the copper traces. | Raise only the switches of this game's shortest answer (canonical wiring: I, V), then the main lever. |
 | H10 valve | power, valve not installed | The radio is silent. | Open its hatch: a valve is missing. | Use the radio valve from the safe on the radio's socket. |
 | H11 tune | radio works, not tuned | Strand left his beacon's band on the board. | The chalkboard says λ = 41 m. The dial has metre bands. | Turn the dial to the 41 m band. |
 | H12 books | signal heard, shelf closed | The beacon repeats three numbers. | Count its pulses: 2, 6, 3. Leyla's encyclopedia listens. | Pull volumes II, VI, then III. |

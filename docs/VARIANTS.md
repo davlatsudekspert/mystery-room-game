@@ -3,7 +3,7 @@
 **Goal.** A player who copies the numbers from a YouTube walkthrough finds that they do not work. Every new game draws its own answers from the in-world evidence; the logic of each puzzle stays the same. Watching a video can still teach *how* a puzzle works, which is fine. Copying the *answer* cannot replace playing.
 
 **Status (2026-10-09): on for players.** `GameState.variant_seed = -1`, so every new game draws its own seed. QA scripts and tests use seed 0 (the canonical answers) unless they are given `--seed=N`.
-- Chapter 1 varies the gear box, the safe cipher, the beacon and the book order.
+- Chapter 1 varies the gear box, the safe cipher, the beacon, the book order and Panel 7's wiring.
 - Chapter 2 varies the valves, the punch card, the tape clicks/dial, the splice order, the focus and the vault overlay.
 - Both chapters have been played to the end through the real 3D scene on a non-canonical seed: Ch1 seed 4242 (safe 1204, books IV-II-VIII, 100 taps, 0 fallbacks) and Ch2 seed 777 (94 taps, 0 fallbacks). The on-screen evidence matches the answers, for example `docs/previews/variants/ch1_seed4242_safe_evidence.jpg`.
 
@@ -22,9 +22,23 @@
 | Safe 7294 | The 4-digit code from the poster's resonance table | Dot counts per symbol on the poster: a shader parameter or 4 decal variants | ≥ 4 |
 | Radio (41 m) | The target wavelength | Chalkboard formula result (Label3D on the board) and the dial scale | 5 |
 | Books II-VI-III | The volume order | The notebook's UV page (UI text from the state) | ≥ 6 |
+| Panel 7 circuits | The wiring: which of the 4 lamps each of the 5 switches toggles. The target never changes (LOCK, LIGHT, ARRAY lit, VENT dark, then the main lever), so the notebook stays as it is | The copper traces on the plate: one pre-rendered plate per wiring (`panel_diagram_<n>.jpg`, drawn from `PANEL_POOL` by `tools/textures/make_decals.py panel`), laid over the baked plate by `Lab7Visuals`. A dot where a trace connects, a hop where it only crosses. The level-3 hint names the shortest answer (fewest switches, then lexicographic) | 8 |
 | Shadow emblem | — | The emblem is lore | — |
 | Projector rings (vial densities) | The density order | Vial labels (Label3D) | 6 |
 | Mirrors | The start rotations | Geometry | 8 × 8 |
+
+### Panel 7 wirings
+- **Pool.** `Lab7Logic.PANEL_POOL`: 8 matrices of 5 switches × 4 lamps over GF(2). Entry 0 is the canonical wiring (seed 0, the tests and the old docs). The seed picks an entry last in `apply_seed`, so the other Chapter 1 answers of an existing seed did not move. The state keeps the wiring flat as `v_panel` (switch × 4 + lamp), so Save and Continue keep it; a save from before has no `v_panel` and is the canonical wiring.
+- **Every entry** (`Lab7Logic.panel_valid`, checked by the tests):
+  - rank 4, so exactly two answers;
+  - no two switches alike;
+  - every switch reaches two lamps, except at most one that reaches one;
+  - every lamp is fed by two or three switches;
+  - VENT is wired into the answer, so raising only the switches that avoid VENT, or all five, fails;
+  - the shortest answer has 2 to 4 switches (in practice 2 or 3).
+- **Answers.** The hint names the shortest answer, then the lexicographic one, as Chapter 4's Panel 0 does. Seed 0's hint is now "I, V" (the canonical wiring also still accepts I, II, III). Both answers of every entry restore the power, and in the other entries I, II, III is no answer.
+- **Evidence.** The solver, the playthrough and the hint read `panel_solution()` from the state. The tests also read each plate's pixels and check that switch *i* and lamp *j* are joined by a dot exactly where the wiring says so.
+- **Redraw after editing the pool:** `python3 tools/textures/make_decals.py panel`, then `godot --headless --path game --import`.
 
 ## Chapter 2
 | Puzzle | Varies | Evidence → how it is shown | Pool |

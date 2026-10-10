@@ -366,8 +366,8 @@ PANEL_RISER_Y = 640.0                              # just above the switch plate
 PANEL_LAMP_Y = 203.0                               # just below the lamp bezels
 PANEL_GAUGE_BOTTOM = 422.0                         # the voltmeter (x 28..122, y 328..422) sits left of switch I's riser
 PANEL_COPPER = (176, 98, 56, 255)
-PANEL_WIRE, PANEL_DOT, PANEL_HOP = 8, 12, 16       # trace width, junction dot radius, hop radius (px)
-HOP_CLEAR, DOT_CLEAR = 46.0, 38.0                  # least gap between two hops / a hop and a dot on one row
+PANEL_WIRE, PANEL_DOT, PANEL_HOP = 9, 13, 18       # trace width, junction dot radius, hop radius (px)
+HOP_CLEAR, DOT_CLEAR = 50.0, 40.0                  # least gap between two hops / a hop and a dot on one row
 
 
 def panel_hops(m: list, level: list) -> list:

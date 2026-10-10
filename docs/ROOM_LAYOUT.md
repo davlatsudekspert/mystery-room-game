@@ -98,7 +98,7 @@ Decal materials (`M_Decal_*`) need explicit 0..1 UVs as described. All other fac
 | `clock_face.png` | 512×224. Shows `03 17` |
 | `poster_resonance.jpg` | 1024×1448 |
 | `chalkboard.jpg` | 1024×640 |
-| `panel_diagram.jpg` | 900×1200, matching plate coordinates |
+| `panel_diagram.jpg`, `panel_diagram_0..7.jpg` | 900×1200, matching plate coordinates; one plate per Panel 7 wiring (`panel_diagram.jpg` = wiring 0) |
 | `radio_dial.jpg` | 1024×256 |
 | `vial_label_{crimson,cobalt,green}.png` | 256×128 |
 | `childs_drawing.jpg` | |

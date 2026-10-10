@@ -378,7 +378,7 @@ func run() -> void:
 		await view("panel")
 		L.select_item("breaker_handle")
 		await act("panel7", "IA_main_lever", func() -> bool: return s["handle_installed"], func() -> void: L.use_item_on("breaker_handle", "panel_main"), "install handle")
-		for i in [0, 1, 2]:
+		for i: int in L.panel_solution(): # this game's wiring: the answer comes from the state
 			await act("panel7", "IA_switch_%d" % i, func() -> bool: return int(s["switches"][i]) == 1, func() -> void: L.toggle_switch(i), "switch %d" % i)
 		await act("panel7", "IA_main_lever", func() -> bool: return s["power_on"], func() -> void: L.toggle_main(), "main lever")
 		await _settle(2.6)
