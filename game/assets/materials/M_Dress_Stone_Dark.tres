@@ -1,0 +1,17 @@
+[gd_resource type="ORMMaterial3D" load_steps=4 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/stone/albedo.jpg" id="1"]
+[ext_resource type="Texture2D" path="res://assets/textures/stone/normal.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/textures/stone/orm.jpg" id="3"]
+
+[resource]
+resource_name = "M_Dress_Stone_Dark"
+albedo_texture = ExtResource("1")
+orm_texture = ExtResource("3")
+metallic = 0
+roughness = 0.85
+normal_enabled = true
+albedo_color = Color(0.3, 0.29, 0.28, 1)
+normal_texture = ExtResource("2")
+ao_enabled = true
+uv1_scale = Vector3(1.4, 1.4, 1.4)
