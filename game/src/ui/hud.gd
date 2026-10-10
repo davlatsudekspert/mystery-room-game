@@ -1146,11 +1146,11 @@ func play_intro() -> void:
 	lbl.offset_left = safe.x + 160
 	lbl.offset_right = -(safe.z + 160)
 	lbl.offset_top = safe.y + 40
-	lbl.offset_bottom = -(safe.w + 150)
+	lbl.offset_bottom = -(safe.w + 60 + ceilf(UITheme.caps_font(false, 2).get_height(UITheme.size(22))) + 40)
 	o.add_child(lbl)
 	# the largest display size at which the longest card still fits its rect (Extra large on a short screen)
 	var avail_w := canvas.x - safe.x - safe.z - 320.0
-	var avail_h := canvas.y - safe.y - safe.w - 190.0
+	var avail_h := canvas.y - safe.y - safe.w - 100.0 - ceilf(UITheme.caps_font(false, 2).get_height(UITheme.size(22))) - 40.0
 	var fs := UITheme.size(44)
 	var floor_fs := UITheme.size(26)
 	var f := lbl.get_theme_font("font")
@@ -1165,8 +1165,10 @@ func play_intro() -> void:
 	var tap := UITheme.label("ui.tap_to_continue", 22, UITheme.MUTED)
 	tap.add_theme_font_override("font", UITheme.caps_font(false, 2))
 	tap.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	tap.offset_top = -(safe.w + 120)
+	# anchored by its bottom edge above the home indicator, as tall as its line (never growing into the inset)
+	var tap_h := ceilf(UITheme.caps_font(false, 2).get_height(UITheme.size(22))) + 8.0
 	tap.offset_bottom = -(safe.w + 50)
+	tap.offset_top = tap.offset_bottom - tap_h
 	var tap_half := minf(500.0 * UITheme.wscale(), (canvas.x - safe.x - safe.z) * 0.5 - 24.0) # never past the safe edges
 	tap.offset_left = -tap_half
 	tap.offset_right = tap_half
