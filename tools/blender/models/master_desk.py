@@ -105,13 +105,13 @@ def brass_parts():
             mt = K.gbox("mt", (-0.003, 0.255, 0.004), (0.003, 0.275, 0.0075), BRASS, 0.0)
             mt.data.transform(Matrix.Rotation(-b, 4, "Z"))
             out.append(on_slope(mt, DIAL_S))
-    for k, (ch, x) in enumerate((("0", -0.085), ("3", -0.045), (":", -0.012), ("1", 0.022))):
+    for k, (ch, x) in enumerate((("0", -0.055), ("3", -0.027), (":", -0.003), ("1", 0.020))):      # the legend 03:1, small, under the hub
         if ch == ":":
-            for y in (-0.122, -0.148):
-                out.append(on_slope(K.gbox("colon", (x - 0.004, y - 0.004, 0.004), (x + 0.004, y + 0.004, 0.009), BRASS, 0.0), DIAL_S))
+            for y in (-0.107, -0.123):
+                out.append(on_slope(K.gbox("colon", (x - 0.003, y - 0.003, 0.004), (x + 0.003, y + 0.003, 0.009), BRASS, 0.0), DIAL_S))
         else:
-            d = C.N.digit_obj(f"lg{k}", int(ch), 0.048, 0.005, BRASS, res=1)
-            d.data.transform(Matrix.Translation((x, -0.135, 0.004)))
+            d = C.N.digit_obj(f"lg{k}", int(ch), 0.036, 0.005, BRASS, res=1)
+            d.data.transform(Matrix.Translation((x, -0.115, 0.004)))
             out.append(on_slope(d, DIAL_S))
     out.append(on_slope(K.gcyl("cap", 0.026, 0.004, 0.028, base=(0, 0, 0), axis=(0, 0, 1), segments=14, mat=BRASS, chamfer=0.003), DIAL_S))
     # ---- the escapement bay's frame
