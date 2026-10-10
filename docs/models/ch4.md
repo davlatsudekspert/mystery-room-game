@@ -159,8 +159,8 @@ Culling groups: **H** hall shell, **B** bridge (bridge, desk, lever, knob, wheel
 | Ring I..IV radii | 10.5, 8.5, 6.5, 4.5; ring top y = 0.5 | `ring_rails`, `array_rings` |
 | Tower I..IV at mark 1 | (0, 0.5, 10.5), (0, 0.5, 8.5), (0, 0.5, 6.5), (0, 0.5, 4.5) | `tower_mount_n` |
 | Hatch n | (0, 2.5, 10.5 / 8.5 / 6.5 / 4.5), opening 0.9 × 0.9 | `catwalk` |
-| Handwheel n axis | (−3.6 / −2.2 / 2.2 / 3.6, 3.8, 12.45), axis +Z | `handwheel` |
-| Chronometer face centre | desk-local (0, 1.20, 0.12) on the slope | `master_desk` |
+| Handwheel n axis | (−3.6 / −2.2 / 2.2 / 3.6, 3.8, 12.65), axis +Z | `handwheel` |
+| Chronometer dial centre | desk-local (0, 1.2595, 0.0673) on the slope (world y 3.76, z 13.22) | `master_desk` |
 | Core crystal centre | (0, 4.1, 0) | `core_crystal` `core_center` |
 | Collar digits | (±0.30 / ±0.10, 3.70, 1.22) | `glass_tower` |
 | Lens socket (cradle) | (0, 3.82, 0.62) | `cradle` `lens_mount` |
@@ -195,9 +195,9 @@ Root views (free look) are marked R. Draw = culling groups (§1.3). FOV is verti
 | `lift_chalk` | (−2.9, 1.55, 15.4) | (−3.0, 1.5, 18.18) | 46 | B |
 | `bridge` (R) | (0, 4.4, 14.6) | (0, 3.4, 0) | 66 | H, B, K, R, I, E |
 | `desk` | (0, 4.35, 14.5) | (0, 3.5, 13.1) | 58 | B |
-| `chronometer` | (0, 4.15, 14.1) | (0, 3.7, 13.2) | 40 | B |
-| `handwheels` | (0, 4.2, 14.2) | (0, 3.7, 8.0) | 78 | B, K, R |
-| `panel0` | (0, 1.45, 12.7) | (0, 1.2, 14.0) | 50 | P, B |
+| `chronometer` | (0, 4.5, 14.3) | (0, 3.75, 13.2) | 40 | B |
+| `handwheels` | (0, 4.9, 15.2), in the bay behind the bridge | (0, 3.3, 9.0) | 84 | B, K, R |
+| `panel0` | (0, 1.2, 12.3), under the bridge | (0, 1.15, 14.0) | 62 | P, B |
 | `catwalk` (R) | (0, 3.9, 11.6) | (0, 3.0, 3.0) | 64 | K, R, I |
 | `hatch_1`..`hatch_4` | (0, 3.35, z_n + 0.55) | (0, 0.65, z_n − 0.05) | 50 | K, R |
 | `island` (R) | (0, 3.8, 5.6) | (0, 3.2, 0) | 64 | I, K |
@@ -297,43 +297,41 @@ facing +Z. It is **not drawn** in the game (the numerals are baked as 3D relief 
 
 ### master_desk.glb (≤ 12k, ≤ 8)
 Materials: `M_Steel_Painted`, `M_Brass_Aged`, `M_Bakelite`, `M_Shader_Quad`. At (0, 2.5, 13.15), yaw 0. Origin = deck level,
-centre of the footprint. Body x ∈ [−1.55, 1.55], z ∈ [−0.45, 0.45]; the operator stands at +Z. The sloped panel runs
-from the front edge (z 0.45, y 0.90) up to (z −0.10, y 1.40) (42.3° from horizontal, up-normal (0, 0.74, 0.67)); behind
-it a flat back shelf at y 1.40. The side wings (x ∈ [−1.55, −0.62] and [0.95, 1.55]) are flat at y = 0.95. Keep the
-whole desk ≤ 1.5 high so the hall stays visible over it from the `bridge` camera.
+centre of the footprint. Body x ∈ [−1.55, 1.55], z ∈ [−0.45, 0.46]; the operator stands at +Z. The wings (x ∈ [−1.55, −0.80]
+and [1.00, 1.55]) are flat at y = 0.95. The console block between them has a **sloped panel** from the front edge (z 0.46,
+y 0.95) up to (z −0.20, y 1.47) (38.2° from horizontal; up-normal **n = (0, 0.7855, 0.6189)**, up-slope direction
+(0, 0.6189, −0.7855)) and a flat back shelf at y 1.47. A slope point is P(s, x) = (x, 0.95 + 0.6189 s, 0.46 − 0.7855 s),
+s ∈ [0, 0.84]. The whole desk stays ≤ 1.65 high (the chart drum is the top) so the hall stays visible over it from the `bridge`
+camera.
 
-**Static** (`master_desk`): green-grey painted cabinet with raised panels, a brass nosing and kick plate, the chronometer
-bezel and a black bakelite dial with brass tick marks and numerals, the escapement bay, the strip-chart window frame and a
-brass scale of the eight minutes, the wing pads for the keeper unit and the lever unit, pilot lamps, rivets.
+**Static** (`master_desk`, 3 surfaces): green-grey painted cabinet with raised panels and rivets, brass nosing and kick strip,
+the dial (Ø 0.57 bezel, black bakelite face, brass tick marks, numerals and legend), the escapement bay's frame and recess,
+the strip chart's frame with the minute numerals 0–7 and the paper roll drum on the back shelf (static), the jog wheel's brackets.
 
-**Dial.** Round dial Ø 0.62 flush in the slope, centre (0, 1.20, 0.12); brass legend **03:1** in the middle, eight station
-numerals **0..7** (the last digit of 03:10..03:17) on a 280° arc, spaced 40°, station p at **clockwise angle
-−140° + 40° p from 12 o'clock**.
+**Dial.** Centre P(0.5, 0) = (0, 1.2595, 0.0673); brass legend **03:1** in the lower middle, eight station numerals **0..7** (the last
+digit of 03:10..03:17) at r 0.185, spaced 40° on a 280° arc, station p at **clockwise angle −140° + 40° p from 12 o'clock**, with
+major and minor ticks.
 
 **Parts:**
-- **`chrono_hand`** (own object, brass): the hand, pivot at the dial centre (0, 1.20, 0.12), built lying in the slope with
-  its tip at 12 o'clock (up the slope). Its node rotation is identity at rest; the code turns it **about the dial normal
-  n = (0, 0.7407, 0.6717) in the desk frame**. Position p (0..7) = **(140° − 40° p)**, counter-clockwise seen from the
-  front of the dial (p = 0 points lower left, p = 7 lower right).
-- **`IA_scrub`**: knurled brass jog wheel Ø 0.30 × 0.10 at the slope's lower edge, centre (0, 0.98, 0.40), axis local +X,
-  protruding 0.04 above the slope. Position p = **−45° p about +X** (8 click stops, forward only; the code refuses
-  backward). Tap or drag → `scrub()`.
-- **`IA_chronometer`**: the escapement bay (a recessed brass movement plate with an escape wheel, a train of gears and an
-  **empty pawl seat**), 0.28 × 0.20 on the slope at (−0.42, 1.12, 0.22). Used on it: `use_item_on("reverse_pawl",
-  "chronometer")`.
-  - **`pawl_mount`** (empty) on the seat, rotated **+42.3° about +X** (the slope normal): the `reverse_pawl` item lies
-    flat on the seat there.
-  - **`chrono_plate`**: the bay's hinged brass cover, **open at rest** (identity, standing up against the dial's lower edge);
-    the code **closes it at `pawl_fitted` = +100° about +X** (pivot on its upper edge).
-- **`chart_paper`**: the strip chart's paper on the slope, 0.40 × 0.46 at (0.60, 1.14, 0.13), `M_Shader_Quad`, UV 0..1 (u
-  across the width = the minutes 0..7, left → right; v up the slope = time). The shader draws the pen marks of `v_night`
-  and the trace so the chart is readable without the replay.
-- **`chart_drum`**: the paper roll drum on the back shelf at (0.60, 1.52, −0.20), axis local X, Ø 0.18 × 0.46, brass; the
-  code turns it. **`chart_pen`**: a pen arm sliding along X over the paper at z = 0.34, pivot at its left end (0.40, ·, ·);
-  slides along X by `0.05 × p` (travel 0.35).
+- **`chrono_hand`** (own object, brass): the hand and its hub, **origin = the dial centre lifted 0.016 along n** (0, 1.2675, 0.0543),
+  built lying in the slope with its tip at 12 o'clock (up the slope). Its node rotation is identity at rest; the code turns it **about
+  n = (0, 0.7855, 0.6189) in the desk frame**. Position p (0..7) = **(140° − 40° p)**, counter-clockwise seen from the front of the dial
+  (p = 0 points lower left, p = 7 lower right).
+- **`IA_scrub`**: knurled brass jog wheel r 0.12 × 0.10 wide on two bracket cheeks at the slope's lower lip, **origin (0, 1.07, 0.49), axis
+  +X**. Position p = **−45° p about +X** (8 click stops, forward only; the code refuses backward). Tap or drag → `scrub()`.
+- **`IA_chronometer`**: the escapement bay (a brass movement plate with an escape wheel, a train of gears, a bridge and an **empty pawl
+  seat**: a ring boss with a spring post), 0.27 × 0.19 on the slope at **P(0.30, −0.62) = (−0.62, 1.1357, 0.2243)** (origin there).
+  Used on it: `use_item_on("reverse_pawl", "chronometer")`.
+  - **`pawl_mount`** (empty) on the seat at (−0.545, 1.142, 0.242), rotated **+38.2° about +X** (the slope normal): the `reverse_pawl`
+    item lies flat on the seat there.
+  - **`chrono_plate`**: the bay's hinged brass cover with a pull knob, **baked open** (−100° from flat, standing up from the bay's upper
+    edge; identity at rest); **origin = the hinge (−0.62, 1.1976, 0.1458)**; the code **closes it at `pawl_fitted` = +100° about +X**.
+- **`chart_paper`**: the strip chart's paper, 0.40 × 0.46 at P(0.475, 0.66) = (0.66, 1.244, 0.087) + 0.003 n, `M_Shader_Quad`, UV 0..1
+  (u across the width = the minutes 0..7, left → right, 0.05 each; v up the slope = time). The shader draws the pen marks of `v_night`
+  and the trace so the chart is readable without the replay. (The design's moving drum and pen are static meshes here: the pen mark is
+  drawn by the shader.)
 - **`echo_mount_strand`** (empty, floor) at local (1.12, 0, 0.78), **yaw 180** (his right hand meets the lever grip).
-- Empties: **`keeper_mount`** at (−1.12, 0.95, 0.0) and **`lever_mount`** at (1.28, 0.95, 0.0), identity; `desk_light`
-  (0, 1.9, 0.5).
+- Empties: **`keeper_mount`** at (−1.12, 0.95, 0.0) and **`lever_mount`** at (1.28, 0.95, 0.0), identity; `desk_light` (0, 1.9, 0.5).
 
 **Logic:** `IA_scrub` → `scrub()`; `IA_chronometer` accepts `reverse_pawl`.
 
@@ -347,16 +345,14 @@ large brass knife-switch lever with a ball grip. The lever pivots at **(0, 0.24,
 - Tap/drag up → `lift_master()`.
 
 ### keeper_knob.glb (≤ 4.5k, ≤ 4)
-Materials: `M_Steel_Painted`, `M_Brass_Aged`, `M_Bakelite`, `M_Shader_Quad`. At the desk `keeper_mount` (−1.12, 3.45, 13.15).
-Origin = the base centre on the wing pad. A bench-instrument box 0.62 w × 0.50 d × 0.45 high: a rear panel leaning back
-25° with the **oscillograph** screen, a lower front panel with the large knob and its collar scale.
-- **`osc_screen`**: round CRT face Ø 0.24 on the leaning panel, centre (0, 0.32, −0.02), UV 0..1 over its bounding square,
-  `M_Shader_Quad`; a brass bezel is static. The shader draws the beat envelope from the beat |p − k| (§10).
-- **`IA_keeper`**: bakelite knob Ø 0.14 × 0.06 with a brass pointer, on the front panel, centre (0, 0.13, 0.16), axis the
-  panel normal (the front panel is vertical, so the axis is local +Z). Pointer at 12 o'clock at identity.
-  **Position p (0..12) = (135° − 22.5° p) about local +Z** (p = 0 lower left, 12 lower right, clockwise).
-  Thirteen brass ticks with numerals 0, 3, 6, 9, 12 and short ticks between engraved round it (static).
-- **`keeper_lamp`**: a jewel above the knob (code: lit when `keeper_on`).
+Materials: `M_Steel_Painted`, `M_Brass_Aged`, `M_Shader_Quad`. At the desk `keeper_mount` (−1.12, 2.5 + 0.95, 13.15). Origin = the box's base
+centre on the wing pad. A bench-instrument box 0.62 w × 0.50 d × 0.25 high with a raised numbered collar plate on its front face and,
+above it, a panel leaning back 25° with the **oscillograph** (no lamp: `keeper_on` shows as a flat beat).
+- **`osc_screen`**: round CRT face r 0.12 on the leaning panel (centre (0, 0.404, −0.06) + 0.0165 along the panel normal), UV 0..1 over its
+  bounding square, `M_Shader_Quad`; a brass bezel is static. The shader draws the beat envelope from the beat |p − k| (§10).
+- **`IA_keeper`**: knurled brass knob r 0.07 × 0.058 with a pointer ridge, **origin (0, 0.125, 0.256)** on the collar plate, axis local +Z.
+  Pointer at 12 o'clock at identity. **Position p (0..12) = (135° − 22.5° p) about local +Z** (p = 0 lower left, 12 lower right, clockwise).
+  Thirteen brass ticks (every third long) with the numerals 0, 3, 6, 9, 12 are engraved on the plate (static).
 - Tap/drag → `turn_keeper(±1)`.
 
 ### handwheel.glb (×4; ≤ 3.5k, ≤ 2)
@@ -549,7 +545,7 @@ Echoes (`lib_echo`, one slot `M_Echo`, poses as root objects, origin between the
 | `shared_numerals` | A | 3,000 | kit | 1 |
 | `master_desk` | B | 12,000 | 8 | 4 |
 | `master_lever` | B | 3,000 | 2 | 2 |
-| `keeper_knob` | B | 4,500 | 4 | 4 |
+| `keeper_knob` | B | 4,500 | 4 | 3 |
 | `handwheel` (×4) | B | 3,500 | 2 | 2 |
 | `panel0` | B | 10,000 | 40 (≤ 20 drawn) | 4 |
 | `ring_rails` | C | 6,000 | 2 | 2 |
