@@ -121,7 +121,8 @@ func play(choice: String) -> void:
 	show_card(choice, false)
 
 
-## The recorder, on black: the click, Leyla's 1998 voice with captions, then a second voice under the hiss.
+## The recorder, on black: the click, Leyla's 1998 voice with captions over a tape-head trace, then a second voice
+## under the hiss.
 func _recorder() -> void:
 	var col := _card_column()
 	AudioManager.sfx("deck_play", -2.0, 0.9)
@@ -137,39 +138,81 @@ func _recorder() -> void:
 	who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	who.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	col.add_child(who)
+	var lines := VBoxContainer.new() # the spoken line(s); a fixed height so the trace below never jumps
+	lines.add_theme_constant_override("separation", 14)
+	lines.custom_minimum_size = Vector2(0, UITheme.size(34) * 3.2)
+	lines.alignment = BoxContainer.ALIGNMENT_CENTER
+	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(lines)
+	var wave := TapeWave.new()
+	wave.custom_minimum_size = Vector2(minf(560.0 * UITheme.wscale(), _canvas().x * 0.5), 64.0 * UITheme.wscale())
+	wave.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	wave.level = 0.12
+	col.add_child(wave)
 	await _fade_in(who, 0.6)
 	for key in ["tease2.voice_1", "tease2.voice_2", "tease2.voice_3"]:
 		_skip = false
 		AudioManager.sfx("tape_voice", -4.0, randf_range(0.97, 1.02))
 		var line := _text(tr(key), 34, UITheme.CREAM, false)
 		line.add_theme_font_override("font", UITheme.display_font(false))
-		col.add_child(line)
+		lines.add_child(line)
+		wave.level = 1.0
 		await _fade_in(line, 0.5)
 		await _wait(2.6 + 0.03 * tr(key).length(), true)
+		wave.level = 0.12
 		await _fade_out(line, 0.4)
 		line.queue_free()
 	await _fade_out(who, 0.4)
-	who.queue_free()
 	# the second voice: Strand, kept in the light, noticing someone beside her
 	_skip = false
 	AudioManager.sfx("tape_garble", -18.0, 0.62)
 	AudioManager.sfx("reveal", -6.0, 0.5)
 	var cap := _text(tr("tease2.second_cap"), 24, UITheme.MUTED, false)
-	col.add_child(cap)
+	lines.add_child(cap)
 	await _fade_in(cap, 0.6)
 	await _wait(1.6, true)
 	var voice := _text(tr("tease2.second_voice"), 40, Color("cfeef7"), false)
 	voice.add_theme_font_override("font", UITheme.display_font(false))
-	col.add_child(voice)
+	lines.add_child(voice)
+	wave.color = Color("9fe3f2")
+	wave.level = 0.55
 	AudioManager.haptic(60)
 	await _fade_in(voice, 0.9)
 	await _wait(3.4, true)
+	wave.level = 0.0
 	AudioManager.sfx("deck_eject", -6.0, 0.7) # the tape runs out
 	var tw := room.create_tween().set_parallel(true)
 	tw.tween_property(cap, "modulate:a", 0.0, 0.8)
 	tw.tween_property(voice, "modulate:a", 0.0, 0.8)
+	tw.tween_property(wave, "modulate:a", 0.0, 0.8)
 	await tw.finished
 	col.get_parent().queue_free()
+
+
+## A tape-head trace under the captions: it moves while a voice speaks and lies almost flat in the hiss.
+class TapeWave extends Control:
+	var level := 0.0
+	var color := Color("ede3cf")
+	var _amp := 0.0
+	var _t := 0.0
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _process(delta: float) -> void:
+		_t += delta
+		_amp = lerpf(_amp, level, clampf(delta * 6.0, 0.0, 1.0))
+		queue_redraw()
+
+	func _draw() -> void:
+		var n := 72
+		var pts := PackedVector2Array()
+		for i in n + 1:
+			var e := sin(PI * float(i) / n) # tapers to nothing at both ends
+			var v := 0.55 * sin(i * 0.9 + _t * 13.0) + 0.3 * sin(i * 2.3 - _t * 21.0) + 0.15 * sin(i * 5.1 + _t * 34.0)
+			pts.append(Vector2(size.x * i / n, size.y * (0.5 + 0.45 * _amp * e * v)))
+		draw_polyline(pts, Color(color, 0.8), 2.0, true)
+		draw_line(Vector2(0, size.y * 0.5), Vector2(size.x, size.y * 0.5), Color(color, 0.12), 1.0)
 
 
 # ====================================================================== the Chapter 3 card
