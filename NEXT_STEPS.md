@@ -10,7 +10,7 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 
 Next in the queue:
 - UI follow-ups after the readability pass (done 2026-10-10: presets, contrast, reader, settings panel, HUD banners and column): a device check of the Large / Extra large presets on the owner's iPhone, then the Chapter 2 / 3 HUD details (the receiver meter at Extra large);
-- Ch3 groups D, E and F (at most two Blender agents at once).
+- Ch3 **model list complete** (2026-10-10: groups A to H built; E = `leyla_camp`, `field_recorder`, `oscillograph`, `crystal_shutter`, F = `gallery_console`, `memorial_wall`; measured notes `docs/models/ch3_e.md`, `ch3_f.md`): next, wire E and F into `underground_room.gd` (the mounts `cradle_mount`, `choice_mount`, `socket_42_mount` are the items' ORIGINS, see ch3_f.md; add a lamp over the console and one on the memorial arc) and rerun `playthrough_ch3` on both keys.
 
 **Top priority:** the iOS crash on New Game (TestFlight build 2). Build 5 adds crash recovery (CrashGuard, safe graphics), the last stage in the menu, and the log in the Files app. See docs/TESTING_ON_DEVICE.md, "Device reports".
 
