@@ -22,11 +22,13 @@ const CONTAINERS := {
 	"ui.restore": [1500, 1.0], "ui.privacy": [1500, 1.0], "ui.yes": [900, 1.0], "ui.no": [900, 1.0],
 	"ui.play": [1200, 0.4], "ui.coming_soon": [1200, 0.4], "ui.on": ["column", 0.5], "ui.off": ["column", 0.5],
 }
-const FLAT := ["ui.privacy"] # link-style buttons without a box: they may simply grow with their text
-const PADDING := 52.0 # content margins left+right in UITheme.build()
-const PANEL_MARGINS := 36.0 # UITheme.panel_box() content margins left+right
+const FLAT := ["ui.privacy", "ui.restore"] # link-style buttons without a box: they may simply grow with their text
+const PANEL_MARGINS := 48.0 # UITheme.panel_box() content margins left+right
 ## A 5.5" 16:9 phone at 480 dpi: the narrowest landscape canvas (1920 px) with the auto scale at its cap.
 const MAX_PHONE := {"size": Vector2i(1920, 1080), "dpi": 480.0, "safe": Rect2i(0, 0, 1920, 1080)}
+## The owner's iPhone: 2556x1179 at 460 dpi, with the notch insets (177 px left and right, 63 px at the bottom).
+const IPHONE := {"size": Vector2i(2556, 1179), "dpi": 460.0, "safe": Rect2i(177, 0, 2556 - 354, 1179 - 63)}
+const TABLET := {"size": Vector2i(2048, 1536), "dpi": 264.0, "safe": Rect2i(0, 0, 2048, 1536)}
 
 
 func _set_screen(emulate: Dictionary, user_scale: float) -> void:
@@ -40,18 +42,27 @@ func _reset_screen() -> void:
 	TranslationServer.set_locale("en")
 
 
+## The theme's button font, size and horizontal padding for the current screen (buttons are display small caps).
+func _button_metrics() -> Dictionary:
+	var t := UITheme.build()
+	var sb := t.get_stylebox("normal", "Button")
+	return {"font": t.get_font("font", "Button"), "size": t.get_font_size("font_size", "Button"),
+		"pad": sb.get_margin(SIDE_LEFT) + sb.get_margin(SIDE_RIGHT)}
+
+
 func test_buttons_fit_at_max_text_scale() -> void:
 	_set_screen({}, 1.3) # desktop / tablet: no automatic boost
-	var font: Font = UITheme.ui_font(500)
-	var size := UITheme.size(28)
-	eq(size, int(round(28 * 1.3)), "no auto boost without a dense screen")
+	var m := _button_metrics()
+	var font: Font = m["font"]
+	var size: int = m["size"]
+	eq(size, int(round(UITheme.BUTTON_PX * 1.3)), "no auto boost without a dense screen")
 	for loc in ["en", "ru", "uz"]:
 		TranslationServer.set_locale(loc)
 		for key: String in BUTTONS:
 			if key in FLAT:
 				continue
 			var w := font.get_string_size(tr(key), HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-			var room := roundf(float(BUTTONS[key]) * UITheme.wscale()) - PADDING
+			var room := roundf(float(BUTTONS[key]) * UITheme.wscale()) - float(m["pad"])
 			check(w <= room, "%s [%s] '%s' is %.0f px > %.0f px" % [key, loc, tr(key), w, room])
 	_reset_screen()
 
@@ -72,13 +83,14 @@ func test_buttons_fit_on_phone_at_max_auto_scale() -> void:
 	for user in [1.0, 1.3]:
 		_set_screen(MAX_PHONE, user)
 		check(is_equal_approx(UITheme.auto_scale(), UITheme.AUTO_MAX), "the 480 dpi phone reaches the auto cap")
-		var font: Font = UITheme.ui_font(500)
-		var size := UITheme.size(28)
+		var m := _button_metrics()
+		var font: Font = m["font"]
+		var size: int = m["size"]
 		for loc in ["en", "ru", "uz"]:
 			TranslationServer.set_locale(loc)
 			for key: String in BUTTONS:
 				var w := font.get_string_size(tr(key), HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-				var need := maxf(roundf(float(BUTTONS[key]) * UITheme.wscale()), w + PADDING)
+				var need := maxf(roundf(float(BUTTONS[key]) * UITheme.wscale()), w + float(m["pad"]))
 				var spec: Array = CONTAINERS[key]
 				var room := _container_inner(spec[0]) * float(spec[1])
 				check(need <= room, "%s [%s] x%.2f needs %.0f px, its container has %.0f px" % [key, loc, user, need, room])
@@ -142,6 +154,71 @@ func test_auto_scale_reaches_readable_sizes() -> void:
 	eq(UITheme.size(26), 26, "tablet body size")
 	_set_screen({"size": Vector2i(1920, 1080), "dpi": 96.0}, 1.0)
 	check(is_equal_approx(UITheme.auto_scale(), 1.0), "desktop auto scale")
+	_reset_screen()
+
+
+## Walks a built panel: every button and slider is a full touch target, no label is clipped or wider than its
+## box, and every text stays inside the panel horizontally (the body may scroll vertically).
+func _check_panel_controls(panel: Control, tag: String) -> void:
+	var pr := panel.get_global_rect()
+	for n in panel.find_children("*", "Control", true, false):
+		var c := n as Control
+		if not c.is_visible_in_tree():
+			continue
+		var r := c.get_global_rect()
+		if c is Button:
+			var b := c as Button
+			var want := UITheme.target(78)
+			check(r.size.y >= want - 0.5, "%s: button «%s» is %.0f px tall, a touch target is %.0f" % [tag, tr(b.text), r.size.y, want])
+			if b.text != "" and b.autowrap_mode == TextServer.AUTOWRAP_OFF:
+				var sb := b.get_theme_stylebox("normal")
+				var room := r.size.x - sb.get_margin(SIDE_LEFT) - sb.get_margin(SIDE_RIGHT)
+				var w := b.get_theme_font("font").get_string_size(b.atr(b.text), HORIZONTAL_ALIGNMENT_LEFT, -1, b.get_theme_font_size("font_size")).x
+				check(w <= room + 2.0, "%s: button text «%s» is %.0f px wide in %.0f px" % [tag, b.atr(b.text), w, room])
+		elif c is HSlider:
+			check(r.size.y >= UITheme.target(64, 8.0) - 0.5, "%s: slider is %.0f px tall" % [tag, r.size.y])
+		elif c is Label and (c as Label).text.strip_edges() != "":
+			var l := c as Label
+			var text := l.atr(l.text)
+			check(l.get_visible_line_count() >= l.get_line_count(), "%s: label «%s» shows %d of %d lines" % [tag, text.left(40), l.get_visible_line_count(), l.get_line_count()])
+			if l.autowrap_mode == TextServer.AUTOWRAP_OFF:
+				var w := l.get_theme_font("font").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, l.get_theme_font_size("font_size")).x
+				check(w <= r.size.x + 2.0, "%s: label «%s» is %.0f px wide in a %.0f px box" % [tag, text.left(40), w, r.size.x])
+			check(r.position.x >= pr.position.x - 1.0 and r.end.x <= pr.end.x + 1.0, "%s: label «%s» sticks out of the panel sideways" % [tag, text.left(40)])
+
+
+## The settings panel, built for real (headless) on the owner's iPhone, the narrowest 16:9 phone and a 10" tablet,
+## at the default and the largest text size, in EN, RU and UZ: it stays inside the usable screen, its footer
+## never overlaps the body, and its controls are full touch targets with nothing clipped.
+func test_settings_panel_fits_the_screen() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var devices := {"iphone": IPHONE, "phone55": MAX_PHONE, "tablet10": TABLET}
+	for dev: String in devices:
+		for user in [1.0, 1.3]:
+			for loc in ["en", "ru", "uz"]:
+				_set_screen(devices[dev], float(user))
+				TranslationServer.set_locale(loc)
+				var tag := "settings %s x%.2f [%s]" % [dev, user, loc]
+				var canvas: Vector2 = UITheme.metrics()["canvas"]
+				var host := Control.new()
+				host.size = canvas
+				tree.root.add_child(host)
+				var sp := SettingsPanel.new()
+				UITheme.safe_center(host).add_child(sp)
+				await tree.process_frame
+				await tree.process_frame
+				var usable := UITheme.usable_rect()
+				var r := sp.get_global_rect()
+				check(usable.grow(1.0).encloses(r), "%s: panel %s outside the usable rect %s" % [tag, r, usable])
+				var footer := sp.get("_footer") as Control
+				var body := sp.get("_scroll_host") as Control
+				var header := sp.get("_header") as Control
+				check(footer.get_global_rect().position.y >= body.get_global_rect().end.y - 0.5, "%s: the footer overlaps the body" % tag)
+				check(body.get_global_rect().position.y >= header.get_global_rect().end.y - 0.5, "%s: the body overlaps the header" % tag)
+				check(body.size.y >= UITheme.target(78) * 2.0, "%s: the body has only %.0f px" % [tag, body.size.y])
+				_check_panel_controls(sp, tag)
+				host.queue_free()
+				await tree.process_frame
 	_reset_screen()
 
 

@@ -11,6 +11,8 @@ extends RefCounted
 
 const INK := Color("0e0f12")
 const PANEL := Color(0.055, 0.06, 0.07, 0.9)
+const PANEL_DARK := Color(0.036, 0.039, 0.047) # dialog and settings panels (alpha set by panel_box)
+const HAIRLINE := Color(0.79, 0.64, 0.37, 0.16) # thin brass separators between rows
 const BRASS := Color("c9a35e")
 const BRASS_HI := Color("e3c27a")
 const CREAM := Color("ede3cf")
@@ -25,6 +27,7 @@ const FONT_DISPLAY_BOLD := "res://assets/fonts/CormorantGaramond-Bold.ttf"
 const FONT_HAND := "res://assets/fonts/Caveat-Variable.ttf"
 
 const BODY_PX := 26 # theme body size (canvas px at scale 1)
+const BUTTON_PX := 34 # button text: display serif in small caps (a smaller x-height than the sans body text)
 const BODY_MM := 2.6 # target em height of body text on the physical screen
 const MIN_TEXT_MM := 2.0 # nothing the player must read is smaller than this
 const TITLE_PX := 72 # sizes at or above this are not raised by the auto scale
@@ -189,6 +192,20 @@ static func display_font(bold: bool = false) -> Font:
 	return _cache[key]
 
 
+## The display serif in true small capitals (the font's `smcp` feature, which covers Latin and Cyrillic), with a
+## little letter spacing: section headers, banner titles and button text.
+static func caps_font(bold: bool = true, spacing: int = 1) -> Font:
+	var key := "caps%d_%d" % [int(bold), spacing]
+	if not _cache.has(key):
+		var fv := FontVariation.new()
+		fv.base_font = display_font(bold)
+		fv.opentype_features = {TextServerManager.get_primary_interface().name_to_tag("smcp"): 1}
+		fv.spacing_glyph = spacing
+		fv.fallbacks = [load(FONT_UI)]
+		_cache[key] = fv
+	return _cache[key]
+
+
 static func hand_font() -> Font:
 	if not _cache.has("hand"):
 		var fv := FontVariation.new()
@@ -200,16 +217,43 @@ static func hand_font() -> Font:
 
 
 # ====================================================================== styles
-static func panel_box(alpha: float = 0.9, radius: int = 14, border: float = 1.5) -> StyleBoxFlat:
+## A dark panel with a hairline gold frame and a soft shadow (dialogs, the settings panel).
+static func panel_box(alpha: float = 0.94, radius: int = 6, border: float = 1.0) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(PANEL, alpha)
-	sb.border_color = Color(BRASS, 0.55)
-	sb.set_border_width_all(int(border))
+	sb.bg_color = Color(PANEL_DARK, alpha)
+	sb.border_color = Color(BRASS, 0.6)
+	sb.set_border_width_all(maxi(1, int(border)))
 	sb.set_corner_radius_all(radius)
-	sb.shadow_color = Color(0, 0, 0, 0.45)
-	sb.shadow_size = 12
-	sb.set_content_margin_all(18)
+	sb.shadow_color = Color(0, 0, 0, 0.5)
+	sb.shadow_size = 22
+	sb.set_content_margin_all(24)
 	return sb
+
+
+## A hairline-only frame (no fill), drawn a few px inside a panel's edge for a double rule.
+static func inner_frame(alpha: float = 0.22, radius: int = 3) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.draw_center = false
+	sb.border_color = Color(BRASS, alpha)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(radius)
+	return sb
+
+
+## A flat button drawn as text only (links, secondary actions): brass text, no box.
+static func text_button(text: String, color: Color = BRASS_HI) -> Button:
+	var b := button(text, 0)
+	b.flat = true
+	var sb := StyleBoxEmpty.new()
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	for s in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		b.add_theme_stylebox_override(s, sb)
+	b.add_theme_color_override("font_color", color)
+	b.add_theme_color_override("font_hover_color", CREAM)
+	b.add_theme_color_override("font_pressed_color", CREAM)
+	b.add_theme_color_override("font_hover_pressed_color", CREAM)
+	return b
 
 
 ## Dark plate behind HUD captions/messages: keeps ≥ 4.5:1 contrast for CREAM text even over a white 3D frame.
@@ -224,20 +268,21 @@ static func caption_plate() -> StyleBoxFlat:
 	return sb
 
 
-## A round grabber texture for sliders, sized for thumbs.
-static func _grabber(d: int, col: Color) -> Texture2D:
-	var key := "grab%d_%s" % [d, col.to_html()]
+## A round grabber texture for sliders: a cream disc with a thin brass rim, sized for thumbs.
+static func _grabber(d: int, col: Color, rim_col: Color = BRASS) -> Texture2D:
+	var key := "grab%d_%s_%s" % [d, col.to_html(), rim_col.to_html()]
 	if _cache.has(key):
 		return _cache[key]
 	var img := Image.create(d, d, false, Image.FORMAT_RGBA8)
 	var c := (d - 1) * 0.5
 	var r := d * 0.5 - 1.0
+	var rim_w := maxf(1.5, d * 0.08)
 	for y in d:
 		for x in d:
 			var dist := Vector2(x - c, y - c).length()
 			var a := clampf(r - dist + 0.5, 0.0, 1.0)
-			var rim := clampf(dist - (r - 3.0), 0.0, 1.0)
-			img.set_pixel(x, y, Color(col.lerp(INK, rim * 0.6), a))
+			var rim := clampf(dist - (r - rim_w) + 0.5, 0.0, 1.0)
+			img.set_pixel(x, y, Color(col.lerp(rim_col, rim), a))
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
@@ -247,23 +292,25 @@ static func build() -> Theme:
 	var t := Theme.new()
 	t.default_font = ui_font(500)
 	t.default_font_size = size(26)
+	# buttons: display serif in small caps on a dark field with a hairline gold frame; pressed = a soft brass fill
 	var btn := StyleBoxFlat.new()
-	btn.bg_color = Color(0.07, 0.075, 0.085, 0.85)
-	btn.border_color = Color(BRASS, 0.7)
-	btn.set_border_width_all(2)
-	btn.set_corner_radius_all(12)
+	btn.bg_color = Color(0.05, 0.052, 0.062, 0.8)
+	btn.border_color = Color(BRASS, 0.62)
+	btn.set_border_width_all(1)
+	btn.set_corner_radius_all(4)
 	btn.content_margin_left = 26
 	btn.content_margin_right = 26
-	btn.content_margin_top = 10
-	btn.content_margin_bottom = 10
+	btn.content_margin_top = 8
+	btn.content_margin_bottom = 8
 	var hov := btn.duplicate() as StyleBoxFlat
 	hov.border_color = BRASS_HI
-	hov.bg_color = Color(0.12, 0.11, 0.09, 0.92)
+	hov.bg_color = Color(0.10, 0.09, 0.075, 0.88)
 	var prs := btn.duplicate() as StyleBoxFlat
-	prs.bg_color = Color(BRASS, 0.85)
+	prs.bg_color = Color(BRASS, 0.3)
+	prs.border_color = BRASS_HI
 	var dis := btn.duplicate() as StyleBoxFlat
-	dis.border_color = Color(MUTED, 0.4)
-	dis.bg_color = Color(0.06, 0.06, 0.07, 0.6)
+	dis.border_color = Color(MUTED, 0.3)
+	dis.bg_color = Color(0.05, 0.05, 0.06, 0.55)
 	t.set_stylebox("normal", "Button", btn)
 	t.set_stylebox("hover", "Button", hov)
 	t.set_stylebox("pressed", "Button", prs)
@@ -272,17 +319,18 @@ static func build() -> Theme:
 	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	t.set_color("font_color", "Button", CREAM)
 	t.set_color("font_hover_color", "Button", BRASS_HI)
-	t.set_color("font_pressed_color", "Button", INK)
-	t.set_color("font_hover_pressed_color", "Button", INK)
+	t.set_color("font_pressed_color", "Button", BRASS_HI)
+	t.set_color("font_hover_pressed_color", "Button", BRASS_HI)
 	t.set_color("font_disabled_color", "Button", MUTED)
-	t.set_font_size("font_size", "Button", size(28))
+	t.set_font("font", "Button", caps_font(true))
+	t.set_font_size("font_size", "Button", size(BUTTON_PX))
 	t.set_color("font_color", "Label", CREAM)
 	t.set_stylebox("panel", "PanelContainer", panel_box())
 	t.set_stylebox("panel", "Panel", panel_box())
-	# sliders: a thick track and a thumb-sized grabber (the whole row is the touch target)
-	var track := int(round(4 + 3 * auto_scale()))
+	# sliders: a thin track with a gold fill and a thumb-sized grabber (the whole row is the touch target)
+	var track := int(round(2 + 1 * auto_scale()))
 	var slider_bg := StyleBoxFlat.new()
-	slider_bg.bg_color = Color(MUTED, 0.35)
+	slider_bg.bg_color = Color(MUTED, 0.3)
 	slider_bg.set_corner_radius_all(track)
 	slider_bg.content_margin_top = track
 	slider_bg.content_margin_bottom = track
@@ -291,10 +339,10 @@ static func build() -> Theme:
 	t.set_stylebox("slider", "HSlider", slider_bg)
 	t.set_stylebox("grabber_area", "HSlider", slider_fill)
 	t.set_stylebox("grabber_area_highlight", "HSlider", slider_fill)
-	var gd := int(round(maxf(30.0, px_for_mm(4.2))))
+	var gd := int(round(maxf(24.0, px_for_mm(3.6))))
 	t.set_icon("grabber", "HSlider", _grabber(gd, CREAM))
-	t.set_icon("grabber_highlight", "HSlider", _grabber(gd, BRASS_HI))
-	t.set_icon("grabber_disabled", "HSlider", _grabber(gd, MUTED))
+	t.set_icon("grabber_highlight", "HSlider", _grabber(gd, BRASS_HI, BRASS_HI))
+	t.set_icon("grabber_disabled", "HSlider", _grabber(gd, MUTED, MUTED))
 	# scroll bars: visible enough to say "there is more", thin enough not to steal space
 	var sw := int(round(6 * auto_scale()))
 	var bar := StyleBoxFlat.new()
@@ -418,7 +466,11 @@ static func dialog(host: Control, design_w: float, title_key: String = "", title
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation", 18)
 	if title_key != "":
-		body.add_child(title(title_key, title_size)) # scrolls with the body: on a short screen the content gets the room
+		var head := VBoxContainer.new() # title over a gold rule; scrolls with the body (a short screen gives the room to the content)
+		head.add_theme_constant_override("separation", 2)
+		head.add_child(title(title_key, title_size))
+		head.add_child(UIOrnament.rule())
+		body.add_child(head)
 	var max_h := usable_rect().size.y
 	v.add_child(scroll_fit(body, p, max_h))
 	var footer := button_row()

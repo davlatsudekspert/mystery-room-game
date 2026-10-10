@@ -110,6 +110,10 @@ epi.take,"You pocket the crystal lens. It is warm — and somewhere far below, s
 epi.leave,"You leave the lens to her. As the door closes behind you, the desk lamp flickers once, like a goodbye.","Вы оставляете линзу ей. Когда дверь закрывается за вами, настольная лампа мигает — словно прощаясь.",Linzani unga qoldirasiz. Eshik ortingizdan yopilganda stol chirogʻi bir bor miltillaydi — xuddi xayrlashgandek.
 epi.shards,Five shards — five fragments of a single night. The Array knows you now.,Пять осколков — пять фрагментов одной ночи. Теперь Решётка знает вас.,Beshta boʻlak — bitta tunning besh parchasi. Endi Panjara sizni taniydi.
 epi.postmark,On the train home you look at the parcel again. The postmark reads: 14 XI 1979.,В поезде вы снова смотрите на посылку. На штемпеле: 14 XI 1979.,Uyga qaytayotgan poyezdda posilkaga yana qaraysiz. Pochta muhrida: 14 XI 1979.
+ui.sec_sound,Sound,Звук,Tovush
+ui.sec_display,Display & comfort,Экран и комфорт,Ekran va qulaylik
+ui.sec_other,Other,Прочее,Boshqa
+ui.safe_graphics_desc,"Fewer effects and shadows: for older phones, or after a crash.",Меньше эффектов и теней: для старых телефонов или после сбоя.,Kamroq effekt va soya: eski telefonlar uchun yoki nosozlikdan soʻng.
 item.notebook.name,Leyla's notebook,Блокнот Лейлы,Leylaning daftari
 item.notebook.desc,A lab journal in Leyla Rahimova's handwriting. One page looks oddly blank.,"Лабораторный журнал, исписанный рукой Лейлы Рахимовой. Одна страница странно пуста.",Leyla Rahimovaning qoʻli bilan yozilgan laboratoriya jurnali. Bir sahifasi negadir boʻm-boʻsh.
 item.uv_lamp_empty.name,UV lamp (empty),УФ-лампа (пустая),UB chiroq (boʻsh)

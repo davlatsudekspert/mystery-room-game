@@ -213,10 +213,12 @@ def qa(parts, args):
         n, d = D.mesh_clearance(fig_b, d1)
         print(f"{D.TAG} tech_b vs autoclave_dead: {n} intersecting triangle pairs, nearest vertex {d * 100:.1f} cm")
     if measure:
-        for fig, nm in ((fig_a, "tech_a"), (fig_b, "tech_b")):
+        for fig, nm, solid in ((fig_a, "tech_a", [parts["body"]]), (fig_b, "tech_b", d1)):
             if fig:
                 lo, hi = K.V.mesh_bounds_godot(fig)
                 print(f"{D.TAG} {nm} world bounds z {lo.z:+.3f} .. {hi.z:+.3f} (vessel front z = {-3.5 + D.R_V:+.3f})")
+                n, olo, ohi = D.mesh_overlap_bounds(fig, solid)
+                print(f"{D.TAG} {nm} overlap: {n} pairs, figure triangles within world {olo} .. {ohi}")
         return
     W0 = lambda p: D.world_point(D.DEAD_POS[0], 0.0, p)   # noqa: E731
 

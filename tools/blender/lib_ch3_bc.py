@@ -280,9 +280,12 @@ def imported(prefix, name):
     return None
 
 
-def hall(prefix="qa_hall_", lamps=True):
-    """The real Choir Hall shell (and its lamp glasses glowing like the game's work lamps)."""
+def hall(prefix="qa_hall_", lamps=True, door=True):
+    """The real Choir Hall shell (and its lamp glasses glowing like the game's work lamps), with the west blast door
+    filling the tunnel mouth in the east wall (door=True)."""
     h = bring("shell_choir", prefix=prefix)
+    if door:
+        bring("blast_door", (-3.70, 0.0, 0.0), 90.0, prefix="qa_wdoor_")
     if h is not None and lamps:
         g = K.glow("qa_worklamp", "FFD49A", 9.0)
         for k in range(6):

@@ -598,3 +598,86 @@ def mesh_clearance(fig_objs, solid_objs, sample=3):
         if hit[0] is not None:
             dmin = min(dmin, hit[3])
     return len(pairs), dmin
+
+
+def mesh_overlap_bounds(fig_objs, solid_objs):
+    """Where figure and solid meshes intersect: (pair count, Godot AABB lo, hi of the overlapping figure
+    triangles' centres) — tells which body part hits which prop."""
+    from mathutils.bvhtree import BVHTree
+    M.refresh()
+    dg = bpy.context.evaluated_depsgraph_get()
+
+    def polys(objs):
+        verts, faces = [], []
+        for o in objs:
+            ev = o.evaluated_get(dg)
+            me = ev.to_mesh()
+            base = len(verts)
+            verts += [o.matrix_world @ v.co for v in me.vertices]
+            faces += [[base + i for i in p.vertices] for p in me.polygons]
+            ev.to_mesh_clear()
+        return verts, faces
+
+    fv, ff = polys(fig_objs)
+    sv, sf = polys(solid_objs)
+    pairs = BVHTree.FromPolygons(fv, ff).overlap(BVHTree.FromPolygons(sv, sf))
+    if not pairs:
+        return 0, None, None
+    lo = Vector((1e9, 1e9, 1e9))
+    hi = Vector((-1e9, -1e9, -1e9))
+    for fi, _si in pairs:
+        c = sum((fv[i] for i in ff[fi]), Vector()) / len(ff[fi])
+        g = K.V.C_INV @ c
+        for k in range(3):
+            lo[k] = min(lo[k], g[k])
+            hi[k] = max(hi[k], g[k])
+    return len(pairs), tuple(round(c, 3) for c in lo), tuple(round(c, 3) for c in hi)
+
+
+def flat_poly_y(name, pts_xz, y, mat):
+    """One horizontal n-gon at height y (G-frame), corners given as (x, z), facing +Y."""
+    bm = bmesh.new()
+    vs = [bm.verts.new((x, y, z)) for (x, z) in pts_xz]
+    f = bm.faces.new(vs)
+    if f.normal_update() is None and f.normal.y < 0:
+        f.normal_flip()
+    o = K.obj_from_bm(name, bm, mat)
+    return o
+
+
+def beam_material(name, hex_colour, alpha=0.35, strength=3.0):
+    """QA-only translucent emissive material (the code's fan bands)."""
+    mat = bpy.data.materials.get(name)
+    if mat is not None:
+        return mat
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    for nd in list(nt.nodes):
+        nt.nodes.remove(nd)
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = M.hex_rgba(hex_colour)
+    em.inputs["Strength"].default_value = strength
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    mix.inputs["Fac"].default_value = alpha
+    nt.links.new(tr.outputs["BSDF"], mix.inputs[1])
+    nt.links.new(em.outputs["Emission"], mix.inputs[2])
+    nt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
+    if hasattr(mat, "surface_render_method"):
+        mat.surface_render_method = "BLENDED"
+    mat.use_backface_culling = False
+    return mat
+
+
+def qa_beam(name, a, b, c, hex_colour, alpha=0.35, strength=3.0):
+    """QA-only triangle between three Godot points (a fan band), double-sided, no shadow."""
+    me = bpy.data.meshes.new(name)
+    me.from_pydata([tuple(K.G(*p)) for p in (a, b, c)], [], [(0, 1, 2)])
+    me.update()
+    o = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(o)
+    me.materials.append(beam_material("qa_beam_" + hex_colour, hex_colour, alpha, strength))
+    o.visible_shadow = False
+    return o

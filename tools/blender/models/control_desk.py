@@ -546,8 +546,8 @@ def qa(parts, args):
         # 7 port C: after step 5, the operator turning the knob to ●
         ("7", NAME + "_7", *PORT_VIEWS["c"], dict(pulled=(4, 2, 5, 1, 3), knob=2, tag=False, key_on=False, live=True,
                                                    lit=5, operator=("op_mount_knob", "pose_knob"))),
-        # 8 the hook with the ◆ key, close-up from the operator side
-        ("8", NAME + "_8", (-6.86, 0.92, -0.08), (-7.0, 0.68, 0.09), 40, dict()),
+        # 8 the hook with the ◆ key, close-up from the operator side (the bow faces north)
+        ("8", NAME + "_8", (-6.9, 0.80, -0.26), (-7.0, 0.67, 0.09), 34, dict()),
         # 9 lever frame close-up, lever 3 pulled
         ("9", NAME + "_9", (-8.25, 1.38, -0.30), (-8.05, 1.05, 0.40), 44, dict(pulled=(3,), tag=False, live=True)),
     ]

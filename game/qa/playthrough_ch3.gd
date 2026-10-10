@@ -5,6 +5,8 @@ extends Node
 ## blast doors and tunnels) and taps the part. A step falls back to a direct logic call only when the tap did not
 ## work; every fallback is reported with what the tap hit instead, and fallbacks for models that are not built yet
 ## are listed per puzzle.
+## After the first wing it also quits and continues: the scene is rebuilt from the save (GameState.save_now /
+## continue_saved, the main menu's Continue) and must show the same state at the wing's hall.
 ## Run: xvfb-run -a godot --path game res://qa/playthrough_ch3.tscn -- --out=<dir> [--key=strand|leyla]
 ##        [--lens=take|leave] [--seed=N] [--secret] [--choice=strand|leyla] [--lang=ru] [--quick]
 ## (through the render queue: tools/qa_run.sh --log=<file> -- res://qa/playthrough_ch3.tscn -- …)
@@ -12,6 +14,7 @@ extends Node
 ## Exit code 0 = chapter completed with no failed step and no fallback.
 
 const Plan := preload("res://qa/ch3_plan.gd")
+const SCENE := "res://src/rooms/underground/underground.tscn"
 ## The views measured for the per-view budget (docs/models/ch3.md §13.3), plus the zone roots.
 const PERF_VIEWS: Array[String] = ["choir", "choir_s", "port_b", "desk", "rack", "gallery", "gallery_w", "glass_floor",
 	"console", "nursery", "nursery_w", "autoclave", "seed_library", "prisms", "camp", "shutter", "lift_w", "lift_e"]
@@ -47,6 +50,7 @@ var _events: Array[String] = []
 var _evidence_done: Dictionary = {}
 var _echoes_done := false
 var _perf_done := false
+var _continue_done := false
 
 
 func _ready() -> void:
@@ -69,6 +73,8 @@ func _ready() -> void:
 		elif a == "--quick":
 			quick = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if DisplayServer.get_name() == "headless":
+		get_window().size = Vector2i(1920, 1080) # headless windows are square: frame the views like a phone
 	SaveSystem.save_path = "user://qa_ch3_save.json"
 	SaveSystem.profile_path = "user://qa_ch3_profile.json"
 	GameState.profile = {"choices": {"ch2_key": key_path + "_key", "ch1_lens": lens_path + "_lens",
@@ -77,12 +83,11 @@ func _ready() -> void:
 	logic = GameState.logic
 	GameState.events.connect(func(ev: Array[String]) -> void: _events.append_array(ev))
 	var t0 := Time.get_ticks_msec()
-	room = (load("res://src/rooms/underground/underground.tscn") as PackedScene).instantiate()
-	room.set("capture_mode", true)
-	get_tree().root.add_child.call_deferred(room)
+	_build_room()
 	await get_tree().process_frame
 	await get_tree().process_frame
-	_log("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
+	_log("scene load+build: %d ms (software renderer; phones differ), viewport %s" % [Time.get_ticks_msec() - t0,
+		str(get_viewport().get_visible_rect().size)])
 	_log("path: Ch2 key %s, Ch1 lens %s, secret %s, seed %d, choice %s" % [key_path, lens_path, secret,
 		int(logic.state["seed"]), choice])
 	var miss: Array = room.get("missing_models")
@@ -96,6 +101,12 @@ func _ready() -> void:
 
 
 # ====================================================================== helpers
+func _build_room() -> void:
+	room = (load(SCENE) as PackedScene).instantiate()
+	room.set("capture_mode", true)
+	get_tree().root.add_child.call_deferred(room)
+
+
 func _log(line: String) -> void:
 	report.append(line)
 	print(line)
@@ -139,12 +150,22 @@ func busy() -> bool:
 	return bool((room.get("hud") as Node).get("_busy")) or bool(room.get("_cinematic"))
 
 
+## Cinematics lock input, and a tap during a camera move is dropped (RoomBase._on_tap): wait for both.
 func wait_idle(limit: float = 60.0) -> void:
 	var t := 0.0
 	await _settle(0.2)
-	while busy() and t < limit:
+	while (busy() or cam().transitioning) and t < limit:
 		await _settle(0.25)
 		t += 0.25
+
+
+func wait_cam() -> void:
+	await _settle(0.3)
+	var t := 0.0
+	while cam().transitioning and t < 5.0:
+		await _settle(0.1)
+		t += 0.1
+	await _settle(0.3)
 
 
 func view(id: String) -> void:
@@ -152,7 +173,19 @@ func view(id: String) -> void:
 		room.call("prepare_view", id)
 	if cam().current() != id:
 		cam().go(id)
-		await _settle(0.9)
+	await wait_cam() # also when already there: the camera may still be gliding back from a deeper view
+
+
+## Where a player taps the eyepiece rim in a port view: the rim spans 0.97 to 3.3 half-heights from the centre
+## (UndergroundRoom._place_eyepiece), so the point depends on the viewport's aspect (headless runs are square).
+func _rim_point() -> Vector2:
+	var vs := get_viewport().get_visible_rect().size
+	var c := vs * 0.5
+	var half_h := vs.y * 0.5
+	var aspect := vs.x / vs.y
+	if aspect >= 1.0:
+		return Vector2(c.x - half_h * (0.97 + minf(aspect, 3.3)) * 0.5, c.y)
+	return Vector2(c.x, c.y - half_h * 0.985)
 
 
 func node_of(model: String, part: String) -> Node3D:
@@ -453,9 +486,40 @@ func run() -> void:
 			await _milestones()
 			if not ok or s["array_awake"]:
 				break
+			if not _continue_done and UndergroundSolver.wing_done(logic, s["entry"]):
+				_continue_done = true
+				await _continue_check()
+				s = logic.state
 	if not logic.is_complete() and not s["array_awake"]:
 		_log("✗ chapter not completed (stopped after %d planning rounds)" % guard)
 	_finish()
+
+
+## A player quits here and taps Continue: the save is written, the scene freed and rebuilt from the save. The
+## rebuilt scene must hold the same state, start at the wing's hall (not in the lift) and keep the gate open.
+func _continue_check() -> void:
+	await wait_idle()
+	var before := _snap(logic)
+	var saved := GameState.save_now()
+	room.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var loaded := saved and GameState.continue_saved()
+	if not loaded:
+		_log("✗ continue: the save could not be written or read back")
+		GameState.logic = logic
+	logic = GameState.logic
+	_build_room()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await _settle(1.2)
+	var start := cam().current()
+	var same := _snap(logic) == before
+	var gate: bool = (room.get("visuals") as Node).get("gate_open")
+	var ok := loaded and same and start == str(room.call("start_view")) and gate and not bool(room.call("_fresh_start"))
+	_log(("✓ " if ok else "✗ ") + "continue: scene rebuilt from the save (state %s, opens at %s, gate %s)" % [
+		"kept" if same else "DIFFERS", start, "open" if gate else "SHUT"])
+	await shot("continue_" + start)
 
 
 func _plan() -> Array:
@@ -560,8 +624,7 @@ func _release_echoes() -> void:
 		else:
 			await goto(p[1])
 			# in a port view the camera sits at the lens: the port's rim frames the view (the room's eyepiece)
-			var vs := get_viewport().get_visible_rect().size
-			var rim := Vector2(vs.x * 0.03, vs.y * 0.5)
+			var rim := _rim_point()
 			var ok := _resolves_to(rim, "IA_port_ring")
 			if ok:
 				room.call("_on_tap", rim)
@@ -592,7 +655,7 @@ func _release_echoes() -> void:
 		await wait_idle()
 		if cam().current().ends_with("_mem"):
 			cam().back()
-			await _settle(0.6)
+			await wait_cam()
 
 
 func _echo_point(n: Node3D) -> Vector2:
