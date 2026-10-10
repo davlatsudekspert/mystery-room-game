@@ -32,7 +32,13 @@ RING_R = [7.0, 5.4, 3.8, 2.2]
 RING_Y = -30.0
 TUBE_R = 0.225
 SYM_Y = -29.70
-SYMS = [((-4.95, SYM_Y, 4.95), 1.5), ((3.82, SYM_Y, 3.82), 1.5), ((-2.69, SYM_Y, -2.69), 1.2), ((1.56, SYM_Y, -1.56), 1.2)]
+# Quad sizes: the sign fills 0.80 of its quad (decal convention), so 2.8 m gives a 2.24 m sign. The glass_floor view
+# (fov 32, ~31.6 m away) shows 17.9 m over the 68.6 mm height of a 6.1" phone (2340x1080 at 400 dpi): 3.83 mm per metre,
+# so the sign reads 8.6 mm tall (it was 1.5 / 1.2 m quads: 4.6 / 3.7 mm). Centres are unchanged (on the ring's tube),
+# and neighbouring signs stay clear of each other and of the next ring's tube.
+SYM_SIZE = 2.8
+SYMS = [((-4.95, SYM_Y, 4.95), SYM_SIZE), ((3.82, SYM_Y, 3.82), SYM_SIZE), ((-2.69, SYM_Y, -2.69), SYM_SIZE),
+        ((1.56, SYM_Y, -1.56), SYM_SIZE)]
 THROAT = [(1.62, -0.10), (1.80, -0.17), (2.15, -0.30), (2.62, -0.48), (3.15, -0.72), (3.62, -0.98), (4.00, -1.20)]
 CAVERN = [(4.00, -1.20), (6.2, -1.9), (8.8, -3.3), (11.2, -5.6), (13.0, -9.0), (14.0, -14.0), (14.0, -22.0),
           (13.6, -28.0), (12.6, -30.4), (11.5, -31.0)]

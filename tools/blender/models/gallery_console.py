@@ -224,7 +224,8 @@ def strand_plate():
         for sy in (-1, 1):
             parts.append(K.rivet("pl_screw", 0.0045, (sx * 0.096, sy * 0.076, 0.004), normal=(0, 0, 1), mat=BRASS, segs=8))
     parts.append(K.gbox("tab", (-0.034, -0.116, -0.0105), (0.034, -0.078, 0.0), BRASS, 0.002))
-    mark = S.inlay("mark", "mark", 0.024, depth=0.0016, mat=BRASS, loc=(0.0, -0.097, 0.0))
+    # bold 2.4: at 24 mm the glyph's own ring band is 0.8 mm (thinner than the bevel); 2.4x makes it 1.9 mm
+    mark = S.inlay("mark", "mark", 0.024, depth=0.0016, mat=BRASS, bevel=0.0003, bold=2.4, loc=(0.0, -0.097, 0.0))
     parts.append(mark)
     for o in parts:
         on_slope(o, PLATE_C)

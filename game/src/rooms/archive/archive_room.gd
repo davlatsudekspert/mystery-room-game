@@ -220,10 +220,46 @@ func _build_models() -> void:
 	# the shelves' contents and the desk's book row each draw as one mesh (one surface per material)
 	ModelUtil.merge_static(models.get("stacks_shelving"), "contents_")
 	ModelUtil.merge_static(models.get("cc_books"), "book_encyclopedia")
+	_merge_hall_decor()
 	var dust := DustMotes.create(Vector3(4.5, 1.6, 3.2), 180)
 	dust.position = Vector3(0, 1.7, 0)
 	add_child(dust)
 	_build_aisle_sign()
+
+
+## Static furniture, trim and shell pieces the player never touches and the visuals never move, light or hide: each
+## group below draws as one mesh instead of one per piece (the hall view was 146 scene draw calls, 153 with the HUD,
+## budget 150). ModelUtil.merge_static keeps the originals, hidden, so their colliders still take taps. Nothing here is
+## an IA_ part, a lamp or lamp glass (the emergency lamps' glass flickers, the pendants' and reading lamp's bulbs
+## light up), the fire shutter, the tube markers or anything a state changes.
+func _merge_hall_decor() -> void:
+	var shell := models.get("room_archive") as Node3D
+	# the shell's outer faces: their shadows are off already (see _build_models), so the merged mesh casts none
+	_merge_named(shell, ["wall_e", "wall_n", "wall_s", "wall_w", "wall_dressing", "ceiling", "trim", "corridor"])
+	_merge_named(shell, ["floor", "tube_run", "film_cans", "shutter_frame", "booth_walls", "booth_ceiling", "booth_fixture"])
+	_merge_named(shell, ["elamp_0", "elamp_1", "elamp_2", "elamp_3", "elamp_4", "elamp_5", "elamp_6", "elamp_7", "elamp_8", "elamp_9"])
+	_merge_named(models.get("card_catalogue"), ["carcass", "carcass_row_0", "carcass_row_1", "carcass_row_2", "carcass_row_3", "carcass_row_4", "stand"])
+	ModelUtil.merge_static(models.get("stacks_shelving"), "stacks_") # frame, terminal, the two ledger shelves
+	_merge_named(models.get("reading_table"), ["table", "table_dressing", "banker_lamp", "lamp_shade"])
+	_merge_named(models.get("archivist_desk"), ["desk", "desk_dressing", "gallery"])
+	_merge_named(models.get("vent_grille"), ["grille_duct", "grille_frame"])
+	ModelUtil.merge_static(self, "chair_body") # the three chairs, across their models
+
+
+## ModelUtil.merge_static takes one name prefix; this folds the meshes called exactly `names` (anywhere under `root`)
+## by hiding the rest of the model's meshes while it runs.
+func _merge_named(root: Node3D, names: Array[String]) -> MeshInstance3D:
+	if root == null:
+		return null
+	var others: Array[MeshInstance3D] = []
+	for mi in ModelUtil.find_meshes(root):
+		if mi.visible and not names.has(str(mi.name)):
+			mi.visible = false
+			others.append(mi)
+	var merged := ModelUtil.merge_static(root, "")
+	for mi in others:
+		mi.visible = true
+	return merged
 
 
 ## The card catalogue stands on the west wall, hidden from the hall by the stacks. An enamel sign hangs over the
@@ -304,6 +340,7 @@ func _build_aisle_sign() -> void:
 		sign.add_child(chain)
 	for mi in ModelUtil.find_meshes(sign):
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ModelUtil.merge_static(sign, "") # the plate, its border, the arrow and the two chains draw as one mesh (the text is its own)
 	add_tap_area(sign, Vector3(0.9, 0.3, 0.12), "aisle", "IA_aisle_sign")
 
 
