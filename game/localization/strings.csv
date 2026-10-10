@@ -725,6 +725,20 @@ epi4.echoes,Four more kept echoes walked free before the Night was undone.,"Ещ
 epi4.all_light,"Every shard found, every echo released. Nothing the Institute kept is kept against its will.","Все осколки найдены, все эхо освобождены. Ничто из того, что хранил институт, не удерживается против воли.","Barcha boʻlaklar topildi, barcha aks-sadolar ozod qilindi. Institut saqlagan hech narsa oʻz xohishiga qarshi saqlanmayapti."
 epi4.end,"Every clock in the building reads 03:13, and ticks. The Institute is no longer forgotten.",Все часы в здании показывают 03:13 — и идут. Институт больше не забыт.,Binodagi barcha soatlar 03:13 ni koʻrsatadi — va yuradi. Institut endi unutilgan emas.
 achv.collect_ch4,Echoes of the Hall,Эхо Зала,Zal aks-sadolari
+ui.about,About,Об игре,Oʻyin haqida
+ui.licenses,Licenses,Лицензии,Litsenziyalar
+ui.tap_to_skip,Tap to skip,"Нажмите, чтобы пропустить",Oʻtkazib yuborish uchun bosing
+credits.created_by,Created by,Создатели,Yaratuvchilar
+credits.testers,Thanks to our testers,Благодарим наших тестировщиков,Sinovchilarimizga rahmat
+credits.made_with,Made with,Сделано на движке,Yaratishda foydalanilgan dvigatel
+credits.cc0,"Thanks to the artists who shared their props, textures and sounds as CC0.","Спасибо авторам, поделившимся моделями, текстурами и звуками под лицензией CC0.","Model, tekstura va tovushlarini CC0 sifatida ulashgan mualliflarga rahmat."
+credits.thanks,Thank you for playing.,"Спасибо, что играли.",Oʻynaganingiz uchun rahmat.
+licenses.godot,Godot Engine,Движок Godot,Godot dvigateli
+licenses.fonts,Fonts,Шрифты,Shriftlar
+licenses.plugins,Purchase plugins,Плагины покупок,Xarid plaginlari
+licenses.components,Third-party components in Godot,Сторонние компоненты Godot,Godot ichidagi uchinchi tomon komponentlari
+licenses.texts,License texts,Тексты лицензий,Litsenziya matnlari
+tut.first,Something rests in the lamplight on the desk. Tap it.,"На столе, в свете лампы, что-то лежит. Нажмите на это.","Stolda, chiroq nurida, nimadir turibdi. Unga bosing."
 hint.notebook.1,Someone left a notebook behind.,Кто-то оставил блокнот.,Kimdir daftar qoldirib ketgan.
 hint.notebook.2,"Look at Leyla's desk, against the wall you face when the lab opens.","Посмотрите на стол Лейлы у стены, к которой вы обращены в начале.",Leylaning stoliga qarang: u boshida roʻparangizdagi devor yonida turibdi.
 hint.notebook.3,"Tap the desk, then take Leyla's notebook.",Нажмите на стол и возьмите блокнот Лейлы.,Stolga bosing va Leylaning daftarini oling.
@@ -941,17 +955,3 @@ hint.c4_reversal.3,"Lever at 03:17. Then at 03:1%d %s, at 03:1%d %s, at 03:1%d %
 hint.c4_finale.1,The lens is still in the cradle.,Линза всё ещё в гнезде.,Linza hali ham uyachada.
 hint.c4_finale.2,"Take it, or leave it.",Заберите её — или оставьте.,Oling — yoki qoldiring.
 hint.c4_finale.3,Choose.,Выбирайте.,Tanlang.
-ui.about,About,Об игре,Oʻyin haqida
-ui.licenses,Licenses,Лицензии,Litsenziyalar
-ui.tap_to_skip,Tap to skip,"Нажмите, чтобы пропустить",Oʻtkazib yuborish uchun bosing
-credits.created_by,Created by,Создатели,Yaratuvchilar
-credits.testers,Thanks to our testers,Благодарим наших тестировщиков,Sinovchilarimizga rahmat
-credits.made_with,Made with,Сделано на движке,Yaratishda foydalanilgan dvigatel
-credits.cc0,"Thanks to the artists who shared their props, textures and sounds as CC0.","Спасибо авторам, поделившимся моделями, текстурами и звуками под лицензией CC0.","Model, tekstura va tovushlarini CC0 sifatida ulashgan mualliflarga rahmat."
-credits.thanks,Thank you for playing.,"Спасибо, что играли.",Oʻynaganingiz uchun rahmat.
-licenses.godot,Godot Engine,Godot Engine,Godot Engine
-licenses.fonts,Fonts,Шрифты,Shriftlar
-licenses.plugins,Purchase plugins,Плагины покупок,Xarid plaginlari
-licenses.components,Third-party components in Godot,Сторонние компоненты Godot,Godot ichidagi uchinchi tomon komponentlari
-licenses.texts,License texts,Тексты лицензий,Litsenziya matnlari
-tut.first,Something rests in the lamplight on the desk. Tap it.,"На столе, в свете лампы, что-то лежит. Нажмите на это.","Stolda, chiroq nurida, nimadir turibdi. Unga bosing."
