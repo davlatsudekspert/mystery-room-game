@@ -1,0 +1,8 @@
+# Chapter 3 group B: Choir Hall props (lib_ch3_bc.py). docs/models/ch3_b.md
+transformer.py
+choir_rack.py
+choir_tube.py
+tube_bench.py
+strand_office.py
+office_desk.py
+meter_case.py

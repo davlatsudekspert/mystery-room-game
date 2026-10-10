@@ -1,0 +1,5 @@
+# Chapter 3 group C: desk, ports, cabinets (lib_ch3_bc.py). docs/models/ch3_c.md
+control_desk.py
+switch_cabinet.py
+interlock_plate.py
+inspection_port.py
