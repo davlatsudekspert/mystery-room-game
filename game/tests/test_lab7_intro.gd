@@ -46,10 +46,17 @@ func test_opening_skips_to_a_settled_room_and_the_notebook_glows() -> void:
 	var quad: Node3D = g.get_child(0)
 	await _tree().process_frame
 	check(quad.visible, "the notebook glows")
-	room.get("logic").take("notebook")
+	var kids_before := room.get_child_count()
+	room.call("_interact", "notebook", "", {}) # the tap that takes it
+	check(bool(room.get("logic").state["taken"].get("notebook", false)), "tapping takes the notebook")
+	check(room.get_child_count() == kids_before + 1, "a ghost of it lifts off the desk")
+	var ghost: Node3D = room.get_child(room.get_child_count() - 1)
+	eq(ghost.find_children("*", "StaticBody3D", true, false).size(), 0, "the ghost has no tap areas")
 	await _tree().process_frame
 	await _tree().process_frame
-	check(not quad.visible, "and stops glowing once it is taken")
+	check(not quad.visible, "the glow stops once it is taken")
+	await _tree().create_timer(0.8).timeout
+	check(not is_instance_valid(ghost) or ghost.is_queued_for_deletion(), "the ghost is gone after its lift")
 	AudioManager.stop_all_ambience(0.0)
 	AudioManager.stop_music(0.0)
 	room.queue_free()

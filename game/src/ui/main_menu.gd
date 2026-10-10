@@ -337,6 +337,10 @@ func _play(chapter_id: String) -> void:
 	_starting = true
 	_pending_scene = Chapters.get_chapter(chapter_id)["scene"]
 	AudioManager.stop_music(1.5)
+	if chapter_id == "ch1":
+		# the rain of Lab 7 begins as the box opens and carries through the loading screen into the opening: the
+		# loading black is never silent, and the first card appears under the rain that is already falling
+		AudioManager.ambience("amb_lab_dark", true, -9.0, 2.5)
 	_shield.visible = true
 	if not bool(Settings.get_value("reduce_motion")):
 		var tw := create_tween().set_parallel(true) # the menu gives way to the box

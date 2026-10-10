@@ -276,6 +276,7 @@ func test_menu_start_calls_goto_once_and_skip_works() -> void:
 	menu2.call("_play", "ch1")
 	eq(calls.size(), 1, "not even by a second Play")
 	menu2.queue_free()
+	AudioManager.stop_all_ambience(0.0) # _play("ch1") starts the rain
 	await _tree().process_frame
 
 
@@ -289,6 +290,7 @@ func test_menu_start_with_reduce_motion_is_a_short_fade() -> void:
 	menu.call("_play", "ch1")
 	eq(calls.size(), 1, "goto runs at once")
 	eq(calls[0][1], 0.3, "with a short fade")
+	AudioManager.stop_all_ambience(0.0)
 	menu.queue_free()
 	await _tree().process_frame
 	Settings.values["reduce_motion"] = before

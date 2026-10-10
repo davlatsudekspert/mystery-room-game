@@ -30,24 +30,24 @@ static func show_credits(host: Control, on_close: Callable) -> Control:
 		var text := str(b["text"])
 		match int(b["kind"]):
 			CreditsData.Kind.TITLE:
-				body.add_child(_centered(UITheme.title(text, 54), false))
+				body.add_child(_centered(UITheme.title(text, 44), false))
 			CreditsData.Kind.SUBTITLE:
-				body.add_child(_centered(_caps(text, 26, UITheme.BRASS), false))
+				body.add_child(_centered(_caps(text, 22, UITheme.BRASS), false))
 				body.add_child(UIOrnament.rule())
 			CreditsData.Kind.HEADING:
-				body.add_child(_centered(_caps(text, 22, UITheme.MUTED), false))
+				body.add_child(_centered(_caps(text, 18, UITheme.MUTED), false))
 			CreditsData.Kind.NAME:
-				var l := UITheme.title(text, 38, true)
+				var l := UITheme.title(text, 32, true)
 				l.add_theme_color_override("font_color", UITheme.CREAM)
 				body.add_child(_centered(l, true))
 			CreditsData.Kind.LINE:
-				body.add_child(_centered(UITheme.label(text, 26, UITheme.MUTED), true))
+				body.add_child(_centered(UITheme.label(text, 22, UITheme.MUTED), true))
 			CreditsData.Kind.THANKS:
-				var l := UITheme.title(text, 34, false)
+				var l := UITheme.title(text, 28, false)
 				body.add_child(_centered(l, true))
 			CreditsData.Kind.GAP:
 				var g := Control.new()
-				g.custom_minimum_size = Vector2(0, 14)
+				g.custom_minimum_size = Vector2(0, 8)
 				body.add_child(g)
 	var footer: HFlowContainer = d["footer"]
 	var lic := UITheme.button("ui.licenses", 320)

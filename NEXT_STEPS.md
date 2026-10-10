@@ -34,6 +34,7 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 3. **Chapter 3:** the model contract `docs/models/ch3.md` (agent), then the Blender build agents (2–3 at a time), the scene, variants (docs/VARIANTS.md list) and a real-scene playthrough on both Chapter 2 key paths.
 4. **Lighting (directive 1B):** before/after real renders of the over-bright spots (the splicer light box, the projector beam haze); storytelling props that never hide puzzle items (1C).
 5. **Chapter 1:** a full player review on the rendered build after the UI audit; minute-by-minute pacing notes (30 s, 1, 2, 3, 5, 10 min).
+   - First minutes: check on a real phone how long the loading black lasts between the menu transition and the first card (the container cannot tell), whether the knob taps on the menu box feel right with a thumb, and the haptics on the slam; then play the end credits after the Chapter 4 finale (`CreditsScene.play(...)`, not wired yet).
 6. **Real-device test:** `docs/TESTING_ON_DEVICE.md` with the first tester build.
 7. **Logo rights:** the owner confirms where the logo artwork came from and that it may be used commercially (`docs/ASSET_LICENSES.md`).
 

@@ -55,10 +55,10 @@ func _lang() -> void:
 		var picker := (load("res://src/ui/language_select.tscn") as PackedScene).instantiate() as Control
 		picker.set("detected_override", code)
 		get_tree().root.add_child(picker)
-		await _settle(0.5)
+		await _settle(0.6)
 		if code == "en":
 			await _shot("lang_en_entrance")
-		await _settle(2.4)
+		await _settle(4.5) # the entrance is real time, and the software renderer is slow
 		picker.set("_t", 2.87) # the shimmer mid-sweep
 		await _shot("lang_%s" % code)
 		picker.queue_free()

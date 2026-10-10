@@ -143,8 +143,8 @@ func _build_glint() -> void:
 		return
 	var g := Gradient.new()
 	g.offsets = PackedFloat32Array([0.0, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0])
-	g.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0.12), Color(1, 1, 1, 0.5),
-		Color(1, 1, 1, 0.12), Color(1, 1, 1, 0), Color(1, 1, 1, 0)])
+	g.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0.22), Color(1, 1, 1, 0.8),
+		Color(1, 1, 1, 0.22), Color(1, 1, 1, 0), Color(1, 1, 1, 0)])
 	var tex := GradientTexture2D.new()
 	tex.gradient = g
 	tex.width = 128
@@ -541,7 +541,7 @@ func _update_glow(delta: float) -> void:
 	if _glow > 0.002:
 		if _light == null and _safe < 3:
 			_light = OmniLight3D.new()
-			_light.light_color = Color("ff9d4d")
+			_light.light_color = Color("ff8f3a")
 			_light.omni_range = 0.55
 			_light.omni_attenuation = 1.6
 			_light.light_specular = 0.4
@@ -549,16 +549,16 @@ func _update_glow(delta: float) -> void:
 			_light.position = Vector3(0.0, 0.1, 0.0)
 			model.add_child(_light)
 		if _light != null:
-			_light.light_energy = 1.5 * _glow + 2.0 * _flood
+			_light.light_energy = 1.4 * _glow + 1.1 * _flood
 	elif _light != null:
 		_light.queue_free()
 		_light = null
 	if _cell_mat != null:
-		_cell_mat.emission_energy_multiplier = 2.2 * _glow + 2.5 * _flood
+		_cell_mat.emission_energy_multiplier = 2.0 * _glow + 1.5 * _flood
 	if _card != null:
 		_card.visible = _glow > 0.002
 		if _card.visible:
-			_card_mat.albedo_color = Color(GLOW_COLOR, clampf(0.42 * _glow + 0.3 * _flood, 0.0, 1.0))
+			_card_mat.albedo_color = Color(GLOW_COLOR, clampf(0.38 * _glow + 0.16 * _flood, 0.0, 1.0))
 
 
 func _update_glint() -> void:
@@ -571,7 +571,7 @@ func _update_glint() -> void:
 	p = p * p * (3.0 - 2.0 * p) * 0.35 + p * 0.65 # a slow, slightly eased sweep
 	_glint_mat.uv1_offset.x = lerpf(0.78, -0.78, p)
 	var fade := sin(PI * clampf(p, 0.0, 1.0))
-	_glint_mat.albedo_color.a = clampf(fade * 1.4, 0.0, 1.0) * 0.8
+	_glint_mat.albedo_color.a = clampf(fade * 1.4, 0.0, 1.0)
 	_glint.visible = true
 
 

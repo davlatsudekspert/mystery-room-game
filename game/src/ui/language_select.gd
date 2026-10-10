@@ -82,7 +82,7 @@ func _ready() -> void:
 	indent.add_child(_prompt)
 	# the prompt in all three languages (EN → RU → UZ), small capitals, aligned with the items' text
 	for code in Loc.SUPPORTED:
-		var l := UITheme.label(PROMPTS[code], 24, UITheme.CREAM if code == _detected else UITheme.MUTED)
+		var l := UITheme.label(PROMPTS[code], 20, UITheme.CREAM if code == _detected else UITheme.MUTED)
 		l.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		l.add_theme_font_override("font", UITheme.caps_font(false, 2))
 		l.uppercase = true
@@ -169,7 +169,7 @@ func _layout() -> void:
 	_left.offset_bottom = -(canvas.y - u.end.y)
 	var avail := u.end.y - u.position.y
 	# rows: at least a 9 mm touch target, airy enough for display type
-	var row_h := maxf(UITheme.target(96), roundf(UITheme.size(MenuItem.SIZE_NORMAL) * 1.5))
+	var row_h := maxf(UITheme.target(78), roundf(UITheme.size(MenuItem.SIZE_NORMAL) * 1.5))
 	for b: Control in _rows.get_children():
 		b.custom_minimum_size.y = row_h
 		row_h = maxf(row_h, b.get_combined_minimum_size().y)

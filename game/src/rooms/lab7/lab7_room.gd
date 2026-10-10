@@ -862,13 +862,15 @@ func _interact(hs: String, part: String, r: Dictionary) -> void:
 				AudioManager.ui("ui_tap")
 		"notebook":
 			if logic.can_take("notebook"):
+				Lab7Juice.lift_ghost(self, models.get("notebook")) # a ghost lifts off the desk (presentation only)
 				logic.take("notebook")
 		"clock":
 			if cam.current() != "clock":
 				cam.go("clock")
+				AudioManager.haptic(10)
 			else:
 				hud.call("message", tr("msg.clock_stopped"))
-				AudioManager.sfx("wheel_tick", -8.0, 0.8)
+				Lab7Juice.clock_nudge(self, models.get("flip_clock")) # it rattles; the tick and the buzz are in there
 		"desk":
 			_interact_desk(part, r)
 		"bookshelf":

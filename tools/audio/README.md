@@ -158,6 +158,8 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/gear_turn.ogg` | 0.68 s | no | peak -1.2 dBFS | 10 KB | synth | Strand's gear box knob: ratchet clicks and a gear settling into place |
 | `sfx/grille_creak.ogg` | 1.65 s | no | peak -1.2 dBFS | 18 KB | synth | Vent grille swings open on a rusty hinge: frame unsticks, creak, light metal rattle |
 | `sfx/hatch_open.ogg` | 2.33 s | no | peak -0.8 dBFS | 20 KB | synth | Floor hatch: iron ring clinks, the heavy lid lifts with a creak and a breath of air, falls back with a thud |
+| `sfx/intro_key.ogg` | 3.07 s | no | peak -0.9 dBFS | 29 KB | synth | Chapter 1 opening: a heavy brass key slides into a heavy old lock, grinds round and the bolt drops |
+| `sfx/intro_thunder.ogg` | 4.75 s | no | peak -0.9 dBFS | 26 KB | synth | Chapter 1 opening: a long, distant roll of thunder behind the rain |
 | `sfx/item_combine.ogg` | 1.15 s | no | peak -3.2 dBFS | 11 KB | synth | Two parts click together, then a bright celesta sparkle (items combined) |
 | `sfx/item_pickup.ogg` | 0.83 s | no | peak -3.0 dBFS | 10 KB | synth | Quick leather/cloth rustle and a little music-box arpeggio (item taken) |
 | `sfx/key_lift.ogg` | 1.22 s | no | peak -0.8 dBFS | 13 KB | synth | A heavy key lifted out of its cradle: catch releases, metal slides free, a faint ring |
@@ -168,6 +170,11 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/locker_open.ogg` | 1.52 s | no | peak -1.0 dBFS | 17 KB | synth | Locker 9 unlocked: key clack, latch lifts, the thin steel door swings open and taps the next one |
 | `sfx/locker_rattle.ogg` | 0.94 s | no | peak -0.9 dBFS | 11 KB | synth | Locked steel locker door tugged: thin metal clatter against the latch |
 | `sfx/maglock_release.ogg` | 1.61 s | no | peak -1.0 dBFS | 13 KB | synth | Door maglock lets go: coil hum cuts out, armature clunk, door rattles |
+| `sfx/menu_click.ogg` | 0.42 s | no | peak -0.8 dBFS | 7 KB | synth | Menu gear box: a knob pushed in and its brass wheel dropping one notch (soft click) |
+| `sfx/menu_knock.ogg` | 0.70 s | no | peak -1.0 dBFS | 6 KB | synth | Menu gear box: a muffled knock from inside as the lid settles, as if something wants out |
+| `sfx/menu_latch.ogg` | 0.47 s | no | peak -1.1 dBFS | 7 KB | synth | Menu gear box: the latch releases (clack, small spring, low clunk) |
+| `sfx/menu_lid_close.ogg` | 0.93 s | no | peak -1.1 dBFS | 10 KB | synth | Menu gear box: the lid comes down and settles with a soft wooden thud and a small latch click |
+| `sfx/menu_lid_open.ogg` | 2.11 s | no | peak -1.0 dBFS | 15 KB | synth | Menu gear box: the lid swings up on its hinge and stops with a soft knock, a warm light swells |
 | `sfx/page_turn.ogg` | 0.69 s | no | peak -0.7 dBFS | 11 KB | synth + Kenney CC0 `bookFlip2.ogg` (RPG Audio) | A page of Leyla's notebook is turned (paper crinkle and air flap) |
 | `sfx/power_on.ogg` | 2.77 s | no | peak -1.1 dBFS | 20 KB | synth | Power restored: relays click in sequence, lights and the Array hum up |
 | `sfx/projector_charge.ogg` | 2.25 s | no | peak -1.1 dBFS | 16 KB | synth | Lumen Projector charging: rising electrical whine over a growing hum |
