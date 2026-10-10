@@ -28,7 +28,7 @@ All coordinates are **Godot, model-local, metres**; models face +Z; angles follo
 | `transformer` (×3) | 4,408 (5,000) | 4 (4) | 3 | `transformer.glb` | `transformer.png`, `_2` … `_4` |
 | `choir_rack` | 5,440 (6,000) | 13 (13) | 4 | `choir_rack.glb` | `choir_rack.png`, `_2` … `_5` |
 | `choir_tube` | 2,352 (2,800) | 7 (7) | 1 | `choir_tube.glb` | `choir_tube.png`, `_2` |
-| `tube_bench` | TBD (2,500) | TBD (5) | 3 | `tube_bench.glb` | `tube_bench.png`, `_2` |
+| `tube_bench` | 1,438 (2,500) | 5 (5) | 3 | `tube_bench.glb` | `tube_bench.png`, `_2` |
 | `strand_office` | TBD (9,000) | TBD (7) | 4 | `strand_office.glb` | `strand_office.png`, `_2` … `_5` |
 | `office_desk` | TBD (5,000) | TBD (6) | 4 | `office_desk.glb` | `office_desk.png`, `_2` … `_4` |
 | `meter_case` | TBD (2,500) | TBD (7) | 4 | `meter_case.glb` | `meter_case.png`, `_2`, `_3` |
@@ -112,7 +112,7 @@ between the rods), `_4` (`choir` root view).
 
 ---
 
-## tube_bench.glb (TBD tris, 5 surfaces)
+## tube_bench.glb (1,438 tris, 5 surfaces)
 
 **Shape.** A painted angle-iron bench 1.40 × 0.60 (top 0.86) with a three-plank top, stretchers, a lower shelf with
 a crate, end braces; on the wall above it a tool board with four hooks, a tuning spanner, a tube hook and a wooden
@@ -122,7 +122,7 @@ mallet.
 
 | Node | Pivot / position | Materials | Notes |
 |---|---|---|---|
-| `tube_bench` | (0, 0, 0) | Steel_Painted, Wood_Floor | static |
+| `tube_bench` | (0, 0, 0) | Steel_Painted, Wood_Floor | static, 1,366 tris; bounds x ±0.70, y 0 … 1.40 (the tool board), z 0 … 0.60 |
 | `IA_bench_0..2` | (0, 0.875, z_j), z_j = 0.45, 0.32, 0.19 (front → back) | Felt | 1.15 × 0.08 cradle strips, y 0.86 … 0.89, with a shallow V groove (half-width 8 mm, 4 mm deep): a Ø 0.05 tube rests on the groove's edges with its axis at y 0.9137 |
 | `bench_mount_0..2` | (−0.55, 0.915, z_j) | — | rot (0, 0, 90): the tube's −Y runs along +X, its eye standing at the left end |
 

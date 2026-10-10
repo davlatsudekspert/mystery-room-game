@@ -359,6 +359,8 @@ msg.c2_vault_shut,Eight bolts hold the door. The glass disc above the wheel show
 msg.c2_disc,Two images meet on the glass. They must match the engraving.,На стекле сходятся два образа. Они должны совпасть с гравировкой.,Shishada ikki tasvir uchrashadi. Ular oʻyma naqshga mos kelishi kerak.
 msg.c2_locker_empty,Locker 9. Nothing left inside.,Шкафчик 9. Внутри больше ничего нет.,9-shkafcha. Ichida boshqa hech narsa qolmagan.
 msg.c2_dial_lock,A rotary dial. Three digits open the latch.,Дисковый номеронабиратель. Защёлку открывают три цифры.,Diskli raqam tergich. Ilgakni uchta raqam ochadi.
+msg.c2_socket_empty,An empty crystal socket under the screen.,Пустое гнездо для кристалла под экраном.,Ekran ostida boʻsh billur uyachasi.
+msg.c2_booth_locked,Locked. A rotary dial is set into the door.,Заперто. В дверь вделан дисковый номеронабиратель.,Qulflangan. Eshikka diskli raqam tergich oʻrnatilgan.
 msg.c2_splicer_box,A light box for reading film strips.,Световой стол для просмотра кадров плёнки.,Lenta kadrlarini koʻrish uchun yorugʻlik stoli.
 cap2.compressor,[The compressor coughs and hums],[Компрессор кашляет и гудит],[Kompressor yoʻtalib gʻuvillaydi]
 cap2.whoosh,[A canister whooshes through the tubes],[По трубам со свистом летит капсула],[Quvurlardan kapsula shuvillab oʻtdi]

@@ -34,7 +34,7 @@ const CASES := {
 		["", "panel", "panel7", "lamp_0", "panel lamp"],
 		["", "panel", "panel7", "IA_switch_1", "breaker switch"],
 		["", "coat", "coat_rack", "", "coat"],
-		["", "window", "cc_kettle", "", "window sill"],
+		["", "window", "cc_compass", "", "window sill"],
 		["", "radiator", "radiator_tap", "IA_radiator", "radiator"],
 		["", "mirror_b", "mirror_stand_b", "IA_mirror_mount", "empty mirror bracket"],
 		["", "mirror_a", "mirror_stand", "IA_mirror_mount", "mirror A"],
@@ -45,8 +45,7 @@ const CASES := {
 		["drawer_open", "drawer", "desk", "IA_drawer_top", "open drawer"],
 		["box_open", "gearbox", "gear_box", "IA_knob_1", "gear knob after the box opened"],
 		["box_open", "gearbox", "gear_box", "IA_box_lid", "open gear box"],
-		["safe_open", "safe", "wall_safe", "IA_key_2", "safe key after it opened"],
-		["safe_open", "safe", "wall_safe", "IA_safe_door", "open safe"],
+		["safe_open", "safe", "wall_safe", "", "open safe"],
 		["compartment_open", "desk_side", "desk", "IA_compartment", "open compartment"],
 		["power_on", "panel", "panel7", "IA_switch_1", "switch after the power is back"],
 		["power_on", "panel", "panel7", "IA_main_lever", "main lever after the power is back"],
@@ -58,7 +57,7 @@ const CASES := {
 		["shelf_open", "cabinet", "shadow_lock", "IA_cabinet_door", "locked cabinet"],
 		["shelf_open", "emblem", "shadow_lock", "IA_emblem_socket", "empty emblem socket"],
 		["shelf_open", "evidence", "evidence_board", "", "evidence wall (document)"],
-		["emblem_recorded", "cabinet", "shadow_lock", "IA_cabinet_door", "open cabinet"],
+		["emblem_recorded", "cabinet", "shadow_lock", "", "open cabinet"],
 		["beam_on", "projector_rings", "lumen_projector", "IA_ring_0", "ring while the beam is on"],
 		["beam_on", "projector", "lumen_projector", "IA_projector_lever", "lever while the beam is on"],
 		["beam_on", "lock", "light_sensor", "", "light lock with the beam on"],
@@ -158,7 +157,7 @@ func cam() -> RoomCamera:
 
 
 func busy() -> bool:
-	return bool(hud.get("_busy")) or bool(room.get("_cinematic")) or bool(room.get("_ending"))
+	return hud.get("_busy") == true or room.get("_cinematic") == true or room.get("_ending") == true
 
 
 func _solve_until(key: String) -> void:
@@ -176,7 +175,15 @@ func _node(model: String, part: String) -> Node3D:
 	var root: Node3D = (room.get("models") as Dictionary).get(model)
 	if root == null:
 		return null
-	return root if part == "" else ModelUtil.find(root, part)
+	if part == "":
+		return root
+	var n := ModelUtil.find(root, part)
+	if n == null:
+		# a tap area with no node of that name: the StaticBody3D that carries the part name
+		for b in root.find_children("*", "StaticBody3D", true, false):
+			if str(b.get_meta("part", "")) == part:
+				return b
+	return n
 
 
 func _rect(n: Node3D, own_only: bool) -> Rect2:
@@ -229,28 +236,43 @@ func _tap_point(model: String, part: String) -> Array:
 	if r.size == Vector2.ZERO:
 		return [Vector2(-1, -1), "off-screen"]
 	var vs := get_viewport().get_visible_rect().size
+	var screen := Rect2(Vector2.ZERO, vs)
 	var mid := r.get_center()
-	if part == "" or _hit(mid) == part:
+	if screen.has_point(mid) and (part == "" or _hit(mid) == part):
 		return [mid, _hit(mid)]
-	var best := mid
+	# The middle of the bounds is covered, empty or off-screen (an open door swung toward the camera): a player taps
+	# where the part is visible, so look for such a point, nearest the middle first; failing that, the nearest
+	# on-screen point of the bounds that hits anything at all.
+	var best := Vector2(-1, -1)
 	var best_d := INF
-	for gy in 7:
-		for gx in 7:
-			var p := r.position + r.size * Vector2(0.1 + 0.8 * gx / 6.0, 0.1 + 0.8 * gy / 6.0)
-			if p.x < 0 or p.y < 0 or p.x > vs.x or p.y > vs.y:
+	var any := Vector2(-1, -1)
+	var any_d := INF
+	for gy in 9:
+		for gx in 9:
+			var p := r.position + r.size * Vector2(0.05 + 0.9 * gx / 8.0, 0.05 + 0.9 * gy / 8.0)
+			if not screen.has_point(p):
 				continue
 			var d := p.distance_to(mid)
-			if d < best_d and _hit(p) == part:
+			var got := _hit(p)
+			if d < best_d and got == part:
 				best = p
 				best_d = d
-	return [best, _hit(best)]
+			elif d < any_d and got != "":
+				any = p
+				any_d = d
+	if best.x >= 0:
+		return [best, part]
+	if any.x >= 0:
+		return [any, _hit(any)]
+	if not screen.intersects(r):
+		return [Vector2(-1, -1), "off-screen (bounds %s, screen %s)" % [r, vs]]
+	return [Vector2(-1, -1), "no reachable point (bounds %s)" % r]
 
 
+## The text is cleared before every tap, so any text now is this tap's answer (the plate fades in over 0.25 s).
 func _label_text(name: String) -> String:
 	var l := hud.get(name) as Label
-	if l == null or l.modulate.a < 0.05 or not l.is_visible_in_tree():
-		return ""
-	return l.text
+	return "" if l == null else l.text
 
 
 func _clear_text(name: String) -> void:

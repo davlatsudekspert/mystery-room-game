@@ -647,7 +647,8 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 				elif s["socket"] != "":
 					l.take_from_socket()
 				else:
-					hud.call("message", tr("obj2.screen"))
+					hud.call("message", tr("msg.c2_socket_empty"))
+					AudioManager.ui("ui_tap")
 			elif cur != "screen":
 				cam.go("screen")
 			else:
@@ -824,7 +825,7 @@ func _interact_booth_door(p: String) -> void:
 	if cur != "booth_door":
 		cam.go("booth_door")
 	else:
-		hud.call("message", tr("obj2.booth_door"))
+		hud.call("message", tr("msg.c2_booth_locked"))
 		AudioManager.sfx("drawer_locked", -6.0, 0.8)
 
 
@@ -962,7 +963,11 @@ func _interact_vault(p: String) -> void:
 			hud.call("message", tr("msg.c2_disc"))
 			AudioManager.ui("ui_tap")
 		_:
-			if cur != "vault":
+			if cur == "vault_ports":
+				# the door around the ports and the disc (the disc has no collider of its own): what the overlay wants
+				hud.call("message", tr("msg.c2_disc"))
+				AudioManager.ui("ui_tap")
+			elif cur != "vault":
 				cam.go("vault")
 			else:
 				# the door body or a bolt: shut until the overlay matches, then the wheel opens it

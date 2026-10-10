@@ -426,6 +426,22 @@ func _place_lights_from_models() -> void:
 	var dl := ModelUtil.find(models.get("desk_lamp"), "light_origin")
 	if dl:
 		(lights["desk_lamp"] as Light3D).global_position = dl.global_position + Vector3(0, -0.04, 0)
+	# The sculpture's ring and rod are plain meshes (no IA_ collider): a tap on them fell through to the wall. A box
+	# around each takes the tap; the smaller knob colliders still win where they overlap.
+	for nm in ["sculpture_ring", "sculpture_rod"]:
+		var mi := ModelUtil.find(models.get("shadow_lock"), nm) as MeshInstance3D
+		if mi and mi.mesh:
+			var ab := mi.mesh.get_aabb()
+			var body := StaticBody3D.new()
+			var cs := CollisionShape3D.new()
+			var box := BoxShape3D.new()
+			box.size = ab.size + Vector3.ONE * 0.02
+			cs.shape = box
+			cs.position = ab.get_center()
+			body.add_child(cs)
+			body.set_meta("part", nm)
+			body.set_meta("hotspot", "shadow")
+			mi.add_child(body)
 	# per-card photographs on the evidence wall and the drying line
 	for k in 8:
 		var card := ModelUtil.find(models.get("evidence_board"), "photo_%d" % k) as MeshInstance3D
@@ -1090,6 +1106,7 @@ func _interact_shadow(part: String) -> void:
 		cam.go("shadow")
 	elif cur == "shadow":
 		cam.go("sculpture") # the sculpture's table or lamp: come closer to the two knobs
+		AudioManager.ui("ui_tap")
 	elif cur == "sculpture":
 		hud.call("message", tr("obj.shadow"))
 		AudioManager.ui("ui_tap")
