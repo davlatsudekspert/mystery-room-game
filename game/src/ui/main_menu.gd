@@ -3,7 +3,9 @@ extends Control
 ## Settings as serif text items (MenuItem), store notices. A vignette and a dark gradient behind the column keep the
 ## text readable (menu_atmosphere.gdshader). The logo fades in, then the items one after another (none of that with
 ## Settings "reduce_motion"). Text and touch targets follow UITheme's screen-based sizing; the logo gives way when
-## the items need the height.
+## the items need the height. The box in the backdrop can be played (tap its knobs) and is the start transition: New
+## Game / Continue spin its wheels into line, open it on a warm light and push the camera in (MenuBoxLogic), then hand
+## over to SceneManager.goto exactly once; a tap skips ahead, Settings "reduce_motion" makes it a short fade only.
 
 var _menu: VBoxContainer
 var _left: VBoxContainer
@@ -15,6 +17,13 @@ var _ver: Label
 var _bg: MenuBackground
 var _atmo: ColorRect # vignette, column gradient and logo glow (canvas shader)
 var _cover: ColorRect # black over the 3D at first, faded out by the entrance
+var _svc: SubViewportContainer
+var _vp: SubViewport
+var _shield: Control # swallows taps while the start transition runs (a tap skips it)
+## Where the chapter scene is loaded; tests replace it to count the calls (default SceneManager.goto).
+var goto_fn := Callable()
+var _starting := false
+var _pending_scene := ""
 
 const LOGO_SIZE := Vector2(700, 525)
 const MENU_SEP := 6.0
@@ -28,16 +37,17 @@ var _safe_poll := 0.0
 func _ready() -> void:
 	theme = UITheme.build()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var svc := SubViewportContainer.new()
-	svc.stretch = true
-	svc.set_anchors_preset(Control.PRESET_FULL_RECT)
-	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(svc)
-	var vp := SubViewport.new()
-	vp.own_world_3d = true
-	svc.add_child(vp)
+	_svc = SubViewportContainer.new()
+	_svc.stretch = true
+	_svc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_svc)
+	_vp = SubViewport.new()
+	_vp.own_world_3d = true
+	_svc.add_child(_vp)
 	_bg = MenuBackground.new()
-	vp.add_child(_bg)
+	_vp.add_child(_bg)
+	_bg.start_goto.connect(_do_goto)
 	_cover = ColorRect.new()
 	_cover.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_cover.color = Color(0, 0, 0, 0)
@@ -90,6 +100,12 @@ func _ready() -> void:
 	_panel_host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_panel_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_panel_host)
+	_shield = Control.new()
+	_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_shield.mouse_filter = Control.MOUSE_FILTER_STOP
+	_shield.visible = false
+	_shield.gui_input.connect(_on_shield_input)
+	add_child(_shield)
 	_build_menu()
 	_entrance()
 	CrashGuard.mark("menu")
@@ -165,6 +181,8 @@ func _update_logo() -> void:
 
 
 func _process(delta: float) -> void:
+	if _starting:
+		_follow_transition()
 	# a 180° turn (sensor_landscape) moves the camera cutout to the other side without resizing the window
 	_safe_poll += delta
 	if _safe_poll >= 0.5:
@@ -212,6 +230,38 @@ func _layout() -> void:
 	var free_r := canvas.x - safe.z
 	_bg.set_frame(Vector2((free_l + free_r) * 0.5 / canvas.x, 0.54), (free_r - free_l) / canvas.x * 0.72)
 	_update_atmosphere()
+
+
+## The start transition drives the black cover and eases the overlay (column gradient, vignette) off the glow.
+func _follow_transition() -> void:
+	_cover.color.a = _bg.fade()
+	var push := _bg.box.push()
+	if push > 0.0:
+		var sm := _atmo.material as ShaderMaterial
+		var canvas: Vector2 = UITheme.metrics()["canvas"]
+		var free_l := _left.offset_right
+		var free_r := canvas.x - UITheme.safe_margins().z
+		var focus := Vector2((free_l + free_r) * 0.5 / canvas.x, 0.54).lerp(Vector2(0.5, 0.5), push)
+		sm.set_shader_parameter("focus", focus)
+		sm.set_shader_parameter("column_dark", 0.8 * (1.0 - push))
+		sm.set_shader_parameter("vignette_inner", 0.16 + 0.5 * push)
+
+
+## Taps on the backdrop (the menu items and panels take theirs first): knobs of the box, or a tap that closes its lid.
+func _gui_input(event: InputEvent) -> void:
+	if _starting or _dim.visible:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var k := Vector2(_vp.size) / Vector2(maxf(1.0, _svc.size.x), maxf(1.0, _svc.size.y))
+		if _bg.tap(event.position * k):
+			accept_event()
+
+
+func _on_shield_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		_bg.box.logic.skip()
+	elif event is InputEventScreenTouch and event.pressed:
+		_bg.box.logic.skip()
 
 
 ## Points the overlay shader at the current layout: vignette on the box, gradient behind the column, glow behind
@@ -282,9 +332,26 @@ func _play(chapter_id: String) -> void:
 	if not playable(chapter_id):
 		_show_chapters() # a save of a chapter this build cannot load (no scene yet, or unreleased): pick another
 		return
+	if _starting:
+		return
+	_starting = true
+	_pending_scene = Chapters.get_chapter(chapter_id)["scene"]
 	AudioManager.stop_music(1.5)
-	var ch := Chapters.get_chapter(chapter_id)
-	SceneManager.goto(ch["scene"])
+	_shield.visible = true
+	if not bool(Settings.get_value("reduce_motion")):
+		var tw := create_tween().set_parallel(true) # the menu gives way to the box
+		tw.tween_property(_left, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(_ver, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_SINE)
+	_bg.begin_start()
+
+
+## The start transition reached the point where the loading flow begins (once per start; a skip calls it at once).
+func _do_goto() -> void:
+	var fade_time := 0.3 if bool(Settings.get_value("reduce_motion")) else 0.45
+	if goto_fn.is_valid():
+		goto_fn.call(_pending_scene, fade_time)
+	else:
+		SceneManager.goto(_pending_scene, fade_time)
 
 
 ## A chapter whose scene this build can load: it is released and has a scene. Continue on any other save (an

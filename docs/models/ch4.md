@@ -642,3 +642,18 @@ Order: A first (everything else is QA-rendered inside `shell_hall`); then B, C, 
    - the master desk's slope is 38.2° (from (z 0.46, y 0.95) to (z −0.20, y 1.47)) and its jog wheel, dial, bay and chart are placed on it
      with the formula P(s, x) of §4; the chart drum and the pen are static (the shader draws the pen mark); the keeper unit has no lamp;
    - Panel 0's switches stand at x = −0.74 and its numerals at x = −0.85 (the bezel took the first positions).
+9. **Built-model changes found while modelling** (groups C–E; the measured pages `ch4_c.md`, `ch4_d.md` and `ch4_e.md` have the numbers):
+   - **Group C.** `floor_mark` (×8) of the design brief is not built (item 4). `ring_rails` has the sleepers and the guide grooves in steel / brass only (no concrete
+     slot), the numerals I–IV lie on the floor west of the catwalk. `array_rings` is one node per ring, no brass (one slot, four surfaces). `mirror_tower` cannot meet
+     "≤ 3 surfaces" with its own part list (body, head, key, four numeral variants): the file has 8 surfaces, **5 drawn per tower**. `tower_head`'s mirror
+     face looks up and +Z; the chrome numerals sit on a brass plate on the post's +Z face. The `IA_key` at (0, 0.19, 0.24) is hidden by the south coaming
+     from the proposed `hatch_n` camera (z + 0.55): use z + 0.35.
+   - **Group D.** The Core is three nodes (`core_pedestal`, `core_shell`, `core_light`) plus `core_center`; the 41 + 1 sprites are code only (no prototype
+     in the file). The collar is a **bottom rail + top rail + 42 balusters** (open in the middle) with a solid **digit housing** (a lock box with four windows) closing
+     the south; the glass case is an octagon (circumradius 1.10). `cradle` adds the lamp slot `M_Glass_Dark` (`cradle_ring`) and `heart_drawer`'s pads, the frosted pane
+     and the item mounts are children of `IA_heart_drawer`. The cage gates and the digit wheels are `M_Brass_Polished` (tappable parts read brighter than the aged
+     lattice). **The `island`, `collar` and `core` cameras of §2 (y 3.6 – 3.8) are inside the collar's band (world y 3.35 … 4.05) and the digit housing stands in front of
+     the cradle, the drawer and the Core's lower half: use cameras above y ≈ 4.4** (see `ch4_d.md`).
+   - **Group E.** `sun_iris` has six guide rails and end stops out to r 1.94 (the leaves slide 0.95 out, so the frame is Ø 2.4 at the ring and Ø 3.9 over the rails).
+     `sun_pedestal` uses `M_Paint_Green` for `ammeter_band` (five slots) and its feed scale numerals read the GAP g (9 at the top, clockwise to 0).
+     `rod_a` and `rod_b` lie on the lamp's X axis, their tips touching at x = −0.25 (local); the arc light sits there.
