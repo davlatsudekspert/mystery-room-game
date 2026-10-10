@@ -68,7 +68,7 @@ def steel():
     # a diagonal brace at each end, bolts at the leg tops
     for sx in (-1, 1):
         x = sx * (W2 - 0.032)
-        br = B.gbox("brace", (x - 0.002, -0.015, -0.3), (x + 0.002, 0.015, 0.3), PAINT, 0.0)
+        br = B.gbox("brace", (-0.002, -0.015, -0.3), (0.002, 0.015, 0.3), PAINT, 0.0)
         br.data.transform(Matrix.Translation((x, 0.50, DEPTH / 2)) @ Matrix.Rotation(math.radians(-42 * sx), 4, "X"))
         p.append(br)
         for z in (0.03, DEPTH - 0.03):

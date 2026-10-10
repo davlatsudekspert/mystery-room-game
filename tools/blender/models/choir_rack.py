@@ -125,7 +125,7 @@ def brass_static():
         p.append(B.gbox("strap", (x - 0.022, BAR[0], BAR[3]), (x + 0.022, BAR[1] + 0.02, BAR[3] + 0.003), BRASS, 0.001))
         for y in (BAR[0] + 0.02, BAR[1] + 0.005):
             p.append(B.rivet("srv", 0.004, (x, y, BAR[3] + 0.003), normal=(0, 0, 1), mat=BRASS, segs=6))
-        p.append(B.gbox("hblock", (x - 0.018, BAR[0] - 0.035, PEG_Z[0]), (x + 0.018, BAR[0], 0.19), BRASS, 0.002))
+        p.append(B.gbox("hblock", (x - 0.018, BAR[0] - 0.02, PEG_Z[0]), (x + 0.018, BAR[0], 0.19), BRASS, 0.002))  # cap top 2.277
         p.append(B.gcyl("peg", PEG_R, PEG_Z[0] + 0.01, PEG_Z[1], base=(x, PEG_Y, 0.0), axis=(0, 0, 1), segments=8, mat=BRASS))
         p.append(B.glathe("pegtip", [(0.0, 0.0), (0.0075, 0.0), (0.0075, 0.004), (0.0, 0.008)], (x, PEG_Y + 0.002, PEG_Z[1]),
                           (0, 0, 1), 8, BRASS, smooth=50.0))

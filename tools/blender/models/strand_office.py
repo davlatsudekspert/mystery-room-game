@@ -92,9 +92,10 @@ def partitions():
     p = []
     # east partition: local X = world +Z (from z 1.2), thickness along world X
     m_e = B.frame_mat((EX, 0.0, NZ), (0, 0, 1), (0, 1, 0))
-    bay(p, m_e, 0.04, DOOR_Z[0] - NZ)
-    bay(p, m_e, DOOR_Z[0] - NZ, DOOR_Z[1] - NZ, door=True)
-    bay(p, m_e, DOOR_Z[1] - NZ, 4.0 - NZ)
+    # the door bay's jambs stand outside the doorway (z 2.16 .. 2.20 and 3.10 .. 3.14): the leaf fills 2.22 .. 3.10
+    bay(p, m_e, 0.04, DOOR_Z[0] - NZ - 0.04)
+    bay(p, m_e, DOOR_Z[0] - NZ - 0.04, DOOR_Z[1] - NZ + 0.04, door=True)
+    bay(p, m_e, DOOR_Z[1] - NZ + 0.04, 4.0 - NZ)
     # north partition: local X = world +X (from x -13.0), thickness along world Z
     m_n = B.frame_mat((WX, 0.0, NZ), (1, 0, 0), (0, 1, 0))
     for (a, b) in ((0.0, 0.70), (0.70, 1.40), (1.40, 2.10), (2.10, EX - WX - 0.04)):
