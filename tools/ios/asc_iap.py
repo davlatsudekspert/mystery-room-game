@@ -165,16 +165,21 @@ def ensure_iap(asc: AscWriter, app_id: str) -> dict:
 	return first(body) if 200 <= st < 300 else {}
 
 
-def ensure_localizations(asc: AscWriter, iap_id: str | None) -> list[str]:
+def ensure_localizations(asc: AscWriter, iap_id: str | None, try_uz: bool) -> list[str]:
 	have: dict[str, dict] = {}
 	if iap_id:
 		st, locs = asc.get_all(f"/v2/inAppPurchases/{iap_id}/inAppPurchaseLocalizations")
 		have = {l["attributes"].get("locale"): l for l in locs}
 		out(f"- localizations: HTTP {st}, {sorted(have) or 'none'}")
+	# Uzbek is tried at the first setup (or with --try-uz); once refused, re-runs do not send it again
+	try_uz = try_uz or not have
 	missing = []
 	for locale, (name, desc) in LOCALIZATIONS.items():
 		assert len(name) <= 30 and len(desc) <= 45, locale
 		cur = have.get(locale)
+		if locale == "uz" and not cur and not try_uz:
+			out("  uz: not offered by App Store Connect (refused at the first setup; --try-uz asks again)")
+			continue
 		if cur:
 			ca = cur["attributes"]
 			if ca.get("name") == name and (ca.get("description") or "") == desc:
@@ -329,6 +334,7 @@ def main() -> int:
 	ap.add_argument("--territories", choices=["app", "all"], default="app",
 		help="in-app purchase availability: the app's territories (default) or every territory")
 	ap.add_argument("--review-screenshot", metavar="PNG", help="App Review screenshot of the purchase screen")
+	ap.add_argument("--try-uz", action="store_true", help="send the Uzbek localization again (App Store Connect has refused it so far)")
 	a = ap.parse_args()
 	out(f"## App Store Connect in-app purchase setup: {PRODUCT_ID} ({'APPLY' if a.apply else 'DRY RUN, nothing is changed'})")
 	key_id, issuer = os.environ.get("ASC_KEY_ID", "").strip(), os.environ.get("ASC_ISSUER_ID", "").strip()
@@ -354,7 +360,7 @@ def main() -> int:
 		return 1
 	iap_id = iap.get("id")
 	todo: list[str] = []
-	todo += ensure_localizations(asc, iap_id)
+	todo += ensure_localizations(asc, iap_id, a.try_uz)
 	todo += ensure_price(asc, iap_id)
 	todo += ensure_availability(asc, iap_id, app_territories(asc, app["id"], a.territories))
 	todo += ensure_screenshot(asc, iap_id, a.review_screenshot)

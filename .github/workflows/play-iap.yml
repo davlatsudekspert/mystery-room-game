@@ -1,0 +1,62 @@
+# MYSTERY ROOM — Google Play: set up the one-time product "full_game" (ubuntu, ~1 min; manual trigger only).
+# tools/android/play_iap.py. DRY RUN BY DEFAULT: with dry_run=true (the default) it only reads (plus Google's
+# read-only regional price calculation) and prints the planned changes. dry_run=false creates or fixes, idempotently,
+# the managed product full_game of com.mysteryroom.forgotteninstitute only: active, "Full Game" / «Полная игра»,
+# US$4.99 in the United States and Google's local price in every other region. It never touches another app, a
+# track, the store listing, the app's price or availability.
+# Before anything it checks the prerequisites and stops with a clear message (exit 3) naming the missing one:
+#   - the service account's app permission "Manage in-app products" (it was given only "Release apps to testing tracks");
+#   - a payments (merchant) profile;
+#   - an uploaded build that declares com.android.vending.BILLING (android.yml include_billing=true or store_sandbox=true).
+# Owner steps in Uzbek: docs/release/GOOGLE_PLAY_TESTING.md §11. Secret: PLAY_SERVICE_ACCOUNT_JSON (never printed).
+name: Google Play in-app product setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only read and print the planned changes (true). false = create/fix full_game in Google Play"
+        type: boolean
+        default: true
+      home_currency:
+        description: "The payments profile's currency (Play's default price must be in it), e.g. USD"
+        type: string
+        default: "USD"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-iap
+  cancel-in-progress: false
+
+jobs:
+  iap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Inputs
+        env:
+          HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+          HOME_CURRENCY: ${{ inputs.home_currency }}
+        run: |
+          [ "$HAS_PLAY" = "true" ] || { echo "::error::Missing repository secret PLAY_SERVICE_ACCOUNT_JSON"; exit 1; }
+          [[ "$HOME_CURRENCY" =~ ^[A-Z]{3}$ ]] || { echo "::error::home_currency must be a 3-letter code such as USD"; exit 1; }
+          echo "dry_run=${{ inputs.dry_run }} home_currency=$HOME_CURRENCY"
+
+      - uses: actions/checkout@v5
+
+      - name: Install PyJWT
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "PyJWT==2.10.1" "cryptography==44.0.2"
+
+      - name: One-time product full_game (${{ inputs.dry_run && 'dry run' || 'APPLY' }})
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          HOME_CURRENCY: ${{ inputs.home_currency }}
+        run: |
+          args=(--home-currency "$HOME_CURRENCY")
+          if [ "$DRY_RUN" != "true" ]; then args+=(--apply); fi
+          "$RUNNER_TEMP/venv/bin/python" tools/android/play_iap.py "${args[@]}"

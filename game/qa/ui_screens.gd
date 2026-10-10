@@ -117,6 +117,8 @@ func _run() -> void:
 	if mobile:
 		Settings.emulate["mobile"] = true
 	SaveSystem.save_path = "user://qa_ui_save.json"
+	Premium.path = "user://qa_ui_entitlements.cfg" # nothing owned: the chapter list offers Unlock
+	Premium.revoke_all_for_tests()
 	if saved:
 		GameState.start_new("ch1") # saves: the menu offers Continue
 	for li in langs.size():
@@ -146,6 +148,10 @@ func _run() -> void:
 		menu.call("_show_chapters")
 		await _settle(0.6)
 		await _shot("%s_chapters" % lang, host)
+		# the purchase screen (debug build: the mock store's price); also the App Review screenshot of full_game
+		menu.call("_show_purchase")
+		await _settle(0.6)
+		await _shot("%s_purchase" % lang, host)
 		menu.call("_confirm", "ui.new_game_confirm", func() -> void: pass)
 		await _settle(0.4)
 		await _shot("%s_confirm" % lang, host)

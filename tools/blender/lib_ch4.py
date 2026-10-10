@@ -180,9 +180,9 @@ VIEWS = {
     "lift_chalk": ((-2.9, 1.55, 15.4), (-3.0, 1.5, 18.18), 46),
     "bridge": ((0.0, 4.4, 14.6), (0.0, 3.4, 0.0), 66),
     "desk": ((0.0, 4.35, 14.5), (0.0, 3.5, 13.1), 58),
-    "chronometer": ((0.0, 4.15, 14.1), (0.0, 3.7, 13.2), 40),
+    "chronometer": ((0.0, 4.5, 14.3), (0.0, 3.75, 13.2), 40),
     "handwheels": ((0.0, 4.9, 15.2), (0.0, 3.3, 9.0), 84),
-    "panel0": ((0.0, 1.45, 12.7), (0.0, 1.2, 14.0), 50),
+    "panel0": ((0.0, 1.2, 12.3), (0.0, 1.15, 14.0), 62),
     "catwalk": ((0.0, 3.9, 11.6), (0.0, 3.0, 3.0), 64),
     "island": ((0.0, 3.8, 5.6), (0.0, 3.2, 0.0), 64),
     "apse": ((-5.5, 1.7, 0.3), (-12.5, 1.8, 0.0), 62),
@@ -256,6 +256,14 @@ def lights(cam=None, fill=40.0, shaft=True, core=True, work=True, bridge_lamp=Fa
                 spot_deg=60)
     if cam is not None and fill > 0:
         K.light("fill", "POINT", (cam[0] + 0.12, cam[1] + 0.18, cam[2] + 0.05), fill, "FFE2C2", radius=0.2)
+
+
+def rot_about(obj, axis_godot, deg: float) -> None:
+    """QA pose: turn a placed part about an arbitrary Godot axis through its own origin (its parent has no rotation)."""
+    a = K.V.C @ Vector(axis_godot).normalized()
+    p = obj.matrix_basis.translation.copy()
+    obj.matrix_basis = Matrix.Translation(p) @ Matrix.Rotation(math.radians(deg), 4, a) @ Matrix.Translation(-p) @ obj.matrix_basis
+    M.refresh()
 
 
 def shoot(name, cam, target, vfov, samples=32, res=(960, 640), world=0.03):

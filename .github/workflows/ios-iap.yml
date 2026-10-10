@@ -1,0 +1,60 @@
+# MYSTERY ROOM — App Store Connect: set up the in-app purchase "full_game" (ubuntu, ~1 min; manual trigger only).
+# tools/ios/asc_iap.py. DRY RUN BY DEFAULT: with dry_run=true (the default) every request is a GET and the planned
+# changes are only printed. dry_run=false creates or fixes, idempotently, on the MYSTERY ROOM app only
+# (bundle id com.mysteryroom.forgotteninstitute): the NON_CONSUMABLE product full_game ("Full Game"), its en-US and
+# ru localizations (Uzbek is tried once; App Store Connect has no Uzbek locale), a price schedule based in the
+# United States at US$4.99 (Apple sets the other territories' prices), availability in the app's territories, and
+# the App Review screenshot. It never submits anything for review and never changes the app's name, price or
+# availability. The result and what is still missing for "Ready to Submit" go to the job summary.
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64 (never printed). Details: docs/MONETIZATION.md
+name: iOS in-app purchase setup (App Store Connect)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only read and print the planned changes (true). false = create/fix full_game in App Store Connect"
+        type: boolean
+        default: true
+      territories:
+        description: "In-app purchase availability: app = the app's territories, all = every territory"
+        type: choice
+        options: [app, all]
+        default: app
+      review_screenshot:
+        description: "Upload the App Review screenshot docs/store/iap/full_game_review.png (needed for review, not for sandbox)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-iap
+  cancel-in-progress: false
+
+jobs:
+  iap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install PyJWT
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "PyJWT==2.10.1" "cryptography==44.0.2"
+
+      - name: In-app purchase full_game (${{ inputs.dry_run && 'dry run' || 'APPLY' }})
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          TERRITORIES: ${{ inputs.territories }}
+          SHOT: ${{ inputs.review_screenshot }}
+        run: |
+          args=(--territories "$TERRITORIES")
+          if [ "$DRY_RUN" != "true" ]; then args+=(--apply); fi
+          if [ "$SHOT" = "true" ]; then args+=(--review-screenshot docs/store/iap/full_game_review.png); fi
+          "$RUNNER_TEMP/venv/bin/python" tools/ios/asc_iap.py "${args[@]}"

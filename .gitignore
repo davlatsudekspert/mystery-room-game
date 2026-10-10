@@ -29,3 +29,8 @@ __pycache__/
 
 # Godot generated translations (rebuilt on import)
 *.translation
+
+# Store plugins: added on the CI runner only by tools/store/add_store_plugins.py (pinned zips), never committed,
+# so a build without billing cannot declare BILLING or link StoreKit by accident (docs/MONETIZATION.md)
+game/addons/GodotGooglePlayBilling/
+game/ios/plugins/
