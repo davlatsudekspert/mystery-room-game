@@ -60,6 +60,17 @@ Only the criteria that moved. Evidence: the same seed played before and after th
 | 7 | Ch2 | 6 → **5.5** | Hall view 166 draw calls (budget 150; it was 144 before the aisle sign and the HUD column), ~86k primitives | A `--perf --breakdown` run is queued to name the extra draws |
 | 8 | both | 8 | Ch1 seed 4242: 100 taps, 0 fallbacks before and after; Ch2 seed 777 leave: 94 taps, 0 fallbacks before and after. 102 tests pass on main plus these changes | More seeds and both player reviews are queued behind other agents' renders |
 
+## 2026-10-10 owner-feedback round: HUD overlap, Panel 7, the safe chain (Chapters 1 and 2)
+The owner played Chapter 1 on an Android phone. Evidence: `tap_map --hud-check` at 19.5:9, 20:9, 16:9 and 4:3 (rules and result lines in `docs/GAMEPLAY_QA.md`), both playthroughs on the final code, 151 headless tests, before/after frames in `docs/previews/quality/` (`ch1_panel7_framing_*`, `ch1_panel7_powered_before_after.jpg`, `ch1_poster_before_after.jpg`, `ch1_notebook_p4_icons_en_ru_uz.jpg`, `ch1_poster_vs_uv_glyphs.jpg`).
+
+| # | Chapter | Change | Evidence | Main gap |
+|---|---|---|---|---|
+| 4 | Ch1 | Panel 7's close-up fits the area the HUD leaves free: the icons, lamps, switches, main lever and its 0 / 1 plate are all on screen and clear of every corner button at the four screen shapes | `--hud-check`: 0 failures in all 36 Ch1 views at 19.5:9 and 4:3 (after reframing the shadow and radio-hatch views); the panel view 0 failures at 20:9 and 16:9 | Not tried with a real finger on the owner's phone |
+| 4 | Ch1 | The safe code chain is pointed at from three places: the UV page line, hint 1 and hint 2, and the poster is fitted whole in its close-up with 4.3:1 ink contrast (was 2.1:1) | The poster's 10 cells match the 10 UV glyphs (`ch1_poster_vs_uv_glyphs.jpg`); `test_safe_chain.gd` | The reader's picture is small on a 19.5:9 phone at the largest text size (pinch or double-tap zooms); owned by the UX pass |
+| 5 | Ch1 | Notebook page 4 shows the panel's four icons next to LOCK, LIGHT, ARRAY and VENT in EN, RU and UZ | `ch1_notebook_p4_icons_en_ru_uz.jpg` | |
+| 4 | Ch2 | Every view checked for HUD overlap at 19.5:9 and 4:3 | Result lines in `docs/GAMEPLAY_QA.md`: 0 failures | The locker view shows slivers of locker 7 and 11 at the screen edge, the vault-ports view a sliver of the wheel (scenery, reported) |
+| 8 | both | Ch1 seeds 4242 and 1337, Ch2 seed 777 on both lens paths | 100 / 101 / 94 / 86 taps, 0 logic fallbacks, 0 taps under a HUD control | `Lambda capture at index 0 was freed` is logged once or twice per playthrough (all four runs) when several items fly into the bag at once (`hud.gd` `_fly_to_bag`, the UX pass's code); harmless, but noisy |
+
 ## Fixes found by QA in this round (see `docs/GAMEPLAY_QA.md`)
 - Chapter 2 crash on every "use item" tap: `ItemDB.is_tool` clashed with Godot's `Script.is_tool()`.
 - The projector beam rendered as a floor-to-ceiling slab.

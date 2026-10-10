@@ -20,6 +20,7 @@ How each chapter has been checked. The five status levels are never mixed:
 |---|---|---|---|
 | 2026-10-09 | camera feel (smooth follow, glide, arcs), dust without shadows, merged shelf meshes, crash recovery, launch/name fixes | seed 4242: all steps ✓, 100 taps, 0 fallbacks | seed 4096, leave path: all steps ✓, 83 taps, 0 fallbacks |
 | 2026-10-10 | light pass (glow, emissives, beam haze, splicer box, camera fill), feedback for every tap, Panel 7 re-framed, radiator and sculpture tap areas, drawer / safe / dial / punch close-ups brought in | seed 4242: all steps ✓, 5/5 shards, 100 taps, 0 fallbacks (before and after the light changes) | seed 777, leave path: all steps ✓, 94 taps, 0 fallbacks (before and after) |
+| 2026-10-10 (owner feedback) | Panel 7 and the poster fitted to the HUD's free area, bag HUD, notebook page 4 icons, safe hints, shadow / radio-hatch reframes, story caption waits outside Panel 7 | seed 4242: all steps ✓, 5/5 shards, `taps through 3D scene: 100, logic fallbacks (missing models/placeholders): 0`; seed 1337: all steps ✓, `taps through 3D scene: 101, logic fallbacks (missing models/placeholders): 0`; both `taps under a HUD control: 0 (window 1920x1080)` | seed 777 leave: all steps ✓, `taps through the 3D scene: 94, logic fallbacks: 0`; seed 777 take: all steps ✓, `taps through the 3D scene: 86, logic fallbacks: 0`; both `taps under a HUD control: 0 (window 1920x1080)` |
 
 All screenshots come from the software renderer in the dev container (lavapipe, no GPU), so colours and frame rate are only indicative of phones.
 
@@ -45,6 +46,32 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 | The radiator was part of the static shell | No way to reach the low radiator view, where a Lumen shard hides between its feet, except a lucky UV sweep from across the room | A tap area on the radiator with its own view and caption |
 | 17 taps answered with nothing: the stopped clock, the desk top and its side, the shut gear-box lid, the shut safe door, the panel's lamps, the bench, the coat, the filing cabinet, the window, the door's eye, the projector's empty socket, the sculpture body, emptied containers, solved wheels and keys, the bookcase after it swung open, the projector lever while the beam is on | The player could not tell a wrong idea from a tap that did not register | Each answers with a short line (13 new EN/RU/UZ keys) and/or a sound; emptied containers say "Empty now."; solved wheels and keys tick quietly. Checked by the feedback audit: 48 taps, 0 silent |
 | Glow 0.6 / bloom 0.05 / threshold 1.1 with emissives at 3.5–4.0 | The panel's jewel lamps, the pendant bulbs, the projector lens and the beam bloomed into white patches; the radio dial clipped white (8 % of the frame) | Glow 0.4 / 0 / 1.35; lamp glass 2.2, bulbs 2.6, beam energy 0.75 (the shader's 1.6), emblem decal 2.2; the camera fill drops to 0.45 at the radio, poster and lock close-ups, where it clipped the cream dial, the glossy glass and the pale eye |
+
+<!-- hud-check-ch1 -->
+### Owner feedback from an Android phone (2026-10-10): Panel 7, the HUD, the safe code chain
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| Panel 7 close-up: the four icons above the lamps were cut off by the title and the main lever with its "1" plate sat under the inventory | Taps on the lever hit inventory slots; the icons that the notebook refers to could not be read | The close-up is **fitted** to the area the HUD leaves free (`RoomCamera.fit_rect` with `hud_free_rect`, refitted when the screen or the text size changes), so the whole plate, icons to lever, shows at 16:9, 19.5:9, 20:9 and 4:3 (`docs/previews/quality/ch1_panel7_framing_{phone61,tablet10}_before_after.jpg`, `ch1_panel7_powered_before_after.jpg`). Each switch bay and the lever have a finger-sized tap area; the lamp icons are 2.7 cm on the plate. The story caption that follows the power-on ("a faint red glow around the bookcase") sat over the icons for 4.5 s, so it now waits until the player leaves the panel |
+| Nothing checked that a control is clear of the HUD: the solver's taps go straight to the room, so earlier runs passed while a phone player could not reach the lever | A defect only a human on a phone could find | `tap_map --hud-check` (see below) and a counter in both playthroughs: taps whose point lies under a HUD control. **0 in every run** |
+| Notebook page 4 named LOCK, LIGHT, ARRAY and VENT in words only; the Uzbek "Panjara" for ARRAY reads like a grille, which is what VENT is | The word-to-lamp link depended on the translation | The page draws the panel's four icons next to the words in all three languages (`{panel_lock}` … tokens, one additive helper `_ink_icons` in `hud.gd`), `docs/previews/quality/ch1_notebook_p4_icons_en_ru_uz.jpg` |
+| The safe chain (UV page symbols → Strand's *Tabula Resonantiarum* poster → dots → digits): hint 1 of "safe" talked about the page, the UV page never said where to look, the poster close-up had its header under a two-line title and its bottom under the prompt, and the ink read at 2.1:1 through the glass | The most likely place for a stuck player: they had four symbols and no pointer | Hint 1 names the poster on the safe's wall, hint 2 says each symbol's dots are one digit (none is 0); the UV page line reads "Count them on his Table of Resonances"; the poster view is fitted whole between title and prompt, its caption is one line, and its glass is hidden in that view (ink contrast **2.1 → 4.3:1** measured on the render). The reader keeps the long title. `docs/previews/quality/ch1_poster_before_after.jpg`; the poster's cells next to the UV page art for all 10 symbols: `ch1_poster_vs_uv_glyphs.jpg` (dot counts and shapes match; `test_safe_chain.gd` also compares the poster generator's table with the logic's and checks 200 seeds) |
+| Hints at levels 1 and 2 did not always name the object to go to | A stuck player was told what to do but not where | All 26 Ch1 goals re-read: the notebook's desk, the drawer wheels and the flip clock, Strand's gear box left of the desk, combining the cell with the lamp from the bag, the UV lamp for the page, the desk's keyhole, Panel 7's lever, the icons over the lamps, the radio's hatch, the bookcase's encyclopedia, the samples on the bench (EN/RU/UZ) |
+| `--hud-check` run at 19.5:9 and 4:3 found controls too close to the screen edge | Sculpture knobs 1–4 mm from the bottom edge in the shadow view; the radio's tuning knob 1.4 mm in the radio-hatch view | The shadow view is aimed lower; the radio-hatch camera is 18 cm further back |
+
+#### HUD check (`tap_map --hud-check`)
+Every interactive part of a view (`IA_*`, `Item_*`, `Shard_*`, `Echo_*`) must have its tap point on screen, outside every rectangle `HUD.blocked_rects()` reports (the four corner buttons; the bag tray when it is out) and at least 6 mm from the screen edge, with the message and prompt banners up as they are while a player works a mechanism with an item in hand. Two exceptions, both reported: a control the view can only *focus* (its tap moves the camera to the object's own view, `RoomBase.in_reach`) is checked in that view, not here; and a control with under 40 % of itself on screen that peeks in at the edge is scenery. A control under a banner is a warning, because banners take no input. Screens: `phone61` 2340×1080 at 400 dpi with a camera cut-out (19.5:9), `phone20` 20:9, `phone55` 1920×1080 (16:9), `tablet10` 2048×1536 (4:3).
+
+| Run | Result line, as printed |
+|---|---|
+| Ch1, 36 views, start state, 19.5:9 | `hud-check (phone61): 93 controls in 36 views, 0 failures, 13 banner warnings (80 focus-only controls and 0 slivers not checked)` |
+| Ch1, 36 views, start state, 4:3 | `hud-check (tablet10): 90 controls in 36 views, 0 failures, 6 banner warnings (59 focus-only controls and 0 slivers not checked)` |
+| Ch1, 10 darkroom views, bookcase open (`--until=shelf_open`), 19.5:9 / 4:3 | `hud-check (phone61): 9 controls in 10 views, 0 failures, 7 banner warnings (28 focus-only controls and 0 slivers not checked)` / `hud-check (tablet10): 9 controls in 10 views, 0 failures, 2 banner warnings (21 focus-only controls and 0 slivers not checked)` |
+| Ch1, 13 views with the beam on (`--until=beam_on`), 19.5:9 / 4:3 | `hud-check (phone61): 35 controls in 13 views, 0 failures, 12 banner warnings (13 focus-only controls and 0 slivers not checked)` / `hud-check (tablet10): 31 controls in 13 views, 0 failures, 4 banner warnings (9 focus-only controls and 0 slivers not checked)` |
+| Ch1 views changed in this pass (panel, poster, shadow, radio_hatch, safe), 20:9 / 16:9 | `hud-check (phone20): 26 controls in 5 views, 0 failures, 2 banner warnings (0 focus-only controls and 0 slivers not checked)` / `hud-check (phone55): 26 controls in 5 views, 0 failures, 2 banner warnings (0 focus-only controls and 0 slivers not checked)` |
+
+Before the check learned which controls a view can work, the first full run printed `hud-check (phone61): 173 controls in 36 views, 24 failures` and `hud-check (tablet10): 149 controls in 36 views, 7 failures`; all but the shadow and radio-hatch cases were controls seen at the edge of someone else's close-up.
+
+<!-- hud-check-ch1 -->
 
 ### Status
 | Area | Level | Evidence |
@@ -112,6 +139,19 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 | Pendant bulbs and shade linings at 3.0 / 0.55, lamp glass 3.0 everywhere, glow 0.6 / 0.05 / 1.1 | Every pendant in the hall was a white blot | Glow 0.4 / 0 / 1.35, lamp glass 2.2, shade glow 0.35 |
 | The screen shader's lit field at 1.25 | The slide view was a clipped white field (21 % of the frame) with no screen weave left | 1.05 |
 | 14 taps answered with nothing: the catalogue carcass, the gauges, the chart, the reading table, the stacks, the dial's centre, the dark screen, the empty screen socket, an empty crystal port, the vault door body, locker 9 once emptied, the slide gate and its turn knob without a slide, Eject with no reel, the splicer's light box, emptied grille / ledger / hatch / lens case / receive tray | As in Chapter 1 | Short lines (14 new EN/RU/UZ keys) and sounds; a tap on the vault door in the ports close-up now describes the disc instead of jumping back to the vault view. Checked by the feedback audit: 40 taps, 0 silent |
+
+<!-- hud-check-ch2 -->
+### HUD check (2026-10-10)
+`tap_map --hud-check` (rules in the Chapter 1 section) on every Chapter 2 view:
+
+| Run | Result line, as printed |
+|---|---|
+| 34 views, start state, 19.5:9 | `hud-check (phone61): 122 controls in 34 views, 0 failures, 30 banner warnings (202 focus-only controls and 3 slivers not checked)` |
+| 34 views, start state, 4:3 | `hud-check (tablet10): 119 controls in 34 views, 0 failures, 24 banner warnings (121 focus-only controls and 0 slivers not checked)` |
+| 12 booth views with the booth open (`--until=booth_open`), 19.5:9 / 4:3 | `hud-check (phone61): 27 controls in 12 views, 0 failures, 7 banner warnings (73 focus-only controls and 0 slivers not checked)` / `hud-check (tablet10): 27 controls in 12 views, 0 failures, 2 banner warnings (36 focus-only controls and 1 slivers not checked)` |
+| 8 vault views with the vault unlocked (`--until=vault_unlocked`), 19.5:9 / 4:3 | `hud-check (phone61): 16 controls in 8 views, 0 failures, 2 banner warnings (26 focus-only controls and 1 slivers not checked)` / `hud-check (tablet10): 16 controls in 8 views, 0 failures, 7 banner warnings (7 focus-only controls and 0 slivers not checked)` |
+
+<!-- hud-check-ch2 -->
 
 ### Status
 | Area | Level | Evidence |
