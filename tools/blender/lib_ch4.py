@@ -77,6 +77,7 @@ MARK_PHI = [180.0 + 45.0 * p for p in range(8)]       # mark p + 1
 def ensure_materials() -> None:
     K.ensure_materials()
     D.ensure_materials()
+    M.material(CHALK, color="ECE6D6", rough=1.0)
     for n in (CONC, GREEN, STEEL, BRASS, PAINT, CHEQ, CHROME, GLASS, GDARK, FROST, BAKE, CREAM, VELVET, CRYSTAL, LUMEN,
               CHALK, BRASS_P, SHQ, WALNUT, PAPER):
         M.material(n)
@@ -174,8 +175,9 @@ def report(label):
 
 # ---------------------------------------------------------------------- views (ch4.md section 2)
 VIEWS = {
-    "lift": ((0.5, 1.6, 16.9), (-1.0, 1.9, 12.0), 64),
-    "lift_chalk": ((-1.0, 1.55, 15.9), (-3.0, 1.5, 18.18), 50),
+    "lift": ((1.55, 1.6, 16.5), (5.0, 2.2, 12.5), 64),
+    "bay_hero": ((0.0, 1.7, 7.5), (0.0, 2.6, 15.5), 60),
+    "lift_chalk": ((-2.9, 1.55, 15.4), (-3.0, 1.5, 18.18), 46),
     "bridge": ((0.0, 4.4, 14.6), (0.0, 3.4, 0.0), 66),
     "desk": ((0.0, 4.35, 14.5), (0.0, 3.5, 13.1), 58),
     "chronometer": ((0.0, 4.15, 14.1), (0.0, 3.7, 13.2), 40),
