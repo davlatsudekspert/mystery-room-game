@@ -2,29 +2,31 @@
 
 How the work is organised (from 2026-10-09): the main session is the game director. Helper agents run in parallel; their results are reviewed and committed to `main`. If a session stops, the next one continues from this file, `DEVELOPMENT_STATUS.md`, `docs/GAMEPLAY_QA.md` and `docs/QUALITY_REPORT.md`.
 
-**Running now (2026-10-09, afternoon):**
-- main menu redesign in the owner's "The Room" direction (gear box hero, serif text items, entrance motion);
-- Ch3 model group A (shells, lift, doors), and groups B+C (Choir Hall props, control desk, cabinets, ports);
-- Ch3 room scene integration (`underground_room.gd`, `playthrough_ch3`): done for the built groups; as B, D, E and F land, rerun `playthrough_ch3` on both key paths (`--key=strand|leyla`), tap-map the new close-ups and re-measure the Choir views (choir_s 90 / desk 86 draw calls before group B);
-- store listing (letter-style description, hero screenshots).
+**State on 2026-10-10 (evening):**
+- Test builds out: Android 0.1.0 (10) on Play internal testing (completed, 39 testers) and TestFlight build 7 (VALID). Both carry the fixes for the owner's Chapter 1 phone report: the bag, taps through the HUD, Panel 7 framing, the Back order, the hint ladder, the UV light, the notebook icons and the safe clue chain. Verified on main: Ch1 playthroughs (seeds 4242 and 1337) and Ch2 (both lens paths) with 0 fallbacks and 0 taps under a HUD control; tap_map `--hud-check` with 0 failures on 36 Ch1 and 34 Ch2 views; 151 tests, 0 failures.
+- Chapter 3: every model is built (groups A–H) and integrated, with 0 fallbacks on both key paths (strand 102 taps, leyla 100) and Continue passing. Draw calls are at most 145 (choir_s) with the HUD.
+- Chapter 4: design, logic, solver and tests are done (24 tests, 16 profile combinations to 3 endings). The model contract is `docs/models/ch4.md`.
+- Apple: the Paid Apps agreement, banking and tax forms are active. Price decision: `full_game` $4.99.
 
-Next in the queue:
-- UI follow-ups after the owner's Chapter 1 phone feedback (done 2026-10-10: bag and tray, taps through the HUD, `blocked_rects()`, Android back order, hint ladder, UV page light, overlap-free HUD on 16:9 / 19.5:9 / 20:9 / 4:3): on a real device, check the Android back gesture order (predictive back on Android 14+), the tray's slide and the flight into the bag at 60 fps, the UV page's shaders on Mali / Adreno, and Extra large on the owner's phone; the room cameras can use `hud.blocked_rects()` to keep close-up controls clear of the four corner buttons;
-- Ch3 **model list complete** (2026-10-10: groups A to H built; E = `leyla_camp`, `field_recorder`, `oscillograph`, `crystal_shutter`, F = `gallery_console`, `memorial_wall`; measured notes `docs/models/ch3_e.md`, `ch3_f.md`): next, wire E and F into `underground_room.gd` (the mounts `cradle_mount`, `choice_mount`, `socket_42_mount` are the items' ORIGINS, see ch3_f.md; add a lamp over the console and one on the memorial arc) and rerun `playthrough_ch3` on both keys.
+**Running now:**
+- Ch3 set dressing (camp, shutter corridor, memorial gallery, grime): Sonnet agent;
+- Ch4 models, groups A and B (shell, bridge, catwalk, master desk, panel 0): Sonnet agent;
+- store purchases: StoreKit 2 and Play Billing plugins, `full_game` workflows for App Store Connect and Play written with `dry_run` (the director reviews and dispatches them), REAL_PAYMENTS_ENABLED stays false: Opus agent.
 
-**Top priority:** the iOS crash on New Game (TestFlight build 2). Build 5 adds crash recovery (CrashGuard, safe graphics), the last stage in the menu, and the log in the Files app. See docs/TESTING_ON_DEVICE.md, "Device reports".
+**Next in the queue:**
+1. The owner's device check of Android (10) and TestFlight 7. On iOS: does New Game reach the room? If not, get a screenshot of the menu's "safe N / last stop" line.
+2. HUD draw calls: the HUD costs about 60 draw calls in every view, which leaves choir_s 5 calls of margin. Batch the HUD (shared StyleBoxes, fewer separate CanvasItems, no per-button shader) before Chapter 4's hall.
+3. Chapter 4: models C–I, then the scene (`array_hall_room.gd`, views, culling, lights) and `playthrough_ch4` across the 16 profile paths.
+4. Chapter 3 release candidate: a rendered playthrough on both paths after the set dressing, the phone-brightness check, then `released: true`.
+5. The store purchase flow, tested in the TestFlight sandbox, and on Play with License testers only.
 
-| Track | Owner | Next |
-|---|---|---|
-| Game (3D, puzzles, story, UX) | director | iOS crash, game feel (camera done: smooth follow, glide, arcs), Chapter 3 integration review |
-| Android / Google Play | agent 1 | Release AAB path, closed-testing plan (12 testers × 14 days check), tester invitation plan → `docs/release/GOOGLE_PLAY_TESTING.md` |
-| iOS / TestFlight | agent 2 | Read-only check of the existing App Store Connect record "Mystery Room: Lost Institute" (no duplicate app), bundle id match, IPA build → `docs/release/IOS_TESTFLIGHT.md` |
-| QA / gameplay | agent 3 | Real-scene playthroughs of every chapter on many variant seeds, softlock/save/load/endings, mobile text and touch |
-| Visual / assets | agent 4 | Mobile UI text scaling and touch targets (in progress), then lighting, storytelling props, logo comparison |
-
-**Waiting on the owner (one decision each):**
-1. One-time approval to upload test builds to Google Play **Internal testing** and **TestFlight** (internal testers only). No external distribution or public release without a separate approval.
-2. Inviting testers to closed testing (later, separately).
+**Waiting on the owner:**
+1. The app icon variant: A, B or C. B is recommended (`docs/brand/icon_variants/`).
+2. Six localization terms (`docs/LOCALIZATION_REVIEW.md`).
+3. Google Play: the payments profile and bank account (the helper is on it), License testing, and the service-account permission for in-app products.
+4. Apple Small Business Program enrolment (15% commission), at developer.apple.com.
+5. EU DSA trader status, before any EU release.
+6. Closed testing invitations, production and public release: each needs a separate approval.
 
 ## Game
 1. **Chapter 2 release:** finish the player review (agent), fix its findings, then set `released: true` for ch2 in `game/src/core/chapters.gd` and update `test_premium_rules`. Tester builds already open it through the `beta_unlock` export feature.
