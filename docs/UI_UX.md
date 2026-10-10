@@ -5,7 +5,7 @@
 |---|---|---|
 | Room readability (wide 3D interior, multiple props in view) | Narrow FOV, so the room feels cramped and needs more rotation | ✅ Natural horizontal FOV, which matches the room's composition |
 | Close-up puzzles (wheels, keypads, switchboards are wider than tall) | Objects must shrink | ✅ Fill the screen with large touch targets |
-| Inventory | Column of 4 slots | ✅ Column on the left, 5 slots visible, scrolls |
+| Inventory | Column of 4 slots | ✅ A bag bottom left; its tray (a column of slots) slides out above it and scrolls |
 | Notebook (two-page spread) | Single page | ✅ Authentic two-page spread |
 | One-handed use | ✅ Better | Two thumbs, which is acceptable for a seated puzzle game |
 | Genre convention for premium 3D puzzle games | Rare | ✅ Common |
@@ -18,10 +18,10 @@ Splash → (first launch) Language picker → Main menu
 Main menu: Continue · New Game · Chapters · Settings · (Restore purchases in Settings)
 Game HUD: [◀ Back]        ◆ VIEW TITLE ◆             [💡 Hint]
           [slot]               caption line
-          [slot]|  (3D view)
+          [slot]|  (3D view)     ← the tray: only while the bag is open
           [slot]|  [👁][⊕] (beside the selected slot)
-          [slot]           message / item found banner
-                           "Use X on…" prompt          [II Pause]
+                           message / item found banner
+          [👜 Bag]          "Use X on…" prompt          [II Pause]
 Overlays: Reader (documents, inscriptions) · Inspect item · Hint · Pause · Settings · Toast · Chapter complete
 ```
 
@@ -32,7 +32,7 @@ Overlays: Reader (documents, inscriptions) · Inspect item · Hint · Pause · S
 - **Type scale:** design sizes are for a 1920×1080 canvas (body 26, buttons 34 in display small caps, view title 30, reading text 40). `UITheme.size()` scales them for the real screen from its dpi (`UITheme.auto_scale()`, capped at 3.2×): body text reaches a **3.0 mm cap height** (`BODY_CAP_MM`, about 4.2 mm em) at Normal on any phone or tablet (about 2.7× on a 6.1" phone at 460 dpi, 1.6× on a 10" tablet, 1× on a desktop), and nothing the player must read is smaller than **3 mm** em. From body size up to 72 px the boost tapers to half, so titles keep leading body text. Settings → Text size multiplies on top: **Normal 1.0 / Large 1.25 / Extra large 1.5** (`Settings.TEXT_SCALES`; older saves snap to the nearest preset). At Large and Extra large nothing overlaps: panels drop to one column and scroll, segmented controls stack, button rows wrap, and a newer HUD banner fades an older one it would cover.
 - **Contrast:** secondary text is `MUTED` b5ab97 (≥ 8:1 on panels). Every line over the 3D scene sits on a dark band or plate at 0.8 alpha (`UIBanner`, `UITheme.caption_plate()` for toasts): cream text ≥ 7:1 and muted text ≥ 4.5:1 even over a white frame.
 - **Safe area:** every screen, panel and toast stays inside the display's safe area (`UITheme.safe_margins()`, re-read after a rotation).
-- **Touch:** targets are at least **9 mm** (`UITheme.target()`; inventory slots 8.5 mm, sliders 8 mm), with 8 dp spacing between them. `qa/ui_screens.tscn --device=phone61|phone67|phone55|tablet10` measures every text and target in millimetres and fails on anything clipped, off-screen or under a cutout.
+- **Touch:** targets are at least **9 mm** (`UITheme.target()`; inventory slots too, `SLOT_MM`; slider grabbers are 8 mm inside 9 mm rows), with 8 dp spacing between them. `qa/ui_screens.tscn --device=phone61|phone67|phone55|tablet10` measures every text and target in millimetres and fails on anything clipped, off-screen or under a cutout.
 - **Motion:** UI 200 ms ease-out. Camera 600 ms cubic in-out. Toasts 2.2 s.
 
 ## Accessibility
@@ -68,11 +68,18 @@ A dark plate with a hairline gold frame (and a fainter second rule inside it), t
 
 ## HUD (`hud.gd`, `ui_banner.gd`, `icon_button.gd`)
 - **Banners** (`UIBanner`): a small-caps serif title between two gold flourishes (a diamond beside the word, a rule running outward and fading), a thin gold rule under it, a subtitle in the body font, on a soft dark band whose ends fade out, with hairlines along its edges. The view title at the top (between Back and Hint) is a title-only banner; captions and tutorial lines are subtitle-only banners under it; messages and the "Use X on…" prompt are subtitle-only banners at the bottom centre. **Item found**: the room's `Found: X` message turns into the item's icon, its name as the title and its one-line description as the subtitle, shown for 4.5 s. One-line texts hug their width; longer ones wrap at the band's maximum width, which keeps clear of the inventory column and the pause button. The caption grows downward and the message upward; when they would meet, the older one fades.
-- **Inventory column:** on the left inside the safe area, under the Back button: dark rounded slots (8.5 mm) stacked beside a thin vertical gold rule with small arrow tips, vertically centred in the free span and scrolling when there are more slots than fit. The selected slot has a brass frame and a warm fill; the Inspect and Combine buttons appear beside it, right of the rule. An empty inventory shows one faint slot frame.
+- **Bag** (owner feedback, Oct 2026: "instead of the items sitting there, a bag button"): a round bezel button bottom left, mirroring Pause, with an original line drawing of a doctor's bag (handle, a body widening to its base, the frame seam and a diamond clasp; `IconButton` "bag"). It opens and closes the **tray**: the inventory column slides out from the left edge in 0.22 s (cubic ease-out; in 0.22 s ease-in; with Reduce camera motion it only fades). While the tray is out the bag is lit (brass fill). While it is in, the bag shows the item in hand (its icon inside the bezel with a bright ring) and a count badge of the items it holds.
+  - **Default:** close-ups always start with the tray in (the whole close-up is the puzzle); room views show it as the player last left it there (Settings `inventory_open`, saved; collapsed on a first run). Opening it in a close-up lasts until the view changes and does not change the saved choice.
+  - **Picking in a close-up:** picking an item folds the tray away 0.3 s later, so the scene is free; the item is used by tapping the room as before. (Not when the tap also showed the Combine tip: the Combine button must stay visible.)
+  - **Found items** show in the item-found banner, then fly from its icon along a short arc into the bag (0.7 s), and the bag swells once as they land (only the swell with Reduce camera motion).
+  - **Tutorial:** the first item in empty pockets shows `tut.inventory` ("Found items go into your bag, bottom left…") and the bag swells, so the line points at the right place.
+- **Tray:** dark rounded slots (9 mm) stacked beside a thin vertical gold rule with small arrow tips, from under the Back button to just above the bag; the slots stand at the bottom, as if lifted out of the bag, and scroll with a drag when there are more than fit (a drag on a slot scrolls, it does not pick). The selected slot has a brass frame and a warm fill; the Inspect and Combine buttons appear beside it, right of the rule. An empty bag shows one faint slot frame. A slot whose icon has not rendered yet shows the item's name inside the square.
+- **Taps go to the room** unless they land on a button: every HUD container, rule, banner, bar and picture is `MOUSE_FILTER_IGNORE` (`hud.gd` `_quiet()`; on a touch screen any other control would swallow the touch). Only the corner buttons, the bag, the slots and the item actions take taps. `test_hud_bag.gd` checks this on the built HUD and taps through banners, the rule, the meter and the gaps between slots.
+- **Blocked rects:** `hud.blocked_rects() -> Array[Rect2]` returns every visible HUD control that takes a tap, in viewport pixels (the canvas that `Camera3D.unproject_position()` returns; a slot scrolled partly out of the tray counts with its visible part; an open overlay covers the screen). In a close-up the tray is in, so these are the four corner buttons (Back, Hint, Pause, Bag): the room camera frames close-ups so that their interactive parts stay out of these rects, and QA checks parts against them (`qa/ui_screens.tscn --view=panel --probe=panel7/IA_main_lever` reports whether Panel 7's main lever is free to tap; `--show-blocked` tints the rects on the screenshot).
 - **Buttons:** round bezel buttons drawn in code (a dark translucent disc, a hairline gold ring with a fainter inner ring, the icon in cream): Back top left, Hint top right (its nudge is a small gold dot), Pause bottom right with a roman-numeral **II**. Hit rects are at least 9 mm.
 - **Intro:** each card's text in the display serif between two gold rules on black, TAP TO CONTINUE in small caps at the bottom.
 - **Dialogs** (`UITheme.dialog()`): the hairline panel, the title over the gold rule, buttons in display small caps with a hairline frame (pressed = a soft brass fill). The pause menu fits a phone screen without scrolling at Normal.
-- **QA scripts** keep working through the same names: `_message`, `_caption_line`, `_top_caption`, `_prompt` are the banners' labels, `_inv_box` is the (vertical) box of slot buttons, `_inv_panel` the column, the overlay and intro structure is unchanged.
+- **QA scripts** keep working through the same names: `_message`, `_caption_line`, `_top_caption`, `_prompt` are the banners' labels, `_inv_box` is the (vertical) box of slot buttons, `_inv_panel` the tray, `_bag_btn` the bag (`set_bag_open(open, by_player)`, `is_bag_open()`), the overlay and intro structure is unchanged.
 
 ## Reader (`hud.gd` → `_reader`, `ui_zoom_view.gd`)
 Every document and inscription opens full screen: a paper plate filling the safe area above the bottom bar, the title in small caps over a hairline (with the page number at the right for the notebook), then the text in the display serif at reading size (`READ_PX` 40 design px, about 5.8 mm em on a 6.1" phone at Normal; it scrolls when longer) and/or the picture. Pictures (`UIZoomView`) zoom with a pinch, the mouse wheel or a double tap (to 2.5×) and pan with a drag; they are shown exactly as the asset is painted, in the current language where a decal has language variants (`DecalLoc`), so puzzle art reveals nothing more than the wall does.

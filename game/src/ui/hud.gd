@@ -1,10 +1,12 @@
 extends CanvasLayer
 ## In-game HUD for room chapters, in the main menu's visual language (docs/UI_UX.md → HUD): centred banners
 ## (a small-caps serif title between gold flourishes over a thin rule, a subtitle below, on a soft dark band)
-## for the view title, captions, messages, prompts and "item found"; the inventory as a column on the left
-## beside a thin vertical gold rule; round bezel buttons (Back top left, Hint top right, Pause with a roman II
-## bottom right); hints, documents (with UV page), the inspect view, pause, intro, finale choice and the
-## chapter-complete screen as dialogs in the same style.
+## for the view title, captions, messages, prompts and "item found"; the inventory in a bag (bottom left) whose
+## tray, a column of slots beside a thin vertical gold rule, slides out above it; round bezel buttons (Back top
+## left, Hint top right, Pause with a roman II bottom right); hints, documents (with UV page), the inspect view,
+## pause, intro, finale choice and the chapter-complete screen as dialogs in the same style.
+## Only buttons and slots take a tap: every container, rule, banner and picture lets it through to the room
+## (blocked_rects() lists what does not).
 ## Sizing follows UITheme (screen-based text scale × the player's text size, touch targets in mm, safe area);
 ## _layout() places everything and runs again when the window or the text size changes.
 
@@ -45,10 +47,19 @@ var _last_progress_ms := 0
 var _safe_seen := Vector4.ZERO
 var _safe_poll := 0.0
 var _found_id := "" # the item the message banner announces (its icon may be rendered a moment later)
+var _bag_btn: IconButton # the inventory: opens and closes the tray (docs/UI_UX.md → Bag)
+var _bag_open := false # the tray is out
+var _closeup := false # the camera is at a close-up: the tray starts collapsed there
+var _inv_tween: Tween
+var _bag_tween: Tween
+var _inv_drag := 0.0 # how far the finger has moved on a slot since it touched it (a drag scrolls the tray)
+var _fly: FlyIcon # a found item on its way into the bag
 
 const PAD := UITheme.HUD_PAD # gap between HUD controls and the safe-area edge
 const INV_SEP := 10
 const ACTION_GAP := 12.0 # between the inventory rule and the item actions
+const TRAY_SLIDE := 0.22 # seconds: the tray slides out of / back toward the left edge
+const TRAY_SHIFT := 0.6 # of the tray's width: how far it slides
 
 
 func bind(r: Node3D) -> void:
@@ -60,6 +71,8 @@ func bind(r: Node3D) -> void:
 	add_child(icons)
 	icons.icon_ready.connect(func(id: String, t: Texture2D) -> void:
 		_refresh_inventory()
+		if is_instance_valid(_fly) and _fly.item_id == id:
+			_fly.tex = t
 		if id == _found_id and _msg_plate != null:
 			_msg_plate.set_icon(t)
 			_stack_bottom())
@@ -88,8 +101,7 @@ func _on_language_changed(_code: String) -> void:
 
 # ====================================================================== layout
 func _build() -> void:
-	_root = Control.new()
-	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root = Control.new() # as large as the canvas (sized in _layout, so an emulated screen in tests and QA matches)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.theme = UITheme.build()
 	add_child(_root)
@@ -103,6 +115,14 @@ func _build() -> void:
 	_pause_btn = IconButton.make("pause", int(UITheme.HUD_BTN_PX))
 	_root.add_child(_pause_btn)
 	_pause_btn.pressed.connect(show_pause)
+	_bag_btn = IconButton.make("bag", int(UITheme.HUD_BTN_PX))
+	_bag_btn.tooltip_text = "ui.bag"
+	_root.add_child(_bag_btn)
+	_bag_btn.pressed.connect(func() -> void: set_bag_open(not _bag_open, true))
+	_back_btn.name = "Back"
+	_hint_btn.name = "Hint"
+	_pause_btn.name = "Pause"
+	_bag_btn.name = "Bag"
 
 	_top_plate = _plate(UITheme.HUD_TITLE_PX, 26, UITheme.CREAM) # small caps read large: body size keeps long names to two lines
 	_top_caption = _top_plate.title_label
@@ -115,22 +135,30 @@ func _build() -> void:
 	_prompt_plate = _plate(28, 26, UITheme.BRASS_HI)
 	_prompt = _prompt_plate.subtitle_label
 
-	# the inventory column: a scrolling stack of slots, a vertical rule with arrow tips, the actions flyout
+	# the bag's tray: a scrolling stack of slots, a vertical rule with arrow tips, the actions flyout. Only the
+	# slots and the item actions take taps; the scroll box, the stack and the rule let them through (a drag on a
+	# slot scrolls the stack itself, see _on_slot_input)
 	_inv_panel = Control.new()
+	_inv_panel.name = "Tray"
 	_inv_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_inv_panel)
 	_inv_scroll = ScrollContainer.new()
 	_inv_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_inv_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_inv_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_inv_scroll.get_v_scroll_bar().mouse_filter = Control.MOUSE_FILTER_IGNORE # hidden; the finger scrolls
+	_inv_scroll.get_h_scroll_bar().mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_inv_panel.add_child(_inv_scroll)
 	_inv_box = VBoxContainer.new()
 	_inv_box.add_theme_constant_override("separation", INV_SEP)
+	_inv_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_inv_scroll.add_child(_inv_box)
 	_inv_scroll.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _place_actions())
 	_inv_rule = UIOrnament.vrule(UITheme.HUD_RULE_W)
 	_inv_panel.add_child(_inv_rule)
 	_actions = HBoxContainer.new()
 	_actions.add_theme_constant_override("separation", 6)
+	_actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_actions.visible = false
 	_inv_panel.add_child(_actions)
 	_act_inspect = IconButton.make("inspect", 96)
@@ -139,7 +167,19 @@ func _build() -> void:
 	_act_combine = IconButton.make("combine", 96)
 	_act_combine.pressed.connect(_toggle_combine)
 	_actions.add_child(_act_combine)
+	_bag_open = bool(Settings.get_value("inventory_open"))
+	_inv_panel.visible = _bag_open
 	_layout()
+	_quiet(_root)
+
+
+## Containers, rules, banners, bars and pictures never take a tap: only buttons do, so a tap beside a slot or
+## on a banner still reaches the room (on a touch screen any control that is not IGNORE swallows the touch).
+static func _quiet(n: Node) -> void:
+	if n is Control and not (n is BaseButton):
+		(n as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for ch in n.get_children():
+		_quiet(ch)
 
 
 ## A banner for one HUD line: the title in display small caps (`title_sz`), the subtitle in the body font.
@@ -183,6 +223,8 @@ func _layout() -> void:
 	var safe := UITheme.safe_margins()
 	_safe_seen = safe
 	var canvas: Vector2 = UITheme.metrics()["canvas"]
+	_root.position = Vector2.ZERO
+	_root.size = canvas
 	var side := maxf(safe.x, safe.z) # keep centred elements symmetric
 	var cb := _pause_btn.custom_minimum_size.x
 	var bd := _back_btn.custom_minimum_size.x
@@ -190,16 +232,19 @@ func _layout() -> void:
 	_pin(_back_btn, Control.PRESET_TOP_LEFT, Vector2(safe.x + PAD, safe.y + PAD))
 	_pin(_hint_btn, Control.PRESET_TOP_RIGHT, Vector2(-(safe.z + PAD + cb), safe.y + PAD))
 	_pin(_pause_btn, Control.PRESET_BOTTOM_RIGHT, Vector2(-(safe.z + PAD + cb), -(safe.w + PAD + cb)))
+	_pin(_bag_btn, Control.PRESET_BOTTOM_LEFT, Vector2(safe.x + PAD, -(safe.w + PAD + cb)))
 	# top: the view title between the corner buttons (centred on their row), the caption line below
 	var top_w := canvas.x - 2.0 * (side + PAD + corner + 20.0)
 	_top_plate.set_meta("max_w", minf(top_w, 1400.0 * UITheme.wscale()))
 	_top_plate.set_meta("y", safe.y + PAD)
 	_top_plate.set_meta("row_h", corner)
-	# left: the inventory column, from under the Back button down to the bottom safe edge
+	# left: the bag's tray, from under the Back button down to just above the bag
 	var col_top := safe.y + PAD + bd + 16.0
-	_inv_span = Rect2(safe.x + PAD, col_top, UITheme.hud_column_width(), canvas.y - safe.w - PAD - col_top)
-	_inv_panel.position = _inv_span.position
+	var col_bottom := canvas.y - safe.w - PAD - cb - 16.0
+	_inv_span = Rect2(safe.x + PAD, col_top, UITheme.hud_column_width(), col_bottom - col_top)
 	_inv_panel.size = _inv_span.size
+	if not (_inv_tween and _inv_tween.is_running()):
+		_inv_panel.position = _tray_pos(_bag_open)
 	# bottom centre: the prompt, with the message above it; both clear of the column and the pause button
 	var text_w := UITheme.hud_text_width()
 	_prompt_plate.set_meta("max_w", text_w)
@@ -231,11 +276,13 @@ func _stack_top() -> void:
 		if _meter.visible:
 			y = maxf(y, row_bottom + _meter.get_combined_minimum_size().y + 8.0)
 	_cap_plate.set_meta("y", y)
-	# sideways the caption keeps clear of the inventory column (and the inspect / combine flyout beside the
-	# selected slot) on the left and the Hint button on the right; it is centred in what is left
-	var left := _inv_span.position.x + _inv_span.size.x + 20.0
-	if _actions.visible:
-		left += ACTION_GAP + _actions.get_combined_minimum_size().x
+	# sideways the caption keeps clear of the corner buttons, and of the open tray (and the inspect / combine
+	# flyout beside the selected slot) on the left; it is centred in what is left
+	var left := safe.x + PAD + corner + 20.0
+	if _bag_open:
+		left = maxf(left, _inv_span.position.x + _inv_span.size.x + 20.0)
+		if _actions.visible:
+			left += ACTION_GAP + _actions.get_combined_minimum_size().x
 	var right := canvas.x - safe.z - PAD - corner - 20.0
 	_cap_plate.set_meta("cx", (left + right) * 0.5)
 	_cap_plate.set_meta("max_w", minf(right - left, 1500.0 * UITheme.wscale()))
@@ -287,23 +334,24 @@ func _refresh_inventory() -> void:
 	_act_inspect.visible = has_sel
 	_act_combine.visible = has_sel and logic.inventory.size() > 1 and logic.selected != "uv_lamp"
 	_act_combine.active = _combine_mode
-	_actions.visible = has_sel
+	_actions.visible = has_sel and _bag_open
 	_place_actions.call_deferred()
+	_update_bag()
 	_update_prompt()
 
 
-## The slots, centred vertically in the column's span; they scroll when there are more than fit. The rule runs
-## beside them with its arrow tips just beyond the first and the last slot.
+## The slots stand at the bottom of the tray's span, just above the bag they came out of; they scroll when there
+## are more than fit. The rule runs beside them with its arrow tips just beyond the first and the last slot.
 func _inventory_geometry() -> void:
 	var slot := UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM)
 	var n := maxi(1, logic.inventory.size())
 	var content_h := n * slot + (n - 1) * INV_SEP
-	var h := minf(content_h, _inv_span.size.y)
-	var y0 := roundf((_inv_span.size.y - h) * 0.5)
+	var tip := 16.0 * UIOrnament.scale_k()
+	var h := minf(content_h, _inv_span.size.y - 2.0 * tip)
+	var y0 := roundf(_inv_span.size.y - tip - h)
 	_inv_scroll.position = Vector2(0, y0)
 	_inv_scroll.custom_minimum_size = Vector2(slot, h)
 	_inv_scroll.size = Vector2(slot, h)
-	var tip := 16.0 * UIOrnament.scale_k()
 	_inv_rule.position = Vector2(slot + UITheme.HUD_COL_GAP, y0 - tip)
 	_inv_rule.size = Vector2(UITheme.HUD_RULE_W, h + 2.0 * tip)
 	_inv_rule.queue_redraw()
@@ -372,15 +420,47 @@ func _slot(id: String, slot: float) -> Button:
 		tr_.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		b.add_child(tr_)
 	else:
-		b.text = tr(ItemDB.name_key(id))
-		b.clip_text = true
-		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		b.add_theme_font_size_override("font_size", UITheme.size(18))
+		# no icon yet (the model is still rendering): the name, wrapped inside the square slot (a Label child, so
+		# the slot never grows taller than wide)
+		var nl := UITheme.label(tr(ItemDB.name_key(id)), 18)
+		nl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		nl.offset_left = 6
+		nl.offset_right = -6
+		nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		nl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		nl.clip_text = true
+		nl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		nl.max_lines_visible = 3
+		nl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(nl)
 	b.pressed.connect(func() -> void: _on_slot(id))
+	b.gui_input.connect(_on_slot_input)
 	return b
 
 
+## A finger that moves on a slot scrolls the tray (the scroll box itself lets taps through to the room), and the
+## press then does not count as a tap on the slot.
+func _on_slot_input(ev: InputEvent) -> void:
+	var dy := 0.0
+	if ev is InputEventMouseButton:
+		var mb := ev as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			_inv_drag = 0.0
+		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+			dy = 60.0
+		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			dy = -60.0
+	elif ev is InputEventMouseMotion and ((ev as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		dy = (ev as InputEventMouseMotion).relative.y
+		_inv_drag += absf(dy)
+	if dy != 0.0:
+		_inv_scroll.scroll_vertical = int(_inv_scroll.scroll_vertical - dy)
+
+
 func _on_slot(id: String) -> void:
+	if _inv_drag >= UITheme.px_for_mm(2.0):
+		_inv_drag = 0.0
+		return # the finger scrolled the tray
 	AudioManager.ui("ui_tap")
 	if _combine_mode and logic.selected != "" and id != logic.selected:
 		_combine_mode = false
@@ -393,9 +473,155 @@ func _on_slot(id: String) -> void:
 	else:
 		logic.select_item(id)
 		_tip_once("use", "tut.use")
+		var combine_tip := false
 		if logic.has_item("uv_lamp_empty") and logic.has_item("battery_cell"):
-			_tip_once("combine", "tut.combine")
+			combine_tip = _tip_once("combine", "tut.combine")
+		if _closeup and not combine_tip:
+			_collapse_after_pick(id)
 	_refresh_inventory()
+
+
+## In a close-up the tray gets out of the way once an item is in hand: the player's next tap is on the room. The
+## bag then shows the item.
+func _collapse_after_pick(id: String) -> void:
+	var tw := create_tween()
+	tw.tween_interval(0.3)
+	tw.tween_callback(func() -> void:
+		if _closeup and _bag_open and logic.selected == id and not _combine_mode and _overlay == null:
+			set_bag_open(false))
+
+
+# ====================================================================== bag
+## Opens or closes the tray with a short eased slide (a plain fade with Settings → Reduce camera motion).
+## `by_player`: at a room view the choice is remembered (Settings "inventory_open"); in a close-up it lasts
+## until the view changes, since close-ups always start with the tray in.
+func set_bag_open(open: bool, by_player: bool = false) -> void:
+	if by_player and not _closeup and bool(Settings.get_value("inventory_open")) != open:
+		Settings.set_value("inventory_open", open)
+	if open == _bag_open:
+		return
+	_bag_open = open
+	if not open:
+		_combine_mode = false
+	_slide_tray()
+	_refresh_inventory()
+	_stack_top() # the caption keeps clear of the tray only while it is out
+
+
+func is_bag_open() -> bool:
+	return _bag_open
+
+
+## Where the tray rests when it is out, or where it slides in from (and back to).
+func _tray_pos(out: bool) -> Vector2:
+	return _inv_span.position if out else _inv_span.position - Vector2(_inv_span.size.x * TRAY_SHIFT, 0.0)
+
+
+func _slide_tray() -> void:
+	if _inv_tween and _inv_tween.is_valid():
+		_inv_tween.kill()
+	var reduce := bool(Settings.get_value("reduce_motion"))
+	var to := _tray_pos(_bag_open)
+	if _bag_open:
+		if not _inv_panel.visible:
+			_inv_panel.position = to if reduce else _tray_pos(false)
+			_inv_panel.modulate.a = 0.0
+		_inv_panel.visible = not _busy
+	elif reduce:
+		to = _inv_panel.position
+	_inv_tween = create_tween().set_parallel(true)
+	_inv_tween.tween_property(_inv_panel, "position", to, TRAY_SLIDE).set_trans(Tween.TRANS_CUBIC).set_ease(
+		Tween.EASE_OUT if _bag_open else Tween.EASE_IN)
+	_inv_tween.tween_property(_inv_panel, "modulate:a", 1.0 if _bag_open else 0.0, TRAY_SLIDE * (0.8 if _bag_open else 1.0))
+	if not _bag_open:
+		_inv_tween.chain().tween_callback(func() -> void: _inv_panel.visible = false)
+
+
+## The bag is lit while the tray is out; with the tray in it shows the item in hand and how many items it holds.
+func _update_bag() -> void:
+	if _bag_btn == null:
+		return
+	_bag_btn.active = _bag_open
+	_bag_btn.picture = icons.get_icon(logic.selected) if logic.selected != "" and not _bag_open else null
+	_bag_btn.count = 0 if _bag_open else logic.inventory.size()
+
+
+## The bag swells once (a found item has landed in it, or the tutorial points at it).
+func _pulse_bag() -> void:
+	if _bag_tween and _bag_tween.is_valid():
+		_bag_tween.kill()
+	_bag_btn.pivot_offset = _bag_btn.size * 0.5
+	_bag_tween = create_tween()
+	_bag_tween.tween_property(_bag_btn, "scale", Vector2.ONE * 1.16, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_bag_tween.tween_property(_bag_btn, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## A found item flies from its banner (or the screen's centre) along a gentle arc into the bag, which pulses once
+## as it lands. With Reduce camera motion the bag only pulses.
+func _fly_to_bag(id: String) -> void:
+	if _busy or not _bag_btn.is_visible_in_tree() or not logic.has_item(id):
+		return
+	if bool(Settings.get_value("reduce_motion")):
+		_pulse_bag()
+		return
+	var canvas: Vector2 = UITheme.metrics()["canvas"]
+	var side := UITheme.target(110.0)
+	var start := canvas * 0.5
+	var ir := _msg_plate.icon_global_rect() if _found_id == id and _msg_plate.visible and _msg_plate.modulate.a > 0.5 else Rect2()
+	if ir.size.x > 0.0:
+		start = ir.get_center()
+		side = ir.size.x
+	var end := _bag_btn.get_global_rect().get_center()
+	if is_instance_valid(_fly):
+		_fly.queue_free()
+	_fly = FlyIcon.new()
+	_fly.item_id = id
+	_fly.tex = icons.get_icon(id)
+	_fly.size = Vector2(side, side)
+	_fly.pivot_offset = _fly.size * 0.5
+	_fly.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_fly)
+	_fly.position = start - _fly.size * 0.5
+	var ctrl := Vector2(lerpf(start.x, end.x, 0.3), minf(start.y, end.y) - canvas.y * 0.16) # the top of the arc
+	var f := _fly
+	var tw := create_tween()
+	tw.tween_method(func(t: float) -> void:
+		if not is_instance_valid(f):
+			return
+		var p := start.lerp(ctrl, t).lerp(ctrl.lerp(end, t), t)
+		f.position = p - f.size * 0.5
+		f.scale = Vector2.ONE * lerpf(1.0, 0.4, t)
+		f.modulate.a = lerpf(1.0, 0.75, t), 0.0, 1.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_callback(f.queue_free)
+	tw.tween_callback(_pulse_bag)
+
+
+## Every visible HUD control that takes a tap, so the room behind it cannot be tapped there: in viewport pixels
+## (the canvas the room camera projects to, Camera3D.unproject_position()). Only buttons and slots take taps;
+## a slot scrolled partly out of the tray counts with its visible part, and an open overlay covers the screen.
+## The room camera frames close-ups so that their controls stay out of these rects (docs/UI_UX.md → Blocked
+## rects). In a close-up the tray is in, so these are the four corner buttons.
+func blocked_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if _root != null:
+		_collect_blocked(_root, Rect2(), out)
+	return out
+
+
+func _collect_blocked(n: Node, clip: Rect2, out: Array[Rect2]) -> void:
+	if n is CanvasItem and not (n as CanvasItem).visible:
+		return
+	if n is Control:
+		var c := n as Control
+		var r := c.get_global_rect()
+		if c.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			var shown := r if clip.size == Vector2.ZERO else r.intersection(clip)
+			if shown.has_area():
+				out.append(shown)
+		if c.clip_contents:
+			clip = r if clip.size == Vector2.ZERO else clip.intersection(r)
+	for ch in n.get_children():
+		_collect_blocked(ch, clip, out)
 
 
 func _toggle_combine() -> void:
@@ -482,6 +708,14 @@ func set_view(id: String, is_root: bool, caption_key: String) -> void:
 	var main := str(room.call("main_root")) if room.has_method("main_root") else ""
 	_back_wanted = not is_root or id == "darkroom" or (main != "" and id != main)
 	_back_btn.visible = _back_wanted and not _busy # cinematics (e.g. the intro's shutter shot) lock input
+	# the bag: close-ups start with the tray in (the whole close-up is the puzzle); room views show it as the
+	# player last left it there
+	var was_closeup := _closeup
+	_closeup = not is_root
+	if _closeup:
+		set_bag_open(false)
+	elif was_closeup:
+		set_bag_open(bool(Settings.get_value("inventory_open")))
 	set_caption(caption_key)
 
 
@@ -494,7 +728,8 @@ func set_caption(caption_key: String) -> void:
 
 func set_busy(b: bool) -> void:
 	_busy = b
-	_inv_panel.visible = not b
+	_inv_panel.visible = not b and _bag_open
+	_bag_btn.visible = not b
 	_hint_btn.visible = not b
 	_pause_btn.visible = not b
 	_back_btn.visible = not b and _back_wanted
@@ -512,8 +747,13 @@ func _on_events(ev: Array[String]) -> void:
 			_refresh_inventory()
 		if e.begins_with("solved:") or e.begins_with("item_added"):
 			_last_progress_ms = Time.get_ticks_msec()
-		if e == "item_added:notebook":
-			_tip_once("inventory", "tut.inventory")
+		if e.begins_with("item_added:"):
+			var id := e.substr(11)
+			if logic.inventory.size() == 1 and _tip_once("inventory", "tut.inventory"):
+				_pulse_bag() # the first item: the tip says where the bag is
+			var tw := create_tween() # the banner shows it first, then it flies into the bag
+			tw.tween_interval(0.6)
+			tw.tween_callback(_fly_to_bag.bind(id))
 		if e == "uv_revealed:notebook_page" and _overlay != null:
 			pass
 
@@ -534,11 +774,13 @@ func _process(delta: float) -> void:
 		_tip_once("hint", "tut.hint")
 
 
-func _tip_once(id: String, key: String) -> void:
+## Shows a tutorial line once per session. -> true when it was shown now.
+func _tip_once(id: String, key: String) -> bool:
 	if _tips_shown.has(id):
-		return
+		return false
 	_tips_shown[id] = true
 	caption(tr(key), 4.5)
+	return true
 
 
 # ====================================================================== overlays (shared)
@@ -852,7 +1094,9 @@ func _show_notebook(page: int) -> void:
 	var r := _reader(o, _doc_title("notebook"), tr("ui.page") % [pg + 1, NB_PAGES])
 	var paper: Control = r["paper"]
 	var v: VBoxContainer = r["vbox"]
-	var body := _ink_label(tr("doc.notebook.p%d" % (pg + 1)) if pg != 4 else "")
+	var body: Control = _ink_label(tr("doc.notebook.p%d" % (pg + 1)) if pg != 4 else "")
+	if pg == 3: # Panel 7: its four lamp icons stand beside the words (language-neutral, see _ink_icons)
+		body = _ink_icons(tr("doc.notebook.p4"))
 	v.add_child(body)
 	if pg == 4:
 		# the "blank" page: UV reveals Leyla's cipher
@@ -1014,6 +1258,32 @@ func _ink_label(text: String, sz: int = READ_PX) -> Label:
 	return l
 
 
+## Ink text with inline icons: each "{name}" in `text` becomes the glyph res://assets/ui/glyphs/<name>.png in ink
+## colour, a bit taller than the letters (Leyla's notebook page 4 shows Panel 7's lamp icons next to the words, so
+## the link between a word and a lamp does not depend on the translation).
+func _ink_icons(text: String, sz: int = READ_PX) -> RichTextLabel:
+	var l := RichTextLabel.new()
+	l.bbcode_enabled = true
+	l.fit_content = true
+	l.scroll_active = false
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.add_theme_font_override("normal_font", UITheme.display_font(false))
+	l.add_theme_font_size_override("normal_font_size", UITheme.size(sz))
+	l.add_theme_color_override("default_color", INK)
+	l.add_theme_constant_override("line_separation", 8)
+	var re := RegEx.create_from_string("\\{(\\w+)\\}")
+	var px := int(round(UITheme.size(sz) * 1.45))
+	var out := ""
+	var at := 0
+	for m in re.search_all(text):
+		out += text.substr(at, m.get_start() - at).replace("[", "[lb]")
+		out += "[img=%d color=#%s]res://assets/ui/glyphs/%s.png[/img]" % [px, INK.to_html(false), m.get_string(1)]
+		at = m.get_end()
+	l.text = out + text.substr(at).replace("[", "[lb]")
+	return l
+
+
 func _show_paper(text: String, title: String = "") -> void:
 	var o := _open_overlay(0.82)
 	var r := _reader(o, title)
@@ -1114,6 +1384,7 @@ func set_meter(level: int) -> void:
 			bar.size_flags_vertical = Control.SIZE_SHRINK_END
 			h.add_child(bar)
 			_meter_bars.append(bar)
+		_quiet(_meter)
 	_meter.visible = level >= 0
 	for i in 5:
 		_meter_bars[i].color = Color("7dff9a") if i < level else Color(1, 1, 1, 0.12)
@@ -1329,3 +1600,27 @@ func show_chapter_complete() -> void:
 		AudioManager.stop_all_ambience()
 		SceneManager.goto("res://src/ui/main_menu.tscn"))
 	footer.add_child(menu)
+
+
+# ====================================================================== found item in flight
+## A found item on its way into the bag: its icon on a soft brass glow (a brass glint while the icon renders).
+class FlyIcon extends Control:
+	var item_id := ""
+	var tex: Texture2D:
+		set(v):
+			tex = v
+			queue_redraw()
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r := minf(size.x, size.y) * 0.5
+		draw_circle(c, r * 0.95, Color(UITheme.BRASS_HI, 0.08))
+		draw_circle(c, r * 0.7, Color(UITheme.BRASS_HI, 0.12))
+		if tex != null:
+			var ts := tex.get_size()
+			var k := minf(r * 1.6 / ts.x, r * 1.6 / ts.y) if ts.x > 0.0 and ts.y > 0.0 else 1.0
+			draw_texture_rect(tex, Rect2(c - ts * k * 0.5, ts * k), false)
+		else:
+			var d := r * 0.35
+			draw_colored_polygon(PackedVector2Array([c + Vector2(-d, 0), c + Vector2(0, -d * 1.4), c + Vector2(d, 0),
+				c + Vector2(0, d * 1.4)]), Color(UITheme.BRASS_HI, 0.95))

@@ -70,6 +70,7 @@ ui.combine,Combine,Объединить,Birlashtirish
 ui.use,Use,Использовать,Ishlatish
 ui.read,Read,Читать,Oʻqish
 ui.inventory_empty,Your pockets are empty.,Карманы пусты.,Choʻntaklaringiz boʻsh.
+ui.bag,Bag,Сумка,Sumka
 ui.combine_prompt,Tap an item to combine with: %s,Выберите предмет для объединения с: %s,Birlashtirish uchun buyumni tanlang: %s
 ui.use_prompt,Tap where to use: %s,"Нажмите, где использовать: %s",Qayerda ishlatishni tanlang: %s
 ui.uv_on,UV light,УФ-свет,UB nur
@@ -98,7 +99,7 @@ tut.look,Drag to look around.,"Проведите пальцем, чтобы о�
 tut.tap,Tap objects to examine them.,"Нажимайте на предметы, чтобы рассмотреть их.",Buyumlarni koʻrish uchun ularga bosing.
 tut.zoom,Pinch to zoom.,"Разведите пальцы, чтобы приблизить.",Yaqinlashtirish uchun ikki barmoqni kering.
 tut.back,Tap the back arrow in the corner to step back.,"Нажмите стрелку «назад» в углу, чтобы вернуться.",Orqaga qaytish uchun burchakdagi strelkani bosing.
-tut.inventory,"Found items appear here. Tap to select, tap again to inspect.","Найденные предметы появляются здесь. Нажмите, чтобы выбрать; ещё раз — чтобы осмотреть.","Topilgan buyumlar shu yerda chiqadi. Tanlash uchun bosing, koʻrish uchun yana bosing."
+tut.inventory,"Found items go into your bag, bottom left. Tap the bag to open it, an item to pick it up, the same item again to inspect it.","Найденные предметы попадают в сумку внизу слева. Нажмите на сумку, чтобы открыть её, на предмет — чтобы взять его, на него же ещё раз — чтобы осмотреть.","Topilgan buyumlar pastki chap burchakdagi sumkaga tushadi. Sumkani ochish uchun unga, buyumni olish uchun buyumga bosing; koʻrish uchun shu buyumga yana bosing."
 tut.use,"With an item selected, tap the place where you want to use it.","Выбрав предмет, нажмите туда, где хотите его использовать.","Buyumni tanlab, uni ishlatmoqchi boʻlgan joyga bosing."
 tut.combine,"Select an item, press Combine, then tap another item.","Выберите предмет, нажмите «Объединить», затем другой предмет.","Buyumni tanlang, «Birlashtirish»ni bosing, soʻng boshqa buyumni tanlang."
 tut.hint,Stuck? The lamp icon gives a hint — gently at first.,Застряли? Значок лампы даст подсказку — сначала мягкую.,Qiyin boʻldimi? Chiroq belgisi maslahat beradi — avval yengilroq.
@@ -144,7 +145,7 @@ item.mirror_item.desc,A brass-framed mirror with a mounting pin. It fits a mirro
 doc.notebook.p1,12 November 1979\n\nStrand wants full resonance on Thursday. The crystal readings are wrong.\n\nIt is not replaying the light.\nIt is keeping it.,12 ноября 1979\n\nСтранд хочет полный резонанс в четверг. Показания кристалла неверны.\n\nОн не воспроизводит свет.\nОн его удерживает.,1979-yil 12-noyabr\n\nStrand payshanba kuni toʻliq rezonans istaydi. Billur koʻrsatkichlari notoʻgʻri.\n\nU yorugʻlikni takrorlamayapti.\nU uni ushlab qolyapti.
 doc.notebook.p2,"14 November 1979, night\n\nEvery clock in the building stopped at the same moment.\n\nI set the lock of my desk drawer to that moment, so that I will never forget it.","14 ноября 1979, ночь\n\nВсе часы в здании остановились в одно и то же мгновение.\n\nЯ установила замок ящика стола на это мгновение, чтобы никогда его не забыть.","1979-yil 14-noyabr, tun\n\nBinodagi barcha soatlar bir lahzada toʻxtadi.\n\nOʻsha lahzani hech qachon unutmaslik uchun stol tortmamning qulfini shu lahzaga oʻrnatdim."
 doc.notebook.p3,"Strand gave each of us one of his gear boxes.\n“Turn one wheel and its neighbour follows — like people,” he said.\n\nI keep the cell for my lamp inside mine.","Странд подарил каждому из нас одну из своих шкатулок с шестернями.\n«Поверни одно колесо — и сосед последует за ним, как люди», — сказал он.\n\nВ своей я храню батарею для лампы.","Strand har birimizga oʻzining tishli gʻildirakli qutichalaridan bittasini sovgʻa qilgan.\n«Bitta gʻildirakni bursang, qoʻshnisi ham ergashadi — xuddi odamlardek», degandi u.\n\nMen oʻzimnikida chirogʻim batareyasini saqlayman."
-doc.notebook.p4,"Panel 7.\nLOCK, LIGHT and ARRAY must be live.\nThe VENT line must stay dead — or the dust from the Array Hall will reach us.","Щит 7.\nЗАМОК, СВЕТ и РЕШЁТКА должны быть под током.\nЛиния ВЕНТИЛЯЦИИ должна оставаться обесточенной — иначе пыль из Зала Решётки дойдёт до нас.","7-panel.\nQULF, YORUGʻLIK va PANJARA tok ostida boʻlishi kerak.\nSHAMOLLATISH liniyasi oʻchiq qolsin — aks holda Panjara zalidagi chang bizgacha yetib keladi."
+doc.notebook.p4,"Panel 7.\n{panel_lock} LOCK, {panel_light} LIGHT and {panel_array} ARRAY must be live.\nThe {panel_vent} VENT line must stay dead — or the dust from the Array Hall will reach us.","Щит 7.\n{panel_lock} ЗАМОК, {panel_light} СВЕТ и {panel_array} РЕШЁТКА должны быть под током.\nЛиния {panel_vent} ВЕНТИЛЯЦИИ должна оставаться обесточенной — иначе пыль из Зала Решётки дойдёт до нас.","7-panel.\n{panel_lock} QULF, {panel_light} YORUGʻLIK va {panel_array} PANJARA tok ostida boʻlishi kerak.\n{panel_vent} SHAMOLLATISH liniyasi oʻchiq qolsin — aks holda Panjara zalidagi chang bizgacha yetib keladi."
 doc.notebook.p5,,,
 doc.notebook.p5_uv,The safe answers in Strand's symbols:,Сейф отвечает символами Странда:,Seyf Strandning belgilari bilan javob beradi:
 doc.notebook.p6,I took the handle of the main breaker and hid it where only my lamp can show the way.,"Я сняла рукоять главного рубильника и спрятала её там, куда дорогу укажет только моя лампа.",Asosiy uzgichning dastasini yechib oldim va uni faqat chirogʻim yoʻl koʻrsata oladigan joyga yashirdim.
@@ -528,29 +529,174 @@ epi3.echoes,Four kept echoes walk free from the machine floor.,Четыре со
 epi3.secret,"In the forty-second socket, Leyla's crystal keeps glowing.",В сорок втором гнезде продолжает светиться кристалл Лейлы.,Qirq ikkinchi uyachada Leylaning billuri yonib turibdi.
 epi3.end,The freight lift waits. Its lowest button has no number.,Грузовой лифт ждёт. На его нижней кнопке нет номера.,Yuk lifti kutib turibdi. Uning eng pastki tugmasida raqam yoʻq.
 achv.echoes_of_the_deep,Echoes of the Deep,Эхо глубин,Chuqurlik aks-sadolari
+hint.c4_act.sun,the Sun lever off,выключить Солнце,Quyosh dastagini oʻchiring
+hint.c4_act.rings,every ring back to mark 1,все кольца на метку 1,barcha halqalarni 1-belgiga qaytaring
+hint.c4_act.keeper,the keeper knob to 0,ручку хранения на 0,saqlash murvatini 0 ga buring
+item.strand_key.desc4,"Heavy brass with a star. A second line on the tag: “— and below the Choir, the Hall.”",Тяжёлая латунь со звездой. Вторая строка на бирке: «— а под Хором — Зал».,Yulduzli ogʻir jez kalit. Yorliqdagi ikkinchi qator: «— Xor ostida esa — Zal».
+item.leyla_key.desc4,"Plain steel with a crescent. A second line on the tag: “— and below the Nursery, the Hall. Finish it.”",Простая сталь с полумесяцем. Вторая строка на бирке: «— а под Питомником — Зал. Закончи».,Yarim oyli oddiy poʻlat kalit. Yorliqdagi ikkinchi qator: «— Koʻchatxona ostida esa — Zal. Yakunla».
+item.tower_key_1.name,Tower key I,Ключ башни I,I minora kaliti
+item.tower_key_1.desc,A brass key stamped I. It fits the cage gate with the same numeral.,Латунный ключ с клеймом I. Подходит к воротам клетки с той же цифрой.,I tamgʻali jez kalit. Qafasning shu raqamli darvozasiga tushadi.
+item.tower_key_2.name,Tower key II,Ключ башни II,II minora kaliti
+item.tower_key_2.desc,A brass key stamped II. It fits the cage gate with the same numeral.,Латунный ключ с клеймом II. Подходит к воротам клетки с той же цифрой.,II tamgʻali jez kalit. Qafasning shu raqamli darvozasiga tushadi.
+item.tower_key_3.name,Tower key III,Ключ башни III,III minora kaliti
+item.tower_key_3.desc,A brass key stamped III. It fits the cage gate with the same numeral.,Латунный ключ с клеймом III. Подходит к воротам клетки с той же цифрой.,III tamgʻali jez kalit. Qafasning shu raqamli darvozasiga tushadi.
+item.tower_key_4.name,Tower key IV,Ключ башни IV,IV minora kaliti
+item.tower_key_4.desc,A brass key stamped IV. It fits the cage gate with the same numeral.,Латунный ключ с клеймом IV. Подходит к воротам клетки с той же цифрой.,IV tamgʻali jez kalit. Qafasning shu raqamli darvozasiga tushadi.
+item.strand_log.name,Strand's log,Журнал Странда,Strandning jurnali
+item.strand_log.desc,"The log of the Night of Silence, in Strand's hand. The last entry is 03:17.","Журнал Ночи тишины, рукой Странда. Последняя запись — 03:17.","Sukunat kechasining jurnali, Strand qoʻli bilan. Oxirgi yozuv — 03:17."
+item.pocket_watch.name,Pocket watch,Карманные часы,Choʻntak soati
+item.pocket_watch.desc,"Strand's watch, stopped at 03:17. Engraved inside the lid: “E.S. — light remembers.”","Часы Странда, остановились на 03:17. Гравировка под крышкой: «Э. С. — свет помнит».","Strandning soati, 03:17 da toʻxtagan. Qopqogʻi ichida oʻyma: «E. S. — yorugʻlik eslaydi»."
+item.strand_last_letter.name,Strand's last letter,Последнее письмо Странда,Strandning soʻnggi maktubi
+item.strand_last_letter.desc,"To Leyla, written on the Night. It names the part he never dared to fit.","Лейле, написано в ту Ночь. В нём названа деталь, которую он так и не решился поставить.","Leylaga, oʻsha Kechada yozilgan. Unda u oʻrnatishga jurʼat etmagan detal nomi bor."
+item.reverse_pawl.name,Reverse pawl,Обратная собачка,Teskari ilgak
+item.reverse_pawl.desc,"A small brass escapement part. With it, a clock can run backwards.",Маленькая латунная деталь хода. С ней часы могут идти назад.,Soat yurgichining kichik jez detali. U bilan soat orqaga yura oladi.
+item.leyla_note_1998.name,"Leyla's note, 1998","Записка Лейлы, 1998","Leylaning xati, 1998"
+item.leyla_note_1998.desc,"A folded page from her locker, dated 1998.","Сложенный листок из её шкафчика, датирован 1998 годом.","Shkafchasidan olingan buklangan varaq, 1998-yil sanasi bilan."
+item.leyla_parcel.name,Leyla's parcel,Посылка Лейлы,Leylaning posilkasi
+item.leyla_parcel.desc,Brown paper and string. Addressed to Laboratory 7 in Leyla's hand. No postmark yet.,Коричневая бумага и бечёвка. Адрес рукой Лейлы: Лаборатория 7. Штемпеля пока нет.,Qoʻngʻir qogʻoz va ip. Leyla qoʻli bilan yozilgan manzil: 7-laboratoriya. Pochta tamgʻasi hali yoʻq.
+obj4.lift,Freight lift — the unnumbered floor,Грузовой лифт — этаж без номера,Yuk lifti — raqamsiz qavat
+obj4.bridge,Operator's bridge,Мостик оператора,Operator koʻprigi
+obj4.desk,Master desk,Главный пульт,Bosh pult
+obj4.chronometer,Chronometer — 03:10 to 03:17,Хронометр — от 03:10 до 03:17,Xronometr — 03:10 dan 03:17 gacha
+obj4.handwheels,Ring handwheels I–IV,Штурвалы колец I–IV,Halqa gʻildiraklari I–IV
+obj4.panel0,Panel 0 — LOCK · LIGHT · ARRAY · VENT,Щит 0 — ЗАМОК · СВЕТ · РЕШЁТКА · ВЕНТ,0-panel — QULF · YORUGʻLIK · PANJARA · VENT
+obj4.catwalk,Catwalk over the rings,Мостик над кольцами,Halqalar ustidagi yoʻlak
+obj4.hatch,Hatch over ring %s,Люк над кольцом %s,%s halqa ustidagi lyuk
+obj4.island,The Reliquary,Реликварий,Relikvariy
+obj4.gate,Cage gate %s,Ворота клетки %s,Qafas darvozasi %s
+obj4.collar,Collar lock,Замковое кольцо,Qulf halqasi
+obj4.core,The Core,Ядро,Oʻzak
+obj4.apse,The Sun apse,Апсида Солнца,Quyosh apsidasi
+obj4.sun_pedestal,"Sun pedestal — feed, ammeter, lever","Пульт Солнца — подача, амперметр, рычаг","Quyosh pulti — uzatish, ampermetr, dastak"
+obj4.iris,The iris,Диафрагма,Diafragma
+obj4.booth,Strand's booth,Кабина Странда,Strandning kabinasi
+obj4.gear_box,Strand's box,Шкатулка Странда,Strandning qutichasi
+obj4.watch,The watch room,Дежурная,Navbatchi xonasi
+obj4.roll_board,Roll board — 41 tags,Доска переклички — 41 бирка,Yoʻqlama taxtasi — 41 yorliq
+obj4.locker,Locker 17,Шкафчик 17,17-shkafcha
+obj4.post_station,Pneumatic post station,Станция пневмопочты,Pnevmatik pochta stansiyasi
+obj4.oculus,The oculus,Окулюс,Gumbaz tuynugi
+msg.c4_gate_wrong_key,This gate takes the other key.,Эти ворота открывает другой ключ.,Bu darvozani boshqa kalit ochadi.
+msg.c4_booth_locked,The booth gate is locked.,Ворота кабины заперты.,Kabina darvozasi qulflangan.
+msg.c4_watch_locked,The grille is locked.,Решётка дежурной заперта.,Navbatchi xonasining panjarasi qulflangan.
+msg.c4_apse_dark,The apse is dark. The lamp waits for power.,В апсиде темно. Лампа ждёт тока.,Apsida qorongʻi. Chiroq tok kutmoqda.
+msg.c4_catwalk_locked,The catwalk gate holds while the lines are dead.,"Калитка мостика заперта, пока линии мертвы.","Liniyalar jonsiz ekan, yoʻlak eshigi yopiq."
+msg.c4_lines_dead,A lamp is still dark. Strand's plate wants all four.,Одна из ламп ещё темна. На табличке Странда — все четыре.,Chiroqlardan biri hali qorongʻi. Strand lavhasida — toʻrttasi ham.
+msg.c4_power_on,"Relays clack. Lamps wake ring by ring; high above, the oculus shutter grinds open.",Щёлкают реле. Лампы загораются кольцо за кольцом; высоко вверху открывается окулюс.,Relelar chiqillaydi. Chiroqlar halqa ketidan halqa yonadi; tepada gumbaz tuynugi ochiladi.
+msg.c4_hall_powered,The hall is running.,Зал под напряжением.,Zal tok ostida.
+msg.c4_switches_locked,The switches are locked live.,Переключатели заблокированы под напряжением.,Ulagichlar tok ostida qulflangan.
+msg.c4_box_is_open,The box is open. The little Array sits inside.,Шкатулка открыта. Внутри — маленькая Решётка.,Quticha ochiq. Ichida — kichkina Panjara.
+msg.c4_box_open,"The lid rises: a tiny brass Array, its towers set, and Strand's log.",Крышка поднимается: крошечная латунная Решётка с выставленными башнями и журнал Странда.,Qopqoq koʻtariladi: minoralari oʻrnatilgan kichkina jez Panjara va Strandning jurnali.
+msg.c4_rods_apart,The rods stand apart. Nothing happens.,Стержни разведены. Ничего не происходит.,Tayoqchalar bir-biridan uzoq. Hech narsa boʻlmaydi.
+msg.c4_arc_shorted,The rods touch. The needle slams to the stop.,Стержни касаются. Стрелка бьёт в упор.,Tayoqchalar tegishdi. Mil toʻxtatgichga urildi.
+msg.c4_arc_struck,The arc strikes with a crack.,Дуга вспыхивает с треском.,Yoy chirsillab yonadi.
+msg.c4_arc_out,Too far: the arc snaps out.,Слишком далеко: дуга гаснет.,Juda uzoq: yoy uzilib oʻchdi.
+msg.c4_sun_steady,The needle sits in the green. The Sun burns steady.,Стрелка в зелёной зоне. Солнце горит ровно.,Mil yashil zonada. Quyosh bir tekis yonadi.
+msg.c4_sun_flicker,The arc flickers. The needle is off the green.,Дуга дрожит. Стрелка вне зелёной зоны.,Yoy lipillaydi. Mil yashil zonadan tashqarida.
+msg.c4_sun_off,The Sun goes dark.,Солнце гаснет.,Quyosh soʻndi.
+msg.c4_leaf_pinned,This leaf is held down by the one above it.,"Этот лепесток прижат тем, что лежит сверху.",Bu yaproqni ustidagisi bosib turibdi.
+msg.c4_iris_open,The iris opens. A beam the width of a door crosses the hall.,Диафрагма раскрывается. Луч шириной с дверь пересекает зал.,Diafragma ochildi. Eshik kengligidagi nur zalni kesib oʻtadi.
+msg.c4_wheels_dead,The handwheels are stiff. The drive is dead.,Штурвалы не идут. Привод мёртв.,Gʻildiraklar qotib qolgan. Yuritma jonsiz.
+msg.c4_beam_0,The beam dies at the outer ring.,Луч гаснет у внешнего кольца.,Nur tashqi halqada soʻnadi.
+msg.c4_beam,The beam reaches tower %d.,Луч доходит до башни %d.,Nur %d-minoraga yetib boradi.
+msg.c4_replay_on,"The beam folds into the Core. The hall fills with figures of light, frozen at 03:17.","Луч складывается в Ядро. Зал заполняют фигуры света, застывшие в 03:17.",Nur Oʻzakka buklanib kiradi. Zalni 03:17 da qotib qolgan nur siymolari toʻldiradi.
+msg.c4_replay_off,The beam breaks. The figures fade like breath.,"Луч обрывается. Фигуры тают, как дыхание.",Nur uzildi. Siymolar nafas kabi tarqab ketadi.
+msg.c4_replay_weak,The beam slips straight through the gaps. The figures flicker and fade.,Луч проскальзывает прямо в просветы. Фигуры мерцают и тают.,Nur oraliqlardan toʻppa-toʻgʻri sirgʻalib oʻtadi. Siymolar lipillab soʻnadi.
+msg.c4_chrono_locked,The wheel is clutched to the Array. It turns only while the hall replays.,"Колесо сцеплено с Решёткой. Оно крутится, только пока зал повторяет.",Gʻildirak Panjaraga ulangan. U faqat zal takrorlayotganda aylanadi.
+msg.c4_minute,03:1%d.,03:1%d.,03:1%d.
+msg.c4_tower_out_of_reach,"The key is on the tower, out of reach. Bring the tower under the hatch.","Ключ на башне, не достать. Подведите башню под люк.","Kalit minorada, qoʻl yetmaydi. Minorani lyuk tagiga keltiring."
+msg.c4_key_wrong_gate,This key fits another gate.,Этот ключ от других ворот.,Bu kalit boshqa darvozaga tushadi.
+msg.c4_gate_open,The gate unlocks. The key stays in it.,Ворота отпираются. Ключ остаётся в замке.,Darvoza ochildi. Kalit qulfda qoladi.
+msg.c4_cage_open,The cage swings open around the glass tower.,Клетка раскрывается вокруг стеклянной башни.,Qafas shisha minora atrofida ochildi.
+msg.c4_collar_shut,The collar holds the tower shut.,Замковое кольцо держит башню закрытой.,Qulf halqasi minorani yopiq tutib turibdi.
+msg.c4_tower_open,"The glass panels sink into the floor. The Core, bare.",Стеклянные панели уходят в пол. Ядро — обнажено.,Shisha panellar polga choʻkadi. Oʻzak — yalangʻoch.
+msg.c4_cradle_refused,The socket is cut for the crystal lens.,Гнездо вырезано под кристаллическую линзу.,Uyacha billur linza uchun oʻyilgan.
+msg.c4_cradle_full,The cradle already holds the lens.,В гнезде уже лежит линза.,Uyachada linza allaqachon bor.
+msg.c4_lens_seated,The lens seats. The Core's light passes through it.,Линза встаёт на место. Свет Ядра проходит сквозь неё.,Linza oʻrniga tushdi. Oʻzak nuri undan oʻtadi.
+msg.c4_heart_open,The Institute's mark falls on the drawer's face. It slides open.,Знак института ложится на лицевую панель ящика. Ящик выдвигается.,Institut belgisi tortma yuziga tushadi. Tortma surilib ochiladi.
+msg.c4_lens_taken,The lens is warm in your hand. The mark fades from the drawer.,Линза тёплая в руке. Знак на ящике гаснет.,Linza qoʻlingizda iliq. Tortmadagi belgi soʻnadi.
+msg.c4_pawl_fitted,The pawl clicks into the escapement. The clock can run both ways.,Собачка щёлкает в механизме хода. Часы могут идти в обе стороны.,Ilgak yurgichga chiq etib tushdi. Soat ikki tomonga yura oladi.
+msg.c4_desk_dead,The desk is dead.,Пульт мёртв.,Pult jonsiz.
+msg.c4_beat_far,Two notes beat fast against each other.,Две ноты быстро бьются друг о друга.,Ikki nota bir-biriga tez uriladi.
+msg.c4_beat_near,The beat slows.,Биение замедляется.,Tepish sekinlashadi.
+msg.c4_keeper_on,The notes lock. The Core answers with a held chord.,Ноты сливаются. Ядро отвечает долгим аккордом.,Notalar qoʻshildi. Oʻzak choʻziq akkord bilan javob beradi.
+msg.c4_keeper_off,The keeper is off. The Core hums alone.,Хранение выключено. Ядро гудит само.,Saqlash oʻchiq. Oʻzak oʻzicha gʻuvillaydi.
+msg.c4_master_held,"The lever is held fast. Everything must stand as on the Night, at 03:17, with a clock that can run back.","Рычаг заперт. Всё должно стоять как в ту Ночь, в 03:17, и часы должны уметь идти назад.","Dastak qotib turibdi. Hammasi oʻsha Kechadagidek, 03:17 da boʻlsin, va soat orqaga yura olsin."
+msg.c4_reversal_begins,The lever lifts. Across the hall the frozen figures begin to move — backwards.,Рычаг поднимается. По всему залу застывшие фигуры начинают двигаться — назад.,Dastak koʻtarildi. Zal boʻylab qotib qolgan siymolar harakatlana boshlaydi — orqaga.
+msg.c4_held_fast,Held fast. Not this minute.,Не поддаётся. Не в эту минуту.,Qotib turibdi. Bu daqiqada emas.
+msg.c4_wound,03:1%d. The hall remembers a minute less.,03:1%d. Зал помнит на минуту меньше.,03:1%d. Zal bir daqiqa kamroq eslaydi.
+msg.c4_snap_back,"The Array holds. Every lever slams down, the rings grind back, the Sun relights. 03:17.","Решётка держит. Все рычаги падают, кольца со скрежетом возвращаются, Солнце вспыхивает снова. 03:17.","Panjara ushlab turadi. Barcha dastaklar tushadi, halqalar gʻijirlab qaytadi, Quyosh yana yonadi. 03:17."
+msg.c4_night_undone,"The hall is dark, and forty-one lights rise through the oculus.","В зале темно, и сорок один огонь поднимается сквозь окулюс.","Zal qorongʻi, va qirq bitta chiroq gumbaz tuynugidan koʻtariladi."
+msg.c4_station_dead,The station is dead.,Станция мертва.,Stansiya jonsiz.
+msg.c4_canister_empty,The canister is empty.,Капсула пуста.,Kapsula boʻsh.
+msg.c4_canister_full,The canister already holds something.,В капсуле уже что-то есть.,Kapsulada allaqachon nimadir bor.
+msg.c4_canister_loaded,The parcel fits the canister exactly.,Посылка входит в капсулу точно по размеру.,Posilka kapsulaga aynan sigʻadi.
+msg.c4_post_no_receiver,"A rush, then a knock from far above: no one receives. The canister drops back.","Шум воздуха, потом стук далеко вверху: никто не принимает. Капсула падает обратно.","Havo shovqini, keyin yuqoridan taqillash: hech kim qabul qilmaydi. Kapsula qaytib tushadi."
+msg.c4_post_returned,The canister comes back. Wrong address.,Капсула возвращается. Неверный адрес.,Kapsula qaytib keldi. Manzil notoʻgʻri.
+msg.c4_parcel_sent,"The canister leaves and does not come back. Somewhere, a postmark: 14 November 1979.",Капсула уходит и не возвращается. Где-то ставят штемпель: 14 ноября 1979.,Kapsula ketdi va qaytmadi. Qayerdadir tamgʻa bosiladi: 1979-yil 14-noyabr.
+msg.c4_locker_bare,"Leyla's locker: a coat, a note, nothing more.","Шкафчик Лейлы: халат, записка, больше ничего.","Leylaning shkafchasi: xalat, xat, boshqa hech narsa."
+msg.c4_echo_count,Kept echoes released: %d / 4,Освобождено эхо: %d / 4,Ozod qilingan aks-sadolar: %d / 4
+cap4.lift,[The lift stops at a floor with no number],[Лифт останавливается на этаже без номера],[Lift raqamsiz qavatda toʻxtaydi]
+cap4.power,"[Relays clack. Work lamps wake, ring by ring]",[Щёлкают реле. Рабочие лампы загораются кольцо за кольцом],[Relelar chiqillaydi. Ish chiroqlari halqa ketidan halqa yonadi]
+cap4.arc,[The arc strikes with a crack and a hiss],[Дуга вспыхивает с треском и шипением],"[Yoy chirsillab, vishillab yonadi]"
+cap4.iris,"[Six brass leaves lift, one after another]",[Шесть латунных лепестков поднимаются один за другим],[Oltita jez yaproq birin-ketin koʻtariladi]
+cap4.rings,[Steel rings grind on their rails],[Стальные кольца скрежещут по рельсам],[Poʻlat halqalar relslarda gʻijirlaydi]
+cap4.replay,"[The hall fills with figures of light, frozen]",[Зал заполняют застывшие фигуры света],[Zalni qotib qolgan nur siymolari toʻldiradi]
+cap4.strand_desk,"Strand stands at the master desk, one hand on the lever, frozen in the moment he pulled it.","Странд стоит у главного пульта, рука на рычаге, застывший в миг, когда он его потянул.","Strand bosh pult yonida turibdi, qoʻli dastakda, uni tortgan lahzada qotib qolgan."
+cap4.forty_second,"Inside the Core, a forty-second light turns toward you.",Внутри Ядра сорок второй огонь поворачивается к вам.,Oʻzak ichida qirq ikkinchi chiroq sizga yuzlanadi.
+cap4.leyla_lens,"Leyla steps out of the light, 1998. She seats the lens you left for her, and fades.","Лейла выходит из света — 1998 год. Она ставит линзу, которую вы ей оставили, и тает.",Leyla yorugʻlikdan chiqadi — 1998-yil. U siz qoldirgan linzani oʻrniga qoʻyadi va yoʻqoladi.
+cap4.snap,[Every lever slams down. 03:17],[Все рычаги падают. 03:17],[Barcha dastaklar tushadi. 03:17]
+cap4.rise,[Forty-one lights rise],[Сорок один огонь поднимается],[Qirq bitta chiroq koʻtariladi]
+intro4.strand_key,"The freight lift sinks past Level −2. On the tag of Strand's key, a second line you never noticed: “— and below the Choir, the Hall.”","Грузовой лифт опускается ниже уровня −2. На бирке ключа Странда — вторая строка, которой вы раньше не замечали: «— а под Хором — Зал».",Yuk lifti −2-qavatdan ham pastga tushmoqda. Strand kalitining yorligʻida ilgari sezmagan ikkinchi qator: «— Xor ostida esa — Zal».
+intro4.leyla_key,"The freight lift sinks past Level −2. On the tag of Leyla's key, a second line you never noticed: “— and below the Nursery, the Hall. Finish it.”","Грузовой лифт опускается ниже уровня −2. На бирке ключа Лейлы — вторая строка, которой вы раньше не замечали: «— а под Питомником — Зал. Закончи».",Yuk lifti −2-qavatdan ham pastga tushmoqda. Leyla kalitining yorligʻida ilgari sezmagan ikkinchi qator: «— Koʻchatxona ostida esa — Zal. Yakunla».
+intro4.2,"The Array Hall. Every clock in the Institute stopped here, at 03:17.","Зал Решётки. Все часы института остановились здесь, в 03:17.","Panjara zali. Institutdagi barcha soatlar shu yerda, 03:17 da toʻxtagan."
+doc4.chalk,"L.R. 1998 — this time, all four.",Л. Р. 1998 — в этот раз все четыре.,L. R. 1998 — bu safar toʻrttasi ham.
+doc4.log,"Tonight: the Sun, the rings and the Choir's note, each in its minute, and my hand on the lever at 03:17.\nI have sealed the Core and set its collar to the minute the Sun is lit. If anyone must open it again, let it be someone who watched.","Сегодня ночью: Солнце, кольца и нота Хора, каждое в свою минуту, и моя рука на рычаге в 03:17.\nЯ запечатал Ядро и выставил его замковое кольцо на минуту, когда зажжётся Солнце. Если кому-то придётся открыть его снова — пусть это будет тот, кто смотрел.","Bu kecha: Quyosh, halqalar va Xor notasi, har biri oʻz daqiqasida, va 03:17 da dastakdagi qoʻlim.\nOʻzakni muhrlab, qulf halqasini Quyosh yonadigan daqiqaga qoʻydim. Agar kimdir uni yana ochishi kerak boʻlsa — bu kuzatgan odam boʻlsin."
+doc4.letter,"Leyla — I made the pawl that lets the clock run back. I never dared to fit it. If you are reading this, you dared more than I did.\nLet them go. Leave me the light.\n— E.S.","Лейла — я сделал собачку, с которой часы пойдут назад. Я так и не решился её поставить. Если ты это читаешь, ты решилась на большее, чем я.\nОтпусти их. Оставь мне свет.\n— Э. С.","Leyla — men soatni orqaga yurgizadigan ilgakni yasadim. Uni oʻrnatishga jurʼat etmadim. Agar buni oʻqiyotgan boʻlsang, sen mendan koʻra koʻproq jurʼat qilding.\nUlarni qoʻyib yubor. Menga yorugʻlikni qoldir.\n— E. S."
+doc4.watch,E.S. — light remembers,Э. С. — свет помнит,E. S. — yorugʻlik eslaydi
+doc4.note,"If the post still runs when time runs back, send it to the laboratory. You know which one.\n— L.R., 1998","Если почта ещё работает, когда время пойдёт назад, отправь это в лабораторию. Ты знаешь, в какую.\n— Л. Р., 1998","Agar vaqt orqaga yurganda pochta hali ishlasa, buni laboratoriyaga joʻnat. Qaysi biriga — oʻzing bilasan.\n— L. R., 1998"
+doc4.parcel,Laboratory 7.,Лаборатория 7.,7-laboratoriya.
+echo4.tech_panel,"A technician kneels at Panel 0 with a lamp in his teeth, tracing a line with his finger.",Техник стоит на коленях у щита 0 с фонариком в зубах и ведёт пальцем по линии.,"Texnik 0-panel oldida tiz choʻkib, tishida fonar, barmogʻi bilan chiziqni kuzatadi."
+echo4.tech_wheels,"Two technicians lean on the handwheels, counting marks to each other.",Двое техников налегли на штурвалы и считают метки друг другу.,"Ikki texnik gʻildiraklarga suyanib, bir-biriga belgilarni sanaydi."
+echo4.clerk_post,A clerk loads a canister at the post station and looks at the clock.,Делопроизводитель заряжает капсулу на станции пневмопочты и смотрит на часы.,"Kotib pochta stansiyasida kapsulani joylab, soatga qaraydi."
+echo4.leyla_lift,"Leyla steps out of the lift, 1998, a lamp in one hand and the crystal lens in the other.","Лейла выходит из лифта — 1998 год, в одной руке лампа, в другой кристаллическая линза.","Leyla liftdan chiqadi — 1998-yil, bir qoʻlida chiroq, ikkinchisida billur linza."
+ui.choice_lens4_prompt,The forty-one are gone into the morning. The crystal lens is still warm in the cradle.,Сорок один ушли в утро. Кристаллическая линза всё ещё тёплая в гнезде.,Qirq bir kishi tongga ketdi. Billur linza uyachada hali ham iliq.
+ui.lens4_take,Take the lens,Забрать линзу,Linzani olish
+ui.lens4_leave,Leave it in the Core,Оставить в Ядре,Oʻzakda qoldirish
+epi4.dawn,"Forty-one lights rise through the oculus into the morning. A forty-second stays, by its own choice; it turns toward you once, then looks up.","Сорок один огонь поднимается сквозь окулюс в утро. Сорок второй остаётся — по своей воле; он один раз поворачивается к вам, потом смотрит вверх.","Qirq bitta chiroq gumbaz tuynugidan tongga koʻtariladi. Qirq ikkinchisi oʻz xohishi bilan qoladi; u bir bor sizga yuzlanadi, soʻng yuqoriga qaraydi."
+epi4.keeper,"Forty lights rise through the oculus. One settles back into the Core and hums a single held note, softly: Strand, keeping the light he could not let go. A forty-second stays beside it and turns toward you.","Сорок огней поднимаются сквозь окулюс. Один опускается обратно в Ядро и тихо тянет одну долгую ноту: Странд, хранящий свет, который не смог отпустить. Сорок второй остаётся рядом и поворачивается к вам.","Qirq chiroq gumbaz tuynugidan koʻtariladi. Bittasi Oʻzakka qaytib choʻkadi va mayin, choʻziq bir nota taratadi: Strand — qoʻyib yubora olmagan yorugʻlikni saqlab. Qirq ikkinchisi uning yonida qoladi va sizga yuzlanadi."
+epi4.true,Forty-one lights rise through the oculus. The forty-second rises last. It pauses at the rim and looks at you the way it did in Laboratory 7.,"Сорок один огонь поднимается сквозь окулюс. Сорок второй поднимается последним. Он замирает у края и смотрит на вас так же, как смотрел в Лаборатории 7.","Qirq bitta chiroq gumbaz tuynugidan koʻtariladi. Qirq ikkinchisi eng oxirida koʻtariladi. U chekkada toʻxtab, sizga 7-laboratoriyadagidek qaraydi."
+epi4.strand_stays,"One light does not follow. It settles into the Core and hums a single held note, softly: Strand, a keeper by his own wish.","Один огонь не следует за остальными. Он опускается в Ядро и тихо тянет одну долгую ноту: Странд, хранитель по собственной воле.","Bir chiroq boshqalarga ergashmaydi. U Oʻzakka choʻkib, mayin, choʻziq bir nota taratadi: Strand — oʻz xohishi bilan saqlovchi."
+epi4.parcel,"Far above, a brass canister drops into the dead station of Laboratory 7. Brown paper, string, a 1979 postmark. It will wait for you.","Далеко вверху латунная капсула падает в мёртвую станцию Лаборатории 7. Коричневая бумага, бечёвка, штемпель 1979 года. Она будет ждать вас.","Yuqorida, jez kapsula 7-laboratoriyaning jonsiz stansiyasiga tushadi. Qoʻngʻir qogʻoz, ip, 1979-yil tamgʻasi. U sizni kutadi."
+epi4.lens_taken,"The crystal lens is warm in your hand. The Core goes dark behind you, and the hall is only a hall.","Кристаллическая линза тёплая в руке. Ядро гаснет за вашей спиной, и зал — просто зал.","Billur linza qoʻlingizda iliq. Oʻzak ortingizda soʻnadi, va zal — shunchaki zal."
+epi4.lens_left,"The crystal lens stays in the cradle. The Core glows softly and replays ordinary days: a tea break, a chalkboard, a child's drawing. Light remembers.","Кристаллическая линза остаётся в гнезде. Ядро мягко светится и повторяет обычные дни: перерыв на чай, доску, детский рисунок. Свет помнит.","Billur linza uyachada qoladi. Oʻzak mayin yonib, odatiy kunlarni takrorlaydi: choy tanaffusi, doska, bola chizgan rasm. Yorugʻlik eslaydi."
+epi4.echoes,Four more kept echoes walked free before the Night was undone.,"Ещё четыре сохранённых эха вышли на свободу прежде, чем Ночь была отменена.",Kecha bekor qilinishidan oldin yana toʻrtta saqlangan aks-sado ozod boʻldi.
+epi4.all_light,"Every shard found, every echo released. Nothing the Institute kept is kept against its will.","Все осколки найдены, все эхо освобождены. Ничто из того, что хранил институт, не удерживается против воли.","Barcha boʻlaklar topildi, barcha aks-sadolar ozod qilindi. Institut saqlagan hech narsa oʻz xohishiga qarshi saqlanmayapti."
+epi4.end,"Every clock in the building reads 03:13, and ticks. The Institute is no longer forgotten.",Все часы в здании показывают 03:13 — и идут. Институт больше не забыт.,Binodagi barcha soatlar 03:13 ni koʻrsatadi — va yuradi. Institut endi unutilgan emas.
+achv.collect_ch4,Echoes of the Hall,Эхо Зала,Zal aks-sadolari
 hint.notebook.1,Someone left a notebook behind.,Кто-то оставил блокнот.,Kimdir daftar qoldirib ketgan.
 hint.notebook.2,Look at the desk under the window.,Посмотрите на стол под окном.,Deraza ostidagi stolga qarang.
 hint.notebook.3,"Tap the desk, then take Leyla's notebook.",Нажмите на стол и возьмите блокнот Лейлы.,Stolga bosing va Leylaning daftarini oling.
-hint.drawer.1,Leyla wrote about a moment she must never forget.,"Лейла писала о мгновении, которое нельзя забыть.",Leyla hech qachon unutmasligi kerak boʻlgan lahza haqida yozgan.
-hint.drawer.2,The clock on her desk stopped at that very moment.,Часы на её столе остановились именно в это мгновение.,Uning stolidagi soat aynan oʻsha lahzada toʻxtagan.
+hint.drawer.1,The desk drawer has four brass wheels. Leyla's notebook says what she set them to.,"У ящика стола четыре латунных колеса. В блокноте Лейла записала, на что их поставила.",Stol tortmasida toʻrtta jez gʻildirak bor. Leyla daftarida ularni nimaga qoʻyganini yozgan.
+hint.drawer.2,That moment is on the stopped flip clock on her desk.,Это мгновение — на остановившихся перекидных часах на её столе.,Bu lahza uning stolidagi toʻxtab qolgan varaqli soatda.
 hint.drawer.3,Set the drawer wheels to 0-3-1-7.,Установите колёса ящика на 0-3-1-7.,Tortma gʻildiraklarini 0-3-1-7 ga qoʻying.
 hint.take_lamp.1,The drawer is open.,Ящик открыт.,Tortma ochiq.
 hint.take_lamp.2,Something is lying inside the drawer.,В ящике что-то лежит.,Tortma ichida nimadir yotibdi.
 hint.take_lamp.3,Tap the lamp inside the drawer to take it.,"Нажмите на лампу в ящике, чтобы взять её.",Olish uchun tortmadagi chiroqqa bosing.
-hint.gearbox.1,Strand's box: each knob drags a neighbour along.,Шкатулка Странда: каждая ручка тянет за собой соседа.,Strandning qutichasi: har bir murvat qoʻshnisini ham aylantiradi.
+hint.gearbox.1,Strand's gear box stands to the left of Leyla's desk: each knob drags a neighbour along.,Шкатулка Странда стоит левее стола Лейлы: каждая ручка тянет за собой соседа.,Strandning qutichasi Leylaning stolidan chaproqda turibdi: har bir murvat qoʻshnisini ham aylantiradi.
 hint.gearbox.2,Bring every gear's pointer to the mark at the back. Count how far each one is.,"Наведите стрелки всех шестерней на метку сзади. Посчитайте, сколько шагов до неё.",Har bir gʻildirak koʻrsatkichini orqadagi belgiga keltiring. Har biri necha qadam uzoqligini sanang.
 hint.gearbox.3,"Press the knobs: left ×%d, middle ×%d, right ×%d.","Нажмите ручки: левую ×%d, среднюю ×%d, правую ×%d.","Murvatlarni bosing: chap ×%d, oʻrta ×%d, oʻng ×%d."
 hint.take_cell.1,The gear box is open.,Шкатулка открыта.,Quticha ochiq.
 hint.take_cell.2,Leyla kept something for her lamp inside it.,Лейла хранила в ней кое-что для лампы.,Leyla uning ichida chirogʻi uchun nimanidir saqlagan.
 hint.take_cell.3,Tap the battery cell inside the box.,Нажмите на батарею в шкатулке.,Quticha ichidagi batareyaga bosing.
 hint.lamp.1,The lamp is dead.,Лампа не работает.,Chiroq ishlamayapti.
-hint.lamp.2,Its battery bay fits something you carry.,К её отсеку подойдёт кое-что из ваших вещей.,Uning batareya joyiga yoningizdagi bir narsa mos keladi.
+hint.lamp.2,Its battery bay fits the cell from Strand's gear box. Combine the two from your bag.,К её отсеку подходит батарея из шкатулки Странда. Соедините их в сумке.,Uning batareya joyiga Strand qutichasidagi batareya mos keladi. Ikkalasini sumkada birlashtiring.
 hint.lamp.3,"Select the UV lamp, press Combine, then tap the battery cell.","Выберите УФ-лампу, нажмите «Объединить», затем батарею.","UB chiroqni tanlang, «Birlashtirish»ni bosing, soʻng batareyani tanlang."
 hint.cipher.1,One page of the notebook looks empty.,Одна страница блокнота кажется пустой.,Daftarning bir sahifasi boʻsh koʻrinadi.
-hint.cipher.2,Some inks only show under ultraviolet light.,Некоторые чернила видны только в ультрафиолете.,Ayrim siyohlar faqat ultrabinafsha nurda koʻrinadi.
+hint.cipher.2,Some inks only show under ultraviolet light. Your UV lamp can reveal them.,Некоторые чернила видны только в ультрафиолете. Ваша УФ-лампа может их показать.,Ayrim siyohlar faqat ultrabinafsha nurda koʻrinadi. UB chiroqingiz ularni koʻrsata oladi.
 hint.cipher.3,Open the notebook at the blank page and press the UV button.,Откройте блокнот на пустой странице и нажмите кнопку УФ.,Daftarni boʻsh sahifada oching va UB tugmasini bosing.
-hint.safe.1,The symbols on the page stand for numbers.,Символы на странице означают числа.,Sahifadagi belgilar sonlarni bildiradi.
-hint.safe.2,The poster on the wall counts dots beside each symbol.,Плакат на стене показывает число точек рядом с каждым символом.,Devordagi plakat har bir belgi yonida nuqtalar sonini koʻrsatadi.
+hint.safe.1,"The symbols on the page match Strand's poster, Tabula Resonantiarum, on the same wall as the safe.","Символы на странице совпадают с плакатом Странда «Tabula Resonantiarum» на той же стене, что и сейф.",Sahifadagi belgilar seyf bilan bir devordagi Strandning «Tabula Resonantiarum» plakatiga mos keladi.
+hint.safe.2,On the poster each symbol has dots beside it: the number of dots is one digit (none is 0). Read the page's symbols in order.,На плакате рядом с каждым символом стоят точки: их число — одна цифра (нет точек — 0). Читайте символы со страницы по порядку.,Plakatda har bir belgi yonida nuqtalar bor: ularning soni bitta raqam (nuqtasiz — 0). Sahifadagi belgilarni tartib bilan oʻqing.
 hint.safe.3,"Enter %s-%s-%s-%s on the safe keypad, then press the enter key (bottom right).",Введите на сейфе %s-%s-%s-%s и нажмите клавишу ввода (внизу справа).,Seyf tugmalarida %s-%s-%s-%s ni tering va kiritish tugmasini bosing (pastki oʻngda).
 hint.take_safe.1,The safe is open.,Сейф открыт.,Seyf ochiq.
 hint.take_safe.2,Everything inside will be useful.,"Всё, что внутри, пригодится.",Ichidagi hamma narsa asqotadi.
@@ -558,26 +704,26 @@ hint.take_safe.3,"Take the key, the lens, the letter and the valve from the safe
 hint.compartment.1,“Where only my lamp can show the way.”,"«Туда, куда дорогу укажет только моя лампа».",«Faqat chirogʻim yoʻl koʻrsata oladigan joyga».
 hint.compartment.2,Shine the UV lamp along Leyla's desk.,Посветите УФ-лампой вдоль стола Лейлы.,Leylaning stoli boʻylab UB chiroq bilan yoriting.
 hint.compartment.3,"Shine UV on the right side of the desk, then press the carved rosette.",Посветите УФ на правую боковину стола и нажмите на резную розетку.,Stolning oʻng yon tomonini UB bilan yoriting va oʻyma gul naqshni bosing.
-hint.key.1,A keyhole has appeared.,Появилась замочная скважина.,Kalit teshigi paydo boʻldi.
+hint.key.1,A keyhole has appeared in Leyla's desk.,В столе Лейлы появилась замочная скважина.,Leylaning stolida kalit teshigi paydo boʻldi.
 hint.key.2,The safe held a small brass key.,В сейфе был маленький латунный ключ.,Seyfda kichkina jez kalit bor edi.
 hint.key.3,Select the brass key and tap the keyhole in the desk.,Выберите латунный ключ и нажмите на скважину в столе.,Jez kalitni tanlang va stoldagi kalit teshigiga bosing.
 hint.take_handle.1,The hidden compartment is open.,Тайник открыт.,Yashirin boʻlma ochiq.
 hint.take_handle.2,Leyla hid something important inside.,Лейла спрятала там нечто важное.,Leyla uning ichiga muhim narsa yashirgan.
 hint.take_handle.3,Take the breaker handle (and the photograph) from the compartment.,Возьмите из тайника рукоять рубильника (и фотографию).,Boʻlmadan uzgich dastasini (va suratni) oling.
-hint.handle.1,The main breaker can't be moved.,Главный рубильник не двигается.,Asosiy uzgich qimirlamaydi.
-hint.handle.2,Its handle is missing — you have it.,У него нет рукояти — она у вас.,Uning dastasi yoʻq — u sizda.
+hint.handle.1,The main lever on Panel 7 can't be moved.,Главный рубильник на щите 7 не двигается.,7-paneldagi asosiy uzgich qimirlamaydi.
+hint.handle.2,"Its handle is missing, and you carry it. Select the handle and tap the lever.","У него нет рукояти, и она у вас. Выберите рукоять и нажмите на рубильник.","Uning dastasi yoʻq, u sizda. Dastani tanlab, uzgichga bosing."
 hint.handle.3,Select the breaker handle and tap the main lever on Panel 7.,Выберите рукоять и нажмите на главный рычаг щита 7.,Uzgich dastasini tanlang va 7-paneldagi asosiy dastakka bosing.
-hint.circuits.1,Leyla listed which lines must be live.,"Лейла записала, какие линии должны быть под током.",Leyla qaysi liniyalar tok ostida boʻlishi kerakligini yozib qoldirgan.
-hint.circuits.2,"LOCK, LIGHT and ARRAY on; VENT off. Follow the copper traces from each switch to the lamps.","ЗАМОК, СВЕТ и РЕШЁТКА — вкл., ВЕНТИЛЯЦИЯ — выкл. Проследите медные дорожки от переключателей к лампам.","QULF, YORUGʻLIK va PANJARA yoqilgan, SHAMOLLATISH oʻchiq. Har bir ulagichdan lampalargacha mis yoʻlakchalarni kuzating."
+hint.circuits.1,Panel 7's four lamps need the right lines. Leyla's notebook says which must be live.,"Четыре лампы щита 7 требуют нужных линий. В блокноте Лейлы сказано, какие должны быть под током.",7-panelning toʻrtta chirogʻiga toʻgʻri liniyalar kerak. Leylaning daftarida qaysilari tok ostida boʻlishi yozilgan.
+hint.circuits.2,"The icons over the lamps are the ones in her notebook: LOCK, LIGHT and ARRAY on; VENT off. Follow the copper traces from each switch to the lamps.","Значки над лампами — те же, что в её блокноте: ЗАМОК, СВЕТ и РЕШЁТКА — вкл., ВЕНТИЛЯЦИЯ — выкл. Проследите медные дорожки от переключателей к лампам.","Lampalar tepasidagi belgilar daftardagilar bilan bir xil: QULF, YORUGʻLIK va PANJARA yoqilgan, SHAMOLLATISH oʻchiq. Har bir ulagichdan lampalargacha mis yoʻlakchalarni kuzating."
 hint.circuits.3,"Raise switches I, II and III only, then raise the main lever.","Поднимите только переключатели I, II и III, затем главный рычаг.","Faqat I, II va III ulagichlarni koʻtaring, soʻng asosiy dastakni koʻtaring."
 hint.valve.1,The radio is silent.,Радио молчит.,Radio jim.
-hint.valve.2,Open its hatch: a valve is missing.,Откройте крышку: не хватает лампы.,Qopqogʻini oching: lampa yetishmayapti.
+hint.valve.2,Open the radio's hatch: a valve is missing. You found one in the safe.,Откройте крышку радио: не хватает лампы. Вы нашли её в сейфе.,Radio qopqogʻini oching: lampa yetishmayapti. Uni seyfdan topgan edingiz.
 hint.valve.3,Select the radio valve from the safe and tap the radio.,Выберите радиолампу из сейфа и нажмите на радио.,Seyfdan olingan radiolampani tanlang va radioga bosing.
 hint.tune.1,Strand left his beacon's band on his board.,Странд оставил на доске волну своего маяка.,Strand mayogʻining toʻlqinini doskasida qoldirgan.
 hint.tune.2,The chalkboard says λ = 41 m. The radio dial is marked in metres too.,На доске написано λ = 41 м. Шкала радио тоже размечена в метрах.,Doskada λ = 41 m deb yozilgan. Radio shkalasi ham metrlarda belgilangan.
 hint.tune.3,Drag the knob (or tap its left side) until the needle sits on 41 m.,"Крутите ручку пальцем (или нажимайте её левую сторону), пока стрелка не встанет на 41 м.","Murvatni barmoq bilan buring (yoki chap tomoniga bosing), koʻrsatkich 41 m ga kelsin."
 hint.books.1,The beacon repeats three numbers.,Маяк повторяет три числа.,Mayoq uchta sonni takrorlaydi.
-hint.books.2,"Count its pulses: %d, %d, %d. Leyla's encyclopedia “remembers them”.","Посчитайте импульсы: %d, %d, %d. Энциклопедия Лейлы «их помнит».","Impulslarni sanang: %d, %d, %d. Leylaning ensiklopediyasi «ularni eslaydi»."
+hint.books.2,"Count its pulses: %d, %d, %d. Leyla's encyclopedia on the bookcase “remembers them”.","Посчитайте импульсы: %d, %d, %d. Энциклопедия Лейлы на книжном шкафу «их помнит».","Impulslarni sanang: %d, %d, %d. Kitob javonidagi Leylaning ensiklopediyasi «ularni eslaydi»."
 hint.books.3,"Pull volumes %s, %s, then %s.","Потяните тома %s, %s, затем %s.","%s, %s, soʻng %s jildlarni torting."
 hint.shadow.1,The wall shows the Institute's mark.,На стене — знак института.,Devorda institut belgisi bor.
 hint.shadow.2,Make the sculpture's shadow draw it: a full ring and a straight line.,"Сделайте так, чтобы тень скульптуры нарисовала его: полное кольцо и прямую линию.",Haykalcha soyasi uni chizsin: toʻliq halqa va toʻgʻri chiziq.
@@ -595,7 +741,7 @@ hint.lens.1,The projector's socket is empty.,Гнездо проектора п�
 hint.lens.2,The crystal lens fits it.,Туда подходит кристаллическая линза.,Unga billur linza mos keladi.
 hint.lens.3,Select the crystal lens and tap the projector.,Выберите линзу и нажмите на проектор.,Billur linzani tanlang va proyektorga bosing.
 hint.projector.1,Strand's letter tells how to tune it.,"Письмо Странда говорит, как его настроить.",Strandning maktubi uni qanday sozlashni aytadi.
-hint.projector.2,“The heaviest first.” Compare the samples' density (ρ).,«Начиная с самого тяжёлого». Сравните плотность (ρ) образцов.,«Eng ogʻiridan boshlab». Namunalarning zichligini (ρ) solishtiring.
+hint.projector.2,“The heaviest first.” Compare the density (ρ) of the three samples on the lab bench.,«Начиная с самого тяжёлого». Сравните плотность (ρ) трёх образцов на лабораторном столе.,«Eng ogʻiridan boshlab». Laboratoriya stolidagi uchta namunaning zichligini (ρ) solishtiring.
 hint.projector.3,"Set the rings to crimson, cobalt, green — then pull the lever.","Установите кольца: малиновый, кобальтовый, зелёный — и потяните рычаг.","Halqalarni toʻq qizil, kobalt, yashilga qoʻying — soʻng dastakni torting."
 hint.mount_mirror.1,One mirror stand is empty.,Одна зеркальная стойка пуста.,Bitta koʻzgu tirgagi boʻsh.
 hint.mount_mirror.2,You carry Strand's round mirror.,У вас есть круглое зеркало Странда.,Sizda Strandning dumaloq koʻzgusi bor.
@@ -609,8 +755,8 @@ hint.finale.3,Make your choice.,Сделайте выбор.,Tanlov qiling.
 hint.c2_catalogue.1,"Leyla's badge carries a number. The card catalogue stands on the west wall, past the stacks.","На пропуске Лейлы есть номер. Картотека стоит у западной стены, за стеллажами.","Leylaning guvohnomasida raqam bor. Kartoteka gʻarbiy devor yonida, javonlar ortida."
 hint.c2_catalogue.2,The catalogue drawers are numbered by the first two digits.,Ящики картотеки пронумерованы по первым двум цифрам.,Kartoteka tortmalari dastlabki ikki raqam boʻyicha raqamlangan.
 hint.c2_catalogue.3,"Drawer 04, divider 1–, card 17.","Ящик 04, разделитель 1–, карточка 17.","04-tortma, 1– ajratgich, 17-kartochka."
-hint.c2_compressor.1,The tube station is dead: there is no pressure.,Станция пневмопочты не работает: нет давления.,Pnevmatik pochta ishlamayapti: bosim yoʻq.
-hint.c2_compressor.2,The plate shows which valve feeds which gauge. Both needles need their green marks.,"Табличка показывает, какой вентиль питает какой манометр. Обе стрелки должны встать на зелёные метки.",Lavhada qaysi ventil qaysi manometrga ulangani koʻrsatilgan. Ikkala mil ham yashil belgiga kelishi kerak.
+hint.c2_compressor.1,The tube station is dead: there is no pressure. The tube compressor makes it.,Станция пневмопочты не работает: нет давления. Его создаёт компрессор.,Pnevmatik pochta ishlamayapti: bosim yoʻq. Bosimni kompressor beradi.
+hint.c2_compressor.2,The compressor's plate shows which valve feeds which gauge. Both needles need their green marks.,"Табличка на компрессоре показывает, какой вентиль питает какой манометр. Обе стрелки должны встать на зелёные метки.",Kompressor lavhasida qaysi ventil qaysi manometrga ulangani koʻrsatilgan. Ikkala mil ham yashil belgiga kelishi kerak.
 hint.c2_compressor.3,"Valves: A %d, B %d, C %d.","Вентили: A %d, B %d, C %d.","Ventillar: A %d, B %d, C %d."
 hint.c2_punch.1,The stacks only answer punched requests.,Хранилище отвечает только на пробитые запросы.,Fond faqat teshilgan soʻrovlarga javob beradi.
 hint.c2_punch.2,Take a blank card from the station tray and copy the index card's notches with the punch.,Возьмите чистый бланк из лотка станции и перенесите вырезы с карточки на перфоратор.,Stansiya tokchasidan boʻsh karta oling va kartochkadagi kesiklarni teshgichda takrorlang.
@@ -636,7 +782,7 @@ hint.c2_tape.3,"Speed 4.75, a reel on the deck, press Play. Do it for all three.
 hint.c2_booth.1,The booth door has a dial.,На двери кинобудки есть диск.,Kinobudka eshigida disk bor.
 hint.c2_booth.2,"“The booth answers to my reels, in the order I made them.” Count each reel's clicks.","«Кинобудка отвечает моим катушкам — в том порядке, в каком я их записала». Сосчитайте щелчки.",«Kinobudka gʻaltaklarimga ularni yozgan tartibimda javob beradi». Chiqillashlarni sanang.
 hint.c2_booth.3,"Dial %d, %d, %d.","Наберите %d, %d, %d.","%d, %d, %d ni tering."
-hint.c2_splice.1,The film is in pieces.,Плёнка разорвана на кусочки.,Lenta boʻlaklarga boʻlingan.
+hint.c2_splice.1,The film is in pieces. Put it together on the film splicer in the booth.,Плёнка разорвана на кусочки. Соберите её на склеечном прессе в кинобудке.,Lenta boʻlaklarga boʻlingan. Uni kinobudkadagi yelimlagichda yigʻing.
 hint.c2_splice.2,The can's lid shows the day running from dawn to noon. Shadows shorten.,На крышке коробки день идёт от рассвета к полудню. Тени укорачиваются.,Quti qopqogʻida kun tongdan tushgacha davom etadi. Soyalar qisqaradi.
 hint.c2_splice.3,Order the frames from the longest shadow to the shortest.,Расположите кадры от самой длинной тени к самой короткой.,Kadrlarni eng uzun soyadan eng qisqasigacha joylang.
 hint.c2_take_reel.1,The reel is whole again.,Бобина снова цела.,Bobina yana butun.
@@ -705,3 +851,42 @@ hint.c3_resonance.3,"X %d, Y %d.","X %d, Y %d.","X %d, Y %d."
 hint.c3_finale.1,Two of them wait for you.,Двое ждут вас.,Ikkovi sizni kutmoqda.
 hint.c3_finale.2,Strand would keep them. Leyla would let them go.,Странд хочет их сохранить. Лейла — отпустить.,Strand ularni saqlab qolmoqchi. Leyla — qoʻyib yubormoqchi.
 hint.c3_finale.3,Choose.,Выбирайте.,Tanlang.
+hint.c4_power.1,The hall is dead.,Зал мёртв.,Zal jonsiz.
+hint.c4_power.2,The panel under the bridge: Strand's plate wants every lamp lit. Follow the engraved traces.,Щит под мостиком: табличка Странда требует зажечь все лампы. Следуйте гравированным линиям.,Koʻprik ostidagi panel: Strand lavhasi barcha chiroqlar yonishini talab qiladi. Oʻyilgan chiziqlarni kuzating.
+hint.c4_power.3,"Switches %s up, then the main lever.","Переключатели %s вверх, затем главный рычаг.","%s ulagichlarni yuqoriga, soʻng bosh dastakni."
+hint.c4_box.1,Strand's box waits on his desk.,Шкатулка Странда ждёт на его столе.,Strandning qutichasi stolida kutmoqda.
+hint.c4_box.2,Each knob drags the next gear along; the last turns alone. Start with the first knob.,Каждая ручка тянет за собой следующую шестерню; последняя крутится одна. Начните с первой ручки.,Har bir murvat keyingi gʻildirakni ham aylantiradi; oxirgisi yolgʻiz aylanadi. Birinchi murvatdan boshlang.
+hint.c4_box.3,"Press the knobs: first ×%d, second ×%d, third ×%d, fourth ×%d.","Нажмите ручки: первую ×%d, вторую ×%d, третью ×%d, четвёртую ×%d.","Murvatlarni bosing: birinchi ×%d, ikkinchi ×%d, uchinchi ×%d, toʻrtinchi ×%d."
+hint.c4_sun.1,The Sun is cold.,Солнце холодное.,Quyosh sovuq.
+hint.c4_sun.2,"Lever on. Feed the rods together until the needle slams over, then back them off into the green.","Рычаг вверх. Сводите стержни, пока стрелка не ударит в упор, затем разводите их до зелёной зоны.","Dastakni yoqing. Mil toʻxtatgichga urilguncha tayoqchalarni yaqinlashtiring, soʻng yashil zonagacha orqaga qaytaring."
+hint.c4_sun.3,"Rods to 0, then back to %d.","Стержни на 0, затем обратно на %d.","Tayoqchalarni 0 ga, soʻng orqaga %d ga."
+hint.c4_iris.1,The Sun burns behind its iris.,Солнце горит за диафрагмой.,Quyosh diafragma ortida yonmoqda.
+hint.c4_iris.2,A leaf under another will not lift. Start from the top of the stack.,Лепесток под другим не поднимется. Начните с самого верхнего.,Boshqasining tagidagi yaproq koʻtarilmaydi. Eng ustkisidan boshlang.
+hint.c4_iris.3,Leaves %s.,Лепестки %s.,Yaproqlar %s.
+hint.c4_align.1,The beam stops at the rings.,Луч останавливается у колец.,Nur halqalarda toʻxtaydi.
+hint.c4_align.2,The little Array in Strand's box shows where each tower stood. Each wheel drags the next ring: work from the outer ring in.,"Маленькая Решётка в шкатулке Странда показывает, где стояла каждая башня. Каждый штурвал тянет следующее кольцо: идите от внешнего кольца внутрь.",Strand qutichasidagi kichkina Panjara har bir minora qayerda turganini koʻrsatadi. Har bir gʻildirak keyingi halqani ham tortadi: tashqi halqadan ichkariga boring.
+hint.c4_align.3,Towers I to IV at marks %s.,Башни с I по IV на метках %s.,I–IV minoralar %s belgilarda.
+hint.c4_keys.1,The cage has four locks.,На клетке четыре замка.,Qafasda toʻrtta qulf bor.
+hint.c4_keys.2,Each tower carries its gate's key. Bring a tower to mark 1 and reach it through the hatch in the catwalk.,На каждой башне — ключ от её ворот. Подведите башню к метке 1 и достаньте ключ через люк в мостике.,Har bir minorada oʻz darvozasining kaliti bor. Minorani 1-belgiga keltiring va kalitni yoʻlakdagi lyuk orqali oling.
+hint.c4_keys.3,"Turn each ring to mark 1 in turn, outer first, and take the key below the hatch.","Поочерёдно ставьте каждое кольцо на метку 1, начиная с внешнего, и берите ключ под люком.","Har bir halqani navbat bilan, tashqisidan boshlab, 1-belgiga qoʻying va lyuk tagidagi kalitni oling."
+hint.c4_cage.1,"Four keys, four gates.","Четыре ключа, четыре ворот.","Toʻrt kalit, toʻrt darvoza."
+hint.c4_cage.2,The numerals match.,Цифры совпадают.,Raqamlar mos keladi.
+hint.c4_cage.3,Each key into the gate with its numeral.,Каждый ключ — в ворота с его цифрой.,Har bir kalitni oʻz raqamli darvozaga.
+hint.c4_collar.1,Strand sealed the Core.,Странд запечатал Ядро.,Strand Oʻzakni muhrlagan.
+hint.c4_collar.2,“…its collar to the minute the Sun is lit.” Scrub the chronometer and watch for the Sun.,"«…замковое кольцо на минуту, когда зажжётся Солнце». Крутите хронометр и следите за Солнцем.",«…qulf halqasini Quyosh yonadigan daqiqaga». Xronometrni aylantiring va Quyoshni kuzating.
+hint.c4_collar.3,%d-%d-%d-%d.,%d-%d-%d-%d.,%d-%d-%d-%d.
+hint.c4_lens.1,The cradle has an empty socket.,В гнезде пустая выемка.,Uyachada boʻsh oʻrin bor.
+hint.c4_lens.2,The crystal lens fits it. The drawer below opens for the Institute's mark.,Кристаллическая линза подходит к ней. Ящик внизу открывается на знак института.,Billur linza unga tushadi. Pastdagi tortma institut belgisiga ochiladi.
+hint.c4_lens.3,Seat the crystal lens in the cradle.,Вставьте кристаллическую линзу в гнездо.,Billur linzani uyachaga qoʻying.
+hint.c4_pawl.1,Strand made a part he never fitted.,"Странд сделал деталь, которую так и не поставил.",Strand oʻrnatmagan bir detal yasagan.
+hint.c4_pawl.2,Take the pawl from the drawer. The chronometer's back is open.,Возьмите собачку из ящика. Задняя крышка хронометра открыта.,Tortmadan ilgakni oling. Xronometrning orqa qopqogʻi ochiq.
+hint.c4_pawl.3,Use the reverse pawl on the chronometer.,Используйте обратную собачку на хронометре.,Teskari ilgakni xronometrga qoʻying.
+hint.c4_note.1,The Core hums a note of its own.,Ядро гудит своей нотой.,Oʻzak oʻz notasida gʻuvillaydi.
+hint.c4_note.2,Turn the keeper knob and watch the beat on the oscillograph: slower is closer.,Крутите ручку хранения и следите за биением на осциллографе: медленнее — значит ближе.,Saqlash murvatini buring va ossillografdagi tepishni kuzating: sekinroq — demak yaqinroq.
+hint.c4_note.3,Keeper at %d.,Ручка хранения на %d.,Saqlash murvati %d da.
+hint.c4_reversal.1,Run the Night backwards.,Прокрутите Ночь назад.,Kechani orqaga aylantiring.
+hint.c4_reversal.2,"Everything as on the Night: the beam folded into the Core, the keeper on, the lens seated. Lift the master lever at 03:17. Then wind back a minute at a time, undoing each minute's step before you wind.","Всё как в ту Ночь: луч сложен в Ядро, хранение включено, линза на месте. Поднимите главный рычаг в 03:17. Затем отводите время назад по минуте, отменяя шаг каждой минуты перед тем, как крутить дальше.","Hammasi oʻsha Kechadagidek: nur Oʻzakka buklangan, saqlash yoqilgan, linza oʻrnida. 03:17 da bosh dastakni koʻtaring. Soʻng vaqtni daqiqa-daqiqa orqaga buring, har daqiqa qadamini burashdan oldin bekor qiling."
+hint.c4_reversal.3,"Lever at 03:17. Then at 03:1%d %s, at 03:1%d %s, at 03:1%d %s.","Рычаг в 03:17. Затем в 03:1%d — %s, в 03:1%d — %s, в 03:1%d — %s.","Dastak 03:17 da. Soʻng 03:1%d da %s, 03:1%d da %s, 03:1%d da %s."
+hint.c4_finale.1,The lens is still in the cradle.,Линза всё ещё в гнезде.,Linza hali ham uyachada.
+hint.c4_finale.2,"Take it, or leave it.",Заберите её — или оставьте.,Oling — yoki qoldiring.
+hint.c4_finale.3,Choose.,Выбирайте.,Tanlang.

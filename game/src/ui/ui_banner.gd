@@ -61,6 +61,13 @@ func set_icon(tex: Texture2D) -> void:
 	queue_redraw()
 
 
+## Where the icon is drawn, in global coordinates (empty without an icon): the found item flies from it.
+func icon_global_rect() -> Rect2:
+	if icon_texture == null or _icon_rect.size.x <= 0.0:
+		return Rect2()
+	return Rect2(get_global_transform() * _icon_rect.position, _icon_rect.size * get_global_transform().get_scale())
+
+
 func _text_of(l: Label) -> String:
 	return l.atr(l.text).strip_edges()
 
