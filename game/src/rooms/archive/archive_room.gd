@@ -905,7 +905,11 @@ func _interact_slide_projector(p: String) -> void:
 		return
 	match p:
 		"IA_slide_rot":
-			l.rotate_slide()
+			if s["slide_in"]:
+				l.rotate_slide()
+			else:
+				hud.call("message", tr("msg.c2_slide_gate_empty"))
+				AudioManager.ui("ui_tap")
 		"IA_slide_lamp":
 			l.toggle_slide_lamp()
 		_:

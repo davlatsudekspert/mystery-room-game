@@ -891,6 +891,10 @@ func _interact_bookshelf(part: String, _r: Dictionary) -> void:
 		if cur != "books":
 			cam.go("books")
 			return
+		if s["shelf_open"]:
+			hud.call("message", tr("obj.bookshelf_open")) # the books are fixed now; the case itself has swung open
+			AudioManager.ui("ui_tap")
+			return
 		var n := int(part.substr(8))
 		logic.pull_book(n)
 		return

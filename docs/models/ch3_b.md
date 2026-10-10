@@ -25,7 +25,7 @@ All coordinates are **Godot, model-local, metres**; models face +Z; angles follo
 
 | Model | Tris (budget) | Surfaces (cap) | Slots (≤ 4) | GLB | QA renders (`qa/blender/ch3/`) |
 |---|---|---|---|---|---|
-| `transformer` (×3) | TBD (5,000) | TBD (4) | 3 | `transformer.glb` | `transformer.png`, `_2` … `_4` |
+| `transformer` (×3) | 4,408 (5,000) | 4 (4) | 3 | `transformer.glb` | `transformer.png`, `_2` … `_4` |
 | `choir_rack` | 5,440 (6,000) | 13 (13) | 4 | `choir_rack.glb` | `choir_rack.png`, `_2` … `_5` |
 | `choir_tube` | 2,352 (2,800) | 7 (7) | 1 | `choir_tube.glb` | `choir_tube.png`, `_2` |
 | `tube_bench` | TBD (2,500) | TBD (5) | 3 | `tube_bench.glb` | `tube_bench.png`, `_2` |
@@ -85,7 +85,7 @@ dropped), `_4` (hangers, lock bar and roller close-up), `_5` (`choir` root view 
 
 ---
 
-## transformer.glb (TBD tris, 4 surfaces, 3 slots)
+## transformer.glb (4,408 tris, 4 surfaces, 3 slots)
 
 **Shape.** A grey-green painted oil transformer: a channel-iron skid, the base section with the bolted seam at
 y 0.62 (hex bolts along the front and sides; x = 0 is left free for the welder's torch), the tank with riveted front
@@ -100,7 +100,7 @@ neighbours). Bounds x ±0.73, y 0 … 3.511 (the rod tips), z −0.475 … 0.50:
 
 | Node | Pivot / position | Materials | Notes |
 |---|---|---|---|
-| `transformer` | (0, 0, 0) | Steel_Painted, Porcelain, Copper | static |
+| `transformer` | (0, 0, 0) | Steel_Painted, Porcelain, Copper | static, 4,290 tris |
 | `hum_lamp` | (0.45, 1.50, 0.46) | Porcelain | glazed jewel in a painted housing on the front face (code tint; `set_emission` duplicates the material, so sharing the bushings' slot is safe) |
 | `arc_base` | (0, 2.38, 0) | — | empty just above the ball terminals (ball gap **0.028** at y 2.355) |
 | `arc_top` | (0, 3.48, 0) | — | empty just below the rod tips (rod-axis gap **0.36** at y 3.50) |

@@ -11,6 +11,8 @@ var _music: Array[AudioStreamPlayer] = []
 var _music_idx := 0
 var _music_name := ""
 var _amb: Dictionary = {} # name -> AudioStreamPlayer
+var sfx_count := 0 # one-shots played so far (QA: "did that tap make a sound?")
+var last_sfx := ""
 
 
 func _ready() -> void:
@@ -62,6 +64,8 @@ func sfx(name: String, volume_db: float = 0.0, pitch: float = 1.0, bus: String =
 	var s := stream("sfx", name)
 	if s == null:
 		return
+	sfx_count += 1
+	last_sfx = name
 	for p in _pool:
 		if not p.playing:
 			p.stream = s
