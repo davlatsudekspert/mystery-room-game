@@ -18,6 +18,7 @@ import lib_devices as D  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 import lib_ch3_items as G  # noqa: E402
 import lib_ch4_items as H  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
 NAME = "strand_last_letter"
@@ -59,10 +60,8 @@ def build():
             v.co.y *= f
     seal.location = (0.0, 0.0, zs)
     M.apply_transform(seal)
-    mark = L.curve_solid("sealmark", G.symbols().loops("mark", 0.0145), 0.0012, bevel=0.0, mat=WAX, drop_bottom=True)
-    mark.location = (0.0, 0.0, zs + 0.0020)
-    M.apply_transform(mark)
-    rb += [seal, mark]
+    mark = MK.mark_solids(0.0145, 0.0012, WAX, loc=(0.0, 0.0), z0=zs + 0.0020, name="sealmark")
+    rb += [seal] + mark
     ribbon = M.join(rb, "ribbon")
     M.set_parent(ribbon, root)
     return root

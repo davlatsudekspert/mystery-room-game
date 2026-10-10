@@ -11,7 +11,7 @@ extends Node
 ## notebook at 32 s (the camera moves to the desk) and 36 s (it is taken: a ghost of it lifts off).
 
 var out_dir := "/tmp"
-var times: Array[float] = [0.0, 3.0, 6.0, 10.0, 15.0, 20.0, 26.0, 30.0, 36.8, 45.0, 60.0] # the owner's nine plus two touch moments
+var times: Array[float] = [0.0, 3.0, 6.0, 10.0, 13.0, 14.6, 15.1, 15.6, 16.4, 17.4, 20.0, 26.0, 30.0, 36.8, 45.0, 60.0] # the owner's nine (0 3 6 10 15 20 30 45 60: nearest frames) and the door beats
 var win := Vector2i(1170, 540)
 var lang := "en"
 var skip_intro := false

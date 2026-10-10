@@ -27,6 +27,7 @@ import mrlib as M  # noqa: E402
 import lib_ch4 as C  # noqa: E402
 import lib_ch4_cde as X  # noqa: E402
 import lib_ch4_fgh as F  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 from lib_ch4 import K, D, BRASS, STEEL, CHEQ, GLASS  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
@@ -309,8 +310,8 @@ def gate_parts():
             br.boss((0.0, (ya + yb) / 2.0, (za + zb) / 2.0), (-1, 0, 0), 0.020, 0.010, sides=6)
     obj1 = br.obj("gate_main")
     # Strand's mark on the lock box (the +Z face), the door's brass is the box
-    mark = C.S.inlay("gate_mark", "mark", 0.15, depth=0.004, mat=BRASS, bevel=0.0004, loc=(0.0, 1.27, z0 + 0.07))
-    return [obj1, mark]
+    mark = MK.mark_solids(0.15, 0.004, BRASS, loc=(0.0, 1.27), z0=z0 + 0.07, name="gate_mark")
+    return [obj1] + mark
 
 
 # ====================================================================== build

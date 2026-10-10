@@ -27,6 +27,7 @@ import lib_ch4_numerals as N  # noqa: E402
 ROOT = M.ROOT
 G.QA_SUB = "ch4"
 C.QA_SUB = "ch4"
+C.LIGHTS = C.SOFT            # the soft three-point rig for every item shot (the default rig over-exposes cream paper and pale leather)
 TAU = 2.0 * math.pi
 BRASS, BRASS_P, STEEL, PAPER, BAKE = "M_Brass_Aged", "M_Brass_Polished", "M_Steel_Dark", "M_Paper", "M_Bakelite"
 
@@ -51,8 +52,8 @@ def tower_key(n: int, name: str):
     eye = list(reversed(L.circle(0.0019, 12, cy=-0.0145)))
     bow = G.plate_xy(name, [bow_loop, eye], 0.0032, -0.0016, BRASS, bevel=0.0006)
     # the numeral plaque (a raised rounded plate) and the numeral on it
-    plaque = G.plate_xy("plaque", [L.rounded_rect(0.0285, 0.0195, 0.003, 3, 0.0, -0.0318)], 0.0007, 0.0016, BRASS, bevel=0.0002)
-    num = N.roman_obj("num", n, 0.0120, 0.0010, BRASS, loc=(0.0, -0.0318, 0.0023), bevel=0.0002)
+    plaque = G.plate_xy("plaque", [L.rounded_rect(0.0290, 0.0215, 0.003, 3, 0.0, -0.0318)], 0.0006, 0.0016, STEEL, bevel=0.0002)
+    num = N.roman_obj("num", n, 0.0150, 0.0013, BRASS, loc=(0.0, -0.0318, 0.0022), bevel=0.0002)
     # a thin brass band between the merlons and the plaque
     band = G.plate_xy("band", [[(-0.0145, -0.0085), (0.0145, -0.0085), (0.0145, -0.0100), (-0.0145, -0.0100)]], 0.0006, 0.0016, BRASS, bevel=0.0001)
     # neck, collar, shank (turned), along -Y
@@ -80,7 +81,8 @@ def tower_key(n: int, name: str):
         if not clean or abs(clean[-1][0] - p[0]) + abs(clean[-1][1] - p[1]) > 1e-7:
             clean.append(p)
     bit = G.plate_xy("key_bit", [clean], 0.0026, -0.0013, STEEL, bevel=0.0003)
-    root = M.join([bow, plaque, num, band, shank], name)
+    root = M.join([bow, num, band, shank], name)
+    bit = M.join([bit, plaque], "key_bit")
     M.set_parent(bit, root)
     return root
 

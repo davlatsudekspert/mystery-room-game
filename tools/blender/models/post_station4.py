@@ -29,6 +29,7 @@ import mrlib as M  # noqa: E402
 import lib_ch4 as C  # noqa: E402
 import lib_ch4_cde as X  # noqa: E402
 import lib_ch4_fgh as F  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 import lib_mech as L  # noqa: E402
 from lib_ch4 import K, D, BRASS, STEEL, BAKE, CREAM  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
@@ -151,7 +152,7 @@ def brass_gauge():
     out.append(K.gbox("gauge_needle", (gx - 0.0016, gy, ZF + 0.0085), (gx + 0.0016, gy + 0.042, ZF + 0.0105), BRASS, 0.0))
     out[-1].data.transform(Matrix.Translation((gx, gy, 0.0)) @ Matrix.Rotation(math.radians(-35.0), 4, "Z") @ Matrix.Translation((-gx, -gy, 0.0)))
     # Strand's mark on the header
-    out.append(K.plate("mark", C.S.loops("mark", 0.125), 0.004, z0=ZF + 0.006, mat=BRASS, bevel=0.0004, drop_bottom=True, loc=(0.0, 1.31, 0.0)))
+    out += MK.mark_solids(0.125, 0.004, BRASS, loc=(0.0, 1.31), z0=ZF + 0.006, name="mark")
     return out
 
 

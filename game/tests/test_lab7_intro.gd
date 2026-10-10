@@ -65,6 +65,37 @@ func test_opening_skips_to_a_settled_room_and_the_notebook_glows() -> void:
 	SaveSystem.save_path = SaveSystem.SAVE_PATH
 
 
+func test_the_first_glowing_thing_takes_the_touch_in_two_taps() -> void:
+	SaveSystem.save_path = "user://test_lab7_intro.json"
+	GameState.start_new("ch1")
+	var room := (load("res://src/rooms/lab7/lab7.tscn") as PackedScene).instantiate()
+	_tree().root.add_child.call_deferred(room)
+	await _tree().process_frame
+	await _tree().process_frame
+	for c in room.get_children():
+		if c is Lab7Intro:
+			c.skip()
+	for i in 10:
+		await _tree().process_frame
+	var cam: RoomCamera = room.get("cam")
+	cam.go("lab", true)
+	for i in 4:
+		await _tree().process_frame
+	var nb: Node3D = (room.get("models") as Dictionary)["notebook"]
+	room.call("_on_tap", cam.unproject_position(nb.global_position + Vector3(0, 0.03, 0)))
+	for i in 70:
+		await _tree().process_frame
+	eq(cam.current(), "desk", "the first tap on the glowing notebook moves the camera to the desk")
+	room.call("_on_tap", cam.unproject_position(nb.global_position + Vector3(0, 0.03, 0)))
+	check(bool(room.get("logic").state["taken"].get("notebook", false)), "the second tap takes it (not the drawer lying right below it)")
+	AudioManager.stop_all_ambience(0.0)
+	AudioManager.stop_music(0.0)
+	room.queue_free()
+	await _tree().process_frame
+	SaveSystem.delete_game()
+	SaveSystem.save_path = SaveSystem.SAVE_PATH
+
+
 func test_a_loaded_game_plays_no_opening() -> void:
 	SaveSystem.save_path = "user://test_lab7_intro.json"
 	GameState.start_new("ch1")

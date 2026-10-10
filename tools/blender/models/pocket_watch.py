@@ -17,6 +17,7 @@ import lib_devices as D  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 import lib_ch3_items as G  # noqa: E402
 import lib_ch4_items as H  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
 NAME = "pocket_watch"
@@ -38,11 +39,7 @@ def build():
         rg.location = (0, 0, ZF)
         M.apply_transform(rg)
         parts.append(rg)
-    mk = G.symbols().loops("mark", 0.0235)
-    mark = L.curve_solid("mark", mk, 0.0009, bevel=0.0, mat=POL, drop_bottom=True)
-    mark.location = (0, 0, ZF)
-    M.apply_transform(mark)
-    parts.append(mark)
+    parts += MK.mark_solids(0.0235, 0.0009, POL, loc=(0.0, 0.0), z0=ZF, name="mark")
     # hinge knuckles (left) and the thumb-catch at the pendant
     for z in (-0.0035, 0.0035):
         k = L.lathe2("knuckle", [(0.0, -0.0060), (0.0033, -0.0060), (0.0033, 0.0060), (0.0, 0.0060)], segments=10, mat=BRASS)

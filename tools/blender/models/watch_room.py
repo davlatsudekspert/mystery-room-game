@@ -27,6 +27,7 @@ import mrlib as M  # noqa: E402
 import lib_ch4 as C  # noqa: E402
 import lib_ch4_cde as X  # noqa: E402
 import lib_ch4_fgh as F  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 from lib_ch4 import K, D, BRASS, STEEL, CHEQ, GLASS  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
@@ -151,7 +152,7 @@ def brass_parts():
 
 def fascia_mark():
     """The Institute's mark on the header, relief 6 mm, in brass."""
-    return [K.plate("mark", C.S.loops("mark", 0.42), 0.006, z0=ZF + 0.02, mat=BRASS, bevel=0.0006, drop_bottom=True, loc=(0.0, 2.93, 0.0))]
+    return MK.mark_solids(0.42, 0.006, BRASS, loc=(0.0, 2.93), z0=ZF + 0.02, name="mark")
 
 
 def gate_parts():

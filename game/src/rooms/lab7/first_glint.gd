@@ -5,7 +5,7 @@ extends Node3D
 ## out for good when `done` says the thing was taken.
 
 const PERIOD_S := 2.6
-const SIZE_M := 0.22
+const SIZE_M := 0.34
 
 var _mat: StandardMaterial3D
 var _quad: MeshInstance3D
@@ -73,4 +73,4 @@ func _process(delta: float) -> void:
 	_t += delta
 	_fade = minf(1.0, _fade + delta)
 	var pulse := 0.5 + 0.5 * sin(_t * TAU / PERIOD_S)
-	_mat.albedo_color.a = _fade * (0.22 + 0.34 * pulse)
+	_mat.albedo_color.a = _fade * (0.3 + 0.55 * pulse)

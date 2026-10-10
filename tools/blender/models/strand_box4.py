@@ -31,6 +31,7 @@ import mrlib as M  # noqa: E402
 import lib_ch4 as C  # noqa: E402
 import lib_ch4_cde as X  # noqa: E402
 import lib_ch4_fgh as F  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 import lib_mech as L  # noqa: E402
 from lib_ch4 import K, D, BRASS, WALNUT, BAKE, PAPER  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
@@ -135,8 +136,10 @@ def lid_parts():
     obj = b.obj("lid_brass")
     out = [obj]
     # Strand's mark in the front strip, the "wheel and arrow" pictogram in the rear strip
-    mark = F.top_plate("lid_mark", C.S.loops("mark", 0.050), TOPY, 0.0030, BRASS, x=0.0, z=0.140, bevel=0.0)
-    out.append(mark)
+    marks = MK.mark_solids(0.050, 0.0030, BRASS, name="lid_mark")
+    for o in marks:
+        o.data.transform(Matrix.Translation((0.0, TOPY, 0.140)) @ Matrix.Rotation(math.radians(-90.0), 4, "X"))
+    out += marks
     pic = F.picto_loops("wheels", 0.105)
     out.append(F.top_plate("lid_picto", pic, TOPY, 0.0035, BRASS, x=0.0, z=-0.134, bevel=0.0))
     return out

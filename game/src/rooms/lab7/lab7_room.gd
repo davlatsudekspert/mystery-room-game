@@ -714,6 +714,10 @@ func _raycast(screen: Vector2) -> Dictionary:
 		exclude.append(h["rid"])
 	if hits.is_empty():
 		return {}
+	# the notebook lying on the desk answers a tap on itself: the drawer's own tap box lies right below it and would
+	# otherwise win from above (the first glowing thing to touch must take the touch)
+	if _resolve(hits[0])["hotspot"] == "notebook" and logic.can_take("notebook"):
+		return hits[0]
 	var first_d := from.distance_to(hits[0]["position"])
 	var best: Dictionary = hits[0]
 	var best_vol := INF

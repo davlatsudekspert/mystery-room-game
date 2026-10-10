@@ -27,6 +27,7 @@ import mrlib as M  # noqa: E402
 import lib_ch4 as C  # noqa: E402
 import lib_ch4_cde as X  # noqa: E402
 import lib_ch4_fgh as F  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 import lib_mech as L  # noqa: E402
 from lib_ch4 import K, D, BRASS, WALNUT, CREAM, GDARK  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
@@ -85,8 +86,8 @@ def board_parts():
     b.box((x - 0.060, y - 0.065, FACE), (x + 0.060, y + 0.155, FACE + 0.004))
     out = [w.obj("board_walnut"), b.obj("board_brass")]
     sign = K.plate("sign", C.S.loops("sign", 0.050), 0.0022, z0=FACE + 0.004, mat=BRASS, bevel=0.0003, drop_bottom=True, loc=(x, y - 0.020, 0.0))
-    mark = K.plate("mark", C.S.loops("mark", 0.105), 0.004, z0=FACE + 0.008, mat=BRASS, bevel=0.0004, drop_bottom=True, loc=(0.0, 1.59, 0.0))
-    return out + [sign, mark]
+    mark = MK.mark_solids(0.105, 0.004, BRASS, loc=(0.0, 1.59), z0=FACE + 0.008, name="mark")
+    return out + [sign] + mark
 
 
 def tag_parts():

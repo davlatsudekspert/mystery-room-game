@@ -12,8 +12,8 @@ const DOOR_AJAR_DEG := -38.0
 const DOOR_DRIFT_DEG := -31.0
 const CARD_IN_S := 1.0
 const CARD_OUT_S := 0.6
-const CARD1_HOLD_S := 3.2
-const CARD2_HOLD_S := 4.6
+const CARD1_HOLD_S := 2.4
+const CARD2_HOLD_S := 4.4
 const REVEAL_S := 1.0
 const LAYER := 40
 
@@ -233,6 +233,7 @@ var _door_now := DOOR_AJAR_DEG
 func _prep() -> void:
 	var cam: RoomCamera = room.get("cam")
 	cam.go("door", true)
+	hud.call("set_caption", "") # no view title over the opening: the door is not "sealed" yet
 	_door_now = DOOR_AJAR_DEG
 	_door_deg(DOOR_AJAR_DEG)
 	_lamp_on(false)

@@ -19,6 +19,7 @@ import lib_devices as D  # noqa: E402
 import lib_ch2_items as C  # noqa: E402
 import lib_ch3_items as G  # noqa: E402
 import lib_ch4_items as H  # noqa: E402
+import lib_ch4_mark as MK  # noqa: E402
 from mathutils import Matrix, Vector  # noqa: E402
 
 NAME = "strand_log"
@@ -114,7 +115,7 @@ def brass():
     inner = list(reversed(L.rounded_rect(0.1170, 0.1790, 0.0025, 2)))
     out.append(G.plate_xy("frame", [outer, inner], 0.0006, z, BRASS, bevel=0.0))
     # Strand's mark at the centre
-    out.append(G.plate_xy("mark", G.symbols().loops("mark", 0.074), 0.0014, z, BRASS, bevel=0.0))
+    out += MK.mark_solids(0.074, 0.0014, BRASS, loc=(0.0, 0.0), z0=z, name="mark")
     # the clasp: a tab from the fore-edge and a lock plate with a keyhole
     tab = [(0.0700, 0.0125), (0.0700, -0.0125), (0.0360, -0.0125), (0.0300, -0.0070), (0.0300, 0.0070), (0.0360, 0.0125)]
     out.append(G.plate_xy("clasp", [tab], 0.0010, z, BRASS, bevel=0.0003))
