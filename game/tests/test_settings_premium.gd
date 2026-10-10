@@ -83,13 +83,14 @@ func test_premium_rules() -> void:
 	check(not p.REAL_PAYMENTS_ENABLED, "real payments must stay disabled")
 	check(not p.tester_build(), "only exports with the beta_unlock feature open paid chapters for testers")
 	check(p.can_play("ch1"), "chapter 1 is free")
-	check(not p.can_play("ch2"), "chapter 2 is released but not owned")
+	check(p.can_play("ch2"), "chapter 2 is free too, with no purchase (owner, 2026-10-10)")
 	check(not p.can_play("ch3"), "chapter 3 is not released")
+	check(not p.owns_chapter("ch3") and not p.owns_chapter("ch4"), "chapters 3 and 4 need the purchase")
 	check(not p.can_play("nope"), "unknown chapter")
 	eq(p.provider.store_name(), "mock", "debug builds use the mock store")
 	p.purchase("full_game")
 	check(p.has_entitlement("full_game"), "mock purchase grants entitlement")
-	check(p.can_play("ch2"), "the purchase opens chapter 2")
+	check(p.owns_chapter("ch3") and p.owns_chapter("ch4"), "the purchase unlocks chapters 3 and 4")
 	check(not p.can_play("ch3"), "still unreleased even if owned")
 	p.revoke_all_for_tests()
 	p.restore_purchases()
@@ -97,6 +98,33 @@ func test_premium_rules() -> void:
 	p.revoke_all_for_tests()
 	DirAccess.remove_absolute("user://test_ent.cfg")
 	p.path = p.PATH
+
+
+## The business model (owner, 2026-10-10, Monument Valley 3 style): Chapters 1 and 2 are free, the one purchase
+## full_game unlocks Chapters 3 and 4, and Premium.PRODUCTS lists exactly the chapters that carry the product.
+func test_business_model_chapters_1_2_free() -> void:
+	var free: Array[String] = []
+	var paid: Array[String] = []
+	for ch: Dictionary in Chapters.LIST:
+		if str(ch["product"]) == "":
+			free.append(str(ch["id"]))
+		else:
+			eq(str(ch["product"]), "full_game", "%s is sold as full_game" % ch["id"])
+			paid.append(str(ch["id"]))
+	eq(free, ["ch1", "ch2"] as Array[String], "Chapters 1-2 are free")
+	eq(paid, ["ch3", "ch4"] as Array[String], "full_game unlocks Chapters 3-4")
+	eq(Premium.PRODUCTS["full_game"]["chapters"], ["ch3", "ch4"], "Premium.PRODUCTS matches the chapter list")
+	# a Chapter 2 game saved while Chapter 2 was paid (tester builds) just opens now
+	Premium.path = "user://test_model_ent.cfg"
+	Premium.revoke_all_for_tests()
+	SaveSystem.save_path = "user://test_model_save.json"
+	check(GameState.start_new("ch2"), "a Chapter 2 game starts without a purchase")
+	eq(GameState.saved_chapter(), "ch2", "and is saved")
+	check(Premium.can_play(GameState.saved_chapter()), "Continue and the chapter list open it with no purchase")
+	SaveSystem.delete_game()
+	SaveSystem.save_path = SaveSystem.SAVE_PATH
+	DirAccess.remove_absolute("user://test_model_ent.cfg")
+	Premium.path = Premium.PATH
 
 
 func test_hint_escalation() -> void:

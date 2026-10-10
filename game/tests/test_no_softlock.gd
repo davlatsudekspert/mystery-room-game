@@ -64,6 +64,8 @@ func test_random_play_never_softlocks() -> void:
 	for seed in runs:
 		rng.seed = 1000 + seed
 		var l := Lab7Logic.new()
+		if seed % 3 != 0:
+			l.apply_seed(7 + seed * 13) # most runs play a drawn game (docs/VARIANTS.md): Panel 7's wiring varies too
 		var steps := rng.randi_range(50, 1500)
 		var bad := ""
 		for _i in steps:

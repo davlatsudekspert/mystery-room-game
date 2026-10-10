@@ -70,7 +70,7 @@ H = {
 "circuits": [
     ("Panel 7's four lamps need the right lines. Leyla's notebook says which must be live.", "Четыре лампы щита 7 требуют нужных линий. В блокноте Лейлы сказано, какие должны быть под током.", "7-panelning toʻrtta chirogʻiga toʻgʻri liniyalar kerak. Leylaning daftarida qaysilari tok ostida boʻlishi yozilgan."),
     ("The icons over the lamps are the ones in her notebook: LOCK, LIGHT and ARRAY on; VENT off. Follow the copper traces from each switch to the lamps.", "Значки над лампами — те же, что в её блокноте: ЗАМОК, СВЕТ и РЕШЁТКА — вкл., ВЕНТИЛЯЦИЯ — выкл. Проследите медные дорожки от переключателей к лампам.", "Lampalar tepasidagi belgilar daftardagilar bilan bir xil: QULF, YORUGʻLIK va PANJARA yoqilgan, SHAMOLLATISH oʻchiq. Har bir ulagichdan lampalargacha mis yoʻlakchalarni kuzating."),
-    ("Raise switches I, II and III only, then raise the main lever.", "Поднимите только переключатели I, II и III, затем главный рычаг.", "Faqat I, II va III ulagichlarni koʻtaring, soʻng asosiy dastakni koʻtaring."),
+    ("Raise only switches %s, then raise the main lever.", "Поднимите только переключатели %s, затем главный рычаг.", "Faqat %s ulagichlarni koʻtaring, soʻng asosiy dastakni koʻtaring."),
 ],
 "valve": [
     ("The radio is silent.", "Радио молчит.", "Radio jim."),

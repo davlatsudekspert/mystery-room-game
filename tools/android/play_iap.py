@@ -38,8 +38,8 @@ PACKAGE = "com.mysteryroom.forgotteninstitute"
 SKU = "full_game"
 US_PRICE_MICROS = 4_990_000 # US$4.99
 LISTINGS = {
-	"en-US": {"title": "Full Game", "description": "Unlocks Chapters 2 to 4. One-time purchase. No ads, no subscriptions."},
-	"ru-RU": {"title": "Полная игра", "description": "Открывает главы 2–4. Разовая покупка. Без рекламы и подписок."},
+	"en-US": {"title": "Full Game", "description": "Unlocks Chapters 3 and 4. One-time purchase."}, # Chapters 1-2 are free
+	"ru-RU": {"title": "Полная игра", "description": "Открывает главы 3 и 4. Разовая покупка."},
 }
 HINT_PERMISSION = ("the service account may not manage in-app products. Play Console > Users and permissions > the "
 	"MYSTERY ROOM service account > App permissions > MYSTERY ROOM only > tick \"Manage in-app products\" (Monetize > "

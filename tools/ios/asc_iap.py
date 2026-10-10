@@ -6,11 +6,13 @@ DRY RUN BY DEFAULT: without --apply every request is a GET and each change is on
 com.mysteryroom.forgotteninstitute and nothing else:
   - the NON_CONSUMABLE in-app purchase productId "full_game", reference name "Full Game", with a review note;
   - localizations en-US "Full Game", ru «Полная игра», uz "To'liq o'yin" (App Store Connect has no Uzbek locale:
-    the uz request is tried and its refusal reported), each with a one-line description (45 characters at most);
+    the uz request is tried and its refusal reported), each with a one-line description (45 characters at most):
+    "Unlocks Chapters 3 and 4. One-time purchase." (Chapters 1-2 are free); existing ones are PATCHed when different;
   - a price schedule with the United States as the base territory at the US$4.99 price point (its id is looked up
     through the API); Apple sets every other territory's price from it automatically;
   - availability in the territories where the app itself is available (with --territories all: every territory);
-  - optionally (--review-screenshot PNG) the App Review screenshot. Review needs it; sandbox purchases do not.
+  - optionally (--review-screenshot PNG) the App Review screenshot. Review needs it; sandbox purchases do not. A
+    different file replaces the current one (DELETE of that screenshot, the only DELETE this script can send).
 It never submits anything for review (no *Submission endpoint is reachable from this script), never changes the
 app's name, price or availability, and never touches another app. Writes go only to the in-app purchase endpoints
 listed in WRITE_OK. At the end it prints the in-app purchase's state and what is still missing for
@@ -43,15 +45,19 @@ REFERENCE_NAME = "Full Game"
 IAP_TYPE = "NON_CONSUMABLE"
 BASE_TERRITORY = "USA"
 BASE_PRICE = "4.99"
-REVIEW_NOTE = ("One-time purchase that unlocks Chapters 2-4 (Chapter 1 is free). To find it: main menu > Chapters > "
-	"Chapter 2 > Unlock, or the Unlock button on the Chapter 1 complete screen. Restore purchases is on the same "
-	"screen and in Settings. No account, no ads, no subscriptions.")
+REVIEW_NOTE = ("One-time purchase that unlocks Chapters 3 and 4 (Chapters 1 and 2 are free). To find it: main menu > "
+	"Chapters > Chapter 3 > Unlock, or the Unlock button on the Chapter 2 complete screen. Restore purchases is on the "
+	"same screen and in Settings. No account, no ads, no subscriptions.")
+EXPECTED_IAP_ID = "6821386340" # full_game as created in App Store Connect (director, 2026-10-10)
 # locale → (display name ≤ 30, description ≤ 45)
 LOCALIZATIONS = {
-	"en-US": ("Full Game", "Unlocks Chapters 2 to 4. One-time purchase."),
-	"ru": ("Полная игра", "Открывает главы 2–4. Разовая покупка."),
-	"uz": ("To'liq o'yin", "2–4-boblarni ochadi. Bir martalik xarid."),
+	"en-US": ("Full Game", "Unlocks Chapters 3 and 4. One-time purchase."),
+	"ru": ("Полная игра", "Открывает главы 3 и 4. Разовая покупка."),
+	"uz": ("To'liq o'yin", "3 va 4-boblarni ochadi. Bir martalik xarid."),
 }
+# DELETE is allowed for one thing only: replacing the in-app purchase's App Review screenshot (an in-app purchase
+# has one; a changed screenshot is deleted, then the new file is uploaded). Nothing else can be deleted.
+DELETE_OK = re.compile(r"/v1/inAppPurchaseAppStoreReviewScreenshots/[A-Za-z0-9-]+")
 WRITE_OK = re.compile(r"/v2/inAppPurchases(/[A-Za-z0-9-]+)?|/v1/inAppPurchaseLocalizations(/[A-Za-z0-9-]+)?|"
 	r"/v1/inAppPurchasePriceSchedules|/v1/inAppPurchaseAvailabilities|/v1/inAppPurchaseAppStoreReviewScreenshots(/[A-Za-z0-9-]+)?")
 
@@ -65,15 +71,16 @@ class AscWriter(Asc):
 		self.planned: list[str] = []
 		self.failed: list[str] = []
 
-	def send(self, method: str, path: str, body: dict, what: str) -> tuple[int, dict]:
-		if method not in ("POST", "PATCH") or not WRITE_OK.fullmatch(path) or "ubmission" in path:
+	def send(self, method: str, path: str, body: dict | None, what: str) -> tuple[int, dict]:
+		allowed = (method in ("POST", "PATCH") and WRITE_OK.fullmatch(path)) or (method == "DELETE" and DELETE_OK.fullmatch(path))
+		if not allowed or "ubmission" in path:
 			raise RuntimeError(f"refusing {method} {path}: not an in-app purchase setup endpoint")
 		if not self.apply:
 			out(f"  DRY RUN: would {method} {path}: {what}")
 			self.planned.append(f"{method} {path}: {what}")
 			return 0, {}
 		for attempt in range(3):
-			req = urllib.request.Request(API + path, data=json.dumps(body).encode(), method=method,
+			req = urllib.request.Request(API + path, data=json.dumps(body).encode() if body is not None else None, method=method,
 				headers={"Authorization": "Bearer " + self._jwt(), "Content-Type": "application/json"})
 			try:
 				with urllib.request.urlopen(req, timeout=60) as r:
@@ -140,7 +147,8 @@ def ensure_iap(asc: AscWriter, app_id: str) -> dict:
 	if iaps:
 		iap = iaps[0]
 		a = iap["attributes"]
-		out(f"  {iap['id']}: type {a.get('inAppPurchaseType')}, reference name {a.get('name')!r}, state {a.get('state')}")
+		out(f"  {iap['id']}: type {a.get('inAppPurchaseType')}, reference name {a.get('name')!r}, state {a.get('state')}"
+			+ ("" if iap["id"] == EXPECTED_IAP_ID else f" (note: the director recorded id {EXPECTED_IAP_ID})"))
 		if a.get("inAppPurchaseType") != IAP_TYPE:
 			out(f"  ERROR: {PRODUCT_ID} exists as {a.get('inAppPurchaseType')}, not {IAP_TYPE}. A product id cannot be"
 				" reused or retyped; the owner decides. Nothing else is changed.")
@@ -293,30 +301,46 @@ def ensure_availability(asc: AscWriter, iap_id: str | None, territories: list[st
 
 
 def ensure_screenshot(asc: AscWriter, iap_id: str | None, path: str | None) -> list[str]:
-	state = None
+	data = Path(path).read_bytes() if path else None
+	if data is not None and not data.startswith(b"\x89PNG"):
+		out(f"- review screenshot: {path} is not a PNG")
+		return ["review screenshot"]
+	name = Path(path).name if path else ""
+	md5 = hashlib.md5(data).hexdigest() if data is not None else ""
+	existing: dict = {}
 	if iap_id:
 		st, shot = asc.get(f"/v2/inAppPurchases/{iap_id}/appStoreReviewScreenshot")
 		if st == 200 and first(shot).get("id"):
-			a = first(shot).get("attributes") or {}
-			state = (a.get("assetDeliveryState") or {}).get("state")
-			out(f"- review screenshot: {a.get('fileName')} ({a.get('fileSize')} bytes), state {state}")
+			existing = first(shot)
+			a = existing.get("attributes") or {}
+			out(f"- review screenshot: {a.get('fileName')} ({a.get('fileSize')} bytes), state "
+				f"{(a.get('assetDeliveryState') or {}).get('state')}")
 		else:
 			out(f"- review screenshot: none (HTTP {st})")
-	if state == "COMPLETE":
-		return []
-	if not path:
+	if existing:
+		a = existing.get("attributes") or {}
+		complete = (a.get("assetDeliveryState") or {}).get("state") == "COMPLETE"
+		if data is None:
+			return [] if complete else ["review screenshot (not complete; give --review-screenshot)"]
+		same = (a.get("sourceFileChecksum") == md5) if a.get("sourceFileChecksum") else (
+			a.get("fileSize") == len(data) and a.get("fileName") == name)
+		if same and complete:
+			out(f"  the same file as {path}: as expected")
+			return []
+		# one review screenshot per in-app purchase: remove the old one, then upload the new file
+		st, _ = asc.send("DELETE", f"/v1/inAppPurchaseAppStoreReviewScreenshots/{existing['id']}", None,
+			f"remove the old review screenshot ({a.get('fileName')}), replaced by {name}")
+		if asc.apply and not 200 <= st < 300:
+			return ["review screenshot (the old one could not be removed)"]
+	elif data is None:
 		return ["review screenshot (App Review needs it; sandbox testing does not)"]
-	data = Path(path).read_bytes()
-	if not data.startswith(b"\x89PNG"):
-		out(f"  {path} is not a PNG")
-		return ["review screenshot"]
 	if not iap_id or not asc.apply:
-		asc.send("POST", "/v1/inAppPurchaseAppStoreReviewScreenshots", {}, f"reserve {Path(path).name} ({len(data)} bytes), upload it, commit")
-		return [] if not asc.apply else ["review screenshot"]
+		asc.send("POST", "/v1/inAppPurchaseAppStoreReviewScreenshots", {}, f"reserve {name} ({len(data)} bytes), upload it, commit")
+		return []
 	st, body = asc.send("POST", "/v1/inAppPurchaseAppStoreReviewScreenshots", {"data": {"type": "inAppPurchaseAppStoreReviewScreenshots",
-		"attributes": {"fileName": Path(path).name, "fileSize": len(data)},
+		"attributes": {"fileName": name, "fileSize": len(data)},
 		"relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap_id}}}}},
-		f"reserve {Path(path).name} ({len(data)} bytes)")
+		f"reserve {name} ({len(data)} bytes)")
 	res = first(body)
 	if not 200 <= st < 300 or not res.get("id"):
 		return ["review screenshot"]
@@ -324,7 +348,7 @@ def ensure_screenshot(asc: AscWriter, iap_id: str | None, path: str | None) -> l
 		return ["review screenshot (upload failed)"]
 	st, _ = asc.send("PATCH", f"/v1/inAppPurchaseAppStoreReviewScreenshots/{res['id']}", {"data": {
 		"type": "inAppPurchaseAppStoreReviewScreenshots", "id": res["id"],
-		"attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}}, "commit the upload")
+		"attributes": {"uploaded": True, "sourceFileChecksum": md5}}}, "commit the upload")
 	return [] if 200 <= st < 300 else ["review screenshot"]
 
 

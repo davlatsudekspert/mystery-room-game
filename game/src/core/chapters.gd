@@ -8,7 +8,7 @@ const LIST: Array[Dictionary] = [
 		"product": "", "released": true},
 	{"id": "ch2", "number": 2, "title": "chapter.ch2.title", "subtitle": "chapter.ch2.subtitle",
 		"scene": "res://src/rooms/archive/archive.tscn", "logic": "res://src/rooms/archive/archive_logic.gd",
-		"product": "full_game", "released": true}, # 3D playthroughs (both lens paths, variant seeds) + player review
+		"product": "", "released": true}, # free since 2026-10-10 (Chapters 1-2 free, full_game unlocks 3-4); 3D playthroughs + player review
 	{"id": "ch3", "number": 3, "title": "chapter.ch3.title", "subtitle": "chapter.ch3.subtitle",
 		"scene": "res://src/rooms/underground/underground.tscn", "logic": "res://src/rooms/underground/underground_logic.gd",
 		"product": "full_game", "released": false}, # scene in integration (models arriving by group); unreleased

@@ -4,13 +4,18 @@
 Outputs to game/assets/textures/decals/ and game/assets/ui/glyphs/.
 All puzzle data here MUST match docs/PUZZLE_DESIGN.md and game/src/rooms/lab7/lab7_logic.gd.
 
-    python3 tools/textures/make_decals.py
+    python3 tools/textures/make_decals.py          # everything
+    python3 tools/textures/make_decals.py panel    # only Panel 7's plates, one per wiring in PANEL_POOL
 """
 from __future__ import annotations
 
+import ast
+import itertools
 import math
 import os
 import random
+import re
+import sys
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
@@ -36,17 +41,19 @@ GLYPH_DOTS = {
 POSTER_ORDER = ["crescent", "eye", "spiral", "diamond", "hourglass",
                 "wave", "fork", "sun", "delta", "cross"]
 VIALS = {"crimson": "1.84", "cobalt": "1.26", "green": "0.79"}
-# switch -> lamps it toggles (order of lamps: LOCK, LIGHT, ARRAY, VENT)
 # radio: dial value 0..100 -> needle u = 0.06 + 0.88 * value / 100 ; band label -> dial value
 RADIO_BANDS = {"60": 5, "49": 20, "41": 36, "31": 55, "25": 72, "19": 86, "16": 96}
 RADIO_MHZ = {5: 3, 6: 12, 7: 30, 9: 50, 11: 66, 13: 80, 15: 90, 17: 97}
-SWITCH_MATRIX = [
-    [1, 0, 0, 1],
-    [0, 1, 0, 0],
-    [0, 0, 1, 1],
-    [1, 1, 0, 0],
-    [0, 1, 1, 1],
-]
+
+
+def read_panel_pool() -> list:
+    """Panel 7's wirings (switch -> lamps it toggles; lamps LOCK, LIGHT, ARRAY, VENT), read from the single source of
+    truth, PANEL_POOL in lab7_logic.gd. Entry 0 is the canonical wiring."""
+    src = open(os.path.join(ROOT, "game", "src", "rooms", "lab7", "lab7_logic.gd"), encoding="utf-8").read()
+    m = re.search(r"const PANEL_POOL: Array = (\[.*?\n\])", src, re.S)
+    assert m, "PANEL_POOL not found in lab7_logic.gd"
+    return ast.literal_eval(m.group(1))
+
 
 rng = np.random.default_rng(7)
 random.seed(7)
@@ -349,8 +356,115 @@ def make_panel_icons() -> None:
         im.save(os.path.join(GLYPH_OUT, f"panel_{name}.png"))
 
 
-def panel_diagram() -> None:
-    """Panel 7 back plate (0.60 x 0.80 m -> 900x1200 px). Coordinates in plate metres, origin centre."""
+# ---- Panel 7 back plate: the copper traces of every wiring in PANEL_POOL ---------------------------------------
+# Plate pixels (900 x 1200 = 0.60 x 0.80 m, 1500 px per metre). The switch and lamp positions are fixed by the model
+# (tools/blender/models/panel7.py); only the traces between them change per wiring.
+PANEL_SW_X = [120.0, 285.0, 450.0, 615.0, 780.0]
+PANEL_LAMP_X = [157.5, 352.5, 547.5, 742.5]
+PANEL_ROW_Y = [595.0, 525.0, 455.0, 385.0, 315.0]  # the five rows, lowest first
+PANEL_RISER_Y = 640.0                              # just above the switch plates
+PANEL_LAMP_Y = 203.0                               # just below the lamp bezels
+PANEL_GAUGE_BOTTOM = 422.0                         # the voltmeter (x 28..122, y 328..422) sits left of switch I's riser
+PANEL_COPPER = (176, 98, 56, 255)
+PANEL_WIRE, PANEL_DOT, PANEL_HOP = 8, 12, 16       # trace width, junction dot radius, hop radius (px)
+HOP_CLEAR, DOT_CLEAR = 46.0, 38.0                  # least gap between two hops / a hop and a dot on one row
+
+
+def panel_hops(m: list, level: list) -> list:
+    """Where traces cross without connecting: (row of switch k, x, kind) for a wiring m and level[i] = the row
+    (0 = lowest) switch i's trace runs along. A horizontal run hops over every vertical one it passes."""
+    span = []
+    for i in range(5):
+        xs = [PANEL_SW_X[i]] + [PANEL_LAMP_X[j] for j in range(4) if m[i][j]]
+        span.append((min(xs), max(xs)))
+    out = []
+    for k in range(5):
+        a, b = span[k]
+        for i in range(5):
+            if i != k and level[i] > level[k] and a < PANEL_SW_X[i] < b:
+                out.append((k, PANEL_SW_X[i]))
+        for j in range(4):
+            low = min(level[i] for i in range(5) if m[i][j])
+            if level[k] >= low and not m[k][j] and a < PANEL_LAMP_X[j] < b:
+                out.append((k, PANEL_LAMP_X[j]))
+    return out
+
+
+def panel_layout(m: list) -> list:
+    """The row each switch's trace runs along: fewest crossings, no two events crowding on a row, switch I
+    clear of the voltmeter; ties go to the order closest to I..V bottom to top."""
+    best = None
+    for level in itertools.permutations(range(5)):
+        if PANEL_ROW_Y[level[0]] < PANEL_GAUGE_BOTTOM + 30:
+            continue
+        hops = panel_hops(m, list(level))
+        crowd = 0
+        for k in range(5):
+            hx = sorted(x for kk, x in hops if kk == k)
+            dots = [PANEL_LAMP_X[j] for j in range(4) if m[k][j]] + [PANEL_SW_X[k]]
+            crowd += sum(1 for a, b in zip(hx, hx[1:]) if b - a < HOP_CLEAR)
+            crowd += sum(1 for x in hx for dx in dots if abs(x - dx) < DOT_CLEAR)
+        inversions = sum(1 for i in range(5) for k in range(i + 1, 5) if level[i] > level[k])
+        score = (len(hops) + 10 * crowd, inversions)
+        if best is None or score < best[0]:
+            best = (score, list(level))
+    assert best is not None and best[0][0] < 10, "no clean layout for %s" % m
+    return best[1]
+
+
+def panel_traces(m: list) -> Image.Image:
+    """The copper traces of wiring m as an anti-aliased RGBA layer: one run up from each switch to its row, the row
+    along to the lamps it feeds, a column up to each lamp. A dot marks every place two traces connect; where traces
+    only cross, the horizontal one hops over the vertical one."""
+    W, H, SS = 900, 1200, 3
+    level = panel_layout(m)
+    layer = Image.new("RGBA", (W * SS, H * SS), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    w = PANEL_WIRE * SS
+
+    def seg(x0, y0, x1, y1):
+        d.line([(x0 * SS, y0 * SS), (x1 * SS, y1 * SS)], fill=PANEL_COPPER, width=w)
+        for x, y in ((x0, y0), (x1, y1)):
+            d.ellipse([x * SS - w / 2, y * SS - w / 2, x * SS + w / 2, y * SS + w / 2], fill=PANEL_COPPER)
+
+    def dot(x, y):
+        r = PANEL_DOT * SS
+        d.ellipse([x * SS - r, y * SS - r, x * SS + r, y * SS + r], fill=PANEL_COPPER)
+
+    hops = panel_hops(m, level)
+    for i in range(5):
+        y = PANEL_ROW_Y[level[i]]
+        conn = [j for j in range(4) if m[i][j]]
+        xs = [PANEL_SW_X[i]] + [PANEL_LAMP_X[j] for j in conn]
+        seg(PANEL_SW_X[i], PANEL_RISER_Y, PANEL_SW_X[i], y)
+        # the row, cut open around every hop and bridged by a half circle
+        cuts = sorted(x for k, x in hops if k == i)
+        x = min(xs)
+        for c in cuts:
+            seg(x, y, c - PANEL_HOP, y)
+            r = (PANEL_HOP + PANEL_WIRE / 2) * SS
+            d.arc([c * SS - r, y * SS - r, c * SS + r, y * SS + r], 180, 360, fill=PANEL_COPPER, width=w)
+            x = c + PANEL_HOP
+        seg(x, y, max(xs), y)
+        dot(PANEL_SW_X[i], y)
+        for j in conn:
+            dot(PANEL_LAMP_X[j], y)
+    for j in range(4):
+        low = max(PANEL_ROW_Y[level[i]] for i in range(5) if m[i][j])
+        seg(PANEL_LAMP_X[j], PANEL_LAMP_Y, PANEL_LAMP_X[j], low)
+    # lamp columns and risers were laid down after the rows: put the dots back on top
+    for i in range(5):
+        y = PANEL_ROW_Y[level[i]]
+        dot(PANEL_SW_X[i], y)
+        for j in range(4):
+            if m[i][j]:
+                dot(PANEL_LAMP_X[j], y)
+    return layer.resize((W, H), Image.LANCZOS)
+
+
+def panel_diagram(n: int = 0) -> Image.Image:
+    """Panel 7 back plate (0.60 x 0.80 m -> 900x1200 px) drawn for wiring n of PANEL_POOL. Coordinates in plate
+    metres, origin centre."""
     W, H = 900, 1200
     sx = W / 0.60
     sy = H / 0.80
@@ -358,28 +472,18 @@ def panel_diagram() -> None:
     def P(x, y):
         return (W / 2 + x * sx, H / 2 - y * sy)
 
-    n = noise(H, W, 80, 4, 41)
-    arr = np.stack([224 * (0.9 + 0.1 * n), 215 * (0.9 + 0.1 * n), 192 * (0.9 + 0.1 * n)], -1)
+    n_ = noise(H, W, 80, 4, 41)
+    arr = np.stack([224 * (0.9 + 0.1 * n_), 215 * (0.9 + 0.1 * n_), 192 * (0.9 + 0.1 * n_)], -1)
     img = Image.fromarray(arr.astype(np.uint8)).convert("RGBA")
     d = ImageDraw.Draw(img)
-    copper = (176, 98, 56, 255)
     dark = (40, 34, 28, 255)
     lamp_x = [-0.195, -0.065, 0.065, 0.195]
     lamp_y = 0.30
     sw_x = [-0.22, -0.11, 0.0, 0.11, 0.22]
     sw_y = -0.06
-    # traces
-    for i, row in enumerate(SWITCH_MATRIX):
-        bus = 0.0 + 0.045 * i
-        conn = [j for j, v in enumerate(row) if v]
-        xs = [sw_x[i]] + [lamp_x[j] for j in conn]
-        d.line([P(sw_x[i], sw_y + 0.03), P(sw_x[i], bus)], fill=copper, width=7)
-        d.line([P(min(xs), bus), P(max(xs), bus)], fill=copper, width=7)
-        d.ellipse([P(sw_x[i], bus)[0] - 9, P(sw_x[i], bus)[1] - 9, P(sw_x[i], bus)[0] + 9, P(sw_x[i], bus)[1] + 9], fill=copper)
-        for j in conn:
-            d.line([P(lamp_x[j], bus), P(lamp_x[j], lamp_y - 0.035)], fill=copper, width=7)
-            q = P(lamp_x[j], bus)
-            d.ellipse([q[0] - 10, q[1] - 10, q[0] + 10, q[1] + 10], fill=copper)
+    # the copper traces of this game's wiring
+    img = Image.alpha_composite(img, panel_traces(read_panel_pool()[n]))
+    d = ImageDraw.Draw(img)
     # lamp bezels + icons (padlock, bulb, crystal, fan) in the band between the bezels and the plate's top edge:
     # half-size 41 px = 2.7 cm, so they read from the close-up on a phone (they were 1.6 cm)
     for j, x in enumerate(lamp_x):
@@ -409,7 +513,14 @@ def panel_diagram() -> None:
     grime = noise(H, W, 25, 3, 43)
     a = np.asarray(img).astype(np.float32)
     a[..., :3] *= (0.85 + 0.15 * grime)[..., None]
-    Image.fromarray(a.astype(np.uint8)).convert("RGB").save(os.path.join(OUT, "panel_diagram.jpg"), quality=92)
+    return Image.fromarray(a.astype(np.uint8)).convert("RGB")
+
+
+def panel_diagrams() -> None:
+    """panel_diagram_<n>.jpg for every wiring in PANEL_POOL; panel_diagram.jpg (the model's baked default) is entry 0."""
+    for n in range(len(read_panel_pool())):
+        panel_diagram(n).save(os.path.join(OUT, "panel_diagram_%d.jpg" % n), quality=92)
+    panel_diagram(0).save(os.path.join(OUT, "panel_diagram.jpg"), quality=92)
 
 
 def vial_labels() -> None:
@@ -600,6 +711,9 @@ def staff_photos(count: int = 8) -> None:
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["panel"]:  # only Panel 7's plates (after editing PANEL_POOL)
+        panel_diagrams()
+        sys.exit(0)
     staff_photos()
     radio_dial()
     wall_emblem()
@@ -608,7 +722,7 @@ if __name__ == "__main__":
     clock_face()
     poster()
     chalkboard()
-    panel_diagram()
+    panel_diagrams()
     make_panel_icons()
     vial_labels()
     childs_drawing()

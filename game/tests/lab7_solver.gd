@@ -69,7 +69,9 @@ static func step(l: Lab7Logic, choice: String) -> void:
 	if not s["power_on"]:
 		if s["main_on"]:
 			l.toggle_main()
-		var want := [1, 1, 1, 0, 0]
+		var want := [0, 0, 0, 0, 0] # this game's own wiring: the answer comes from the state
+		for sw: Variant in l.panel_solution():
+			want[int(sw)] = 1
 		for i in 5:
 			if int(s["switches"][i]) != want[i]:
 				l.toggle_switch(i)

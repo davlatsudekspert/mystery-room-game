@@ -1,6 +1,6 @@
 extends Node
 ## Entitlements and purchases behind a provider interface (docs/MONETIZATION.md).
-## Chapter 1 is always free. Real payments stay DISABLED until the owner sets REAL_PAYMENTS_ENABLED = true after
+## Chapters 1 and 2 are free; the one purchase "full_game" unlocks Chapters 3 and 4 (owner, 2026-10-10). Real payments stay DISABLED until the owner sets REAL_PAYMENTS_ENABLED = true after
 ## store validation. Tester builds with the custom export feature "store_sandbox" use the real store's sandbox:
 ## TestFlight purchases are always sandbox (never charged); on Google Play only License testers are not charged.
 
@@ -15,7 +15,7 @@ signal price_changed(product: String, price: String)
 signal busy_changed(what: String)
 
 const REAL_PAYMENTS_ENABLED := false
-const PRODUCTS := {"full_game": {"chapters": ["ch2", "ch3", "ch4"]}}
+const PRODUCTS := {"full_game": {"chapters": ["ch3", "ch4"]}} # must match the "product" fields in Chapters.LIST
 const PATH := "user://entitlements.cfg"
 
 var provider: StoreProvider
@@ -91,6 +91,14 @@ func has_entitlement(product: String) -> bool:
 func can_play(chapter_id: String) -> bool:
 	var ch := Chapters.get_chapter(chapter_id)
 	if ch.is_empty() or not ch.get("released", false):
+		return false
+	return owns_chapter(chapter_id)
+
+
+## The player may play this chapter once it is released: it is free, its product is owned, or a beta_unlock build.
+func owns_chapter(chapter_id: String) -> bool:
+	var ch := Chapters.get_chapter(chapter_id)
+	if ch.is_empty():
 		return false
 	var product: String = ch.get("product", "")
 	return product == "" or has_entitlement(product) or tester_build()

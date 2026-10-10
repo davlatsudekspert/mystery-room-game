@@ -407,10 +407,10 @@ func _show_chapters() -> void:
 		var can := Premium.can_play(ch["id"])
 		if can:
 			state_key = "ui.completed" if GameState.is_chapter_completed(ch["id"]) else ("ui.free" if Chapters.is_free(ch["id"]) else "ui.play")
-		# a released paid chapter the player does not own yet: "Unlock" opens the purchase screen when this build
-		# has a store (release builds keep "Coming soon" while real payments are off)
-		var buyable := not can and bool(ch.get("released", false)) and not Chapters.is_free(ch["id"]) and Premium.store_open()
-		var b := UITheme.button("ui.play" if can else ("ui.buy" if buyable else state_key), 300)
+		var buy_key := purchase_button(ch, can, Premium.store_open(), Premium.store_sandbox(),
+			Premium.has_entitlement(str(ch.get("product", ""))))
+		var buyable := buy_key != ""
+		var b := UITheme.button("ui.play" if can else (buy_key if buyable else state_key), 300)
 		b.disabled = not can and not buyable
 		if can:
 			var id: String = ch["id"]
@@ -429,6 +429,21 @@ func _show_chapters() -> void:
 	var close := UITheme.button("ui.close", 260)
 	close.pressed.connect(_clear_panel)
 	(d["footer"] as Control).add_child(close)
+
+
+## The chapter list's purchase button for a chapter the player cannot play: "ui.buy" (opens the purchase screen),
+## "ui.owned" or "" (none: the button says "Coming soon"). A released paid chapter offers Unlock when this build has
+## a store (release builds keep "Coming soon" while real payments are off). An unreleased paid chapter offers it only
+## in store_sandbox test builds, so testers can test the purchase before Chapters 3–4 ship; a store never sells a
+## chapter that is not in the build.
+static func purchase_button(ch: Dictionary, can: bool, store_open: bool, sandbox: bool, owned: bool) -> String:
+	if can or str(ch.get("product", "")) == "" or not store_open:
+		return ""
+	if bool(ch.get("released", false)):
+		return "" if owned else "ui.buy"
+	if sandbox:
+		return "ui.owned" if owned else "ui.buy"
+	return ""
 
 
 ## The purchase screen over the chapter list; closing it shows the list again (now with Play if it was bought).

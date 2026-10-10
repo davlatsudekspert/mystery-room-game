@@ -288,3 +288,145 @@ func test_variants_are_solvable_and_saved() -> void:
 			"seed %d survives save and load" % seed)
 		check(Lab7Solver.solve(l, "leave_lens" if seed % 2 == 0 else "take_lens"), "seed %d: the solver finishes" % seed)
 	check(codes.size() > 40, "safe codes really vary (%d distinct in 60)" % codes.size())
+
+
+# ------------------------------------------------------------------ Panel 7: the wiring varies (docs/VARIANTS.md)
+const ROMAN_JOIN := ["I", "II", "III", "IV", "V"]
+
+
+func _answer_text(sw: Array) -> String:
+	return ", ".join(sw.map(func(v: Variant) -> String: return ROMAN_JOIN[int(v)]))
+
+
+## A fresh game wired as pool entry n, the switches raised as in `combo`, then the main lever.
+func _raise(n: int, combo: Array) -> Array[String]:
+	var p := Lab7Logic.new()
+	p.state["v_panel"] = Lab7Logic.flat_panel(Lab7Logic.PANEL_POOL[n])
+	p.state["handle_installed"] = true
+	for i: Variant in combo:
+		p.toggle_switch(int(i))
+	return p.toggle_main()
+
+
+func test_panel_pool_entries_are_valid() -> void:
+	var pool := Lab7Logic.PANEL_POOL
+	check(pool.size() >= 6 and pool.size() <= 8, "about 6 to 8 wirings (%d)" % pool.size())
+	eq(Lab7Logic.flat_panel(pool[0]), Lab7Logic.new().state["v_panel"], "entry 0 is the canonical wiring a fresh game has")
+	var hints := {}
+	var seen := {}
+	for n in pool.size():
+		var w := Lab7Logic.flat_panel(pool[n])
+		check(Lab7Logic.panel_valid(w), "entry %d passes panel_valid" % n)
+		check(not seen.has(str(w)), "entry %d is not a duplicate" % n)
+		seen[str(w)] = true
+		eq(Lab7Logic.panel_rank(w), 4, "entry %d has rank 4" % n)
+		var sols := Lab7Logic.panel_solutions(w)
+		eq(sols.size(), 2, "entry %d has exactly two answers" % n)
+		check((sols[0] as Array).size() >= 2 and (sols[0] as Array).size() <= 4, "entry %d: shortest answer of 2-4 switches" % n)
+		check(not hints.has(str(sols[0])), "entry %d: its hint answer %s is new in the pool" % [n, str(sols[0])])
+		hints[str(sols[0])] = true
+		# both answers really restore the power, and the VENT lamp stays dark
+		for sol: Array in sols:
+			has(_raise(n, sol), "power_restored", "entry %d answer %s" % [n, str(sol)])
+		# every other combination fails: no power (wrong lamps lit, or VENT trips the breaker)
+		for mask in 32:
+			var combo: Array = []
+			for i in 5:
+				if (mask >> i) & 1 == 1:
+					combo.append(i)
+			if sols.has(combo):
+				continue
+			var ev := _raise(n, combo)
+			lacks(ev, "power_restored", "entry %d wrong combination %s" % [n, str(combo)])
+		# the naive tries do not work
+		var all_up: Array = [0, 1, 2, 3, 4]
+		lacks(_raise(n, all_up), "power_restored", "entry %d raising everything" % n)
+		if n > 0:
+			check(not sols.has([0, 1, 2]), "entry %d: raising I, II and III (the old answer) is no answer" % n)
+	check(Lab7Logic.panel_solutions(Lab7Logic.flat_panel(pool[0])).has([0, 1, 2]), "the canonical wiring keeps I, II, III")
+	check(Lab7Logic.panel_solutions(Lab7Logic.flat_panel(pool[0])).has([0, 4]), "the canonical wiring keeps I, V")
+	# the validator rejects a wiring that breaks a rule
+	check(not Lab7Logic.panel_valid(Lab7Logic.flat_panel([[1, 0, 0, 1], [1, 0, 0, 1], [0, 0, 1, 1], [1, 1, 0, 0], [0, 1, 1, 1]])), "two alike switches")
+	check(not Lab7Logic.panel_valid(Lab7Logic.flat_panel([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [1, 1, 1, 0]])), "rank 4 but lamps with one switch")
+	check(not Lab7Logic.panel_valid(Lab7Logic.flat_panel([[1, 1, 0, 0], [0, 1, 1, 0], [1, 0, 1, 0], [0, 0, 0, 1], [1, 1, 1, 1]])), "rank 3")
+	check(not Lab7Logic.panel_valid([1, 0, 0]), "wrong size")
+
+
+func test_panel_seed_picks_deterministically() -> void:
+	var l := Lab7Logic.new()
+	l.apply_seed(0)
+	eq(l.panel_variant(), 0, "seed 0 keeps the canonical wiring")
+	var reached := {}
+	for seed in range(1, 401):
+		var a := Lab7Logic.new()
+		a.apply_seed(seed)
+		var b := Lab7Logic.new()
+		b.apply_seed(seed)
+		eq(a.state["v_panel"], b.state["v_panel"], "seed %d picks the same wiring twice" % seed)
+		var n := a.panel_variant()
+		check(n >= 0, "seed %d draws a pool wiring" % seed)
+		reached[n] = true
+	eq(reached.size(), Lab7Logic.PANEL_POOL.size(), "400 seeds reach every wiring")
+	# the other Chapter 1 answers of a seed did not move when Panel 7 joined the draw
+	var s4242 := Lab7Logic.new()
+	s4242.apply_seed(4242)
+	eq(s4242.safe_code(), "1204", "seed 4242 safe code")
+	eq(s4242.beacon(), [4, 2, 8], "seed 4242 beacon")
+
+
+func test_panel_wiring_is_saved_and_old_saves_stay_canonical() -> void:
+	for seed in range(1, 41):
+		var a := Lab7Logic.new()
+		a.apply_seed(seed)
+		a.toggle_switch(a.panel_solution()[0])
+		var b := Lab7Logic.new()
+		check(b.from_dict(JSON.parse_string(JSON.stringify(a.to_dict()))), "seed %d loads" % seed)
+		eq(b.state["v_panel"], a.state["v_panel"], "seed %d keeps its wiring" % seed)
+		eq(b.panel_variant(), a.panel_variant(), "seed %d keeps its decal" % seed)
+		eq(b.panel_solution(), a.panel_solution(), "seed %d keeps its answer" % seed)
+		eq(b.lamps(), a.lamps(), "seed %d lamps" % seed)
+	# a save from before the wiring varied has no wiring: it is the canonical one
+	var old := Lab7Logic.new()
+	var d := old.to_dict()
+	(d["state"] as Dictionary).erase("v_panel")
+	var loaded := Lab7Logic.new()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(d)))
+	eq(loaded.panel_variant(), 0, "an old save is the canonical wiring")
+
+
+func test_panel_hint_names_this_games_answer() -> void:
+	for n in Lab7Logic.PANEL_POOL.size():
+		var p := Lab7Logic.new()
+		p.state["v_panel"] = Lab7Logic.flat_panel(Lab7Logic.PANEL_POOL[n])
+		var sols := Lab7Logic.panel_solutions(p.state["v_panel"])
+		eq(p.panel_solution(), sols[0], "entry %d: the hint answer is the shortest" % n)
+		var args := p.hint_args("circuits", 3)
+		eq(args, [_answer_text(sols[0])], "entry %d: level 3 speaks the player's own answer" % n)
+		eq(p.hint_args("circuits", 1), [], "level 1 stays as it is")
+		eq(p.hint_args("circuits", 2), [], "level 2 stays as it is")
+		# the hint's answer, followed to the letter, lights the lamps
+		has(_raise(n, p.panel_solution()), "power_restored", "entry %d: the hint's answer works" % n)
+	# the text: one placeholder in each language, and it formats
+	var csv := FileAccess.open("res://localization/strings.csv", FileAccess.READ)
+	check(csv != null, "strings.csv exists")
+	if csv == null:
+		return
+	var row: PackedStringArray = []
+	while not csv.eof_reached():
+		var r := csv.get_csv_line()
+		if r.size() >= 4 and r[0] == "hint.circuits.3":
+			row = r
+	check(row.size() >= 4, "hint.circuits.3 exists")
+	for col in [1, 2, 3]:
+		if row.size() >= 4:
+			var text := str(row[col])
+			eq(text.count("%s"), 1, "hint.circuits.3 col %d has one %%s" % col)
+			check(not (text % ["I, V"]).contains("%"), "hint.circuits.3 col %d formats" % col)
+			check((text % ["I, V"]).contains("I, V"), "hint.circuits.3 col %d shows the answer" % col)
+
+
+func test_panel_solver_reads_the_answer_from_the_state() -> void:
+	for n in Lab7Logic.PANEL_POOL.size():
+		var p := Lab7Logic.new()
+		p.state["v_panel"] = Lab7Logic.flat_panel(Lab7Logic.PANEL_POOL[n])
+		check(Lab7Solver.solve(p, "leave_lens"), "entry %d: the solver finishes Chapter 1" % n)

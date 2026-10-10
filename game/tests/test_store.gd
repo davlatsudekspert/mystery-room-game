@@ -365,7 +365,7 @@ func test_premium_with_a_store() -> void:
 	Premium.purchase("full_game")
 	fb.on_purchase_updated.emit({"response_code": 0, "purchases": [play_purchase(1, false)]})
 	eq(answers.back(), ["full_game", true, "ui.purchase_ok"], "bought")
-	check(Premium.can_play("ch2"), "Chapter 2 opens")
+	check(Premium.owns_chapter("ch3") and Premium.owns_chapter("ch4"), "Chapters 3 and 4 are unlocked")
 	var cfg := ConfigFile.new()
 	check(cfg.load(ENT) == OK and bool(cfg.get_value("owned", "full_game", false)), "the entitlement is saved on the device")
 	Premium.owned = {}
@@ -406,8 +406,24 @@ func test_every_store_message_is_translated() -> void:
 	eq(PurchasePanel.buy_text(true, "$4.99"), "Unlocked")
 
 
-## The purchase screen with the mock store: price on the button, a visible Restore purchases, the tester reset, and
-## the chapter list's Unlock button opening it.
+## Which chapters the chapter list offers for sale (Chapters 1-2 free, 3-4 paid and unreleased for now).
+func test_chapter_list_purchase_button() -> void:
+	var menu: GDScript = load("res://src/ui/main_menu.gd")
+	var released_paid := {"id": "chX", "product": "full_game", "released": true}
+	var unreleased_paid := {"id": "ch3", "product": "full_game", "released": false}
+	var free := Chapters.get_chapter("ch2")
+	eq(menu.call("purchase_button", released_paid, false, true, false, false), "ui.buy", "a released paid chapter: Unlock")
+	eq(menu.call("purchase_button", released_paid, false, false, false, false), "", "no store (payments off): Coming soon")
+	eq(menu.call("purchase_button", unreleased_paid, false, true, false, false), "",
+		"an unreleased chapter is never sold in a store build")
+	eq(menu.call("purchase_button", unreleased_paid, false, true, true, false), "ui.buy",
+		"store_sandbox test builds sell it, so the purchase can be tested before Chapters 3-4 ship")
+	eq(menu.call("purchase_button", unreleased_paid, false, true, true, true), "ui.owned", "then show it as bought")
+	eq(menu.call("purchase_button", free, true, true, true, false), "", "Chapter 2 is free: Play, nothing to buy")
+
+
+## The purchase screen with the mock store: price on the button, a visible Restore purchases, the tester reset;
+## the chapter list offers Play for the free Chapters 1-2 and sells nothing that is not released.
 func test_purchase_screen() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	Premium.path = ENT
@@ -423,9 +439,9 @@ func test_purchase_screen() -> void:
 	menu.call("_show_chapters")
 	await tree.process_frame
 	var host: Control = menu.get("_panel_host")
-	var unlock := _find(host, "ui.buy")
-	check(unlock != null and not unlock.disabled, "Chapter 2 (released, not owned) offers Unlock")
-	unlock.pressed.emit()
+	check(_find(host, "ui.buy") == null, "nothing to buy in the list: Chapter 2 is free, Chapters 3-4 are not released")
+	check(_find(host, "ui.play") != null and not _find(host, "ui.play").disabled, "Chapter 2 offers Play without a purchase")
+	menu.call("_show_purchase")
 	await tree.process_frame
 	var panel := _first_panel(host)
 	check(panel != null, "the purchase screen opens")
@@ -454,8 +470,7 @@ func test_purchase_screen() -> void:
 	(_find(panel, "ui.close") as Button).pressed.emit()
 	await tree.process_frame
 	await tree.process_frame
-	var play := _find(host, "ui.play")
-	check(play != null, "back in the chapter list, the bought chapter offers Play")
+	check(_first_panel(host) == null and _find(host, "ui.play") != null, "Close goes back to the chapter list")
 	menu.queue_free()
 	await tree.process_frame
 	Premium.revoke_all_for_tests()
@@ -487,7 +502,8 @@ func test_disabled_store_offers_no_purchase() -> void:
 	var host: Control = menu.get("_panel_host")
 	check(_find(host, "ui.buy") == null, "no Unlock button")
 	var soon := _find(host, "ui.coming_soon")
-	check(soon != null and soon.disabled, "Chapter 2 still says Coming soon")
+	check(soon != null and soon.disabled, "Chapter 3 says Coming soon")
+	check(_find(host, "ui.play") != null, "Chapters 1-2 offer Play")
 	menu.queue_free()
 	await tree.process_frame
 	DirAccess.remove_absolute(ENT)

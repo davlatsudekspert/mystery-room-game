@@ -7,8 +7,22 @@ const DRAWER_CODE: Array[int] = [0, 3, 1, 7]
 const GEAR_POSITIONS := 6
 const GEAR_START: Array[int] = [1, 3, 2]
 const SAFE_CODE := "7294"
-## switch -> lamps toggled [LOCK, LIGHT, ARRAY, VENT]
-const SWITCH_MATRIX: Array = [[1, 0, 0, 1], [0, 1, 0, 0], [0, 0, 1, 1], [1, 1, 0, 0], [0, 1, 1, 1]]
+## Panel 7's wiring: for each switch I..V the lamps it toggles [LOCK, LIGHT, ARRAY, VENT]. Every game draws one of
+## these (docs/VARIANTS.md; the target below never changes, only the wiring does). Entry 0 is the canonical wiring.
+## tools/textures/make_decals.py reads this very list and draws panel_diagram_<n>.jpg for every entry, so keep
+## one matrix per line and no comments inside the brackets. Every entry passes panel_valid().
+const PANEL_POOL: Array = [
+	[[1, 0, 0, 1], [0, 1, 0, 0], [0, 0, 1, 1], [1, 1, 0, 0], [0, 1, 1, 1]],
+	[[1, 1, 0, 0], [1, 0, 0, 1], [1, 0, 1, 0], [0, 0, 0, 1], [0, 1, 1, 0]],
+	[[0, 1, 0, 1], [0, 1, 0, 0], [1, 1, 0, 0], [1, 0, 1, 1], [0, 0, 1, 1]],
+	[[1, 0, 1, 1], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 1]],
+	[[1, 1, 0, 1], [1, 0, 0, 1], [0, 0, 1, 0], [1, 0, 1, 0], [0, 1, 0, 1]],
+	[[1, 0, 0, 0], [1, 0, 1, 0], [0, 0, 1, 1], [0, 1, 1, 1], [0, 1, 0, 1]],
+	[[1, 0, 1, 1], [0, 1, 0, 0], [1, 1, 0, 1], [0, 0, 1, 1], [0, 1, 1, 0]],
+	[[0, 1, 1, 0], [0, 1, 1, 1], [1, 0, 0, 1], [0, 0, 1, 0], [1, 1, 0, 1]],
+]
+const PANEL_SWITCHES := 5
+const PANEL_LAMPS := 4
 const LAMP_TARGET: Array[int] = [1, 1, 1, 0]
 const RADIO_START := 80
 const RADIO_TARGET := 36
@@ -69,6 +83,7 @@ func default_state() -> Dictionary:
 		"rosette": false,
 		"compartment_open": false,
 		"handle_installed": false,
+		"v_panel": flat_panel(PANEL_POOL[0]), # Panel 7's wiring, switch-major (switch * 4 + lamp)
 		"switches": [0, 0, 0, 0, 0],
 		"main_on": false,
 		"power_on": false,
@@ -168,6 +183,8 @@ func apply_seed(seed: int) -> void:
 	var vols: Array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 	_shuffle(vols, rng)
 	state["v_beacon"] = vols.slice(0, 3)
+	# Panel 7: one of the wirings (drawn last, so the answers above stay what these seeds always gave)
+	state["v_panel"] = flat_panel(PANEL_POOL[rng.randi_range(0, PANEL_POOL.size() - 1)])
 
 
 static func _shuffle(a: Array, rng: RandomNumberGenerator) -> void:
@@ -220,6 +237,9 @@ func hint_args(goal: String, level: int) -> Array:
 			if level == 3:
 				var c := safe_code()
 				return [c[0], c[1], c[2], c[3]]
+		"circuits":
+			if level == 3:
+				return [", ".join(panel_solution().map(func(v: Variant) -> String: return roman(int(v) + 1)))]
 		"books":
 			if level == 2:
 				return beacon().duplicate()
@@ -331,25 +351,145 @@ func press_rosette() -> Array[String]:
 
 # ================================================================== P6 Panel 7
 func lamps() -> Array[int]:
-	var out: Array[int] = [0, 0, 0, 0]
 	if not state["main_on"]:
-		return out
-	var sw: Array = state["switches"]
-	for i in 5:
-		if int(sw[i]) == 1:
-			for j in 4:
-				out[j] ^= int(SWITCH_MATRIX[i][j])
-	return out
+		return [0, 0, 0, 0] as Array[int]
+	return _raw_lamps()
 
 
 func _raw_lamps() -> Array[int]:
+	return panel_lamps(state["v_panel"], state["switches"])
+
+
+## The lamps a set of raised switches lights on a wiring (flat, switch-major).
+static func panel_lamps(wiring: Array, switches: Array) -> Array[int]:
 	var out: Array[int] = [0, 0, 0, 0]
-	var sw: Array = state["switches"]
-	for i in 5:
-		if int(sw[i]) == 1:
-			for j in 4:
-				out[j] ^= int(SWITCH_MATRIX[i][j])
+	for i in PANEL_SWITCHES:
+		if int(switches[i]) == 1:
+			for j in PANEL_LAMPS:
+				out[j] ^= int(wiring[i * PANEL_LAMPS + j])
 	return out
+
+
+static func flat_panel(matrix: Array) -> Array:
+	var out: Array = []
+	for row: Variant in matrix:
+		for v: Variant in row as Array:
+			out.append(int(v))
+	return out
+
+
+## This game's wiring as 5 rows of 4 (switch -> lamps).
+func panel_matrix() -> Array:
+	var out: Array = []
+	for i in PANEL_SWITCHES:
+		out.append((state["v_panel"] as Array).slice(i * PANEL_LAMPS, (i + 1) * PANEL_LAMPS))
+	return out
+
+
+## Which PANEL_POOL entry this game wired (the panel diagram decal), or -1 for a wiring outside the pool.
+func panel_variant() -> int:
+	for n in PANEL_POOL.size():
+		if _arr_eq(flat_panel(PANEL_POOL[n]), state["v_panel"]):
+			return n
+	return -1
+
+
+## Every set of switches (as arrays of switch indices) that lights the target. With rank 4 there are exactly two.
+## Fewest switches first, then lexicographic.
+static func panel_solutions(wiring: Array) -> Array:
+	var out: Array = []
+	for mask in 1 << PANEL_SWITCHES:
+		var sw: Array = []
+		var idx: Array = []
+		for i in PANEL_SWITCHES:
+			var up := (mask >> i) & 1
+			sw.append(up)
+			if up == 1:
+				idx.append(i)
+		if _arr_eq(panel_lamps(wiring, sw), LAMP_TARGET):
+			out.append(idx)
+	out.sort_custom(func(a: Array, b: Array) -> bool:
+		return a.size() < b.size() if a.size() != b.size() else str(a) < str(b))
+	return out
+
+
+## The answer the hints name: fewest switches, then lexicographic.
+func panel_solution() -> Array:
+	var sols := panel_solutions(state["v_panel"])
+	return sols[0] if not sols.is_empty() else []
+
+
+## GF(2) rank of a wiring (5 switch rows of 4 lamp bits).
+static func panel_rank(wiring: Array) -> int:
+	var rows: Array[int] = []
+	for i in PANEL_SWITCHES:
+		var r := 0
+		for j in PANEL_LAMPS:
+			r |= int(wiring[i * PANEL_LAMPS + j]) << j
+		rows.append(r)
+	var rank := 0
+	for bit in PANEL_LAMPS:
+		var pivot := -1
+		for k in range(rank, rows.size()):
+			if (rows[k] >> bit) & 1 == 1:
+				pivot = k
+				break
+		if pivot < 0:
+			continue
+		var t := rows[rank]
+		rows[rank] = rows[pivot]
+		rows[pivot] = t
+		for k in rows.size():
+			if k != rank and (rows[k] >> bit) & 1 == 1:
+				rows[k] ^= rows[rank]
+		rank += 1
+	return rank
+
+
+## A wiring a game may draw: rank 4 (so exactly two switch sets light the target), no two switches alike, every
+## switch reaches two lamps (one may reach a single lamp), every lamp has two or three switches, VENT is wired
+## into the answer (raising only the switches that avoid VENT, or all five, is no answer), and the shortest
+## answer has 2 to 4 switches.
+static func panel_valid(wiring: Array) -> bool:
+	if wiring.size() != PANEL_SWITCHES * PANEL_LAMPS or panel_rank(wiring) != 4:
+		return false
+	var rows := {}
+	var thin := 0
+	for i in PANEL_SWITCHES:
+		var key := ""
+		var weight := 0
+		for j in PANEL_LAMPS:
+			key += str(int(wiring[i * PANEL_LAMPS + j]))
+			weight += int(wiring[i * PANEL_LAMPS + j])
+		if weight == 0:
+			return false
+		thin += 1 if weight < 2 else 0
+		rows[key] = true
+	if rows.size() != PANEL_SWITCHES or thin > 1:
+		return false
+	for j in PANEL_LAMPS:
+		var n := 0
+		for i in PANEL_SWITCHES:
+			n += int(wiring[i * PANEL_LAMPS + j])
+		if n < 2 or n > 3:
+			return false
+	var sols := panel_solutions(wiring)
+	if sols.size() != 2 or (sols[0] as Array).size() < 2 or (sols[0] as Array).size() > 4:
+		return false
+	var vent_free: Array = []
+	var all_up: Array = []
+	for i in PANEL_SWITCHES:
+		vent_free.append(1 - int(wiring[i * PANEL_LAMPS + 3]))
+		all_up.append(1)
+	if _arr_eq(panel_lamps(wiring, vent_free), LAMP_TARGET) or _arr_eq(panel_lamps(wiring, all_up), LAMP_TARGET):
+		return false
+	for sw: Array in sols:
+		var feeds_vent := false
+		for i: Variant in sw:
+			feeds_vent = feeds_vent or int(wiring[int(i) * PANEL_LAMPS + 3]) == 1
+		if not feeds_vent:
+			return false
+	return true
 
 
 func toggle_switch(i: int) -> Array[String]:
