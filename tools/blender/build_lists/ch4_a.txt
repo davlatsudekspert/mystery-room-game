@@ -1,3 +1,4 @@
 # Chapter 4 group A: shell and circulation (lib_ch4.py). docs/models/ch4_a.md
 shell_hall.py
 shell_lift4.py
+bridge.py

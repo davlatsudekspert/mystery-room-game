@@ -4,11 +4,11 @@ along the bay walls, the north rail with the gate opening and four numeral plate
 and the catwalk gate. Contract: docs/models/ch4.md section 3 bridge; results: docs/models/ch4_a.md.
 
 Built in WORLD coordinates. Mesh objects:
-  bridge_deck    M_Chequer    deck slab, 26 stair treads, 4 flat numeral-free plates are NOT here (see bridge_rail)
+  bridge_deck    M_Chequer    deck slab and 26 stair treads (13 per flight)
   bridge_frame   M_Steel_Dark front fascia girder (stiffeners, rivets), rear girder, cross beams, columns, rail posts,
-                 stair stringers
-  bridge_rail    M_Brass_Aged north rail (gate opening x +-0.55), side + rear rails, stair handrails, the four numeral
-                 plates I..IV lying on the deck in front of the wheel mounts (numerals read upright from the south)
+                 stair stringers, the four numeral plates (0.42 x 0.28) in front of the wheel mounts
+  bridge_rail    M_Brass_Aged north rail (gate opening x +-0.55), side + rear rails, stair handrails, the brass numerals
+                 I..IV (0.16 high) on those plates, lying flat, reading upright from the south
   bridge_paint   M_Steel_Painted the pier wall under the deck (x +-3.2, z 14.0 - 14.4) with raised panels
   catwalk_gate   M_Brass_Aged  lattice gate leaf 1.0 x 1.05, origin at the hinge (-0.55, 2.5, 11.95); closed = identity;
                  open = +95 deg about +Y (swings north onto the catwalk)
@@ -97,6 +97,9 @@ def frame_parts():
         out.append(K.gbox("rpost", (x - 0.035, DECK, Z1 - 0.085), (x + 0.035, RAIL_Y, Z1 - 0.015), STEEL, 0.003))
     for sx in (-1, 1):
         out.append(K.gbox("spost", (sx * X1 - 0.035 + (-0.04 * sx), DECK, Z0 + 0.0), (sx * X1 + 0.035 + (-0.04 * sx), RAIL_Y, Z0 + 0.07), STEEL, 0.003))
+    # numeral plates (dark steel, the brass numerals I..IV stand on them) in front of the wheel mounts
+    for x in WHEEL_X:
+        out.append(K.gbox("np", (x - 0.21, DECK, 12.77), (x + 0.21, DECK + 0.014, 13.05), STEEL, 0.003))
     # stair stringers (inner side) + posts
     for sx in (-1, 1):
         xa, xb = sorted((sx * 4.9, sx * 4.9 - sx * 0.06))
@@ -133,10 +136,9 @@ def rail_parts():
         out.append(rod((x, DECK + 1.02, Z1), (x, DECK + 1.02, Z1 - 0.15), 0.03, BRASS, 10))
     # numeral plates I..IV on the deck in front of the wheel mounts, numerals read upright from the south
     for i, x in enumerate(WHEEL_X):
-        out.append(K.gbox("np", (x - 0.17, DECK, 12.80), (x + 0.17, DECK + 0.012, 13.00), BRASS, 0.003))
-        num = C.N.roman_obj(f"num_{i + 1}", i + 1, 0.12, 0.006, BRASS)
+        num = C.N.roman_obj(f"num_{i + 1}", i + 1, 0.16, 0.008, BRASS)
         num.data.transform(Matrix.Rotation(math.radians(-90.0), 4, "X"))      # lie on the plate, top toward north
-        num.data.transform(Matrix.Translation((x, DECK + 0.012, 12.90)))
+        num.data.transform(Matrix.Translation((x, DECK + 0.014, 12.91)))
         out.append(num)
     return out
 
@@ -241,6 +243,11 @@ def qa(args, parts):
         cam, tgt, fov = (-4.6, 3.7, 14.3), (0.0, 3.3, 12.0), 64
         lit(cam, 60.0, 0.16)
         C.shoot(NAME + "_3", cam, tgt, fov, samples=S, res=RES)
+
+    if C.want(args, "4"):          # the numeral plates I and II in front of the wheel mounts (read from the south)
+        cam, tgt, fov = (-2.9, 3.35, 14.2), (-2.9, 2.5, 12.9), 42
+        lit(cam, 80.0, 0.2)
+        C.shoot(NAME + "_4", cam, tgt, fov, samples=S, res=RES)
 
 
 def main():
