@@ -238,3 +238,5 @@ Before the check learned which controls a view can work, the first full run prin
 3. **The chalk staircase and the meter.** Is "reading 1 = the longest tube" understood from the staircase alone?
 4. **The prism fans.** Is the additive colour on the three rims readable on a phone screen?
 5. **The ring symbols.** Outer → inner through the glass floor against the drum order on the door.
+6. **The recorder keys.** On a phone, are the two ivory piano keys found at once, and is ◀◀ / ▶ read as rewind / play? (Render: readable at 1280 x 720; a phone screen is smaller.)
+7. **Brightness.** The Choir Hall is dark by design (the rack and the transformers stay near black at default brightness); the drum windows' brass frames and the console's lamp jewels are the brightest things on screen. Check both at default and at maximum brightness on an OLED phone.
