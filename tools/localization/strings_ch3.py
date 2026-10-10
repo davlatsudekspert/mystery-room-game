@@ -17,8 +17,8 @@ S = [
 ("hint.c3_pos.1", "one step right", "на шаг правее", "bir qadam oʻngda"),
 ("hint.c3_pos.2", "two steps right", "на два шага правее", "ikki qadam oʻngda"),
 # ---------------------------------------------------------------- items
-("item.strand_key.desc3", "Heavy brass with a star. The tag reads: \"For the Choir.\"", "Тяжёлая латунь со звездой. На бирке: «Для Хора».", "Yulduzli ogʻir jez kalit. Yorliqda: «Xor uchun»."),
-("item.leyla_key.desc3", "Plain steel with a crescent. The tag reads: \"For the Nursery.\"", "Простая сталь с полумесяцем. На бирке: «Для Питомника».", "Yarim oyli oddiy poʻlat kalit. Yorliqda: «Koʻchatxona uchun»."),
+("item.strand_key.desc3", "Heavy brass with a star. The tag reads: “For the Choir.”", "Тяжёлая латунь со звездой. На бирке: «Для Хора».", "Yulduzli ogʻir jez kalit. Yorliqda: «Xor uchun»."),
+("item.leyla_key.desc3", "Plain steel with a crescent. The tag reads: “For the Nursery.”", "Простая сталь с полумесяцем. На бирке: «Для Питомника».", "Yarim oyli oddiy poʻlat kalit. Yorliqda: «Koʻchatxona uchun»."),
 ("item.key_diamond.name", "Diamond key", "Ключ-ромб", "Rombli kalit"),
 ("item.key_diamond.desc", "An isolator key with a diamond-shaped bow.", "Ключ изолятора с головкой в форме ромба.", "Boshi romb shaklidagi uzgich kaliti."),
 ("item.key_triangle.name", "Triangle key", "Ключ-треугольник", "Uchburchakli kalit"),
@@ -30,7 +30,7 @@ S = [
 ("item.resonance_meter.name", "Resonance meter", "Резонансметр", "Rezonans oʻlchagich"),
 ("item.resonance_meter.desc", "Strand's handheld meter. Tap something with it: the needle reads 1–7 while it rings.", "Ручной прибор Странда. Коснитесь им предмета: пока тот звенит, стрелка показывает 1–7.", "Strandning qoʻl asbobi. U bilan biror narsaga tegining: u jaranglaganda mil 1–7 ni koʻrsatadi."),
 ("item.ecg_strip.name", "ECG strip", "Лента ЭКГ", "EKG tasmasi"),
-("item.ecg_strip.desc", "Strand's heart trace, 1977. Three pen brackets: a sun, a moon, a star.", "Кардиограмма Странда, 1977. Три скобки пером: солнце, луна, звезда.", "Strandning yurak yozuvi, 1977. Ruchka bilan uchta qavs: quyosh, oy, yulduz."),
+("item.ecg_strip.desc", "Strand's heart trace, 1977. Three pen brackets: a sun, a moon, a star.", "Кардиограмма Странда, 1977. Три скобки пером: солнце, луна, звезда.", "Strandning kardiogrammasi, 1977. Ruchka bilan uchta qavs: quyosh, oy, yulduz."),
 ("item.strand_letters.name", "Strand's letters", "Письма Странда", "Strandning maktublari"),
 ("item.strand_letters.desc", "A bundle of letters to Leyla, never sent.", "Пачка писем Лейле, так и не отправленных.", "Leylaga yozilgan, ammo joʻnatilmagan maktublar."),
 ("item.seed_crystal.name", "Seed crystal", "Затравочный кристалл", "Urugʻ billur"),
@@ -47,7 +47,7 @@ S = [
 ("obj3.desk", "Control desk", "Пульт управления", "Boshqaruv pulti"),
 ("obj3.office", "Strand's office", "Кабинет Странда", "Strandning kabineti"),
 ("obj3.choir", "The Choir", "Хор", "Xor"),
-("obj3.port", "Crystal inspection port", "Кристальное смотровое окно", "Billur kuzatuv tuynugi"),
+("obj3.port", "Crystal inspection port", "Кристаллическое смотровое окно", "Billur kuzatuv tuynugi"),
 ("obj3.gallery", "The Resonance Gallery", "Резонансная галерея", "Rezonans galereyasi"),
 ("obj3.glass_floor", "Glass floor over the shaft", "Стеклянный пол над шахтой", "Shaxta ustidagi shisha pol"),
 ("obj3.memorial", "Memorial wall — 41 crystals", "Стена памяти — 41 кристалл", "Xotira devori — 41 billur"),
@@ -60,13 +60,13 @@ S = [
 ("obj3.prisms", "Prism bench", "Стол с призмами", "Prizmalar stoli"),
 ("obj3.seal", "Spectral seal", "Спектральная печать", "Spektral muhr"),
 ("obj3.camp", "Leyla's camp", "Лагерь Лейлы", "Leylaning qarorgohi"),
-("obj3.shutter", "Crystal shutter", "Кристальная заслонка", "Billur toʻsiq"),
+("obj3.shutter", "Crystal shutter", "Кристаллическая заслонка", "Billur toʻsiq"),
 # ---------------------------------------------------------------- messages (msg.* = layout-tested)
 ("msg.c3_gate_wrong", "This gate takes the other key.", "Эти ворота открывает другой ключ.", "Bu darvozani boshqa kalit ochadi."),
 ("msg.c3_wrong_lock", "The key won't go in: this lock takes another shape.", "Ключ не входит: этот замок под другую форму.", "Kalit kirmayapti: bu qulf boshqa shakl uchun."),
 ("msg.c3_isolator_no_key", "The handle is locked. Its own key must be in the lock.", "Рукоять заперта. В замке должен быть её ключ.", "Dastak qulflangan. Qulfda oʻz kaliti boʻlishi kerak."),
 ("msg.c3_isolator_held_missing", "It won't turn ON until the key behind its glass is back.", "Не включится, пока ключ за его стеклом не вернётся.", "Oynasi ortidagi kalit qaytmaguncha yoqilmaydi."),
-("msg.c3_key_trapped", "The key is trapped. Turn the switch first.", "Ключ заперт. Сначала поверните рубильник.", "Kalit qulflangan. Avval uzgichni buring."),
+("msg.c3_key_trapped", "The key is trapped. Turn the switch first.", "Ключ заперт. Сначала переключите изолятор.", "Kalit qulflangan. Avval uzgichni buring."),
 ("msg.c3_office_key_trapped", "The key is trapped while the office door stands open.", "Ключ заперт, пока дверь кабинета открыта.", "Kabinet eshigi ochiq ekan, kalit qulflangan."),
 ("msg.c3_office_locked", "Strand's office is locked.", "Кабинет Странда заперт.", "Strandning kabineti qulflangan."),
 ("msg.c3_office_open", "The glass door of Strand's office swings open.", "Стеклянная дверь кабинета Странда открывается.", "Strand kabinetining shisha eshigi ochildi."),
@@ -121,15 +121,15 @@ S = [
 ("cap3.recorder", "[The recorder clicks on]", "[Магнитофон щёлкает и включается]", "[Magnitofon chiq etib yoqildi]"),
 ("cap3.leyla_echo", "For a moment Leyla is here, in 1998. She touches a drawer of the seed library and fades.", "На миг здесь Лейла — 1998 год. Она касается ящика с затравками и тает.", "Bir lahza Leyla shu yerda — 1998-yil. U urugʻ tortmasiga tegadi va yoʻqoladi."),
 ("cap3.echoes_appear", "Strand and Leyla stand in the light, on either side of you.", "Странд и Лейла стоят в свете, по обе стороны от вас.", "Strand va Leyla yorugʻlikda, ikki yoningizda turibdi."),
-("cap3.secret", "Leyla, 1998, kneels by the wall and lays her hand on the forty-second socket. \"Keep a place for me.\"", "Лейла, 1998. Она опускается у стены и кладёт ладонь на сорок второе гнездо. «Оставьте мне место».", "Leyla, 1998. U devor yonida choʻkkalab, qirq ikkinchi uyachaga kaftini qoʻyadi. «Menga joy qoldiring»."),
-("intro3.strand_key", "The freight lift sinks below the archive. The tag on Strand's key reads: \"For the Choir.\"", "Грузовой лифт опускается под архив. На бирке ключа Странда: «Для Хора».", "Yuk lifti arxiv ostiga tushmoqda. Strand kalitidagi yorliqda: «Xor uchun»."),
-("intro3.leyla_key", "The freight lift sinks below the archive. The tag on Leyla's key reads: \"For the Nursery.\"", "Грузовой лифт опускается под архив. На бирке ключа Лейлы: «Для Питомника».", "Yuk lifti arxiv ostiga tushmoqda. Leyla kalitidagi yorliqda: «Koʻchatxona uchun»."),
+("cap3.secret", "Leyla, 1998, kneels by the wall and lays her hand on the forty-second socket. “Keep a place for me.”", "Лейла, 1998. Она опускается у стены и кладёт ладонь на сорок второе гнездо. «Оставьте мне место».", "Leyla, 1998. U devor yonida choʻkkalab, qirq ikkinchi uyachaga kaftini qoʻyadi. «Menga joy qoldiring»."),
+("intro3.strand_key", "The freight lift sinks below the archive. The tag on Strand's key reads: “For the Choir.”", "Грузовой лифт опускается под архив. На бирке ключа Странда: «Для Хора».", "Yuk lifti arxiv ostiga tushmoqda. Strand kalitidagi yorliqda: «Xor uchun»."),
+("intro3.leyla_key", "The freight lift sinks below the archive. The tag on Leyla's key reads: “For the Nursery.”", "Грузовой лифт опускается под архив. На бирке ключа Лейлы: «Для Питомника».", "Yuk lifti arxiv ostiga tushmoqda. Leyla kalitidagi yorliqda: «Koʻchatxona uchun»."),
 ("intro3.2", "Level −2. The machine floor that fed the Array.", "Уровень −2. Машинный этаж, питавший Решётку.", "−2-qavat. Panjarani oziqlantirgan mashina qavati."),
 # ---------------------------------------------------------------- documents
 ("doc3.diagnosis", "1977.\nTwo years, perhaps three. The Array does not forget, Leyla. Neither will I.\n— S.", "1977.\nДва года, может быть, три. Решётка не забывает, Лейла. Я тоже не забуду.\n— С.", "1977.\nIkki yil, balki uch. Panjara unutmaydi, Leyla. Men ham unutmayman.\n— S."),
 ("doc3.note", "My heart keeps the count.", "Моё сердце ведёт счёт.", "Yuragim sanoqni saqlaydi."),
 ("doc3.recorder", "If you hear this, the lift still works. The Choir and the Nursery must sing together, or the Array stays deaf. I am going down to them. Listen to my crystals — they remember the tune.", "Если ты это слышишь, лифт ещё работает. Хор и Питомник должны петь вместе, иначе Решётка останется глухой. Я спускаюсь к ним. Слушай мои кристаллы — они помнят мелодию.", "Agar buni eshitayotgan boʻlsang, lift hali ishlaydi. Xor va Koʻchatxona birga kuylashi kerak, aks holda Panjara kar boʻlib qoladi. Men ularning oldiga tushyapman. Billurlarimni tingla — ular kuyni eslaydi."),
-("doc3.growth_log", "Last seed, cross-section. Sketched a third of a turn off.", "Последняя затравка, срез. Зарисована с поворотом на треть оборота.", "Oxirgi urugʻ, kesimi. Uchdan bir burilish bilan chizilgan."),
+("doc3.growth_log", "Last seed, cross-section. Sketched a third of a turn off.", "Последняя затравка, срез. Зарисована с поворотом на треть оборота.", "Oxirgi urugʻ, kesimi. Uchdan bir aylanma burilgan holda chizilgan."),
 # ---------------------------------------------------------------- kept echoes
 ("echo3.welder", "A welder bends over the transformers, sparks frozen around his mask.", "Сварщик склонился над трансформаторами, искры застыли вокруг маски.", "Payvandchi transformatorlar ustiga engashgan, niqobi atrofida uchqunlar qotib qolgan."),
 ("echo3.tech_a", "A technician wipes the frost from an autoclave window, again and again.", "Лаборантка снова и снова стирает иней со стекла автоклава.", "Laborant ayol avtoklav oynasidagi qirovni qayta-qayta artadi."),
@@ -149,13 +149,13 @@ S = [
 
 H = {
 "c3_interlock": [
-    ("Strand's switch room runs on keys.", "Щитовая Странда работает на ключах.", "Strand uzgichlar xonasi kalitlar bilan ishlaydi."),
+    ("Strand's switch room runs on keys.", "Щитовая Странда работает на ключах.", "Strandning uzgichlar xonasi kalitlar bilan ishlaydi."),
     ("The plate shows which key frees which. Each lock shows the shape it takes.", "Табличка показывает, какой ключ освобождает какой. На каждом замке — форма его ключа.", "Lavha qaysi kalit qaysini boʻshatishini koʻrsatadi. Har bir qulfda oʻz kaliti shakli bor."),
     ("Diamond into II, triangle into I, circle into III, each turned OFF. The square opens the office.", "Ромб — в II, треугольник — в I, круг — в III, каждый выключить. Квадрат открывает кабинет.", "Romb — II ga, uchburchak — I ga, doira — III ga, har birini oʻchiring. Kvadrat kabinetni ochadi."),
 ],
 "c3_heart": [
     ("Strand kept his meter locked.", "Странд держал свой прибор под замком.", "Strand asbobini qulf ostida saqlagan."),
-    ("\"My heart keeps the count.\" Look at the strip on his lamp.", "«Моё сердце ведёт счёт». Посмотрите на ленту на его лампе.", "«Yuragim sanoqni saqlaydi». Chirogʻidagi tasmaga qarang."),
+    ("“My heart keeps the count.” Look at the strip on his lamp.", "«Моё сердце ведёт счёт». Посмотрите на ленту на его лампе.", "«Yuragim sanoqni saqlaydi». Chirogʻidagi tasmaga qarang."),
     ("Count the peaks in each bracket: sun %d, moon %d, star %d.", "Сосчитайте пики в каждой скобке: солнце %d, луна %d, звезда %d.", "Har bir qavsdagi choʻqqilarni sanang: quyosh %d, oy %d, yulduz %d."),
 ],
 "c3_choir": [
@@ -170,7 +170,7 @@ H = {
 ],
 "c3_startup": [
     ("The hall must be started in the right order.", "Зал нужно запускать в правильном порядке.", "Zalni toʻgʻri tartibda ishga tushirish kerak."),
-    ("Watch the operator through all three crystal ports. The counter tells you the step.", "Наблюдайте за оператором через все три кристальных окна. Счётчик показывает шаг.", "Operatorni uchala billur tuynukdan kuzating. Hisoblagich qadamni koʻrsatadi."),
+    ("Watch the operator through all three crystal ports. The counter tells you the step.", "Наблюдайте за оператором через все три кристаллических окна. Счётчик показывает шаг.", "Operatorni uchala billur tuynukdan kuzating. Hisoblagich qadamni koʻrsatadi."),
     ("Levers %s, then the knob to the circle.", "Рычаги %s, затем ручку на круг.", "Dastaklar %s, soʻng murvatni doiraga buring."),
 ],
 "c3_seed": [
