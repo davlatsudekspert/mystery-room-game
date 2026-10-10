@@ -8,7 +8,7 @@ extends RoomBase
 
 ## Render layer for meshes the reflection probes must not capture (glowing lamp glass), as in Chapter 2.
 const NO_PROBE_LAYER := 1 << 19
-const ALL_GROUPS := "CGSNKL"
+const ALL_GROUPS := "CGSNKLJ"
 const DRAG_PX_PER_STEP := 26.0
 const INTRO_SECONDS := 7.6
 
@@ -25,6 +25,7 @@ var _frost: ColorRect
 var _dirs: Dictionary = {} # knob / turntable -> tap direction (+1 / -1), turning back at the end stops
 var _drag_kind := ""
 var _knob_acc := 0.0
+var _lantern_t := 0.0
 var _recording := 0 # playback generation of Leyla's recorder (a rewind restarts it)
 ## The brass rim of a crystal port framing the port views: in a port view the camera sits at the lens, so the
 ## port's own ring is behind it; tapping this rim (IA_port_ring) switches between now and the kept memory.
@@ -38,6 +39,7 @@ func _ready() -> void:
 	GameState.in_game = true
 	make_environment(Color("05070a"), Color("2c3434"), 0.42, Color("0f1a1c"), 0.010)
 	_build_models()
+	_build_dressing()
 	_build_lights()
 	build_camera()
 	cam.far = 48.0 # the Array lies 30 m below the glass floor
@@ -150,6 +152,21 @@ func _build_models() -> void:
 			missing_models.append(extra)
 
 
+## Set dressing (UndergroundData.DRESS): story props, wall services and grime. No colliders (no tap can reach them), no
+## shadow casting (they would only add draw calls to the shadow pass); a model that is not built yet is skipped quietly.
+func _build_dressing() -> void:
+	for id: String in UndergroundData.DRESS:
+		var e: Array = UndergroundData.DRESS[id]
+		var n: Node3D = null
+		if ResourceLoader.exists("res://assets/models/%s.glb" % e[0]):
+			n = spawn(id, e[0], Vector3.ZERO, 0.0, "", "none")
+		if n == null:
+			continue
+		for mi in ModelUtil.find_meshes(n):
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		tag_cull(n, e[1])
+
+
 ## Give one part (and only its own collider) a hotspot of its own.
 func _part_hotspot(p: Node3D, hs: String) -> void:
 	if p == null:
@@ -260,7 +277,9 @@ func _build_lights() -> void:
 	_light("fill_1", "omni", Vector3(11.5, 3.6, 0.8), cold, 0.9, 5.0, "N")
 	_spot("prism_lamp", Vector3(6.1, 1.0, 0.55), Vector3(6.1, 1.15, -1.0), 25.0, Color("fff2d8"), 1.2, 2.5, "N", false)
 	# Leyla's camp and the lift
-	_light("camp_lamp", "omni", _at("leyla_camp", "camp_light", Vector3(6.2, 2.45, -2.6)), Color("ffc27a"), 1.0, 3.0, "K")
+	# the bare bulb is only a weak fill now: the storm lantern on the crate table is the camp's key light (dressing)
+	_light("camp_lamp", "omni", _at("leyla_camp", "camp_light", Vector3(6.2, 2.45, -2.6)), Color("ffc27a"), 0.45, 3.0, "K")
+	_light("camp_kero", "omni", _at("dress_camp", "camp_lamp_flame", Vector3(6.49, 0.535, -3.03)), Color("ffae55"), 2.3, 4.6, "KJ")
 	_light("cage_lamp", "omni", _at("freight_lift", "cage_light", Vector3(0.0, 2.36, 6.0)), Color("ffd29a"), 1.0, 3.0, "L")
 	# the lobby beyond the cage: a lamp over each passage mouth, or the way out of the lift is a black hole
 	_light("lobby_w", "omni", Vector3(-4.6, 2.8, 5.3), warm, 1.1, 6.0, "L")
@@ -410,6 +429,8 @@ func groups_for(view: String) -> String:
 	if v.is_empty():
 		return ALL_GROUPS
 	var g: String = v[4]
+	if g.contains("K"):
+		g += "J" # the camp's own views also draw its dressing; the Nursery views that only look in through the door do not
 	if str(v[5]) != "" and bool(l3().state.get(v[5], false)):
 		g += str(v[6])
 	if _cinematic and view == "shutter" and l3().state["shutter_open"]:
@@ -959,9 +980,14 @@ func _interact_shutter(p: String) -> void:
 
 
 # ====================================================================== per-frame
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var fill: OmniLight3D = lights["focus_fill"]
 	fill.global_position = cam.global_position + cam.global_basis * Vector3(0.12, 0.18, 0.05)
+	# the storm lantern burns unevenly: a few per cent, slow
+	_lantern_t += delta
+	var kero := lights.get("camp_kero") as Light3D
+	if kero != null and kero.is_visible_in_tree():
+		kero.light_energy = float(kero.get_meta("base_energy")) * (1.0 + 0.05 * sin(_lantern_t * 6.3) + 0.035 * sin(_lantern_t * 11.7 + 1.9))
 
 
 # ====================================================================== view changes

@@ -50,6 +50,13 @@ const LAYOUT := {
 	"gallery_console": ["gallery_console", Vector3(0.0, 0.0, 2.6), 0.0, "console", "parts", "G"],
 	"memorial_wall": ["memorial_wall", Vector3.ZERO, 0.0, "memorial", "parts", "G"],
 }
+## Set dressing (the Chapter 3 art pass, docs/GAMEPLAY_QA.md): id -> [model, culling groups]. Each is an original model
+## built in world coordinates in place (tools/blender/models/ch3_dress_*.py), drawn without colliders or shadows, so nothing in
+## it can take a tap or hide a hotspot. J = the camp's own views (camp, shutter, recorder): the Nursery views that look through
+## the camp door never draw it, they already sit at the draw-call budget.
+const DRESS := {
+	"dress_camp": ["ch3_dress_camp", "J"],
+}
 ## Extra rotation about the model's own X after the yaw (degrees): port C looks down from the gantry.
 const PITCH := {"port_c": 60.0}
 ## Parts whose hotspot differs from their model's: model -> {part -> hotspot}.
