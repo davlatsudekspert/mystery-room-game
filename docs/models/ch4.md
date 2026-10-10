@@ -632,4 +632,13 @@ Order: A first (everything else is QA-rendered inside `shell_hall`); then B, C, 
    `IA_booth_gate` for `"booth_gate"`, `IA_watch_gate` for `"watch_gate"`, `IA_post_canister` for `"post_canister"`; pick-ups:
    `IA_key` on each tower → `take("tower_n")`, `IA_box_log` → `box_log`, `IA_heart_watch/letter/pawl` → `heart_*`,
    `IA_locker_note` / `IA_locker_parcel` → `locker_*`.
-7. **Handwheel numerals** I–IV are on the bridge's wheel plates, not on the wheel GLB (one GLB serves four positions).
+7. **Handwheel numerals** I–IV are on the bridge's wheel plates (dark steel plates with brass numerals, lying on the deck in front of each
+   mount), not on the `handwheel` GLB (one GLB serves four positions). The wheel's own dial plate carries the stops 1–8.
+8. **Built-model changes found while modelling** (groups A and B; the measured pages `ch4_a.md` and `ch4_b.md` have the numbers):
+   - the catwalk gate opens **+95°** about +Y (north, onto the catwalk); the cage gates open −95° (outward);
+   - the cameras `lift`, `hatch_n`, `handwheels`, `chronometer` and `panel0` of §2 were moved so they actually see their subject (the first
+     `lift` camera was inside the cage; `hatch_n` looked into the deck slab; the four wheels do not fit a 78° view from the desk);
+   - the hall has **18 pilasters** (every 15°, offset 7.5°) and 24 radial ribs on the same azimuths, 16 ventilation grilles;
+   - the master desk's slope is 38.2° (from (z 0.46, y 0.95) to (z −0.20, y 1.47)) and its jog wheel, dial, bay and chart are placed on it
+     with the formula P(s, x) of §4; the chart drum and the pen are static (the shader draws the pen mark); the keeper unit has no lamp;
+   - Panel 0's switches stand at x = −0.74 and its numerals at x = −0.85 (the bezel took the first positions).

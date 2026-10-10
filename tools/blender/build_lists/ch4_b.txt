@@ -1,3 +1,5 @@
 # Chapter 4 group B: the bridge desk (lib_ch4.py). docs/models/ch4_b.md
 handwheel.py
 master_lever.py
+keeper_knob.py
+panel0.py

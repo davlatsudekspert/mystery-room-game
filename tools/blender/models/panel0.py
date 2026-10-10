@@ -7,7 +7,7 @@ At (0, 0, 14.0), yaw 180 (faces north). Origin = floor level at the centre of th
 front. Board x +-0.95, y 0.2 - 2.1, z 0 - 0.22 (face at z = 0.22), plinth to y 0.2. Local coordinates:
   panel_body    M_Steel_Painted  plinth, cabinet, raised bezel (face z 0.25 at the border), corner bolts
   panel_brass   M_Brass_Aged     4 line buses at x = -0.30 / 0 / 0.30 / 0.60 (y 0.40 - 1.60), 5 switch wires at y_s = 1.42 / 1.18 /
-                                 0.94 / 0.70 / 0.46 (x -0.66 .. 0.72), Strand's plate (0.90 x 0.12 at (0.15, 2.00)) with 4 discs
+                                 0.94 / 0.70 / 0.46 (x -0.66 .. 0.72), Strand's plate (1.14 x 0.14 at (0.15, 2.00)) with 4 discs
                                  over the lamps, the lamp bezels, 4 pictograms at y 1.70, numerals I..V at x -0.90, switch collars,
                                  the main lever's quadrant guide
   leyla_chalk   M_Chalk          her sign, 1998 and four tally strokes on the lower left, 2 mm proud
@@ -95,10 +95,10 @@ def brass_parts():
     for y in ROW_Y:                                                       # the five switch wires
         out.append(K.gbox("wire", (-0.66, y - 0.004, FACE), (0.72, y + 0.004, FACE + 0.0015), BRASS, 0.0))
     # Strand's plate with four filled discs over the lamps
-    out.append(K.gbox("plate", (-0.30, 1.94, FACE), (0.60, 2.06, FACE + 0.006), BRASS, 0.002))
+    out.append(K.gbox("plate", (-0.42, 1.93, FACE), (0.72, 2.07, FACE + 0.006), BRASS, 0.002))
     for x in LINE_X:
-        out.append(K.gcyl("disc", 0.028, FACE + 0.006, FACE + 0.011, base=(x, 2.00, 0.0), axis=(0, 0, 1), segments=16, mat=BRASS, chamfer=0.0015))
-    for x in (-0.28, 0.58):
+        out.append(K.gcyl("disc", 0.034, FACE + 0.006, FACE + 0.012, base=(x, 2.00, 0.0), axis=(0, 0, 1), segments=18, mat=BRASS, chamfer=0.0015))
+    for x in (-0.38, 0.68):
         out.append(K.rivet("pr", 0.008, (x, 1.955, FACE + 0.006), normal=(0, 0, 1), mat=BRASS, segs=6))
     # lamp bezels
     for x in LINE_X:
