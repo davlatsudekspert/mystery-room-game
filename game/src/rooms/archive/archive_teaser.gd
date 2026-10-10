@@ -89,6 +89,7 @@ func play(choice: String) -> void:
 		env.fog_density = 0.03
 		env.fog_light_color = Color("0c1a20")
 	_cam().go("shaft", true)
+	_room_lights(false)
 	AudioManager.ambience("amb_archive", false, 0.0, 1.5)
 	AudioManager.ambience("amb_power_hum", true, -3.0, 3.0)
 	_set_cage(CAGE_FROM)
@@ -112,6 +113,7 @@ func play(choice: String) -> void:
 	await _fade_black(1.0, 1.1 if not _skip else 0.3)
 	_skip = false
 	_cam().go("vault_inside", true)
+	_room_lights(true)
 	_free_shaft()
 	if env and not fog.is_empty():
 		env.fog_density = fog[0]
@@ -127,25 +129,25 @@ func _recorder() -> void:
 	var col := _card_column()
 	AudioManager.sfx("deck_play", -2.0, 0.9)
 	AudioManager.sfx("tape_hiss", -10.0)
-	var head := _text(tr("epi2.recorder"), 40, UITheme.CREAM, true)
+	var head := _text(tr("epi2.recorder"), 50, UITheme.CREAM, true)
 	col.add_child(head)
 	await _fade_in(head, 1.0)
 	await _wait(3.0, true)
 	await _fade_out(head, 0.5)
 	head.queue_free()
-	var who := UITheme.label(tr("tease2.voice_who"), 22, UITheme.MUTED)
+	var who := UITheme.label(tr("tease2.voice_who"), 26, UITheme.MUTED)
 	who.add_theme_font_override("font", UITheme.caps_font(false, 1))
 	who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	who.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	col.add_child(who)
 	var lines := VBoxContainer.new() # the spoken line(s); a fixed height so the trace below never jumps
 	lines.add_theme_constant_override("separation", 14)
-	lines.custom_minimum_size = Vector2(0, UITheme.size(34) * 3.2)
+	lines.custom_minimum_size = Vector2(0, UITheme.size(42) * 3.2)
 	lines.alignment = BoxContainer.ALIGNMENT_CENTER
 	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(lines)
 	var wave := TapeWave.new()
-	wave.custom_minimum_size = Vector2(minf(560.0 * UITheme.wscale(), _canvas().x * 0.5), 64.0 * UITheme.wscale())
+	wave.custom_minimum_size = Vector2(minf(640.0 * UITheme.wscale(), _canvas().x * 0.5), 80.0 * UITheme.wscale())
 	wave.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	wave.level = 0.12
 	col.add_child(wave)
@@ -153,7 +155,7 @@ func _recorder() -> void:
 	for key in ["tease2.voice_1", "tease2.voice_2", "tease2.voice_3"]:
 		_skip = false
 		AudioManager.sfx("tape_voice", -4.0, randf_range(0.97, 1.02))
-		var line := _text(tr(key), 34, UITheme.CREAM, false)
+		var line := _text(tr(key), 42, UITheme.CREAM, false)
 		line.add_theme_font_override("font", UITheme.display_font(false))
 		lines.add_child(line)
 		wave.level = 1.0
@@ -167,11 +169,11 @@ func _recorder() -> void:
 	_skip = false
 	AudioManager.sfx("tape_garble", -18.0, 0.62)
 	AudioManager.sfx("reveal", -6.0, 0.5)
-	var cap := _text(tr("tease2.second_cap"), 24, UITheme.MUTED, false)
+	var cap := _text(tr("tease2.second_cap"), 28, UITheme.MUTED, false)
 	lines.add_child(cap)
 	await _fade_in(cap, 0.6)
 	await _wait(1.6, true)
-	var voice := _text(tr("tease2.second_voice"), 40, Color("cfeef7"), false)
+	var voice := _text(tr("tease2.second_voice"), 50, Color("cfeef7"), false)
 	voice.add_theme_font_override("font", UITheme.display_font(false))
 	lines.add_child(voice)
 	wave.color = Color("9fe3f2")
@@ -228,26 +230,26 @@ func show_card(choice: String, instant: bool, store_state: String = "") -> void:
 		await _fade_black(0.94, 0.8)
 	var col := _card_column()
 	var state := store_state if store_state != "" else card_state()
-	var label := UITheme.label(tr("chapter.label") % 3, 24, UITheme.MUTED)
+	var label := UITheme.label(tr("chapter.label") % 3, 28, UITheme.MUTED)
 	label.add_theme_font_override("font", UITheme.caps_font(false, 2))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	col.add_child(label)
-	var title := UITheme.title(tr("chapter.ch3.title"), 64)
+	var title := UITheme.title(tr("chapter.ch3.title"), 72)
 	title.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	col.add_child(title)
 	var rule := UIOrnament.rule()
 	rule.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	rule.custom_minimum_size = Vector2(minf(560.0 * UITheme.wscale(), _canvas().x * 0.6), 22.0)
 	col.add_child(rule)
-	var tag := _text(tr("tease2.tag_leyla_key" if choice == "leyla_key" else "tease2.tag_strand_key"), 28, UITheme.CREAM, false)
+	var tag := _text(tr("tease2.tag_leyla_key" if choice == "leyla_key" else "tease2.tag_strand_key"), 30, UITheme.CREAM, false)
 	col.add_child(tag)
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 18)
 	col.add_child(gap)
 	var line_key := {"soon": "tease2.coming_soon", "unlock": "tease2.unlock_line", "play": ""}[state] as String
 	if line_key != "":
-		var line := _text(tr(line_key), 24, UITheme.MUTED, false)
+		var line := _text(tr(line_key), 26, UITheme.MUTED, false)
 		col.add_child(line)
 	var row := UITheme.button_row(24)
 	col.add_child(row)
@@ -614,6 +616,26 @@ func _build_shaft() -> void:
 	_glow_light.omni_attenuation = 1.1
 	_glow_light.position = Vector3(SHAFT_X, SHAFT_BOTTOM + 1.4, SHAFT_Z)
 	_shaft.add_child(_glow_light)
+
+
+## The archive's own lights are switched off for the shaft shot and back on after it: the top storey of the shaft
+## lies within their reach, and with them a phone's per-mesh light limit (8 on the Mobile renderer) dropped the
+## shaft's own top lamp, leaving the storey nearest the camera dark.
+var _lights_off: Array[Light3D] = []
+
+
+func _room_lights(on: bool) -> void:
+	if not on:
+		_lights_off.clear()
+		for l: Variant in (room.get("lights") as Dictionary).values():
+			if l is Light3D and (l as Light3D).visible:
+				(l as Light3D).visible = false
+				_lights_off.append(l)
+	else:
+		for l in _lights_off:
+			if is_instance_valid(l):
+				l.visible = true
+		_lights_off.clear()
 
 
 func _free_shaft() -> void:
