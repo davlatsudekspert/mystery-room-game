@@ -117,6 +117,8 @@ func _ready() -> void:
 	_build_input()
 	CrashGuard.detail("hud")
 	_build_hud()
+	_frame_panel() # with the HUD's own free area, now that it exists
+	get_viewport().size_changed.connect(_on_viewport_resized)
 	add_child(PerfGuard.new())
 	GameState.events.connect(_on_events)
 	visuals.apply_state(false)
@@ -217,6 +219,7 @@ func _build_models() -> void:
 	models["radiator_tap"] = radiator
 	_roots[radiator] = "radiator_tap"
 	_add_tap_area(radiator, Vector3(0.84, 0.7, 0.16), "radiator", "IA_radiator")
+	_add_panel_tap_areas()
 	var dust := DustMotes.create(Vector3(2.8, 1.5, 2.3), 140)
 	dust.position = Vector3(0, 1.6, 0)
 	add_child(dust)
@@ -293,7 +296,8 @@ func _build_shards() -> void:
 		_add_tap_area(node, Vector3(0.12, 0.12, 0.12), "", "Shard_" + id, false)
 
 
-func _add_tap_area(parent: Node3D, size: Vector3, hotspot: String, part: String, local: bool = true) -> void:
+func _add_tap_area(parent: Node3D, size: Vector3, hotspot: String, part: String, local: bool = true,
+		offset: Vector3 = Vector3.ZERO) -> void:
 	var body := StaticBody3D.new()
 	var cs := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -305,6 +309,21 @@ func _add_tap_area(parent: Node3D, size: Vector3, hotspot: String, part: String,
 	parent.add_child(body)
 	if not local:
 		body.position = Vector3.ZERO
+	body.position += offset
+
+
+## Panel 7's switches are 3 cm levers 11 cm apart and the breaker a 6 cm fork: from the close-up that shows the
+## whole plate they are 1–2 mm wide on a phone. Each gets a tap area the width of its bay (the bakelite base, the
+## numeral under it and the trace above) and the breaker one that covers its housing and the 0 / 1 plate, so a
+## finger anywhere on a switch's bay works that switch (model space: x across the plate, y up, z out of it).
+func _add_panel_tap_areas() -> void:
+	var panel: Node3D = models.get("panel7")
+	if panel == null:
+		return
+	for i in 5:
+		var x := [-0.22, -0.11, 0.0, 0.11, 0.22][i] as float
+		_add_tap_area(panel, Vector3(0.105, 0.17, 0.07), "panel", "IA_switch_%d" % i, false, Vector3(x, -0.085, 0.05))
+	_add_tap_area(panel, Vector3(0.20, 0.17, 0.11), "panel", "IA_main_lever", false, Vector3(0.0, -0.275, 0.06))
 
 
 func _build_lights() -> void:
@@ -497,6 +516,26 @@ func _frame_safe() -> void:
 		cam.add_view("safe", Vector3(2.26, 1.3, 2.0), Vector3(2.26, 1.26, 2.5), 34.0)
 
 
+## Panel 7's close-up shows the whole plate: the four icons above the lamps, the traces, the switches with their
+## numerals, the main lever with its handle and the 0 / 1 plate. The plate is 0.60 × 0.80 m on the east wall; the
+## camera stands square to it at the distance where all of it fits in the area the HUD leaves clear (below the
+## title row, above the prompt, right of the inventory column), so a 20:9 phone with large text and a 4:3 tablet
+## both see it whole. At 0.88 m the icons were cut off at the top and the handle sat under the HUD.
+const PANEL_PLATE_CENTRE := Vector3(2.966, 1.45, -1.3) # the plate's front face
+const PANEL_HALF := Vector2(0.33, 0.42) # half-size framed: the plate plus the cabinet's bezels
+
+func _frame_panel() -> void:
+	var f: Dictionary = cam.fit_rect(PANEL_PLATE_CENTRE, Vector3.LEFT, PANEL_HALF.x, PANEL_HALF.y, 54.0,
+		cam.hud_free_rect(hud), 0.04)
+	cam.add_view("panel", f["pos"], f["target"], 54.0)
+
+
+## The screen's shape or the HUD's size changed (rotation, text size): close-ups fitted to the free area follow.
+func _on_viewport_resized() -> void:
+	_frame_panel()
+	_reframe("panel")
+
+
 ## A close-up whose framing depends on the state was just re-aimed: glide to the new framing if the player is in it.
 func _reframe(view_id: String) -> void:
 	if cam.current() == view_id:
@@ -553,9 +592,7 @@ func _build_views() -> void:
 	V.call("radio_hatch", Vector3(0.55, 1.54, 1.92), Vector3(0.54, 1.12, 2.23), 38.0)
 	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
 	_frame_safe()
-	# Far enough back that the lamps (y 1.75) clear the title plates and the main lever's handle (y 1.10) clears the
-	# inventory bar; at 0.88 m the handle sat under the bar and a finger could not reach it.
-	V.call("panel", Vector3(1.85, 1.46, -1.3), Vector3(3.0, 1.46, -1.3), 54.0)
+	_frame_panel()
 	V.call("coat", Vector3(1.5, 1.38, -1.7), Vector3(2.12, 1.07, -2.08), 52.0) # west of Panel 7's open door
 	V.call("mirror_a", Vector3(0.95, 1.5, 1.05), Vector3(1.6, 1.15, 1.6), 46.0)
 	V.call("mirror_b", Vector3(0.85, 1.45, 0.4), Vector3(1.6, 1.15, 0.12), 46.0)

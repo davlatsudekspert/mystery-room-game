@@ -311,6 +311,44 @@ def chalkboard() -> None:
     img.convert("RGB").save(os.path.join(OUT, "chalkboard.jpg"), quality=90)
 
 
+PANEL_ICONS = ["lock", "light", "array", "vent"]  # the lamps' order on Panel 7 (LAMP_TARGET: on, on, on, off)
+
+
+def draw_panel_icon(d: ImageDraw.ImageDraw, j: int, ix: float, iy: float, s: float, col) -> None:
+    """Panel 7's lamp icon j (0 padlock = LOCK, 1 bulb = LIGHT, 2 crystal = ARRAY, 3 fan = VENT) centred at
+    (ix, iy) in a box of half-size s. The same art is printed on the plate and shown in Leyla's notebook."""
+    k = s / 24.0  # the icons were drawn at half-size 24
+    lw = max(2, round(5 * k))
+    if j == 0:  # padlock: body and shackle
+        d.rounded_rectangle([ix - 18 * k, iy - 4 * k, ix + 18 * k, iy + 22 * k], radius=4 * k, fill=col)
+        d.arc([ix - 13 * k, iy - 24 * k, ix + 13 * k, iy + 6 * k], 180, 360, fill=col, width=max(2, round(6 * k)))
+    elif j == 1:  # bulb: glass and cap
+        d.ellipse([ix - 16 * k, iy - 22 * k, ix + 16 * k, iy + 10 * k], outline=col, width=lw)
+        d.rectangle([ix - 8 * k, iy + 10 * k, ix + 8 * k, iy + 22 * k], fill=col)
+    elif j == 2:  # crystal: a facetted diamond
+        pts = [(ix, iy - 24 * k), (ix + 16 * k, iy - 6 * k), (ix, iy + 24 * k), (ix - 16 * k, iy - 6 * k)]
+        d.line(pts + [pts[0]], fill=col, width=lw, joint="curve")
+        for q in pts:  # round the corners (the apex shows a notch otherwise)
+            d.ellipse([q[0] - lw / 2, q[1] - lw / 2, q[0] + lw / 2, q[1] + lw / 2], fill=col)
+        d.line([pts[1], pts[3]], fill=col, width=max(2, round(3 * k)))
+    else:  # fan: a ring with three blades
+        d.ellipse([ix - 22 * k, iy - 22 * k, ix + 22 * k, iy + 22 * k], outline=col, width=max(2, round(4 * k)))
+        for a in (0, 120, 240):
+            ra = math.radians(a)
+            d.ellipse([ix + 11 * k * math.cos(ra) - 9 * k, iy + 11 * k * math.sin(ra) - 9 * k,
+                       ix + 11 * k * math.cos(ra) + 9 * k, iy + 11 * k * math.sin(ra) + 9 * k], fill=col)
+
+
+def make_panel_icons() -> None:
+    """Panel 7's four lamp icons as white 256 px icons (tinted by the UI), for the notebook's page about the panel."""
+    for j, name in enumerate(PANEL_ICONS):
+        size = 256
+        im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        draw_panel_icon(d, j, size / 2, size / 2, size * 0.40, (255, 255, 255, 255))
+        im.save(os.path.join(GLYPH_OUT, f"panel_{name}.png"))
+
+
 def panel_diagram() -> None:
     """Panel 7 back plate (0.60 x 0.80 m -> 900x1200 px). Coordinates in plate metres, origin centre."""
     W, H = 900, 1200
@@ -342,27 +380,13 @@ def panel_diagram() -> None:
             d.line([P(lamp_x[j], bus), P(lamp_x[j], lamp_y - 0.035)], fill=copper, width=7)
             q = P(lamp_x[j], bus)
             d.ellipse([q[0] - 10, q[1] - 10, q[0] + 10, q[1] + 10], fill=copper)
-    # lamp bezels + icons (padlock, bulb, crystal, fan)
+    # lamp bezels + icons (padlock, bulb, crystal, fan) in the band between the bezels and the plate's top edge:
+    # half-size 41 px = 2.7 cm, so they read from the close-up on a phone (they were 1.6 cm)
     for j, x in enumerate(lamp_x):
         q = P(x, lamp_y)
         d.ellipse([q[0] - 40, q[1] - 40, q[0] + 40, q[1] + 40], outline=dark, width=6)
-        ix, iy = P(x, lamp_y + 0.075)
-        if j == 0:  # padlock
-            d.rounded_rectangle([ix - 18, iy - 4, ix + 18, iy + 22], radius=4, fill=dark)
-            d.arc([ix - 13, iy - 24, ix + 13, iy + 6], 180, 360, fill=dark, width=6)
-        elif j == 1:  # bulb
-            d.ellipse([ix - 16, iy - 22, ix + 16, iy + 10], outline=dark, width=5)
-            d.rectangle([ix - 8, iy + 10, ix + 8, iy + 22], fill=dark)
-        elif j == 2:  # crystal
-            pts = [(ix, iy - 24), (ix + 16, iy - 6), (ix, iy + 24), (ix - 16, iy - 6)]
-            d.line(pts + [pts[0]], fill=dark, width=5)
-            d.line([pts[1], pts[3]], fill=dark, width=3)
-        else:  # fan
-            d.ellipse([ix - 22, iy - 22, ix + 22, iy + 22], outline=dark, width=4)
-            for a in (0, 120, 240):
-                ra = math.radians(a)
-                d.ellipse([ix + 11 * math.cos(ra) - 9, iy + 11 * math.sin(ra) - 9,
-                           ix + 11 * math.cos(ra) + 9, iy + 11 * math.sin(ra) + 9], fill=dark)
+        ix, iy = P(x, lamp_y + 0.068)
+        draw_panel_icon(d, j, ix, iy, 41, dark)
     # switch plates + roman numerals
     f = font(F_SERIF_B, 40)
     for i, x in enumerate(sw_x):
@@ -585,6 +609,7 @@ if __name__ == "__main__":
     poster()
     chalkboard()
     panel_diagram()
+    make_panel_icons()
     vial_labels()
     childs_drawing()
     window_night()

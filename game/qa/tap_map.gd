@@ -13,6 +13,9 @@ extends Node
 ##        [--screen=phone61|phone20|phone55|tablet10|WxH@dpi[:l,t,r,b]] (render as that phone: its aspect, dpi and
 ##        safe insets drive the HUD's size and the mm checks; the window takes the same aspect)
 ##        [--text-scale=1.15] (the player's Settings → Text size)
+##        [--doc=poster] (also shoot that reader document, e.g. poster, chalkboard, evidence: <out>/doc_poster.png)
+##        [--cam=name:x,y,z:tx,ty,tz:fov] (replace that view's camera, e.g. to shoot the old framing as "before")
+##        [--notebook=4] (also shoot Leyla's notebook, page 4, as a player reads it: <out>/notebook_p4.png)
 ##        [--hud-check] (every control in the view — IA_*, Item_*, Shard_*, Echo_* — must have its tap point on
 ##        screen, clear of the HUD's input-blocking controls and at least EDGE_MM from the screen edge; a control
 ##        under a banner that only covers it is a warning. The message and prompt banners are shown while it
@@ -36,6 +39,9 @@ var out_dir := "/tmp/tap_map"
 var room: Node3D
 var lines: Array[String] = []
 var hud_check := false
+var notebook_page := 0
+var doc_name := ""
+var cam_overrides: Array[String] = []
 var hud_controls := 0
 var hud_failures := 0
 var hud_warnings := 0
@@ -82,6 +88,12 @@ func _run() -> void:
 			Settings.values["text_scale"] = clampf(float(a.substr(13)), 0.9, 1.3)
 		elif a == "--hud-check":
 			hud_check = true
+		elif a.begins_with("--doc="):
+			doc_name = a.substr(6)
+		elif a.begins_with("--cam="):
+			cam_overrides.append(a.substr(6))
+		elif a.begins_with("--notebook="):
+			notebook_page = int(a.substr(11))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if _screen_name != "":
 		await _apply_screen(_screen_name)
@@ -111,6 +123,11 @@ func _run() -> void:
 	await _settle(1.5)
 	var cam: RoomCamera = room.get("cam")
 	var perf_only := OS.get_cmdline_user_args().has("--perf")
+	for o in cam_overrides: # name:x,y,z:tx,ty,tz:fov
+		var f := o.split(":")
+		var p := f[1].split(",")
+		var t := f[2].split(",")
+		cam.add_view(f[0], Vector3(float(p[0]), float(p[1]), float(p[2])), Vector3(float(t[0]), float(t[1]), float(t[2])), float(f[3]))
 	for v in views:
 		if room.has_method("prepare_view"):
 			room.call("prepare_view", v)
@@ -129,7 +146,19 @@ func _run() -> void:
 			if OS.get_cmdline_user_args().has("--breakdown"):
 				await _breakdown(v)
 			continue
+		print("tap_map: view %s" % v) # progress: tools/qa_run.sh kills a run whose log stops growing
 		await _map(v)
+	if notebook_page > 0 and room.get("hud") != null:
+		GameState.logic.callv("take", ["notebook"]) if GameState.logic.can_take("notebook") else null
+		(room.get("hud") as CanvasLayer).call("_show_notebook", notebook_page - 1)
+		await _settle(0.8)
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("%s/notebook_p%d.png" % [out_dir, notebook_page])
+	if doc_name != "" and room.get("hud") != null:
+		(room.get("hud") as CanvasLayer).call("show_document", doc_name)
+		await _settle(0.8)
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("%s/doc_%s.png" % [out_dir, doc_name])
 	var qa_exit := 0
 	if hud_check:
 		lines.append("hud-check%s: %d controls in %d views, %d failures, %d banner warnings" % [
@@ -363,6 +392,12 @@ func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
 	var blocked := _blocked_rects(hud)
 	var covers := _banner_rects(hud)
 	var edge_px := EDGE_MM / UITheme.mm_per_px()
+	var named: PackedStringArray = []
+	for b in blocked:
+		named.append("%s %s" % [b["name"], _fmt_rect(b["rect"])])
+	for c in covers:
+		named.append("%s %s" % [c["name"], _fmt_rect(c["rect"])])
+	lines.append("HUD zones[%s]: %s" % [view_id, "; ".join(named)])
 	var zones: Array[Dictionary] = []
 	for b in blocked:
 		zones.append({"rect": b["rect"], "kind": "blocked", "name": b["name"]})
@@ -404,6 +439,10 @@ func _hud_check(view_id: String, marks: Array[Dictionary]) -> Array[Dictionary]:
 				lines.append("HUD[%s]: %s — covered by a banner (%s)" % [view_id, part, c["name"]])
 				break
 	return zones
+
+
+static func _fmt_rect(r: Rect2) -> String:
+	return "[%d,%d %dx%d]" % [int(r.position.x), int(r.position.y), int(r.size.x), int(r.size.y)]
 
 
 func _hud_restore() -> void:

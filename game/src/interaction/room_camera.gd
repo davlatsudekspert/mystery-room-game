@@ -68,6 +68,58 @@ func go(id: String, instant: bool = false) -> void:
 	view_changed.emit(id)
 
 
+## A close-up that frames a wall-mounted rectangle whole, whatever the screen's shape and HUD size: the camera
+## stands square to the wall at the distance where the rectangle (centre `c`, facing `n` into the room, half-size
+## `hw` × `hh` metres, `margin` of its size around it) fits inside `free` (the viewport-px area the HUD leaves
+## clear, see hud_free_rect), and is shifted along the wall so the rectangle sits in the middle of that area.
+## The vertical fov is kept (Camera3D KEEP_HEIGHT), so a wide phone gains width and a 4:3 tablet loses it.
+## -> {"pos": Vector3, "target": Vector3}
+func fit_rect(c: Vector3, n: Vector3, hw: float, hh: float, view_fov: float, free: Rect2, margin: float = 0.05) -> Dictionary:
+	var vp := get_viewport().get_visible_rect()
+	if free.size.x < 1.0 or free.size.y < 1.0:
+		free = vp
+	var aspect := vp.size.x / vp.size.y
+	var t := tan(deg_to_rad(view_fov) * 0.5) # visible half-height per metre of distance
+	var fh := free.size.y / vp.size.y # the free area as a fraction of the screen
+	var fw := free.size.x / vp.size.x
+	var d := maxf(hh * (1.0 + margin) / (t * fh), hw * (1.0 + margin) / (t * aspect * fw))
+	# the free area's centre, as a fraction (-1..1) of the half-screen from the middle; the camera moves the other
+	# way along the wall so the rectangle lands there
+	var cx := (free.get_center().x - vp.position.x) / vp.size.x * 2.0 - 1.0
+	var cy := (free.get_center().y - vp.position.y) / vp.size.y * 2.0 - 1.0
+	var forward := -n.normalized()
+	var right := forward.cross(Vector3.UP).normalized()
+	var shift := right * (-cx * d * t * aspect) + Vector3.UP * (cy * d * t)
+	var pos := c + n.normalized() * d + shift
+	return {"pos": pos, "target": pos + forward * d}
+
+
+## The part of the screen the HUD leaves clear for the scene, in viewport px: inside the safe area, right of the
+## inventory column, left of the corner buttons, below the title row and above one banner at the bottom (the
+## prompt that is up while the player works a mechanism with an item in hand). HUD.free_rect() when the HUD
+## provides it; otherwise UITheme's HUD geometry, the same numbers hud.gd lays out with.
+func hud_free_rect(hud: Node = null) -> Rect2:
+	var vp := get_viewport().get_visible_rect()
+	if hud != null and hud.has_method("free_rect"):
+		return hud.call("free_rect")
+	var safe := UITheme.safe_margins()
+	var pad := UITheme.HUD_PAD
+	var gap := 12.0
+	# the inventory: a bag button in the bottom-left corner (the column of corner buttons), or a column of slots
+	var bag := hud != null and hud.has_method("set_bag_open")
+	var left := vp.position.x + safe.x + pad + (UITheme.target(UITheme.HUD_BTN_PX) if bag else UITheme.hud_column_width()) + gap
+	var right := vp.end.x - (safe.z + pad + UITheme.target(UITheme.HUD_BTN_PX) + gap)
+	var top := vp.position.y + safe.y + pad + UITheme.target(UITheme.HUD_BACK_PX) + gap
+	var bottom := vp.end.y - (safe.w + pad + banner_height() + gap)
+	return Rect2(left, top, maxf(1.0, right - left), maxf(1.0, bottom - top))
+
+
+## Height of a one-line HUD banner (a prompt or a message) at the current text size (UIBanner.fit's numbers).
+static func banner_height() -> float:
+	var k := UIOrnament.scale_k()
+	return UITheme.ui_font().get_height(UITheme.size(28)) + 2.0 + 2.0 * UIBanner.PAD_Y * k
+
+
 ## Re-apply the current view after its definition changed (add_view on the same id).
 func refresh() -> void:
 	var id := current()
