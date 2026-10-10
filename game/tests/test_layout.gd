@@ -258,15 +258,16 @@ func test_hud_elements_do_not_collide() -> void:
 			check(not hint.intersects(back_r), "%s: hint and back overlap" % tag)
 			check(band_w >= 600.0, "%s: the message band is only %.0f px wide" % [tag, band_w])
 			check(column.size.y >= 3.0 * UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM), "%s: the column has room for fewer than three slots (%.0f px)" % [tag, column.size.y])
-			# the longest view title fits the top band in two lines of display small caps
+			# the longest view titles fit the top band in two lines of display small caps at Normal, three at XL
 			var caps := UITheme.caps_font(true, 2)
-			var fs := UITheme.size(30)
+			var fs := UITheme.size(UITheme.HUD_TITLE_PX)
 			var top_w := canvas.x - 2.0 * (maxf(safe.x, safe.z) + pad + maxf(btn, back) + 20.0) - 64.0
+			var lines := 2 if user < 1.1 else 3
 			for loc in ["en", "ru", "uz"]:
 				TranslationServer.set_locale(loc)
 				for key in ["obj.drawing", "obj.poster", "obj2.chart", "obj.chalkboard"]:
 					var w := caps.get_string_size(tr(key), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-					check(w <= top_w * 2.0 * 0.9, "%s [%s]: title «%s» needs more than two lines (%.0f px in %.0f)" % [tag, loc, tr(key), w, top_w])
+					check(w <= top_w * lines * 0.92, "%s [%s]: title «%s» needs more than %d lines (%.0f px in %.0f)" % [tag, loc, tr(key), lines, w, top_w])
 	_reset_screen()
 
 

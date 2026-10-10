@@ -165,6 +165,7 @@ static func panel_width(design_w: float) -> float:
 const HUD_PAD := 16.0
 const HUD_BACK_PX := 104.0
 const HUD_BTN_PX := 92.0
+const HUD_TITLE_PX := 26 # the view title's design size (display small caps)
 const HUD_SLOT_PX := 112.0
 const HUD_COL_GAP := 8.0 # between the inventory slots and their vertical rule
 const HUD_RULE_W := 14.0

@@ -104,15 +104,15 @@ func _build() -> void:
 	_root.add_child(_pause_btn)
 	_pause_btn.pressed.connect(show_pause)
 
-	_top_plate = _plate(30, 26, UITheme.CREAM)
+	_top_plate = _plate(UITheme.HUD_TITLE_PX, 26, UITheme.CREAM) # small caps read large: body size keeps long names to two lines
 	_top_caption = _top_plate.title_label
-	_cap_plate = _plate(30, 26, UITheme.CREAM) # subtitles are reading text: body size
+	_cap_plate = _plate(28, 26, UITheme.CREAM) # subtitles are reading text: body size
 	_caption_line = _cap_plate.subtitle_label
 	_cap_plate.modulate.a = 0.0
-	_msg_plate = _plate(30, 28, UITheme.CREAM)
+	_msg_plate = _plate(28, 28, UITheme.CREAM)
 	_message = _msg_plate.subtitle_label
 	_msg_plate.modulate.a = 0.0
-	_prompt_plate = _plate(30, 26, UITheme.BRASS_HI)
+	_prompt_plate = _plate(28, 26, UITheme.BRASS_HI)
 	_prompt = _prompt_plate.subtitle_label
 
 	# the inventory column: a scrolling stack of slots, a vertical rule with arrow tips, the actions flyout
