@@ -330,7 +330,7 @@ def grime():
     on("grime_top", "N", 6.90, 2.52, 1.7, 0.85, flip=True)
     on("baseboard", "N", 5.30, 0.40, 1.7, 0.85)
     on("baseboard", "N", 6.90, 0.40, 1.7, 0.85, flip=True)
-    on("damp_a", "N", 7.05, 2.02, 0.95, 0.95, 20.0)
+    on("damp_a", "N", 6.85, 2.02, 0.80, 0.80, 20.0)
     on("streaks_a", "N", 5.95, 1.50, 0.80, 0.80, 0.0, 0.0045)
     on("rust_a", "N", WALL_W + 0.06, 1.56, 0.34, 0.34, 0.0, 0.005)      # under the switch box
     on("tiles_a", "N", snap_t(5.40), snap_t(0.90, 0.0), 0.60, 0.60)
@@ -340,7 +340,7 @@ def grime():
     on("grime_top", "W", -1.75, 2.50, 1.7, 0.85, flip=True)
     on("baseboard", "W", -3.10, 0.40, 1.7, 0.85, flip=True)
     on("baseboard", "W", -1.75, 0.40, 1.7, 0.85)
-    on("damp_b", "W", -3.62, 1.78, 0.80, 0.80, -10.0)
+    on("damp_b", "W", -3.45, 1.78, 0.80, 0.80, -10.0)
     on("streaks_b", "W", -1.40, 1.30, 0.80, 0.80)
     on("tiles_b", "W", snap_t(-1.60), snap_t(0.45, 0.0), 0.60, 0.60)
     on("rust_b", "W", -3.44, 1.88, 0.40, 0.40, 0.0, 0.005)               # under the flanged joint
@@ -349,7 +349,7 @@ def grime():
     # ---- south partition (cream steel)
     on("grime_top", "S", 5.0, 2.52, 1.7, 0.85)
     on("baseboard", "S", 5.0, 0.40, 1.7, 0.85)
-    on("damp_a", "S", 4.85, 2.20, 0.8, 0.8, 200.0)
+    on("damp_a", "S", 5.10, 2.20, 0.8, 0.8, 200.0)
     on("streaks_a", "S", 5.45, 1.30, 0.7, 0.7)
     on("rust_a", "S", 5.45, 2.55, 0.34, 0.34, 0.0, 0.005)
     on("baseboard", "S", 7.0, 0.40, 1.7, 0.85)
@@ -414,6 +414,7 @@ def build():
     dec += grime()
     X.clip_quads(dec, (WALL_W + 0.002, 0.0, WALL_N + 0.002), (WALL_E - 0.002, 2.9, WALL_S - 0.002))
     objs = wood + steel + leather + paper + brass + glass + flame + wool + paint + cord + crimson + dec
+    X.report_outside(objs, (WALL_W, 0.0, WALL_N), (WALL_E, 2.9, WALL_S))
     body = K.part(NAME, objs, pivot=(0.0, 0.0, 0.0))
     lx, ly, lz = LAMP
     light = K.empty("camp_lamp_flame", (lx, ly + FLAME_Y, lz))

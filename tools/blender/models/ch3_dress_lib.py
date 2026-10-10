@@ -138,6 +138,21 @@ def clip_quads(objs, lo, hi, eps=1e-4):
         me.update()
 
 
+def report_outside(objs, lo, hi, tol=0.012):
+    """Print every object that leaves the box lo..hi (G-frame), so props never poke through a wall."""
+    n = 0
+    for o in objs:
+        if o is None or o.type != "MESH":
+            continue
+        pts = [o.matrix_world @ v.co for v in o.data.vertices]
+        a = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+        b = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+        if any(a[i] < lo[i] - tol or b[i] > hi[i] + tol for i in range(3)):
+            n += 1
+            print(f"{TAG} OUTSIDE {o.name}: {tuple(round(c, 3) for c in a)} .. {tuple(round(c, 3) for c in b)}")
+    return n
+
+
 def snap(v: float, step: float = TILE, phase: float = 0.0) -> float:
     return round((v - phase) / step) * step + phase
 
