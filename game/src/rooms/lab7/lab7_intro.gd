@@ -32,6 +32,13 @@ var _flicker_bases: Dictionary = {}
 var _glint: FirstGlint
 
 
+## Seconds from the first frame to the first prompt when nobody taps (QA and the 20 s budget).
+static func duration() -> float:
+	var card1 := CARD_IN_S + CARD1_HOLD_S + CARD_OUT_S + 0.1
+	var card2 := CARD_IN_S + CARD2_HOLD_S + CARD_OUT_S + 0.1
+	return card1 + 0.3 + card2 + 1.7 + 0.5 + 0.9 + 1.0 + 2.1
+
+
 ## Starts the opening on a fresh Chapter 1 (called by the room once everything is built).
 static func start(r: Node3D) -> Lab7Intro:
 	var i := Lab7Intro.new()
