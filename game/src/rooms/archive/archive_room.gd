@@ -80,7 +80,9 @@ const CAPTION := {
 	"projector": "obj2.projector", "slides": "obj2.slides", "slide_projector": "obj2.slide_projector",
 	"lens_case": "obj2.booth", "screen": "obj2.screen", "socket": "obj2.screen", "vault": "obj2.vault",
 	"vault_ports": "obj2.vault", "vault_inside": "obj2.vault_open", "shutter": "obj2.shutter",
-	"vault_reel": "obj2.vault_open", "vault_cradle": "obj2.vault_open",
+	# the finale's close-ups carry no title: on a phone with large text the title plate covered the top of the key
+	# cradle (tap_map --hud-check --screen=phone61), and the reel needs the room under its caption
+	"vault_reel": "", "vault_cradle": "",
 }
 ## Views that are inside the projection booth (the booth interior is only drawn while one is active).
 const CAT_VIEWS := ["catalogue", "cat_drawer", "cat_section"]

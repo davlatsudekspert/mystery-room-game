@@ -135,7 +135,7 @@ Estimated length: 30–40 minutes. Free since 2026-10-10.
 ### Chapter 1
 `game/src/rooms/lab7/lab7_room.gd` (new functions at the end of the file, plus four call sites: `_ready`, `shelf_opened`, `beam_path` and `_play_ending`), `lab7_logic.gd` (`epilogue_keys` only), `tools/localization/strings_ch1.py`.
 - **The bookcase reveal is shown.** As the case swings:
-  - the darkroom's red safelight flares through the gap (0.7 → 2.6 → back);
+  - the darkroom's red safelight flares through the gap (0.7 → 4.2 → back, reaching 1.6 m further for a moment);
   - a breath of dust rolls out into the lab;
   - a low tone sounds and a caption reads: *"[A cold draught breathes out from behind the shelves]"*.
 - **Beyond the door, a corridor.** The door now opens onto a 9 m institute corridor: linoleum, green dado, plaster and three enamel pendants. At its far end are double doors under a lit enamel sign, **RECORDS ARCHIVE B** (it translates with the language), and an amber emergency lamp. As the door swings, the lamps flicker on one by one toward the sign: *"[Beyond the door, the corridor lamps wake one by one]"*. The lens choice is now made looking down a lit corridor that leads to Chapter 2. The corridor is built only when the door opens.

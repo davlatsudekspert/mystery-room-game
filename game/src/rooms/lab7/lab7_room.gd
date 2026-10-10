@@ -1589,9 +1589,12 @@ func _apply_brightness(key: String) -> void:
 func _stage_bookcase_reveal() -> void:
 	var red: OmniLight3D = lights["safelight"]
 	var base := red.light_energy
-	var tw := create_tween()
-	tw.tween_property(red, "light_energy", 2.6, 0.45)
-	tw.tween_property(red, "light_energy", maxf(base, 0.7), 1.6)
+	var reach := red.omni_range
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(red, "light_energy", 4.2, 0.45)
+	tw.tween_property(red, "omni_range", reach + 1.6, 0.45) # the red light reaches out into the lab for a moment
+	tw.chain().tween_property(red, "light_energy", maxf(base, 0.7), 1.8)
+	tw.tween_property(red, "omni_range", reach, 1.8)
 	var puff := DustMotes.create(Vector3(0.08, 0.9, 0.45), 90)
 	puff.one_shot = true
 	puff.explosiveness = 0.8
