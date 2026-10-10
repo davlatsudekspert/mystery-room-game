@@ -319,6 +319,8 @@ Prerequisites:
 ## 11. In-app product `full_game` and purchase testing (2026-10-10)
 **State.** The game's Play Billing code is ready and tested headless with a fake billing singleton (`docs/MONETIZATION.md`). Real payments stay off (`REAL_PAYMENTS_ENABLED = false`). Nothing was created in Play Console and no workflow was dispatched.
 
+**Owner progress (2026-10-10):** the payments profile was filled in on the existing developer-account profile (individual; public name "Yuldashali Abdurakhmonov", "Computer software", statement name "Y ABDURAKHMONOV"). The NBU USD bank account was added, and a bank statement was sent for verification. Google reports the result by e-mail within a few days. The profile is account-wide, so it also serves the other apps in this developer account. Still open: License testing, and the service account's "Manage in-app products" for MYSTERY ROOM only. Neither needs to wait for the bank check.
+
 **What blocks creating the product (verified only against a fake API; to be confirmed by a `play-iap.yml` dry run):**
 1. The service account has only **"Release apps to testing tracks"**. Creating or editing in-app products needs the app permission **"Manage in-app products"** (in some permission sets it sits under "Manage store presence").
 2. Play allows paid products only with a **payments (merchant) profile**.
