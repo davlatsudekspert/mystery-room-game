@@ -211,6 +211,23 @@ func test_box_renders_the_state_machine() -> void:
 	await _tree().process_frame
 
 
+func test_starting_with_the_lid_already_open_keeps_it_open() -> void:
+	var box := MenuBox.new()
+	await _add(box)
+	box.setup(0, 1)
+	box.logic.scramble(0)
+	box.touch(0)
+	box.touch(2)
+	box.advance(MenuBoxLogic.OPEN_S + 0.2)
+	check(float(box.get("_lid_deg")) > 69.0, "open")
+	box.begin_start(false)
+	for i in 30:
+		box.advance(1.0 / 60.0)
+		check(float(box.get("_lid_deg")) > 69.0, "the lid does not drop when New Game is pressed on an open box")
+	box.queue_free()
+	await _tree().process_frame
+
+
 func test_idle_life_runs_by_itself_but_not_with_reduce_motion() -> void:
 	var box := MenuBox.new()
 	await _add(box)

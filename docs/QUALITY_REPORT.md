@@ -80,3 +80,63 @@ The owner played Chapter 1 on an Android phone. Evidence: `tap_map --hud-check` 
 - The compressor diagram was unreadable.
 - A locker door blocked the floor hatch.
 - English words were baked into decals.
+
+## 2026-10-10 performance: HUD draw calls (all chapters)
+The in-game HUD cost about 60 draw calls in every 3D view (Chapter 3's `choir_s` was at 145 of 150, Chapter 4's hall plans about 90 scene calls). Method: `tap_map --perf --hud-breakdown` (new: the view with the HUD shown and hidden; the HUD with the 3D room hidden, so only the 2D canvas draws; the calls each HUD node adds when hidden in turn; every visible HUD node that breaks batching) and `--hud-states` (new: the HUD in the states a player meets). Screen: `--screen=phone61`, 2340x1080 at 400 dpi, text scale 2.54 (a 6.1" phone at Normal). Both columns come from the same scenes; the scene part (HUD hidden) is identical before and after (lab 103, bench 123, hall 147, booth 68, choir_s 89).
+
+### Totals per view
+| View | Before: view / HUD adds | After: view / HUD adds | HUD alone, 3D hidden (before → after) |
+|---|---|---|---|
+| Ch1 `lab` (room view, no Back) | 137 / 34 | 106 / 3 | 35 → 4 |
+| Ch1 `bench` (close-up, Back, title) | 180 / 57 | 130 / 7 | 58 → 8 |
+| Ch2 `hall` (room view, title, bag count) | 197 / 50 | 154 / 7 | 51 → 8 |
+| Ch2 `booth` | 128 / 60 | 76 / 8 | 61 → 9 |
+| Ch3 `choir_s` (`--until=case_open`) | 149 / 60 | 97 / 8 | 61 → 9 |
+
+The HUD adds 3 to 8 calls in a normal room view (budget 20; the "HUD alone" column also counts the one call an empty canvas has). `choir_s` in the `case_open` state is 97 of 150 (it was 149); the other `choir_s` states in `GAMEPLAY_QA.md` (worst case 145 with the old HUD) were not re-measured.
+
+### Which HUD nodes cost what (Ch1 `bench`, Ch2 `hall`, Ch3 `choir_s`; before → after)
+| Node | Before | After | Why it cost that |
+|---|---|---|---|
+| Back / Hint / Pause bezel button | 10 / 11 / 8 | 1 / 1 / 1 | disc (1), two antialiased rings (3 each), the icon's antialiased arcs and polylines (3 each) and polygons (1 each); only the plain lines batched |
+| Bag button | 15 (18 with items) | 1 (+1 for the count's digits) | the same, plus the count's two discs and the hand ring |
+| Title banner | 13 in the per-node pass (its label 2 to 6) | 3 (1 mesh, 2 for the label: outline and fill) | each gradient and rect of the band was a polygon of its own |
+
+### What breaks 2D batching in this engine build (Godot 4.7.2, measured in a scratch scene, 640x360, calls per primitive)
+| Drawn with | Calls |
+|---|---|
+| 5 `draw_rect` in a row / 5 `draw_line` of any width, antialiased or not / 5 `draw_texture_rect` of one texture | 1 in total |
+| `draw_circle`, `draw_colored_polygon`, `draw_polygon` with vertex colours | 1 each |
+| `draw_arc` or `draw_polyline` antialiased | 3 each (without antialiasing 1) |
+| rects alternating with circles (5 each) | 10 (every change of kind starts a call) |
+| a rect, a textured rect, a rect | 3 (a texture and the plain white pixel do not batch) |
+| two textures alternating (6 rects) | 6 |
+| a Label with an outline (`outline_size` 3 or 4) | 1 or 2, depending on whether outline and fill glyphs share an atlas page; the HUD's title label is 2 and 1 without its outline; a two-line message banner is 5 in all (1 mesh + the text) |
+| a `StyleBoxFlat` panel, rounded, bordered, with or without a shadow; `clip_contents` | 1 |
+| an item with `modulate.a = 0` | 0 (skipped, so a faded banner costs nothing: the HUD is 5 again after a message and a caption have faded) |
+| `draw_mesh` with vertex colours, two meshes | 2 |
+| a transparent SubViewport used as an atlas | not used: its pixels are stored premultiplied (a (1, .8, .3, .8) disc reads back (.8, .64, .24, .8)), so every item drawing it would need a premultiplied material |
+
+The HUD has no per-button ShaderMaterial, no `clip_contents` outside the tray's scroll box, no shadow `StyleBox` and no `Label` shadow; the cost was the number of separate primitives.
+
+### What changed
+- New `game/src/ui/ui_mesh.gd` (`UIMesh`): collects rects, gradients, polygons, discs, antialiased strokes (0.5 px alpha ramp, mitered joins, butt ends) and arcs into one vertex-coloured mesh drawn with one `draw_mesh()`.
+- `IconButton._draw`, `UIBanner._draw` and `UIOrnament._draw` build one `UIMesh` each instead of 7 to 18 `draw_*` calls. The count's digits and an item picture in hand stay separate draws (a font atlas and a texture cannot join a mesh): a bezel is 1 call, 2 with the count, 3 with a picture and a count.
+- Same shapes, sizes, colours and alpha ramps, same code paths (every `draw_*` call has its `UIMesh` equivalent next to it). Overlays (UV page, notebook, hints, pause) use the same buttons and ornaments; their layout is untouched and their draw calls were not measured.
+- QA: `tap_map --hud-breakdown`, `--hud-states`; `game/tests/test_ui_mesh.gd` (geometry of the mesh, every icon in every state, the banner's mesh stays inside the banner).
+
+### Visual check (unchanged look)
+`docs/previews/ui/perf/{en,ru,uz}_{normal,xl}_before_after.jpg`: 19.5:9 (the owner's iPhone, 2556x1179), Normal and Extra large; each sheet is the bare HUD, the busiest HUD (title, caption, message, prompt, meter, bag count, item in hand) and a found-item banner, before on the left and after on the right. Pixel difference before/after over the whole frame: mean 0.1 to 1.0 of 765 per pixel, 21 to 750 pixels (of 3.0 million) differ by more than 96; the difference map (x4) shows mostly 3D scene edges and a faint shading of the banner bands, nothing visible at full size.
+
+### HUD in the states a player meets (Ch1 `lab`, 5 items in the bag, `--hud-states`, 3D room hidden so the numbers include the empty canvas's 1 call; before → after)
+| State | Calls |
+|---|---|
+| as it is (3 corner buttons, count) | 38 → 5 |
+| + a two-line message | 49 → 10 |
+| the found-item banner instead | 58 → 13 |
+| + a caption | 67 → 16 |
+| + a prompt, item in hand | 72 → 21 |
+| + the bag open (tray with 5 slots and the item actions) | 116 → 33 |
+| after the message and caption have faded | 38 → 5 |
+
+Main gap: with the tray open each slot still costs 2 (its rounded frame, and its item icon, which is a texture of its own), so a player who leaves the bag open at room views has about 8 + 2 per item + 3 calls; the busiest state of `test_hud_layout` (everything at once) is 33. Merging the slot frames into one mesh layer and packing the item icons into one atlas would make the tray constant; not done, because it changes how slots take taps and `ItemIcons` renders each icon into its own texture. Font outlines cost one call per text line; they stay because the look must not change.

@@ -76,6 +76,7 @@ var _snd_latch := false
 var _snd_lid := false
 var _snd_close := false
 var _lid_deg := 0.0
+var _lid_start_deg := 0.0 # where the lid was when a start began (the box may already be open: it stays open)
 var _glow := 0.0
 var _flood := 0.0
 var _push := 0.0
@@ -283,6 +284,7 @@ func _on_event(ev: StringName, arg: int) -> void:
 		&"start":
 			_snd_latch = false
 			_snd_lid = false
+			_lid_start_deg = _lid_deg
 			if arg == 0:
 				for w in 3:
 					begin_spin(w, maxf(0.0, MenuBoxLogic.START_TIMES[w] - MenuBoxLogic.START_SPIN_S))
@@ -471,6 +473,7 @@ func _lid_angle() -> float:
 				var t := logic.start_t - MenuBoxLogic.START_LATCH_T
 				# the same swing as the touch opening, played faster
 				deg = _open_curve(t / (MenuBoxLogic.START_LID_S + 0.12), 0.155) if t > 0.0 else 0.0
+				deg = maxf(deg, _lid_start_deg)
 	return deg
 
 
@@ -571,7 +574,7 @@ func _update_glint() -> void:
 	p = p * p * (3.0 - 2.0 * p) * 0.35 + p * 0.65 # a slow, slightly eased sweep
 	_glint_mat.uv1_offset.x = lerpf(0.78, -0.78, p)
 	var fade := sin(PI * clampf(p, 0.0, 1.0))
-	_glint_mat.albedo_color.a = clampf(fade * 1.4, 0.0, 1.0)
+	_glint_mat.albedo_color.a = clampf(fade * 1.4, 0.0, 1.0) * 0.7
 	_glint.visible = true
 
 

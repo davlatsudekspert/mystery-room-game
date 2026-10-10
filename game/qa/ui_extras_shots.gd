@@ -58,7 +58,7 @@ func _lang() -> void:
 		await _settle(0.6)
 		if code == "en":
 			await _shot("lang_en_entrance")
-		await _settle(4.5) # the entrance is real time, and the software renderer is slow
+		await _settle(8.0) # the entrance is real time, and the software renderer is slow
 		picker.set("_t", 2.87) # the shimmer mid-sweep
 		await _shot("lang_%s" % code)
 		picker.queue_free()

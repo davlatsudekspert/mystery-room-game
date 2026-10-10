@@ -106,10 +106,11 @@ const VIEWS := {
 	# hud-check at 19.5:9 (2026-10-10): the tube bench's three places sat 0.4 to 3 mm from the bottom edge (its table
 	# top is below the eye line) and the master hammer 5 mm from the right edge. `rack` stands 0.9 m to the east and
 	# looks level, so the whole rack and the bench places are on screen (bench places x 1600..1900, y 790..820 of 2340 x 1080).
-	# `rack_close` stands 0.3 m further back (still centred on the rack): the hammer clears the right edge on a phone and the
-	# first and last slots and the left tube clear the edges of a 4:3 tablet (the slots sat 5.1 and 5.4 mm in).
+	# `rack_close` stands 0.45 m further back and 0.15 m higher, still centred on the rack: the hammer clears the right edge
+	# at 19.5:9, 20:9 and 16:9, the first and last slots and the left tube clear the edges of a 4:3 tablet (the slots sat 5.1
+	# and 5.4 mm in), and the bench's tubes stay below the frame (higher and wider, they peeked in at the bottom right).
 	"rack": [Vector3(-8.7, 1.8, -1.0), Vector3(-8.7, 1.62, -3.65), 58.0, false, "C", "", ""],
-	"rack_close": [Vector3(-9.6, 1.75, -2.1), Vector3(-9.6, 1.75, -3.8), 54.0, false, "C", "", ""],
+	"rack_close": [Vector3(-9.6, 1.9, -1.95), Vector3(-9.6, 1.9, -3.8), 54.0, false, "C", "", ""],
 	# hud-check at 4:3 (tablet10): the master hammer on the rack's right post, 0.83 m west of the bench's middle, sat 4.3 mm
 	# from the left edge. The camera stands 0.2 m further west; the three places (x -7.9 .. -6.8) stay in view.
 	"bench": [Vector3(-7.55, 1.6, -2.35), Vector3(-7.55, 0.9, -3.7), 50.0, false, "C", "", ""],
@@ -157,9 +158,9 @@ const VIEWS := {
 	"recorder": [Vector3(5.3, 1.38, -2.2), Vector3(5.0, 0.84, -1.68), 34.0, false, "K", "camp_open", "N"],
 	# cinematic only
 	"hall_start": [Vector3(-5.8, 2.2, 2.9), Vector3(-10.0, 2.4, -2.0), 64.0, false, "C", "", ""],
-	# hud-check, start state: the cam drum's third peg sat 2.8 mm from the right edge of the 19.5:9 frame. 0.1 m east and
-	# 10 degrees wider put the drum's pegs and the start lever inside the edges on a phone and a 4:3 tablet, in every state.
-	"grow": [Vector3(8.5, 1.3, -2.3), Vector3(8.5, 1.2, -3.1), 50.0, false, "N", "", ""],
+	# hud-check, start state: the cam drum's third peg sat 2.8 mm from the right edge of the 19.5:9 frame. 0.15 m east and
+	# 16 degrees wider put the drum's pegs and the start lever inside the edges (6+ mm) on a phone and a 4:3 tablet.
+	"grow": [Vector3(8.55, 1.3, -2.3), Vector3(8.55, 1.2, -3.1), 56.0, false, "N", "", ""],
 	"array_rise": [Vector3(0.0, 1.7, 3.6), Vector3(0.0, 2.6, -0.5), 66.0, false, "GS", "", ""],
 	"secret": [Vector3(0.6, 1.5, -1.8), Vector3(1.7, 0.9, -3.3), 52.0, false, "G", "", ""],
 }

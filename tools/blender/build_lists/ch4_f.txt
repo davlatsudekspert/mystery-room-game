@@ -1,0 +1,5 @@
+# Chapter 4 group F: Strand's booth (lib_ch4.py, lib_ch4_cde.py, lib_ch4_fgh.py). docs/models/ch4_f.md
+booth.py
+booth_desk.py
+strand_box4.py
+orrery.py
