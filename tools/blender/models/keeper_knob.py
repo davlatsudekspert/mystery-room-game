@@ -81,7 +81,7 @@ def stat_parts():
     br.append(on_panel(bez, 0.015))
     for k in range(4):
         a = math.radians(45.0 + 90.0 * k)
-        s = K.screw("bs", 0.007, (0.0, 0.0, 0.0), normal=(0, 0, 1), mat=BRASS)
+        s = K.rivet("bs", 0.007, (0.0, 0.0, 0.0), normal=(0, 0, 1), mat=BRASS, segs=8)
         s.data.transform(Matrix.Translation((0.139 * math.cos(a), 0.139 * math.sin(a), 0.0)))
         br.append(on_panel(s, 0.029))
     return st, br

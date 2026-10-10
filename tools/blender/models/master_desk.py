@@ -121,7 +121,7 @@ def brass_parts():
     out.append(on_slope(fr, BAY_S, BAY_X))
     for sx in (-1, 1):
         for sy in (-1, 1):
-            sc = K.screw("bsc", 0.008, (sx * 0.145, sy * 0.105, 0.016), normal=(0, 0, 1), mat=BRASS)
+            sc = K.rivet("bsc", 0.008, (sx * 0.145, sy * 0.105, 0.016), normal=(0, 0, 1), mat=BRASS, segs=8)
             out.append(on_slope(sc, BAY_S, BAY_X))
     # ---- the strip chart: frame and the minute numerals 0..7 in the lower border
     outer = L.rounded_rect(0.46, 0.56, 0.010, 3)
