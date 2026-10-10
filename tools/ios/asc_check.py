@@ -314,12 +314,15 @@ def report_crashes(asc: Asc, app_id: str, n: int) -> None:
 		out(f"- GET /v1/builds: HTTP {st}: {err(builds)}")
 	st, subs = asc.get(f"/v1/apps/{app_id}/betaFeedbackCrashSubmissions", {"limit": str(n), "sort": "-createdDate",
 		"fields[betaFeedbackCrashSubmissions]": "createdDate,deviceModel,osVersion,appUptimeInMilliseconds,buildBundleId,build,crashLog",
-		"include": "build", "fields[builds]": "version"})
+		"include": "build,crashLog", "fields[builds]": "version", "fields[betaCrashLogs]": "logText"})
 	out("### TestFlight crash reports shared by testers")
 	if st != 200:
 		out(f"- GET betaFeedbackCrashSubmissions: HTTP {st}: {err(subs)}")
 		return
 	versions = {b["id"]: b["attributes"].get("version") for b in subs.get("included") or [] if b.get("type") == "builds"}
+	# the logs come back included with the list when Apple has one; the per-submission endpoint is the fallback
+	logs = {b["id"]: (b.get("attributes") or {}).get("logText") or "" for b in subs.get("included") or []
+		if b.get("type") == "betaCrashLogs"}
 	data = subs.get("data") or []
 	if not data:
 		out("- none yet (the tester taps Share on the crash prompt, or sends feedback from the TestFlight app)")
@@ -328,11 +331,16 @@ def report_crashes(asc: Asc, app_id: str, n: int) -> None:
 		build = versions.get(((c.get("relationships") or {}).get("build") or {}).get("data", {}).get("id", ""), "?")
 		out(f"- {a.get('createdDate')}: build {build}, {a.get('deviceModel')}, iOS {a.get('osVersion')}, "
 			f"app up {int(a.get('appUptimeInMilliseconds') or 0) / 1000:.1f} s")
-		st2, log = asc.get(f"/v1/betaFeedbackCrashSubmissions/{c['id']}/crashLog", {"fields[betaCrashLogs]": "logText"})
-		if st2 != 200:
-			out(f"  crash log: HTTP {st2}: {err(log)}")
-			continue
-		for ln in crash_summary(((log.get("data") or {}).get("attributes") or {}).get("logText") or ""):
+		log_id = (((c.get("relationships") or {}).get("crashLog") or {}).get("data") or {}).get("id", "")
+		text = logs.get(log_id, "")
+		if not text:
+			st2, log = asc.get(f"/v1/betaFeedbackCrashSubmissions/{c['id']}/crashLog", {"fields[betaCrashLogs]": "logText"})
+			if st2 != 200:
+				out(f"  crash log: not available (HTTP {st2}; Apple attaches it only when the device sent one). "
+					"TestFlight app → the build → Crashes, or Xcode Organizer, shows it")
+				continue
+			text = ((log.get("data") or {}).get("attributes") or {}).get("logText") or ""
+		for ln in crash_summary(text):
 			out(ln)
 
 
