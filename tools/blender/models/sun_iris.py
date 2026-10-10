@@ -161,7 +161,7 @@ def qa(args, parts):
         C.lights(cam, fill=fill, ambient=ambient, bridge_lamp=False, core=False)
         K.light("sun_arc", "POINT", (-12.4, 1.8, 0.0), 60000.0, "FFF6E8", radius=0.2)
     if C.want(args, "1"):          # the iris view, closed: the stack reads from the overlaps
-        cam, tgt, fov = C.view("iris")
+        cam, tgt, fov = (-8.8, 1.8, 0.0), (-11.8, 1.8, 0.0), 40
         lit(cam, 60.0, 0.25)
         C.shoot(NAME, cam, tgt, fov, samples=S, res=RES)
     if C.want(args, "2"):          # the top of the stack lifted: leaves 3 and 6 slid out 0.95

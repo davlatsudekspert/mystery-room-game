@@ -134,22 +134,25 @@ func _build() -> void:
 		Premium.restore_purchases())
 	var privacy := UITheme.text_button("ui.privacy", UITheme.MUTED)
 	privacy.pressed.connect(func() -> void: OS.shell_open(PRIVACY_URL))
+	var about := UITheme.text_button("ui.about", UITheme.MUTED)
+	about.pressed.connect(func() -> void: CreditsPanel.open(self)) # credits, then Licenses
 	var close := UITheme.button("ui.close", 260)
 	close.pressed.connect(func() -> void: closed.emit())
 	# the three on one line when they fit (large text on a small phone: Restore and Privacy become the last rows
 	# of the body, so the footer stays one touch target tall and the body keeps its room)
 	var inner_w := custom_minimum_size.x - 48.0
 	var need := 2.0 * 28.0 # (the buttons are not in the tree yet, so their own minimum size has no theme)
-	for b: Button in [restore, privacy, close]:
+	for b: Button in [restore, privacy, about, close]:
 		need += maxf(b.custom_minimum_size.x, _button_text_width(b.text) + 2.0 * (30.0 if b == close else 18.0))
 	if need <= inner_w:
 		actions.add_child(restore)
 		actions.add_child(privacy)
+		actions.add_child(about)
 	else:
 		# as full-width rows after the last section; the words wrap, so a long translation never widens the body
 		var links := VBoxContainer.new()
 		links.add_theme_constant_override("separation", 0)
-		for b: Button in [restore, privacy]:
+		for b: Button in [restore, privacy, about]:
 			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			b.custom_minimum_size.x = 0
 			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL

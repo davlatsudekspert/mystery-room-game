@@ -62,6 +62,22 @@ func run() -> void:
 	check("Chapter 2 is free and released (Premium.can_play)", Premium.can_play("ch2"))
 	GameState.start_new("ch1")
 	var l1 := GameState.logic as Lab7Logic
+	var g1 := 0
+	while not l1.state["door_open"] and g1 < 400:
+		Lab7Solver.step(l1, "take_lens")
+		g1 += 1
+	check("Chapter 1 played to the open door, the lens not yet chosen", l1.state["door_open"] and not l1.is_complete())
+	GameState.save_now()
+	GameState.logic = null
+	GameState.continue_saved()
+	var lab0: Node = (load("res://src/rooms/lab7/lab7.tscn") as PackedScene).instantiate()
+	get_tree().root.add_child(lab0)
+	await _settle(2.0)
+	var choice0: Node = (lab0.get("hud") as Node).get("_overlay")
+	check("Continue at the open door offers the choice again", _button(choice0, "ui.take_lens") != null)
+	lab0.queue_free()
+	await _settle(0.3)
+	l1 = GameState.logic as Lab7Logic
 	check("Chapter 1 solved (seed %d, take the lens)" % GameState.variant_seed, Lab7Solver.solve(l1, "take_lens"))
 	GameState.save_now()
 	var choices: Dictionary = SaveSystem.load_profile().get("choices", {})
@@ -115,6 +131,22 @@ func run() -> void:
 	await _settle(1.5)
 	check("no intro after Continue; the hall view", (room.get("cam") as RoomCamera).current() == "hall" and not bool((room.get("hud") as Node).get("_busy")))
 	# ---------------------------------------------------------------- 3. Chapter 2 finished, Continue
+	room.queue_free()
+	await _settle(0.3)
+	g = 0
+	while not l2b.state["vault_open"] and g < 400:
+		ArchiveSolver.step(l2b, "strand_key")
+		g += 1
+	GameState.save_now()
+	GameState.logic = null
+	GameState.continue_saved()
+	l2b = GameState.logic as ArchiveLogic
+	check("Chapter 2 saved at the open vault, no key taken", l2b.state["vault_open"] and not l2b.is_complete())
+	room = (load("res://src/rooms/archive/archive.tscn") as PackedScene).instantiate() as ArchiveRoom
+	get_tree().root.add_child(room)
+	await _settle(2.0)
+	var choice2: Node = (room.get("hud") as Node).get("_overlay")
+	check("Continue at the open vault offers the two keys again", _button(choice2, "ui.take_strand_key") != null)
 	room.queue_free()
 	await _settle(0.3)
 	check("Chapter 2 solved to the end (Strand's key)", ArchiveSolver.solve(l2b, "strand_key"))

@@ -4,7 +4,7 @@ Contract: docs/models/ch4.md section 7 sun_lamp; results: docs/models/ch4_e.md.
 LOCAL FRAME: origin = the sphere centre; placed at (-13.0, 1.8, 0), yaw 0; the glass port faces +X (into the hall); the floor is at local
 y = -1.8. Nodes:
   sun_lamp   M_Brass_Aged + M_Steel_Dark + M_Glass  the static lamp: a riveted brass sphere Ø 2.4 (meridian and latitude straps, rivets) open
-             at the port, a dark steel lining, the brass port bezel with 16 bolts and the 1.5 Ø glass port (x = 0.93 .. 0.95), a steel cradle
+             at the port, a dark steel lining, the brass port bezel (r 0.70 .. 0.88, x 0.90 .. 1.02) with 16 bolts and the 1.5 Ø glass port (x = 0.93 .. 0.95), a steel cradle
              (two trunnions, four splayed legs, braces, foot plates), a steel carriage rail for rod_b, cooling fins round the back pole
              and a chimney
   rod_a      M_Steel_Dark + M_Brass_Aged  the fixed carbon rod (Ø 0.10, tapered tip) on the -X side with its brass cap and holder; ORIGIN = its tip
@@ -99,11 +99,11 @@ def shell_parts():
             X.bm_dome(bm, tuple(c), 0.017, 0.016, segs=5, normal=tuple(c.normalized()))
     brass.append(K.obj_from_bm("straps", bm, BRASS))
     # --- the port bezel (a turned ring), its bolts, the glass port
-    bez = [(0.75, 0.90), (0.98, 0.90), (0.98, 1.00), (0.93, 1.04), (0.70, 1.04), (0.70, 0.97), (0.75, 0.97), (0.75, 0.90)]
+    bez = [(0.75, 0.90), (0.88, 0.90), (0.88, 0.98), (0.84, 1.02), (0.70, 1.02), (0.70, 0.96), (0.75, 0.96), (0.75, 0.90)]
     brass.append(K.glathe("bezel", bez, base=(0, 0, 0), axis=(1, 0, 0), segments=48, mat=BRASS, smooth=50.0, cap_bottom=False, cap_top=False))
     for i in range(16):
         a = math.radians(22.5 * i)
-        brass.append(K.rivet("bolt", 0.022, (1.04, 0.84 * math.cos(a), 0.84 * math.sin(a)), normal=(1, 0, 0), mat=BRASS, segs=5))
+        brass.append(K.rivet("bolt", 0.02, (1.02, 0.78 * math.cos(a), 0.78 * math.sin(a)), normal=(1, 0, 0), mat=BRASS, segs=5))
     glass.append(K.gcyl("glass", 0.752, 0.925, 0.945, base=(0, 0, 0), axis=(1, 0, 0), segments=32, mat=GLASS))
     # --- cooling fins round the back pole and a chimney on top
     for i in range(6):

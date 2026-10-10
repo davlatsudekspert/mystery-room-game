@@ -10,7 +10,7 @@ ISLAND FRAME: placed at (0, 2.5, 0); origin = the island centre on the platform 
     drawer_face     M_Glass_Frosted  CHILD of IA_heart_drawer: the frosted pane 0.40 x 0.20 in the window (z 0.700 .. 0.708), origin (0, 0.68, 0.704);
                     the projected mark falls here (cradle.glb `mark_mount` is on it at (0, 0.68, 0.705))
     IA_heart_watch / IA_heart_letter / IA_heart_pawl   M_Velvet  CHILDREN of IA_heart_drawer: three velvet pads in the tray (watch Ø 0.13 at
-                    x = -0.185, letter 0.19 x 0.19 at x = 0, pawl 0.13 x 0.13 at x = +0.185; all at z = 0.44 closed, y top 0.545); origin =
+                    x = -0.185, letter 0.19 x 0.19 at x = 0, pawl 0.13 x 0.13 at x = +0.185; all at z = 0.36 closed (0.91 open), y top 0.545); origin =
                     the pad's top centre
     watch_mount / letter_mount / pawl_item_mount   empties, identity, CHILDREN of their pad, at the pad top centre (items lie flat, hero face +Y)
 
@@ -38,7 +38,7 @@ TRAY_TOP = 0.545                                  # the pad tops
 PADS = {"IA_heart_watch": ("watch_mount", -0.185, 0.13, 0.13, True),
         "IA_heart_letter": ("letter_mount", 0.0, 0.19, 0.19, False),
         "IA_heart_pawl": ("pawl_item_mount", 0.185, 0.13, 0.13, False)}
-PAD_Z = 0.44
+PAD_Z = 0.36                                      # closed; open = 0.91: behind the front panel by 0.25 .. 0.43, so a high camera sees the pads
 
 
 def housing_parts():
@@ -163,7 +163,7 @@ def qa(args, parts):
         K.pose_slide(parts["drawer"], (0.0, 0.0, 0.55))
         qb = K.V._qbox                                           # QA stand-in for the letter on its pad (the real size, 0.162 wide)
         qb("qa_letter", (-0.081, TRAY_TOP + 2.5, PAD_Z + 0.55 - 0.081), (0.081, TRAY_TOP + 2.504, PAD_Z + 0.55 + 0.081), "M_Paper")
-        cam, tgt, fov = (0.8, 4.3, 2.9), (0.0, 3.05, 1.0), 46
+        cam, tgt, fov = (0.5, 5.0, 2.7), (0.0, 3.1, 0.95), 46
         lit(cam, 40.0, 0.2)
         C.shoot(NAME + "_2", cam, tgt, fov, samples=S, res=RES)
 

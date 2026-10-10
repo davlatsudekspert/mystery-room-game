@@ -68,6 +68,13 @@ func shot(name: String) -> void:
 	print("shot %s" % p.get_file())
 
 
+func perf(label: String) -> void:
+	var rs := RenderingServer
+	print("perf[%s]: draw calls %d, primitives %d" % [label,
+		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
+		rs.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)])
+
+
 func check(label: String, ok: bool) -> void:
 	print(("✓ " if ok else "✗ ") + label)
 	if not ok:
@@ -118,6 +125,7 @@ func run() -> void:
 		w += 0.25
 	await _settle(1.4)
 	await shot("reel_41")
+	perf("vault_reel")
 	check("caption: the forty-one", caption_text() == tr("cap2.reel_41"))
 	await _settle(4.0)
 	await shot("reel_42_reveal")
@@ -144,6 +152,7 @@ func run() -> void:
 	check("cut to the lift shaft", cam().current() == "shaft")
 	await _settle(1.2)
 	await shot("shaft_lamps")
+	perf("shaft")
 	await _settle(2.6)
 	await shot("shaft_bottom")
 	await _settle(3.0)

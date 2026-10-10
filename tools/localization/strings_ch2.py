@@ -182,6 +182,11 @@ S = [
 ("tease2.unlock_line", "Chapters 3 and 4 finish the story. One purchase unlocks both; no ads, ever.", "Главы 3 и 4 завершают историю. Одна покупка открывает обе; никакой рекламы.", "3- va 4-boblar hikoyani yakunlaydi. Bitta xarid ikkalasini ochadi; hech qanday reklama yoʻq."),
 ("tease2.continue_story", "Continue the story", "Продолжить историю", "Hikoyani davom ettirish"),
 ("tease2.not_now", "Not now", "Не сейчас", "Hozir emas"),
+("msg.c2_crystal_dark", "The crystal stays clear: the screen is dark, nothing falls on it.", "Кристалл остаётся прозрачным: экран тёмный, на него ничего не падает.", "Billur tiniqligicha qoldi: ekran qorongʻi, unga hech narsa tushmayapti."),
+("msg.c2_crystal_blur", "The crystal stays clear: the picture on the screen is blurred.", "Кристалл остаётся прозрачным: изображение на экране размыто.", "Billur tiniqligicha qoldi: ekrandagi tasvir xira."),
+("msg.c2_crystal_mixed", "The crystal stays clear: two images overlap on the screen.", "Кристалл остаётся прозрачным: на экране накладываются два изображения.", "Billur tiniqligicha qoldi: ekranda ikki tasvir ustma-ust tushgan."),
+("msg.c2_crystal_waits", "The crystal stays clear. It waits for one sharp image, alone on the screen.", "Кристалл остаётся прозрачным. Он ждёт одно чёткое изображение — одно на всём экране.", "Billur tiniqligicha qoldi. U ekranda yolgʻiz turgan bitta aniq tasvirni kutyapti."),
+("msg.c2_mixed", "The slide's light and the film's light cross on the screen.", "Свет слайда и свет кинопроектора смешиваются на экране.", "Slayd nuri va kinoproyektor nuri ekranda aralashib ketdi."),
 ]
 
 H = {

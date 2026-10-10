@@ -254,7 +254,8 @@ def qa(args, parts):
     if C.want(args, "2"):          # gate 1: the lock face, 1.8 m outside, eye 3.9 (glass case hidden)
         X.vis("qa_glass_tower_", False)
         cam, tgt, fov = (0.40, 3.9, CHORD_Z + 1.8), (LOCK_X, 2.5 + LOCK_Y, CHORD_Z), 46
-        lit(cam, 60.0, 0.2)
+        lit(cam, 40.0, 0.2)
+        K.light("side", "POINT", (2.2, 4.6, CHORD_Z + 1.4), 260.0, "FFC98A", radius=0.1)          # a raking lamp: the relief reads
         C.shoot(NAME + "_2", cam, tgt, fov, samples=S, res=RES)
     if C.want(args, "3"):          # gate 2 open (-95 deg about +Y), seen from the north-west
         X.vis("qa_glass_tower_", True)

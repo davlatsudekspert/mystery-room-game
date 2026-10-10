@@ -8,7 +8,8 @@ extends Node
 
 var out_dir := "/tmp"
 var mode := "transition"
-var times: Array[float] = [0.0, 0.34, 0.74, 1.0, 1.2, 1.4, 1.6, 1.78]
+var times: Array[float] = [0.0, 0.30, 0.66, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9]
+var open_times: Array[float] = [0.0, 0.25, 0.6, 1.1, 2.0]
 var win := Vector2i(1170, 540)
 var lang := "en"
 var menu: Control
@@ -38,12 +39,19 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	get_window().size = win
 	await _settle(0.3)
-	var k := 2340.0 / win.x
 	Settings.set("emulate", {"size": Vector2i(2340, 1080), "dpi": 400.0, "safe": Rect2i(120, 0, 2220, 1080)})
 	SaveSystem.save_path = "user://qa_menu_box_save.json"
 	GameState.start_new("ch1") # a save: the menu offers Continue
 	TranslationServer.set_locale(lang)
-	Settings.values["reduce_motion"] = mode == "reduce"
+	for m in mode.split(",", false):
+		await _mode(m)
+	print("QA_DONE exit=0")
+	get_tree().quit(0)
+
+
+func _mode(m: String) -> void:
+	Settings.values["reduce_motion"] = m == "reduce"
+	gotos = 0
 	menu = (load("res://src/ui/main_menu.tscn") as PackedScene).instantiate()
 	get_tree().root.add_child(menu)
 	menu.set("goto_fn", func(path: String, fade: float) -> void:
@@ -52,16 +60,16 @@ func _run() -> void:
 	await _settle(1.6) # the entrance
 	bg = menu.get("_bg")
 	bg.manual = true
-	match mode:
+	match m:
 		"transition", "reduce":
 			await _transition()
 		"idle":
 			await _idle()
 		"play":
 			await _play()
-	print("gotos=%d" % gotos)
-	print("QA_DONE exit=0")
-	get_tree().quit(0)
+	print("mode %s: gotos=%d" % [m, gotos])
+	menu.queue_free()
+	await _settle(0.2)
 
 
 func _settle(seconds: float) -> void:
@@ -124,6 +132,13 @@ func _play() -> void:
 		await _shot("play_press_%d_%d" % [step, box.logic.presses])
 		_step(0.3)
 	print("phase after plan: %d wheels %s" % [box.logic.phase, box.logic.wheels])
-	for t in times:
-		_step(t if t > 0.0 else 0.001)
+	var prev := 0.0
+	for t in open_times:
+		_step(maxf(t - prev, 0.001))
+		prev = t
 		await _shot("play_open_%04d" % int(round(t * 1000.0)))
+	_step(1.0)
+	await _shot("play_hold")
+	box.tap_anywhere()
+	_step(0.4)
+	await _shot("play_closing")

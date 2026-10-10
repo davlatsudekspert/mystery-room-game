@@ -459,7 +459,7 @@ func _lid_angle() -> float:
 		MenuBoxLogic.Phase.CLOSED:
 			deg = _lift_angle()
 		MenuBoxLogic.Phase.OPENING:
-			deg = _open_curve(logic.phase_t / MenuBoxLogic.OPEN_S, 0.18, 0.7)
+			deg = _open_curve(logic.phase_t / MenuBoxLogic.OPEN_S, 0.18)
 		MenuBoxLogic.Phase.OPEN:
 			deg = LID_OPEN_DEG
 		MenuBoxLogic.Phase.CLOSING:
@@ -470,12 +470,13 @@ func _lid_angle() -> float:
 			else:
 				var t := logic.start_t - MenuBoxLogic.START_LATCH_T
 				# the same swing as the touch opening, played faster
-				deg = _open_curve(t / (MenuBoxLogic.START_LID_S + 0.12), 0.14, 0.55) if t > 0.0 else 0.0
+				deg = _open_curve(t / (MenuBoxLogic.START_LID_S + 0.12), 0.155) if t > 0.0 else 0.0
 	return deg
 
 
-## The lid pops off its latch (a degree or so), then swings up heavily and meets its stop with a small rebound.
-static func _open_curve(p: float, pop_at: float, c1: float) -> float:
+## The lid pops off its latch (a degree or so), then swings up with weight: slow to get going, quick through the
+## middle, and braking hard into its stop (smootherstep).
+static func _open_curve(p: float, pop_at: float) -> float:
 	if p <= 0.0:
 		return 0.0
 	if p >= 1.0:
@@ -484,9 +485,7 @@ static func _open_curve(p: float, pop_at: float, c1: float) -> float:
 	if p < pop_at:
 		return pop * sin(0.5 * PI * p / pop_at)
 	var q := (p - pop_at) / (1.0 - pop_at)
-	var c3 := c1 + 1.0
-	var u := q - 1.0
-	var e := 1.0 + c3 * u * u * u + c1 * u * u # ease out back: fast, then settles with a rebound
+	var e := q * q * q * (q * (6.0 * q - 15.0) + 10.0)
 	return pop + (LID_OPEN_DEG - pop) * e
 
 
@@ -531,8 +530,8 @@ func _update_glow(delta: float) -> void:
 	_push = 0.0
 	if logic.phase == MenuBoxLogic.Phase.STARTING and not _still:
 		var t := logic.start_t
-		_flood = smoothstep(1.15, 1.75, t)
-		_push = smoothstep(0.98, 1.78, t)
+		_flood = smoothstep(1.25, 1.85, t)
+		_push = smoothstep(0.9, 1.9, t)
 	# glint
 	if _glint != null:
 		if _glint_t >= 0.0 and not _still:
@@ -542,7 +541,7 @@ func _update_glow(delta: float) -> void:
 	if _glow > 0.002:
 		if _light == null and _safe < 3:
 			_light = OmniLight3D.new()
-			_light.light_color = Color("ffbf73")
+			_light.light_color = Color("ff9d4d")
 			_light.omni_range = 0.55
 			_light.omni_attenuation = 1.6
 			_light.light_specular = 0.4
@@ -550,16 +549,16 @@ func _update_glow(delta: float) -> void:
 			_light.position = Vector3(0.0, 0.1, 0.0)
 			model.add_child(_light)
 		if _light != null:
-			_light.light_energy = 2.4 * _glow + 3.0 * _flood
+			_light.light_energy = 1.5 * _glow + 2.0 * _flood
 	elif _light != null:
 		_light.queue_free()
 		_light = null
 	if _cell_mat != null:
-		_cell_mat.emission_energy_multiplier = 2.6 * _glow + 3.0 * _flood
+		_cell_mat.emission_energy_multiplier = 2.2 * _glow + 2.5 * _flood
 	if _card != null:
 		_card.visible = _glow > 0.002
 		if _card.visible:
-			_card_mat.albedo_color = Color(GLOW_COLOR, clampf(0.55 * _glow + 0.35 * _flood, 0.0, 1.0))
+			_card_mat.albedo_color = Color(GLOW_COLOR, clampf(0.42 * _glow + 0.3 * _flood, 0.0, 1.0))
 
 
 func _update_glint() -> void:

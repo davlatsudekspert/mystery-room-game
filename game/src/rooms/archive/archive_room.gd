@@ -138,7 +138,19 @@ func _ready() -> void:
 		hud.call("play_intro")
 	elif not capture_mode and logic.is_complete():
 		_resume_completed()
+	elif not capture_mode and logic.state["vault_open"]:
+		_resume_choice()
 	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
+
+
+## A save made after the vault opened but before a key was taken (the player quit during the finale): the reel and
+## the two keys again, and the choice, instead of an open vault with no way to end the chapter.
+func _resume_choice() -> void:
+	_ending = true
+	cam.go("vault_cradle", true)
+	visuals.vault_reel(true)
+	await get_tree().create_timer(0.6).timeout
+	hud.call("show_choice")
 
 
 ## A save made after the key was chosen (the player quit on the Chapter 3 card or the chapter card): open the vault
@@ -1061,6 +1073,25 @@ func _on_events(ev: Array[String]) -> void:
 	hud.call("set_caption", view_caption(cam.current()))
 	if film:
 		_play_film(ev.has("secret_reel"), ev.has("leyla_echo"))
+	elif ev.has("crystal_seated") and not ev.any(func(e: String) -> bool: return e.begins_with("recorded:")):
+		_explain_blank_crystal()
+	elif ev.has("slide_lamp:on") and logic.state["projector_on"]:
+		hud.call("message", tr("msg.c2_mixed")) # the hidden rule of P11b said out loud, without the answer
+
+
+## A blank crystal seated in the screen socket that recorded nothing: say why, so a wrong try teaches something
+## (dark screen, a blurred picture, two images at once, or not the single image it waits for).
+func _explain_blank_crystal() -> void:
+	var l := logic as ArchiveLogic
+	var img := l.screen_image()
+	var key := "msg.c2_crystal_waits"
+	if img == "":
+		key = "msg.c2_crystal_dark"
+	elif img == "mixed":
+		key = "msg.c2_crystal_mixed"
+	elif img.begins_with("film:") and not l.is_sharp():
+		key = "msg.c2_crystal_blur"
+	hud.call("message", tr(key))
 
 
 func _feedback(e: String) -> void:

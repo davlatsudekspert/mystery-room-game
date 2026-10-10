@@ -109,7 +109,9 @@ const VIEWS := {
 	# `rack_close` moves 0.2 m east for the hammer.
 	"rack": [Vector3(-8.7, 1.8, -1.0), Vector3(-8.7, 1.62, -3.65), 58.0, false, "C", "", ""],
 	"rack_close": [Vector3(-9.4, 1.75, -2.4), Vector3(-9.4, 1.75, -3.8), 54.0, false, "C", "", ""],
-	"bench": [Vector3(-7.35, 1.6, -2.35), Vector3(-7.35, 0.9, -3.7), 50.0, false, "C", "", ""],
+	# hud-check at 4:3 (tablet10): the master hammer on the rack's right post, 0.83 m west of the bench's middle, sat 4.3 mm
+	# from the left edge. The camera stands 0.2 m further west; the three places (x -7.9 .. -6.8) stay in view.
+	"bench": [Vector3(-7.55, 1.6, -2.35), Vector3(-7.55, 0.9, -3.7), 50.0, false, "C", "", ""],
 	"port_a": [Vector3(-4.8, 0.95, 2.5), Vector3(-7.4, 1.35, 0.5), 36.0, false, "C", "", ""],
 	"port_b": [Vector3(-11.75, 4.65, 1.75), Vector3(-8.2, 1.15, 0.45), 34.0, false, "C", "", ""],
 	"port_c": [Vector3(-8.6, 4.95, 1.8), Vector3(-8.3, 1.2, 0.4), 40.0, false, "C", "", ""],
@@ -125,7 +127,9 @@ const VIEWS := {
 	"scope": [Vector3(0.0, 1.42, 3.0), Vector3(0.0, 1.25, 2.53), 34.0, false, "G", "", ""],
 	"strand_plate": [Vector3(-0.42, 1.3, 3.1), Vector3(-0.42, 0.97, 2.76), 34.0, false, "G", "", ""],
 	"cradle": [Vector3(0.0, 1.35, 3.15), Vector3(0.0, 1.0, 2.74), 38.0, false, "G", "", ""],
-	"memorial": [Vector3(0.0, 1.6, -1.2), Vector3(0.0, 1.45, -3.92), 60.0, false, "G", "", ""],
+	# hud-check at 4:3: socket 42 (x 1.78) sat 1.7 mm from the right edge. 0.25 m east and 2 degrees wider keep the whole
+	# arc on a phone and put the socket 17 mm inside the edge of a tablet.
+	"memorial": [Vector3(0.25, 1.6, -1.2), Vector3(0.25, 1.45, -3.92), 62.0, false, "G", "", ""],
 	"socket_42": [Vector3(1.35, 1.4, -2.6), Vector3(1.78, 1.15, -3.49), 40.0, false, "G", "", ""],
 	"drum_west": [Vector3(-2.55, 1.45, 1.16), Vector3(-3.55, 1.3, 1.16), 46.0, false, "G", "", ""],
 	"drum_east": [Vector3(2.55, 1.45, -1.16), Vector3(3.55, 1.3, -1.16), 46.0, false, "G", "", ""],

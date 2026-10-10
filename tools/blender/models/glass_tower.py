@@ -201,6 +201,7 @@ def qa(args, parts):
     if C.want(args, "1"):          # the collar view: the four digit wheels at 3 1 4 7
         cam, tgt, fov = (0.0, 3.8, 2.6), (0.0, 3.7, 1.22), 40
         lit(cam, 25.0, 0.2)
+        K.light("collar_lamp", "POINT", (0.0, 4.55, 1.9), 150.0, "FFC98A", radius=0.08)          # the lamp the code gives the collar
         C.shoot(NAME, cam, tgt, fov, samples=S, res=RES)
     if C.want(args, "2"):          # the glass case, the collar and its posts from the north-west above
         cam, tgt, fov = (-2.8, 5.3, 3.6), (0.0, 3.5, 0.0), 54

@@ -130,9 +130,11 @@ func _ready() -> void:
 	if logic.state["power_on"]:
 		AudioManager.ambience("amb_power_hum", true, -8.0)
 	if not capture_mode and logic.state["taken"].is_empty() and logic.inventory.is_empty():
-		hud.call("play_intro")
+		Lab7Intro.start(self) # the rain, the key, the cards, the door; a tap skips (src/rooms/lab7/lab7_intro.gd)
 	elif not capture_mode and logic.is_complete():
 		_resume_completed()
+	elif not capture_mode and logic.state["door_open"]:
+		_resume_choice()
 	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
 
 
@@ -1618,6 +1620,17 @@ func _resume_completed() -> void:
 	cam.go("door", true)
 	await get_tree().create_timer(0.6).timeout
 	hud.call("show_chapter_complete")
+
+
+## A save made after the door opened but before the lens was taken or left (the player quit during the ending):
+## the choice is offered again at the open door, instead of a finished room with no way to end the chapter.
+func _resume_choice() -> void:
+	_ending = true
+	_build_corridor()
+	_corridor_lit(true)
+	cam.go("door", true)
+	await get_tree().create_timer(0.6).timeout
+	hud.call("show_choice")
 
 
 ## Beyond Lab 7's door: the corridor to Records Archive B (Chapter 2 starts at its far end). Built from primitives and

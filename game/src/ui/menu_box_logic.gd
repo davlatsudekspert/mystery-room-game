@@ -25,13 +25,13 @@ const OPEN_S := 1.1 # the lid swings up (the first part is the latch popping)
 const HOLD_S := 4.5 # open, light spilling out, before it closes by itself
 const CLOSE_S := 0.8
 ## The start transition. Landings: the wheels click into place one after another, then the latch, the lid, the push.
-const START_SPIN_S := 0.34 # each wheel spins this long before it lands
-const START_LATCH_T := 0.95
-const START_LID_S := 0.7
-const START_GOTO_T := 1.35 # the loading flow starts here (its own 0.45 s fade ends at START_END_T)
-const START_END_T := 1.8
+const START_SPIN_S := 0.30 # each wheel spins this long before it lands
+const START_LATCH_T := 0.82
+const START_LID_S := 0.66 # the lid's swing, after its 0.12 s pop off the latch
+const START_GOTO_T := 1.5 # the loading flow starts here (its own 0.45 s fade ends at START_END_T)
+const START_END_T := 1.95
 ## When the six start events happen: three landings (click, click, click), the latch, the goto, the end.
-const START_TIMES: Array[float] = [0.34, 0.54, 0.74, START_LATCH_T, START_GOTO_T, START_END_T]
+const START_TIMES: Array[float] = [0.30, 0.48, 0.66, START_LATCH_T, START_GOTO_T, START_END_T]
 const SKIP_S := 0.25 # a tap during the transition: black in this long, the loading flow starts at once
 
 var wheels: Array[int] = [0, 0, 0] # notches from the front mark
