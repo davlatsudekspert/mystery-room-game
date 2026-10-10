@@ -8,6 +8,31 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 - Chapter 4: design, logic, solver and tests are done (24 tests, 16 profile combinations to 3 endings). The model contract is `docs/models/ch4.md`.
 - Apple: the Paid Apps agreement, banking and tax forms are active. Price decision: `full_game` $4.99.
 
+**Owner requests tracker (2026-10-10; keep it current, nothing may drop):**
+| Request | State |
+|---|---|
+| Text readability, Normal / Large / XL, overlap-free HUD | done |
+| Inventory bag, taps through the HUD, Android Back order, 3-level hints, soft UV page | done (Android 10 / TF 7) |
+| Panel 7 framing, notebook icons, safe → poster clue | done |
+| Panel 7 different on every phone (wiring variants) | in progress |
+| Home-screen name "Mystery Room" (iOS and Android) | done |
+| App icon A / B / C | waiting: the owner's choice (B recommended) |
+| Six localization terms | waiting: the owner (LOCALIZATION_REVIEW.md) |
+| Bloom and dark spots in Ch1 and Ch2, mechanism feedback | done |
+| iOS black screen on New Game | iOS starts at safe level 1 (no MSAA); waiting for the owner's TF 7 test, then TF 8 |
+| Menu gear box alive and opening (The Room style) | in progress |
+| Premium language screen, captivating first 3 minutes | in progress |
+| Credits (Yuldashali Abdurakhmonov & Aliyorbek Toshtemirov) and licenses | in progress |
+| Chapters 1–2 free, full_game ($4.99) → Chapters 3–4 | done (code, docs, App Store Connect texts) |
+| Chapters 1–2 "better than The Room", Chapter 2 cliffhanger | in progress (Opus) |
+| HUD draw calls | in progress |
+| Chapter 3: models, scene, dressing | done; release-candidate QA in progress |
+| Chapter 4: design, logic, tests | done; models A–E done, F–H in progress, I next, then the scene |
+| Google Play product, License testing, service-account permission | waiting: the owner (bank verification pending) |
+| Apple Small Business Program, EU DSA trader status | waiting: the owner, before release |
+| Weekly store statistics report | after the public release |
+| Closed testing, production, public release | each needs a separate approval |
+
 **Running now:**
 - Ch3 set dressing (camp, shutter corridor, memorial gallery, grime): Sonnet agent;
 - Ch4 models, groups A and B (shell, bridge, catwalk, master desk, panel 0): Sonnet agent;
