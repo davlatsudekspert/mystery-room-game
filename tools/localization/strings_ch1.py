@@ -54,6 +54,7 @@ S = [
 ("obj.radio", "Valve radio", "Ламповый радиоприёмник", "Lampali radiopriyomnik"),
 ("obj.projector", "Lumen projector", "Проектор «Люмен»", "«Lumen» proyektori"),
 ("obj.poster", "Tabula Resonantiarum — Strand's table of resonances", "Tabula Resonantiarum — таблица резонансов Странда", "Tabula Resonantiarum — Strandning rezonanslar jadvali"),
+("obj.poster_view", "Tabula Resonantiarum", "Tabula Resonantiarum", "Tabula Resonantiarum"),
 ("obj.chalkboard", "Strand's chalkboard", "Доска Странда", "Strandning doskasi"),
 ("obj.bench", "Laboratory bench", "Лабораторный стол", "Laboratoriya stoli"),
 ("obj.vials", "Three samples, labelled only by density (ρ)", "Три образца, подписаны только плотностью (ρ)", "Uchta namuna — faqat zichligi (ρ) yozilgan"),

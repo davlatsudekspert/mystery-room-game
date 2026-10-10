@@ -5,11 +5,12 @@ osc_wave.gdshader); results: docs/models/ch3_e.md.
 On the camp table at (4.97, 0.74, -1.72), yaw 135 (the screen faces north-east, toward both the `shutter` and the
 `recorder` cameras). Origin = the bottom centre; front +Z.
 
-Size 0.20 w x 0.15 h (front; the top slopes to 0.13 at the back) x 0.26 d (z -0.11 .. 0.15). The contract's
-0.22 x 0.16 x 0.30 would cut into the recorder's overhanging keys 0.27 m away and hide them from the `recorder`
-view (ch3_e.md, deviations).
+Size 0.20 w x 0.15 h x 0.20 d (z -0.05 .. 0.15), STEPPED: a front block 0.15 high (z 0.085 .. 0.15, the bezel and the screen)
+and a low body 0.085 high behind it with rounded rear corners. The contract's 0.22 x 0.16 x 0.30 box, 0.27 m from the
+recorder, would put its back corner on the recorder's overhanging keys and hide them from the `recorder` view, whose
+camera (5.3, 1.32, -2.55) looks over the scope at the keys (ch3_e.md, deviations).
 
-  oscillograph   (static) cream steel case with the sloped top and vent louvres, a bakelite front bezel with the
+  oscillograph   (static) cream steel stepped case with vent louvres on the low body, a bakelite front bezel with the
                  screen window, four bakelite knobs and a folded bakelite side handle, rubber feet; the dark CRT
                  glass behind the window (M_Glass_Dark) and a pilot jewel
   osc_screen     the CRT face 0.10 x 0.08 at (0, 0.09, 0.151), UV 0..1 (u -> +X, v -> +Y), M_Shader_Quad
@@ -35,8 +36,10 @@ TRI_BUDGET, SURF_BUDGET, MAT_BUDGET = 2000, 4, 4
 CREAM, BAKE, GLASS_DARK, SHQ = E.CREAM_STEEL, E.BAKE, E.GLASS_DARK, E.SHQ
 
 HALF_W = 0.10
-Z0, Z1 = -0.11, 0.15                      # case back / front (the bezel face)
-H_FRONT, H_BACK = 0.15, 0.13
+Z0, Z1 = -0.05, 0.15                      # case back / front (the bezel face)
+ZF0 = 0.085                               # the front block runs z 0.085 .. 0.15; the low body behind it
+ZB1 = 0.09
+H_FRONT, H_BODY = 0.15, 0.085
 FEET = 0.012
 BEZEL_T = 0.006
 SCREEN = (0.0, 0.09, 0.151)
@@ -48,18 +51,15 @@ JEWEL = (-0.08, 0.125)
 
 def case():
     cr, bk, gl = [], [], []
-    # the case: a side profile (z, y) extruded along x, top sloping from the bezel back to the rear
-    prof = [(Z0, FEET), (Z1 - BEZEL_T, FEET), (Z1 - BEZEL_T, H_FRONT), (Z0, H_BACK)]
-    cr.append(B.prism_x("case", prof, -HALF_W, HALF_W, CREAM))
-    # a rolled edge strip round the front and the louvres on the sloped top
-    for k in range(6):
-        t = 0.02 + 0.03 * k
-        z = Z1 - BEZEL_T - t
-        y = H_FRONT - (H_FRONT - H_BACK) * (Z1 - BEZEL_T - z) / (Z1 - BEZEL_T - Z0)
-        cr.append(K.gbox("louvre", (-0.06, y - 0.001, z - 0.004), (0.06, y + 0.0015, z + 0.004), CREAM, 0.0))
+    # the low body (rounded rear corners) and the front block carrying the bezel
+    cr.append(E.rrect_box("body", 2 * HALF_W, H_BODY - FEET, ZB1 - Z0, 0.04, (0.0, (FEET + H_BODY) / 2, (Z0 + ZB1) / 2), CREAM, n=4, bevel=0.002))
+    cr.append(K.gbox("front", (-HALF_W, FEET, ZF0), (HALF_W, H_FRONT, Z1 - BEZEL_T), CREAM, 0.003))
+    for k in range(5):
+        z = -0.02 + 0.022 * k
+        cr.append(K.gbox("louvre", (-0.06, H_BODY - 0.0005, z - 0.004), (0.06, H_BODY + 0.0015, z + 0.004), CREAM, 0.0))
     # feet
     for sx in (-1, 1):
-        for z in (Z0 + 0.025, Z1 - 0.03):
+        for z in (Z0 + 0.03, Z1 - 0.03):
             bk.append(K.gcyl("foot", 0.009, 0.0, FEET + 0.001, base=(sx * (HALF_W - 0.02), 0.0, z), axis=(0, 1, 0), segments=8,
                              mat=BAKE))
     # bezel plate with the window
@@ -76,9 +76,9 @@ def case():
     gl.append(B.jewel("pilot", (JEWEL[0], JEWEL[1], Z1), 0.0045, (0, 0, 1), GLASS_DARK, seg=10))
     bk.append(D.ring("pilot_ring", 0.0045, 0.0065, Z1, Z1 + 0.002, (JEWEL[0], JEWEL[1], 0.0), (0, 0, 1), 10, BAKE))
     # a folded carrying handle on the left side (x = -HALF_W)
-    hy = H_BACK * 0.55
-    bk.append(K.V.tube("handle", [(-HALF_W - 0.002, hy, 0.08), (-HALF_W - 0.016, hy, 0.08), (-HALF_W - 0.016, hy, -0.06),
-                                  (-HALF_W - 0.002, hy, -0.06)], 0.005, sides=6, mat=BAKE, fillet=0.01))
+    hy = 0.052
+    bk.append(K.V.tube("handle", [(-HALF_W - 0.002, hy, 0.05), (-HALF_W - 0.016, hy, 0.05), (-HALF_W - 0.016, hy, -0.03),
+                                  (-HALF_W - 0.002, hy, -0.03)], 0.005, sides=6, mat=BAKE, fillet=0.01))
     # a BNC-style input socket (cream) low on the bezel's left
     cr.append(K.gcyl("socket", 0.006, Z1, Z1 + 0.008, base=(-0.08, 0.022, 0.0), axis=(0, 0, 1), segments=10, mat=CREAM, caps=False))
     cr.append(K.gcyl("socket_pin", 0.0015, Z1, Z1 + 0.007, base=(-0.08, 0.022, 0.0), axis=(0, 0, 1), segments=5, mat=CREAM))
@@ -97,6 +97,17 @@ def build():
     return dict(body=body, screen=screen)
 
 
+def case_height(xl, zl):
+    """Top of the case (above the table) at scope-local (x, z), None outside its footprint."""
+    if abs(xl) > HALF_W or zl < Z0 or zl > Z1:
+        return None
+    r = 0.04
+    if zl < Z0 + r and abs(xl) > HALF_W - r:          # the rounded rear corners
+        if math.hypot(abs(xl) - (HALF_W - r), zl - (Z0 + r)) > r:
+            return None
+    return H_FRONT if zl >= ZF0 else H_BODY + 0.0015
+
+
 def verify(path):
     req = [NAME, "osc_screen"]
     errs = E.verify(path, required=req, identity=req, expect={NAME: (0, 0, 0), "osc_screen": SCREEN},
@@ -106,11 +117,23 @@ def verify(path):
     o = bpy.data.objects["osc_screen"]
     uv = [tuple(round(c, 3) for c in d.uv) for d in o.data.uv_layers.active.data]
     print(f"{E.TAG} osc_screen UV {uv}")
-    # the recorder view's sight line to the recorder's keys passes over the case (ch3_e.md)
-    cam, keys = Vector((5.3, 1.32, -2.55)), Vector((4.98, 0.82, -1.55))
-    for frac in (0.80, 0.83, 0.86):
-        p = cam.lerp(keys, frac)
-        print(f"{E.TAG} sight line at z {p.z:.3f}: y {p.y:.3f} (case top there ~{0.74 + H_FRONT - 0.01:.3f})")
+    # the recorder view's sight lines to the recorder's keys must clear the case (ch3_e.md): world -> scope-local
+    cam = Vector((5.3, 1.32, -2.55))
+    th = math.radians(E.OSC_YAW)
+    ax, az = Vector((math.cos(th), -math.sin(th))), Vector((math.sin(th), math.cos(th)))     # local +X / +Z in world (x, z)
+    worst = 9.0
+    for kx in (4.93, 4.98):
+        keys = Vector((kx, 0.812, -1.575))
+        for i in range(1, 200):
+            p = cam.lerp(keys, i / 200)
+            d = Vector((p.x - E.OSC_POS[0], p.z - E.OSC_POS[2]))
+            xl, zl = d.dot(ax), d.dot(az)
+            h = case_height(xl, zl)
+            if h is not None:
+                worst = min(worst, p.y - (E.OSC_POS[1] + h))
+    print(f"{E.TAG} sight line to the recorder keys clears the case by {worst * 1000:.0f} mm (worst point; >= 10 needed)")
+    if worst < 0.010:
+        errs.append("the scope hides the recorder keys")
     return errs
 
 

@@ -4,6 +4,8 @@ extends TestBase
 ## (bottom left) whose tray slides out above it, remembers the player's choice at room views, starts collapsed
 ## in close-ups and shows the item in hand.
 
+const HUD_FLY = preload("res://src/ui/hud.gd").FlyIcon
+
 ## A 5.5" 16:9 phone at 480 dpi: its canvas (1920x1080) is the headless test window's, so taps land where the
 ## layout put things.
 const PHONE := {"size": Vector2i(1920, 1080), "dpi": 480.0, "safe": Rect2i(0, 0, 1920, 1080)}
@@ -246,3 +248,21 @@ func test_bag_and_slots_are_touch_targets() -> void:
 		check(UITheme.target(UITheme.HUD_BTN_PX) * mm >= UITheme.TOUCH_MM - 0.01, "%s: the bag is %.1f mm" % [dev["size"], UITheme.target(UITheme.HUD_BTN_PX) * mm])
 		check(UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM) * mm >= UITheme.TOUCH_MM - 0.01, "%s: a slot is %.1f mm" % [dev["size"], UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM) * mm])
 	Settings.emulate = {}
+
+
+## Nothing of the bag draws over an open document: a find while a page is open does not fly across it.
+func test_no_flight_over_an_open_document() -> void:
+	var r := await _start(["notebook"])
+	var hud := r.hud
+	hud.call("show_document", "letter")
+	await r.wait(0.1)
+	var o := hud.get("_overlay") as Control
+	_give(r.logic, "battery_cell")
+	await r.wait(0.9)
+	var root := hud.get("_root") as Control
+	var above := false
+	for i in range(o.get_index() + 1, root.get_child_count()):
+		above = above or root.get_child(i) is HUD_FLY
+	check(not above, "no flying item above the open document")
+	hud.call("_close_overlay")
+	await _finish(r)

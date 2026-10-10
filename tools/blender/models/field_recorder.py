@@ -201,11 +201,16 @@ def qa(parts, args):
         E.shoot(NAME, R[0], R[1], R[2])
     # 2 hero: from the front, high and close, the play key pressed and the needle at 40 %
     if E.want(args, "2"):
-        K.pose_rot(parts["keys"]["play"], "X", -8.0)
-        K.pose_rot(parts["vu"], "Z", -40.0)
+        K.pose_rot(parts["keys"]["play"], "x", -8.0)
+        K.pose_rot(parts["vu"], "z", -40.0)
         cam = W((0.10, 0.30, 0.34))
         E.camp_lights(cam, fill=5.0)
         E.shoot(NAME + "_2", cam, W((0.0, 0.07, 0.01)), 36)
+    # 3 the keys from above and in front, close (the pictograms)
+    if E.want(args, "3"):
+        cam = W((-0.005, 0.22, 0.20))
+        E.camp_lights(cam, fill=3.0)
+        K.shoot(NAME + "_3", cam, W((-0.005, 0.066, 0.118)), vfov=24)
 
 
 def main():

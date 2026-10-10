@@ -54,6 +54,11 @@ var _inv_tween: Tween
 var _bag_tween: Tween
 var _inv_drag := 0.0 # how far the finger has moved on a slot since it touched it (a drag scrolls the tray)
 var _fly: FlyIcon # a found item on its way into the bag
+var _msg_on := false # the message banner is showing (from message() until its fade-out starts)
+var _cap_on := false # the same for the caption
+var _msg_at := 0 # when each was shown: the newer of the two keeps its place when both do not fit
+var _cap_at := 0
+var _meter_label: Label
 
 const PAD := UITheme.HUD_PAD # gap between HUD controls and the safe-area edge
 const INV_SEP := 10
@@ -75,7 +80,7 @@ func bind(r: Node3D) -> void:
 			_fly.tex = t
 		if id == _found_id and _msg_plate != null:
 			_msg_plate.set_icon(t)
-			_stack_bottom())
+			_arrange())
 	_build()
 	GameState.events.connect(_on_events)
 	Settings.changed.connect(_on_setting_changed)
@@ -251,68 +256,186 @@ func _layout() -> void:
 	_prompt_plate.set_meta("from_bottom", true)
 	_msg_plate.set_meta("max_w", text_w)
 	_msg_plate.set_meta("from_bottom", true)
-	_fit_plate(_top_plate)
-	_stack_bottom()
-	_stack_top() # after the bottom: the caption keeps clear of the prompt and the message
+	_arrange()
 	_inventory_geometry()
 
 
-## Caption line and receiver meter go below the corner buttons and below the view title, however many lines
-## the title wrapped to (large text sizes).
+## (Older names: the banners are laid out together.)
 func _stack_top() -> void:
+	_arrange()
+
+
+func _stack_bottom() -> void:
+	_arrange()
+
+
+## Lays the banners and the meter out so that nothing overlaps (a corner button, the bag, the open tray and its
+## item actions, each other) at any text size on any screen shape, inside the safe area (docs/UI_UX.md → HUD
+## layout; test_hud_layout.gd):
+##   1. the meter (Chapter 2) under the Hint button;
+##   2. the view title between the corner buttons, centred on their row, two lines at most (an ellipsis beyond);
+##      a second line keeps clear of the meter (narrower), or the meter moves under the title;
+##   3. the prompt at the bottom (two lines at most), the message above it at full width under the meter, or
+##      narrower beside it, whichever shows more of it, cut to the lines that fit under the title;
+##   4. the caption under the title, beside the meter (under it when beside is too narrow), cut to the lines that
+##      fit above the message and the prompt.
+## When the caption and the message cannot both keep a line, the older of them fades out (the newer line is the
+## one the player is waiting for); one that cannot keep a line at all gives way.
+func _arrange() -> void:
+	if _root == null:
+		return
 	var safe := UITheme.safe_margins()
 	var canvas: Vector2 = UITheme.metrics()["canvas"]
 	var corner := maxf(_pause_btn.custom_minimum_size.x, _back_btn.custom_minimum_size.x)
 	var row_bottom := safe.y + PAD + corner + 10.0
-	var y := row_bottom
-	if _top_plate.visible:
-		y = maxf(y, _top_plate.position.y + _top_plate.size.y + 6.0)
-	# the receiver meter (Chapter 2) hangs under the Hint button; the caption goes below it, never beside it
+	var gap := 10.0
+	var cx := canvas.x * 0.5
+	# 1. the meter, under the Hint button
+	var mr := Rect2()
+	if _meter != null:
+		_fit_meter(canvas)
+		var ms := _meter.get_combined_minimum_size()
+		mr = Rect2(canvas.x - safe.z - PAD - ms.x, row_bottom, ms.x, ms.y)
+		if not _meter.visible:
+			mr = Rect2()
+	var meter_half := mr.position.x - 20.0 - cx # half the width a centred banner has beside the meter
+	# 2. the title (two lines at most); a second line keeps clear of the meter, or the meter moves down
+	var top_w: float = _top_plate.get_meta("max_w", 1200.0)
+	_top_plate.max_title_lines = 2
+	_fit_plate(_top_plate)
+	if mr.has_area() and _top_plate.visible and _box(_top_plate).intersects(mr.grow(gap)):
+		_top_plate.set_meta("max_w", minf(top_w, 2.0 * meter_half))
+		_fit_plate(_top_plate)
+		_top_plate.set_meta("max_w", top_w)
+		if _box(_top_plate).intersects(mr.grow(gap)):
+			mr.position.y = _top_plate.position.y + _top_plate.size.y + gap
 	if _meter != null:
 		_meter.offset_right = -(safe.z + PAD)
 		_meter.offset_left = _meter.offset_right
-		_meter.offset_top = row_bottom
+		_meter.offset_top = mr.position.y if mr.has_area() else row_bottom
 		_meter.offset_bottom = _meter.offset_top
-		if _meter.visible:
-			y = maxf(y, row_bottom + _meter.get_combined_minimum_size().y + 8.0)
-	_cap_plate.set_meta("y", y)
-	# sideways the caption keeps clear of the corner buttons, and of the open tray (and the inspect / combine
-	# flyout beside the selected slot) on the left; it is centred in what is left
+	var title_box := _box(_top_plate) if _top_plate.visible else Rect2(cx, safe.y + PAD, 0.0, 0.0)
+	var tops: Array[Rect2] = [title_box]
+	if mr.has_area():
+		tops.append(mr)
+	# 3. the prompt at the bottom, the message above it
+	var bottom := canvas.y - safe.w - PAD
+	var text_w := UITheme.hud_text_width()
+	_prompt_plate.max_sub_lines = 2
+	_prompt_plate.set_meta("y", bottom)
+	_prompt_plate.set_meta("max_w", text_w)
+	_fit_plate(_prompt_plate)
+	if mr.has_area() and _prompt_plate.visible and _box(_prompt_plate).intersects(mr.grow(gap)):
+		_prompt_plate.set_meta("max_w", minf(text_w, 2.0 * meter_half))
+		_fit_plate(_prompt_plate)
+	var floor_y := bottom
+	if _prompt_plate.visible:
+		floor_y = _prompt_plate.position.y - gap
+	var msg_full := 3 if _found_id != "" else 0
+	# the message keeps clear of the item actions beside the open tray (they stay level with their slot)
+	var msg_w := text_w
+	if _bag_open and _actions.visible:
+		var fly_right := _inv_span.position.x + _inv_rule.position.x + _inv_rule.size.x + ACTION_GAP + _actions.get_combined_minimum_size().x
+		msg_w = minf(msg_w, maxf(200.0, 2.0 * (cx - fly_right - 20.0)))
+	var widths: Array[float] = [msg_w]
+	if mr.has_area() and meter_half * 2.0 < msg_w:
+		widths.append(maxf(200.0, 2.0 * meter_half)) # beside the meter instead of under it
+	var best_w := msg_w
+	var best_score := -1.0
+	for w in widths:
+		_msg_plate.set_meta("max_w", w)
+		_msg_plate.set_meta("y", floor_y)
+		var ceiling := _below(tops, Vector2(cx - w * 0.5, cx + w * 0.5), safe.y + PAD) + gap
+		_cut_to(_msg_plate, msg_full, ceiling)
+		var score := float(_msg_plate.sub_lines) * w if _plate_fits(_msg_plate, ceiling) else -float(w) * 0.001
+		if score > best_score + 1.0:
+			best_score = score
+			best_w = w
+	_msg_plate.set_meta("max_w", best_w)
+	var msg_ceiling := _below(tops, Vector2(cx - best_w * 0.5, cx + best_w * 0.5), safe.y + PAD) + gap
+	_cut_to(_msg_plate, msg_full, msg_ceiling)
+	if _msg_on and not _plate_fits(_msg_plate, msg_ceiling):
+		_give_way(_msg_plate)
+	var cap_floor := floor_y
+	if _msg_on and _msg_plate.visible:
+		cap_floor = _msg_plate.position.y - gap
+	# 4. the caption: under the title, centred in the room left between the left and right controls; beside the
+	# meter when that leaves a reasonable line, under it otherwise
 	var left := safe.x + PAD + corner + 20.0
 	if _bag_open:
 		left = maxf(left, _inv_span.position.x + _inv_span.size.x + 20.0)
 		if _actions.visible:
 			left += ACTION_GAP + _actions.get_combined_minimum_size().x
 	var right := canvas.x - safe.z - PAD - corner - 20.0
+	if mr.has_area() and mr.position.x - 20.0 - left >= canvas.x * 0.3:
+		right = minf(right, mr.position.x - 20.0)
 	_cap_plate.set_meta("cx", (left + right) * 0.5)
 	_cap_plate.set_meta("max_w", minf(right - left, 1500.0 * UITheme.wscale()))
-	# the caption may not run into the banners at the bottom: fewer lines (with an ellipsis) when it would
-	var limit := canvas.y - safe.w - PAD - 10.0
-	for p: UIBanner in [_prompt_plate, _msg_plate]:
-		if p.visible and p.modulate.a > 0.05:
-			limit = minf(limit, p.position.y - 10.0)
-	_cap_plate.max_sub_lines = 0
-	_fit_plate(_cap_plate)
-	if _cap_plate.visible and _cap_plate.position.y + _cap_plate.size.y > limit:
-		var f := _caption_line.get_theme_font("font")
-		var fs := _caption_line.get_theme_font_size("font_size")
-		var line_h := f.get_height(fs) + float(_caption_line.get_theme_constant("line_spacing"))
-		var room := limit - y - 2.0 * UIBanner.PAD_Y * UIOrnament.scale_k() - 6.0
-		_cap_plate.max_sub_lines = maxi(1, int(floor(room / line_h)))
-		_fit_plate(_cap_plate)
+	_cap_plate.set_meta("y", maxf(row_bottom, _below(tops, Vector2(left, right), row_bottom) + 6.0))
+	_cut_to_floor(_cap_plate, cap_floor)
+	if _cap_on and _caption_line.text != "" and not _plate_above(_cap_plate, cap_floor):
+		if _msg_on and _msg_plate.visible and _cap_at >= _msg_at:
+			_give_way(_msg_plate) # the caption is newer: the message makes room
+			_cut_to_floor(_cap_plate, floor_y)
+		if not _plate_above(_cap_plate, floor_y if not _msg_on else cap_floor):
+			_give_way(_cap_plate)
+	_place_actions()
 
 
-## The prompt sits at the bottom safe edge; the message above it (or in its place while there is no prompt).
-func _stack_bottom() -> void:
-	var safe := UITheme.safe_margins()
-	var canvas: Vector2 = UITheme.metrics()["canvas"]
-	var bottom := canvas.y - safe.w - PAD
-	_prompt_plate.set_meta("y", bottom)
-	_fit_plate(_prompt_plate)
-	if _prompt_plate.visible:
-		bottom = _prompt_plate.position.y - 10.0
-	_msg_plate.set_meta("y", bottom)
-	_fit_plate(_msg_plate)
+func _box(p: Control) -> Rect2:
+	return Rect2(p.position, p.size)
+
+
+## The lowest bottom edge among `rects` that reach over the horizontal span `xs` (x = from, y = to), or `floor`.
+static func _below(rects: Array[Rect2], xs: Vector2, floor: float) -> float:
+	var y := floor
+	for r in rects:
+		if r.position.x < xs.y and r.end.x > xs.x:
+			y = maxf(y, r.end.y)
+	return y
+
+
+## Fits a bottom-anchored banner with at most `full` subtitle lines (0 = all), then fewer while its top is above
+## `ceiling` (one line at least).
+func _cut_to(p: UIBanner, full: int, ceiling: float) -> void:
+	p.max_sub_lines = full
+	_fit_plate(p)
+	while p.visible and p.position.y < ceiling and p.sub_lines > 1:
+		p.max_sub_lines = p.sub_lines - 1
+		_fit_plate(p)
+
+
+## Fits a top-anchored banner, then with fewer subtitle lines while its bottom runs past `floor_y`.
+func _cut_to_floor(p: UIBanner, floor_y: float) -> void:
+	p.max_sub_lines = 0
+	_fit_plate(p)
+	while p.visible and p.position.y + p.size.y > floor_y and p.sub_lines > 1:
+		p.max_sub_lines = p.sub_lines - 1
+		_fit_plate(p)
+
+
+func _plate_fits(p: UIBanner, ceiling: float) -> bool:
+	return not p.visible or p.position.y >= ceiling - 0.5
+
+
+func _plate_above(p: UIBanner, floor_y: float) -> bool:
+	return not p.visible or p.position.y + p.size.y <= floor_y + 0.5
+
+
+## A banner that has no room left fades out now (its line is over).
+func _give_way(p: UIBanner) -> void:
+	if p == _msg_plate:
+		_msg_on = false
+		if _msg_tween and _msg_tween.is_valid():
+			_msg_tween.kill()
+	elif p == _cap_plate:
+		_cap_on = false
+		if _cap_tween and _cap_tween.is_valid():
+			_cap_tween.kill()
+	if p.modulate.a > 0.0:
+		var tw := create_tween()
+		tw.tween_property(p, "modulate:a", 0.0, 0.2)
+	p.set_meta("on", false)
 
 
 ## Safe-area insets in viewport units: x=left y=top z=right w=bottom.
@@ -369,8 +492,21 @@ func _place_actions() -> void:
 	var slot_y := _inv_scroll.position.y + idx * (slot + INV_SEP) - _inv_scroll.scroll_vertical
 	var sz := _actions.get_combined_minimum_size()
 	_actions.size = sz
-	_actions.position = Vector2(_inv_rule.position.x + _inv_rule.size.x + ACTION_GAP,
-		clampf(slot_y + (slot - sz.y) * 0.5, 0.0, maxf(0.0, _inv_span.size.y - sz.y)))
+	var x := _inv_rule.position.x + _inv_rule.size.x + ACTION_GAP
+	# level with the slot, but kept inside the tray's span, under a title that wraps over it and above the
+	# banners at the bottom (in the tray's coordinates)
+	var lo := 0.0
+	var hi := _inv_span.size.y - sz.y
+	var xs := Vector2(_inv_span.position.x + x, _inv_span.position.x + x + sz.x)
+	for p: UIBanner in [_top_plate]:
+		var r := _box(p)
+		if p.visible and r.position.x < xs.y and r.end.x > xs.x:
+			lo = maxf(lo, r.end.y + 8.0 - _inv_span.position.y)
+	for p: UIBanner in [_prompt_plate, _msg_plate]:
+		var r := _box(p)
+		if p.visible and (p != _msg_plate or _msg_on) and r.position.x < xs.y and r.end.x > xs.x:
+			hi = minf(hi, r.position.y - 8.0 - sz.y - _inv_span.position.y)
+	_actions.position = Vector2(x, clampf(slot_y + (slot - sz.y) * 0.5, lo, maxf(lo, hi)))
 
 
 func _slot_style(selected: bool, hover: bool = false) -> StyleBoxFlat:
@@ -505,7 +641,7 @@ func set_bag_open(open: bool, by_player: bool = false) -> void:
 		_combine_mode = false
 	_slide_tray()
 	_refresh_inventory()
-	_stack_top() # the caption keeps clear of the tray only while it is out
+	_arrange() # the caption keeps clear of the tray only while it is out
 
 
 func is_bag_open() -> bool:
@@ -561,6 +697,9 @@ func _pulse_bag() -> void:
 func _fly_to_bag(id: String) -> void:
 	if _busy or not _bag_btn.is_visible_in_tree() or not logic.has_item(id):
 		return
+	if _overlay != null:
+		_pulse_bag() # a document or dialog is open: no flight across it (the bag under it still swells)
+		return
 	if bool(Settings.get_value("reduce_motion")):
 		_pulse_bag()
 		return
@@ -581,6 +720,8 @@ func _fly_to_bag(id: String) -> void:
 	_fly.pivot_offset = _fly.size * 0.5
 	_fly.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_fly)
+	if _overlay != null:
+		_root.move_child(_fly, _overlay.get_index()) # under an open document or dialog, never over it
 	_fly.position = start - _fly.size * 0.5
 	var ctrl := Vector2(lerpf(start.x, end.x, 0.3), minf(start.y, end.y) - canvas.y * 0.16) # the top of the arc
 	var f := _fly
@@ -638,8 +779,7 @@ func _update_prompt() -> void:
 		_prompt.text = tr("ui.uv_drag")
 	else:
 		_prompt.text = tr("ui.use_prompt") % tr(ItemDB.name_key(logic.selected))
-	_stack_bottom()
-	_stack_top() # the caption keeps clear of the prompt
+	_arrange() # the caption keeps clear of the prompt
 
 
 # ====================================================================== feedback
@@ -667,41 +807,42 @@ func message(text: String, seconds: float = 2.8) -> void:
 		_msg_plate.max_sub_lines = 0
 		_message.text = text
 	_message.modulate.a = 1.0 # (QA scripts blank the label itself to detect the next message as new)
-	_stack_bottom()
-	_yield_overlap(_cap_plate, _msg_plate)
 	if _msg_tween and _msg_tween.is_valid():
 		_msg_tween.kill()
+	_msg_on = text.strip_edges() != ""
+	_msg_at = Time.get_ticks_usec()
+	_msg_plate.set_meta("on", _msg_on)
+	_arrange()
+	if not _msg_on:
+		_msg_plate.modulate.a = 0.0
+		return
 	_msg_tween = create_tween()
 	_msg_tween.tween_property(_msg_plate, "modulate:a", 1.0, 0.18)
 	_msg_tween.tween_interval(seconds)
+	_msg_tween.tween_callback(func() -> void:
+		_msg_on = false
+		_msg_plate.set_meta("on", false))
 	_msg_tween.tween_property(_msg_plate, "modulate:a", 0.0, 0.5)
 
 
 func caption(text: String, seconds: float = 3.5) -> void:
 	_caption_line.text = text
-	_stack_top()
-	_yield_overlap(_msg_plate, _cap_plate)
 	if _cap_tween and _cap_tween.is_valid():
 		_cap_tween.kill()
+	_cap_on = text.strip_edges() != ""
+	_cap_at = Time.get_ticks_usec()
+	_cap_plate.set_meta("on", _cap_on)
+	_arrange()
+	if not _cap_on:
+		_cap_plate.modulate.a = 0.0
+		return
 	_cap_tween = create_tween()
 	_cap_tween.tween_property(_cap_plate, "modulate:a", 1.0, 0.25)
 	_cap_tween.tween_interval(seconds)
+	_cap_tween.tween_callback(func() -> void:
+		_cap_on = false
+		_cap_plate.set_meta("on", false))
 	_cap_tween.tween_property(_cap_plate, "modulate:a", 0.0, 0.6)
-
-
-## Large text on a short screen: when the banner that is appearing (`newer`) would overlap one still showing
-## (`older`), the older one fades out at once. The newer line is the one the player is waiting for.
-func _yield_overlap(older: UIBanner, newer: UIBanner) -> void:
-	if not older.visible or older.modulate.a <= 0.05 or not newer.visible:
-		return
-	if not Rect2(older.position, older.size).intersects(Rect2(newer.position, newer.size)):
-		return
-	var tw := create_tween()
-	tw.tween_property(older, "modulate:a", 0.0, 0.2)
-	if older == _cap_plate and _cap_tween and _cap_tween.is_valid():
-		_cap_tween.kill()
-	elif older == _msg_plate and _msg_tween and _msg_tween.is_valid():
-		_msg_tween.kill()
 
 
 func set_view(id: String, is_root: bool, caption_key: String) -> void:
@@ -722,8 +863,7 @@ func set_view(id: String, is_root: bool, caption_key: String) -> void:
 func set_caption(caption_key: String) -> void:
 	# the key itself: the label auto-translates, so a language switch in the pause menu updates it too
 	_top_caption.text = caption_key
-	_fit_plate(_top_plate)
-	_stack_top()
+	_arrange()
 
 
 func set_busy(b: bool) -> void:
@@ -1198,22 +1338,16 @@ func _show_notebook(page: int) -> void:
 		var cipher := VBoxContainer.new()
 		cipher.add_theme_constant_override("separation", 26)
 		v.add_child(cipher)
+		# the "blank" page: under the UV lamp Leyla's cipher glows on the paper (UIUVLight: a feathered violet
+		# pool on the sheet, fluorescing fibres, glowing ink; no hard edge anywhere)
 		var ink_line := _ink_label(tr("doc.notebook.p5_uv"))
-		ink_line.add_theme_color_override("font_color", Color("9cffd8"))
-		# glowing ink on light paper is ~1.9:1 on its own; a dark halo keeps it legible
-		ink_line.add_theme_color_override("font_outline_color", Color("1d0f3a"))
-		ink_line.add_theme_constant_override("outline_size", 10)
+		UIUVLight.glow_label(ink_line)
 		cipher.add_child(ink_line)
 		var glyphs := HBoxContainer.new()
 		glyphs.alignment = BoxContainer.ALIGNMENT_CENTER
-		glyphs.add_theme_constant_override("separation", 40)
+		glyphs.add_theme_constant_override("separation", 0) # the glow's margin spaces them
 		for gid: Variant in l7.safe_glyphs(): # this game's cipher (docs/VARIANTS.md)
-			var tr_ := TextureRect.new()
-			tr_.texture = load("res://assets/ui/glyphs/%s.png" % gid)
-			tr_.custom_minimum_size = Vector2.ONE * round(130 * UITheme.wscale())
-			tr_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			tr_.modulate = Color("9cffd8")
-			glyphs.add_child(tr_)
+			glyphs.add_child(UIUVLight.glow_picture(load("res://assets/ui/glyphs/%s.png" % gid), round(110 * UITheme.wscale())))
 		cipher.add_child(glyphs)
 		cipher.visible = l7.state["uv_page"]
 		if not l7.state["uv_page"] and l7.has_uv():
@@ -1223,23 +1357,19 @@ func _show_notebook(page: int) -> void:
 			v.add_child(c)
 			uvb.pressed.connect(func() -> void:
 				l7.uv_reveal("notebook_page")
-				var tint := ColorRect.new()
-				tint.color = Color(0.45, 0.25, 1.0, 0.0)
-				tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				tint.set_anchors_preset(Control.PRESET_FULL_RECT)
-				paper.add_child(tint)
-				var tw := create_tween()
-				tw.tween_property(tint, "color:a", 0.22, 0.25)
+				var light := UIUVLight.shine(paper, cipher, 0.0)
 				cipher.visible = true
 				cipher.modulate.a = 0.0
+				var tw := create_tween()
+				if not bool(Settings.get_value("reduce_motion")):
+					# the tube strikes: a flicker, then the light settles
+					tw.tween_property(light, "strength", 0.55, 0.07)
+					tw.tween_property(light, "strength", 0.2, 0.06)
+				tw.tween_property(light, "strength", 1.0, 0.5).set_ease(Tween.EASE_OUT)
 				tw.parallel().tween_property(cipher, "modulate:a", 1.0, 1.2)
 				uvb.visible = false)
 		elif l7.state["uv_page"]:
-			var tint := ColorRect.new()
-			tint.color = Color(0.45, 0.25, 1.0, 0.18)
-			tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			tint.set_anchors_preset(Control.PRESET_FULL_RECT)
-			paper.add_child(tint)
+			UIUVLight.shine(paper, cipher)
 	var nav := _bottom_bar(o)
 	var prev := IconButton.make("prev", 96)
 	prev.disabled = pg == 0
@@ -1465,14 +1595,14 @@ func set_meter(level: int) -> void:
 		var v := VBoxContainer.new()
 		v.add_theme_constant_override("separation", 8)
 		_meter.add_child(v)
-		var t := UITheme.label("item.pocket_receiver.name", 22, UITheme.MUTED)
+		var t := UITheme.label("item.pocket_receiver.name", 20, UITheme.MUTED)
 		t.add_theme_font_override("font", UITheme.caps_font(false, 1))
-		t.autowrap_mode = TextServer.AUTOWRAP_OFF
 		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(t)
+		_meter_label = t
 		var h := HBoxContainer.new()
 		h.alignment = BoxContainer.ALIGNMENT_CENTER
-		var k := UITheme.size(20) / 20.0
+		var k := UIOrnament.scale_k() # the bars are a picture: they grow with the ornaments, not with the text
 		h.add_theme_constant_override("separation", int(round(8 * k)))
 		v.add_child(h)
 		for i in 5:
@@ -1482,10 +1612,26 @@ func set_meter(level: int) -> void:
 			h.add_child(bar)
 			_meter_bars.append(bar)
 		_quiet(_meter)
+		_meter.minimum_size_changed.connect(_arrange, CONNECT_DEFERRED) # its name wrapped: lay out again
 	_meter.visible = level >= 0
 	for i in 5:
 		_meter_bars[i].color = Color("7dff9a") if i < level else Color(1, 1, 1, 0.12)
 	_layout() # the caption line keeps clear of the meter
+
+
+## The meter's name wraps (two lines at most) instead of making the meter wider than a quarter of the screen.
+func _fit_meter(canvas: Vector2) -> void:
+	if _meter_label == null:
+		return
+	var f := _meter_label.get_theme_font("font")
+	var fs := _meter_label.get_theme_font_size("font_size")
+	var w := f.get_string_size(_meter_label.atr(_meter_label.text), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 4.0
+	var bars := 0.0
+	for b in _meter_bars:
+		bars += b.custom_minimum_size.x + 8.0
+	var cap := maxf(bars, canvas.x * 0.24)
+	_meter_label.autowrap_mode = TextServer.AUTOWRAP_OFF if w <= cap else TextServer.AUTOWRAP_WORD_SMART
+	_meter_label.custom_minimum_size.x = minf(w, cap)
 
 
 func _close_button_bottom(o: Control) -> void:

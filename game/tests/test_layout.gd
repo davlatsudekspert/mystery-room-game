@@ -258,7 +258,8 @@ func test_hud_elements_do_not_collide() -> void:
 			check(not hint.intersects(back_r), "%s: hint and back overlap" % tag)
 			check(band_w >= 600.0, "%s: the message band is only %.0f px wide" % [tag, band_w])
 			check(column.size.y >= 3.0 * UITheme.target(UITheme.HUD_SLOT_PX, UITheme.SLOT_MM), "%s: the column has room for fewer than three slots (%.0f px)" % [tag, column.size.y])
-			# the longest view titles fit the top band in two lines of display small caps at Normal, three at XL
+			# the longest view titles fit the top band in two lines of display small caps at Normal; at XL they would
+			# need three, and the banner cuts them at two with an ellipsis (hud.gd _arrange(), test_hud_layout.gd)
 			var caps := UITheme.caps_font(true, 2)
 			var fs := UITheme.size(UITheme.HUD_TITLE_PX)
 			var top_w := canvas.x - 2.0 * (maxf(safe.x, safe.z) + pad + maxf(btn, back) + 20.0) - 64.0

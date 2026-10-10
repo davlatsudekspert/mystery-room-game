@@ -61,7 +61,7 @@ const HOTSPOT_VIEW := {
 const HOTSPOT_CAPTION := {
 	"door": "obj.door", "desk": "obj.desk", "clock": "obj.clock", "filing": "obj.filing",
 	"bookshelf": "obj.bookshelf", "gearbox": "obj.gearbox", "chalkboard": "obj.chalkboard",
-	"projector": "obj.projector", "bench": "obj.bench", "radio": "obj.radio", "poster": "obj.poster",
+	"projector": "obj.projector", "bench": "obj.bench", "radio": "obj.radio", "poster": "obj.poster_view",
 	"safe": "obj.safe", "panel": "obj.panel", "coat": "obj.coat", "mirror_a": "obj.mirror_a",
 	"mirror_b": "obj.mirror_b", "lock": "obj.lock", "evidence": "obj.evidence", "shadow": "obj.shadow",
 	"window": "obj.window", "vials": "obj.vials", "drawer": "obj.drawer", "books": "obj.bookshelf",
@@ -117,7 +117,7 @@ func _ready() -> void:
 	_build_input()
 	CrashGuard.detail("hud")
 	_build_hud()
-	_frame_panel() # with the HUD's own free area, now that it exists
+	_frame_fitted() # with the HUD's own free area, now that it exists
 	get_viewport().size_changed.connect(_on_viewport_resized)
 	add_child(PerfGuard.new())
 	GameState.events.connect(_on_events)
@@ -524,16 +524,24 @@ func _frame_safe() -> void:
 const PANEL_PLATE_CENTRE := Vector3(2.966, 1.45, -1.3) # the plate's front face
 const PANEL_HALF := Vector2(0.33, 0.42) # half-size framed: the plate plus the cabinet's bezels
 
-func _frame_panel() -> void:
-	var f: Dictionary = cam.fit_rect(PANEL_PLATE_CENTRE, Vector3.LEFT, PANEL_HALF.x, PANEL_HALF.y, 54.0,
-		cam.hud_free_rect(hud), 0.04)
+## Strand's poster (frame 0.544 × 0.751 m, centred on the south wall) is framed the same way: all of it, header to
+## footer, between the title and the prompt, so the dots beside every symbol can be counted (the caption is one line).
+const POSTER_CENTRE := Vector3(-0.3, 1.9, 2.49) # the paper
+const POSTER_HALF := Vector2(0.28, 0.385)
+
+func _frame_fitted() -> void:
+	var free: Rect2 = cam.hud_free_rect(hud)
+	var f: Dictionary = cam.fit_rect(PANEL_PLATE_CENTRE, Vector3.LEFT, PANEL_HALF.x, PANEL_HALF.y, 54.0, free, 0.04)
 	cam.add_view("panel", f["pos"], f["target"], 54.0)
+	f = cam.fit_rect(POSTER_CENTRE, Vector3.FORWARD, POSTER_HALF.x, POSTER_HALF.y, 44.0, free, 0.03)
+	cam.add_view("poster", f["pos"], f["target"], 44.0)
 
 
 ## The screen's shape or the HUD's size changed (rotation, text size): close-ups fitted to the free area follow.
 func _on_viewport_resized() -> void:
-	_frame_panel()
+	_frame_fitted()
 	_reframe("panel")
+	_reframe("poster")
 
 
 ## A close-up whose framing depends on the state was just re-aimed: glide to the new framing if the player is in it.
@@ -589,10 +597,11 @@ func _build_views() -> void:
 	V.call("bench", Vector3(-0.3, 1.65, 1.15), Vector3(-0.3, 1.0, 2.25), 56.0)
 	V.call("vials", Vector3(-0.9, 1.18, 1.62), Vector3(-0.9, 1.0, 2.12), 32.0)
 	V.call("radio", Vector3(0.55, 1.22, 1.62), Vector3(0.55, 1.05, 2.22), 36.0)
-	V.call("radio_hatch", Vector3(0.55, 1.54, 1.92), Vector3(0.54, 1.12, 2.23), 38.0)
-	V.call("poster", Vector3(-0.3, 1.85, 1.45), Vector3(-0.3, 1.9, 2.5), 44.0)
+	# 18 cm further back along the same line of sight: the tuning knob on the radio's front edge comes in from the
+	# screen edge (tap_map --hud-check wants 6 mm) while the hatch and its valve socket stay as readable as before
+	V.call("radio_hatch", Vector3(0.553, 1.685, 1.813), Vector3(0.54, 1.12, 2.23), 38.0)
 	_frame_safe()
-	_frame_panel()
+	_frame_fitted()
 	V.call("coat", Vector3(1.5, 1.38, -1.7), Vector3(2.12, 1.07, -2.08), 52.0) # west of Panel 7's open door
 	V.call("mirror_a", Vector3(0.95, 1.5, 1.05), Vector3(1.6, 1.15, 1.6), 46.0)
 	V.call("mirror_b", Vector3(0.85, 1.45, 0.4), Vector3(1.6, 1.15, 0.12), 46.0)

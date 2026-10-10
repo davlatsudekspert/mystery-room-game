@@ -15,6 +15,9 @@ var subtitle_label: Label
 var icon_texture: Texture2D # drawn by the banner itself (left of the text block)
 var band_alpha := 0.8 # over a white 3D frame: cream text 7:1, muted 4.9:1, brass 7:1
 var max_sub_lines := 0 # 0 = as many lines as the subtitle needs; otherwise it is cut there with an ellipsis
+var max_title_lines := 0 # the same for the title
+var sub_lines := 0 # lines the subtitle shows after fit()
+var title_lines := 0
 var _title_rect := Rect2()
 var _icon_rect := Rect2() # where the icon is drawn (empty = none)
 var _fl := 0.0 # flourish length actually drawn (0 = none)
@@ -94,10 +97,13 @@ func fit(max_w: float) -> void:
 	var tw := 0.0
 	var th := 0.0
 	_fl = 0.0
+	title_lines = 0
+	sub_lines = 0
 	if title_label.visible:
-		var m := _measure(title_label, ttext, inner_max)
+		var m := _measure(title_label, ttext, inner_max, max_title_lines)
 		tw = m.x
 		th = m.y
+		title_lines = int(m.z)
 		if title_label.autowrap_mode == TextServer.AUTOWRAP_OFF:
 			_fl = clampf((inner_max - tw) * 0.5 - 18.0 * k, 0.0, FLOURISH * k)
 			if _fl < 14.0 * k:
@@ -108,6 +114,7 @@ func fit(max_w: float) -> void:
 		var m := _measure(subtitle_label, stext, inner_max, max_sub_lines)
 		sw = m.x
 		sh = m.y
+		sub_lines = int(m.z)
 	var title_w := tw + (2.0 * (_fl + 18.0 * k) if _fl > 0.0 else 0.0)
 	var text_w := maxf(title_w, sw)
 	var rule_gap := 10.0 * k if (title_label.visible and subtitle_label.visible) else 0.0
@@ -140,8 +147,8 @@ func fit(max_w: float) -> void:
 
 ## The size a label needs for `text`: one line hugging its width when it fits `max_w`, otherwise wrapped at
 ## `max_w`; the height counts whole lines plus the theme's line spacing (what the Label itself needs to show
-## every line). Sets the label's autowrap mode accordingly.
-static func _measure(l: Label, text: String, max_w: float, max_lines: int = 0) -> Vector2:
+## every line). Sets the label's autowrap mode accordingly. -> (width, height, lines shown)
+static func _measure(l: Label, text: String, max_w: float, max_lines: int = 0) -> Vector3:
 	var f := l.get_theme_font("font")
 	var fs := l.get_theme_font_size("font_size")
 	var spacing := float(l.get_theme_constant("line_spacing"))
@@ -161,7 +168,7 @@ static func _measure(l: Label, text: String, max_w: float, max_lines: int = 0) -
 	else:
 		l.max_lines_visible = -1
 		l.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	return Vector2(w, lines * line_h + (lines - 1) * spacing + 4.0)
+	return Vector3(w, lines * line_h + (lines - 1) * spacing + 4.0, lines)
 
 
 ## Sets a label's size (the labels clip, so Godot's deferred minimum size never clamps the measured value).
