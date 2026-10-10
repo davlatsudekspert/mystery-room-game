@@ -38,6 +38,7 @@
   - the shortest answer has 2 to 4 switches (in practice 2 or 3).
 - **Answers.** The hint names the shortest answer, then the lexicographic one, as Chapter 4's Panel 0 does. Seed 0's hint is now "I, V" (the canonical wiring also still accepts I, II, III). Both answers of every entry restore the power, and in the other entries I, II, III is no answer.
 - **Evidence.** The solver, the playthrough and the hint read `panel_solution()` from the state. The tests also read each plate's pixels and check that switch *i* and lamp *j* are joined by a dot exactly where the wiring says so.
+- **Preview.** `docs/previews/variants/ch1_panel7_variants.jpg`: the real Panel 7 close-up of every wiring at 19.5:9 (1560 × 720, 1:1), seeds 0, 1, 5, 42, 2, 9, 6, 7. Re-render with `tools/qa_run.sh -- --resolution 1560x720 res://qa/panel_variants.tscn -- --out=<dir> [--only=6,7]` (about four wirings per run keeps the software renderer in memory).
 - **Redraw after editing the pool:** `python3 tools/textures/make_decals.py panel`, then `godot --headless --path game --import`.
 
 ## Chapter 2
