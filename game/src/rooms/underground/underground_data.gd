@@ -70,22 +70,24 @@ const NO_SHADOW_PREFIX := ["choir_walls", "choir_ceiling", "choir_trim", "galler
 const ZONE_ROOT := {"choir": "choir", "gallery": "gallery", "nursery": "nursery"}
 
 ## view -> [position, target, fov, root?, groups drawn, state key that adds groups ("" = none), groups it adds]
+## Views that frame a lobby passage mouth (choir_s, switch_room, desk, nursery_w) also draw L: with the lobby culled the
+## opening showed the fogged background as a flat teal slab (rendered QA, 2026-10-10).
 const VIEWS := {
 	"lift_w": [Vector3(0.5, 1.6, 6.4), Vector3(-1.1, 1.35, 6.0), 62.0, true, "L", "", ""],
 	"lift_e": [Vector3(-0.5, 1.6, 6.4), Vector3(1.1, 1.35, 6.0), 62.0, true, "L", "", ""],
 	# Choir Hall
 	"choir": [Vector3(-5.4, 1.65, 3.3), Vector3(-9.6, 1.5, -2.0), 62.0, true, "CL", "", ""],
-	"choir_s": [Vector3(-5.6, 1.65, -2.9), Vector3(-10.6, 1.3, 2.6), 62.0, true, "C", "", ""],
+	"choir_s": [Vector3(-5.6, 1.65, -2.9), Vector3(-10.6, 1.3, 2.6), 62.0, true, "CL", "", ""],
 	"office_door": [Vector3(-9.0, 1.5, 2.65), Vector3(-10.2, 1.1, 2.75), 50.0, false, "C", "", ""],
 	"office": [Vector3(-10.5, 1.6, 2.35), Vector3(-12.55, 0.85, 2.95), 56.0, false, "C", "", ""],
 	"ecg_lamp": [Vector3(-12.0, 1.3, 2.3), Vector3(-12.62, 1.06, 2.45), 40.0, false, "C", "", ""],
 	"meter_case": [Vector3(-12.05, 1.25, 3.3), Vector3(-12.6, 0.84, 3.3), 40.0, false, "C", "", ""],
-	"switch_room": [Vector3(-8.3, 1.65, 1.75), Vector3(-8.3, 1.4, 4.0), 58.0, false, "C", "", ""],
+	"switch_room": [Vector3(-8.3, 1.65, 1.75), Vector3(-8.3, 1.4, 4.0), 58.0, false, "CL", "", ""],
 	"cabinet_0": [Vector3(-7.4, 1.45, 2.75), Vector3(-7.4, 1.3, 3.55), 50.0, false, "C", "", ""],
 	"cabinet_1": [Vector3(-8.3, 1.45, 2.75), Vector3(-8.3, 1.3, 3.55), 50.0, false, "C", "", ""],
 	"cabinet_2": [Vector3(-9.2, 1.45, 2.75), Vector3(-9.2, 1.3, 3.55), 50.0, false, "C", "", ""],
 	"interlock_plate": [Vector3(-8.3, 2.05, 2.6), Vector3(-8.3, 2.3, 3.97), 40.0, false, "C", "", ""],
-	"desk": [Vector3(-7.8, 1.85, -1.6), Vector3(-7.75, 1.2, 0.35), 60.0, false, "C", "", ""],
+	"desk": [Vector3(-7.8, 1.85, -1.6), Vector3(-7.75, 1.2, 0.35), 60.0, false, "CL", "", ""],
 	"rack": [Vector3(-9.6, 1.8, -1.25), Vector3(-9.6, 2.1, -3.65), 58.0, false, "C", "", ""],
 	"rack_close": [Vector3(-9.6, 1.75, -2.4), Vector3(-9.6, 1.75, -3.8), 54.0, false, "C", "", ""],
 	"bench": [Vector3(-7.35, 1.6, -2.35), Vector3(-7.35, 0.9, -3.7), 50.0, false, "C", "", ""],
@@ -113,7 +115,7 @@ const VIEWS := {
 	"finale": [Vector3(0.0, 1.85, 3.75), Vector3(0.0, 1.15, 0.4), 66.0, false, "GS", "", ""],
 	# Nursery and Leyla's camp
 	"nursery": [Vector3(5.7, 1.65, 3.3), Vector3(10.6, 1.3, -2.6), 62.0, true, "NL", "camp_open", "K"],
-	"nursery_w": [Vector3(12.2, 1.65, 2.9), Vector3(6.4, 1.2, -0.8), 62.0, true, "N", "camp_open", "K"],
+	"nursery_w": [Vector3(12.2, 1.65, 2.9), Vector3(6.4, 1.2, -0.8), 62.0, true, "NL", "camp_open", "K"],
 	"autoclave": [Vector3(8.4, 1.55, -1.55), Vector3(8.4, 1.15, -2.95), 54.0, false, "N", "", ""],
 	"cam_drum": [Vector3(8.7, 1.35, -2.25), Vector3(8.7, 1.05, -2.88), 40.0, false, "N", "", ""],
 	"growth_log": [Vector3(8.7, 1.55, -2.55), Vector3(8.7, 1.5, -3.1), 38.0, false, "N", "", ""],

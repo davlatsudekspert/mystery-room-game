@@ -90,7 +90,7 @@ def dressing():
         for sz in (-1, 1):
             cx, cz = bx + sx * (bw / 2 - 0.03), bz + sz * (bd / 2 - 0.03)
             tri = [(cx + sx * 0.03, cz + sz * 0.03), (cx - sx * 0.05, cz + sz * 0.03), (cx + sx * 0.03, cz - sz * 0.05)]
-            corner = B.K.flat_poly("bcorner", A.ccw([(x, z) for (x, z) in tri]), TOP + 0.0025, WALNUT, up=True)
+            corner = B.K.flat_poly("bcorner", A.ccw(tri), [], TOP + 0.0025, WALNUT, up=True)
             p.append(corner)
             p.append(B.rivet("bstud", 0.004, (cx, TOP + 0.0025, cz), normal=(0, 1, 0), mat=BRASS, segs=6))
     # ashtray
@@ -149,7 +149,7 @@ def coat():
         top = hook + Vector((0.0, -0.11, 0.0)) + tang * (s * 0.19) + radial * 0.04
         pts = [top, top + Vector((0.0, -0.22, 0.0)) + radial * 0.03 + tang * (s * 0.01),
                top + Vector((0.0, -0.50, 0.0)) + radial * 0.05 + tang * (s * 0.0)]
-        sl = A.tube("sleeve", [B.G(*w2l(*q)) if False else Vector(w2l(*q)) for q in pts], 0.055, sides=10, mat=PAPER, radii=[0.062, 0.052, 0.046])
+        sl = A.tube("sleeve", [Vector(w2l(*q)) for q in pts], 0.055, sides=10, mat=PAPER, radii=[0.062, 0.052, 0.046])
         out.append(sl)
     return out
 
