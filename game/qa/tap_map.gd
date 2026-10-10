@@ -73,6 +73,7 @@ func _run() -> void:
 		for k in range(1, parts.size()):
 			args.append(int(parts[k]) if parts[k].is_valid_int() else parts[k])
 		logic.callv(parts[0], args)
+	logic.select_item("") # the solver may leave a tool (the UV lamp, the receiver) in hand: clean shots, no torch disc
 	var scene: String = SCENES.get(chapter, SCENES["ch1"])
 	room = (load(scene) as PackedScene).instantiate()
 	room.set("capture_mode", true)
