@@ -195,8 +195,7 @@ func _layout() -> void:
 	_top_plate.set_meta("max_w", minf(top_w, 1400.0 * UITheme.wscale()))
 	_top_plate.set_meta("y", safe.y + PAD)
 	_top_plate.set_meta("row_h", corner)
-	var meter_w := _meter.get_combined_minimum_size().x if _meter != null and _meter.visible else 0.0
-	_cap_plate.set_meta("max_w", minf(canvas.x - 2.0 * (side + PAD + maxf(corner, meter_w) + 20.0), 1500.0 * UITheme.wscale()))
+	_cap_plate.set_meta("max_w", minf(canvas.x - 2.0 * (side + PAD + corner + 20.0), 1500.0 * UITheme.wscale()))
 	# left: the inventory column, from under the Back button down to the bottom safe edge
 	var col_top := safe.y + PAD + bd + 16.0
 	_inv_span = Rect2(safe.x + PAD, col_top, UITheme.hud_column_width(), canvas.y - safe.w - PAD - col_top)
@@ -209,8 +208,8 @@ func _layout() -> void:
 	_msg_plate.set_meta("max_w", text_w)
 	_msg_plate.set_meta("from_bottom", true)
 	_fit_plate(_top_plate)
-	_stack_top()
 	_stack_bottom()
+	_stack_top() # after the bottom: the caption keeps clear of the prompt and the message
 	_inventory_geometry()
 
 
@@ -218,17 +217,35 @@ func _layout() -> void:
 ## the title wrapped to (large text sizes).
 func _stack_top() -> void:
 	var safe := UITheme.safe_margins()
+	var canvas: Vector2 = UITheme.metrics()["canvas"]
 	var corner := maxf(_pause_btn.custom_minimum_size.x, _back_btn.custom_minimum_size.x)
-	var y := safe.y + PAD + corner + 10.0
+	var row_bottom := safe.y + PAD + corner + 10.0
+	var y := row_bottom
 	if _top_plate.visible:
 		y = maxf(y, _top_plate.position.y + _top_plate.size.y + 6.0)
-	_cap_plate.set_meta("y", y)
-	_fit_plate(_cap_plate)
+	# the receiver meter (Chapter 2) hangs under the Hint button; the caption goes below it, never beside it
 	if _meter != null:
 		_meter.offset_right = -(safe.z + PAD)
 		_meter.offset_left = _meter.offset_right
-		_meter.offset_top = y
+		_meter.offset_top = row_bottom
 		_meter.offset_bottom = _meter.offset_top
+		if _meter.visible:
+			y = maxf(y, row_bottom + _meter.get_combined_minimum_size().y + 8.0)
+	_cap_plate.set_meta("y", y)
+	# the caption may not run into the banners at the bottom: fewer lines (with an ellipsis) when it would
+	var limit := canvas.y - safe.w - PAD - 10.0
+	for p: UIBanner in [_prompt_plate, _msg_plate]:
+		if p.visible and p.modulate.a > 0.05:
+			limit = minf(limit, p.position.y - 10.0)
+	_cap_plate.max_sub_lines = 0
+	_fit_plate(_cap_plate)
+	if _cap_plate.visible and _cap_plate.position.y + _cap_plate.size.y > limit:
+		var f := _caption_line.get_theme_font("font")
+		var fs := _caption_line.get_theme_font_size("font_size")
+		var line_h := f.get_height(fs) + float(_caption_line.get_theme_constant("line_spacing"))
+		var room := limit - y - 2.0 * UIBanner.PAD_Y * UIOrnament.scale_k() - 6.0
+		_cap_plate.max_sub_lines = maxi(1, int(floor(room / line_h)))
+		_fit_plate(_cap_plate)
 
 
 ## The prompt sits at the bottom safe edge; the message above it (or in its place while there is no prompt).
@@ -389,6 +406,7 @@ func _update_prompt() -> void:
 	else:
 		_prompt.text = tr("ui.use_prompt") % tr(ItemDB.name_key(logic.selected))
 	_stack_bottom()
+	_stack_top() # the caption keeps clear of the prompt
 
 
 # ====================================================================== feedback
@@ -407,11 +425,13 @@ func message(text: String, seconds: float = 2.8) -> void:
 	if _found_id != "":
 		_msg_plate.set_title(tr(ItemDB.name_key(_found_id)))
 		_msg_plate.set_icon(icons.get_icon(_found_id))
+		_msg_plate.max_sub_lines = 3 # the full description is in Inspect; the banner stays a banner at Extra large
 		_message.text = tr(logic.item_desc_key(_found_id))
 		seconds = maxf(seconds, 4.5)
 	else:
 		_msg_plate.set_title("")
 		_msg_plate.set_icon(null)
+		_msg_plate.max_sub_lines = 0
 		_message.text = text
 	_message.modulate.a = 1.0 # (QA scripts blank the label itself to detect the next message as new)
 	_stack_bottom()
@@ -1116,11 +1136,21 @@ func play_intro() -> void:
 	lbl.add_theme_color_override("font_color", UITheme.CREAM)
 	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.offset_left = safe.x + 220
-	lbl.offset_right = -(safe.z + 220)
+	lbl.offset_left = safe.x + 160
+	lbl.offset_right = -(safe.z + 160)
 	lbl.offset_top = safe.y + 40
-	lbl.offset_bottom = -(safe.w + 140)
+	lbl.offset_bottom = -(safe.w + 150)
 	o.add_child(lbl)
+	# the largest display size at which the longest card still fits its rect (Extra large on a short screen)
+	var avail_w := canvas.x - safe.x - safe.z - 320.0
+	var avail_h := canvas.y - safe.y - safe.w - 190.0
+	var fs := UITheme.size(44)
+	var floor_fs := UITheme.size(26)
+	var f := lbl.get_theme_font("font")
+	for key in logic.intro_keys():
+		while fs > floor_fs and f.get_multiline_string_size(tr(key), HORIZONTAL_ALIGNMENT_CENTER, avail_w, fs).y > avail_h * 0.78:
+			fs = maxi(floor_fs, int(fs * 0.92))
+	lbl.add_theme_font_size_override("font_size", fs)
 	var rule_top := UIOrnament.rule(0.0, 24.0)
 	var rule_bottom := UIOrnament.rule(0.0, 24.0)
 	o.add_child(rule_top)
@@ -1130,8 +1160,9 @@ func play_intro() -> void:
 	tap.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	tap.offset_top = -(safe.w + 120)
 	tap.offset_bottom = -(safe.w + 50)
-	tap.offset_left = -500 * UITheme.wscale()
-	tap.offset_right = 500 * UITheme.wscale()
+	var tap_half := minf(500.0 * UITheme.wscale(), (canvas.x - safe.x - safe.z) * 0.5 - 24.0) # never past the safe edges
+	tap.offset_left = -tap_half
+	tap.offset_right = tap_half
 	tap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tap.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	o.add_child(tap)

@@ -14,6 +14,7 @@ var title_label: Label
 var subtitle_label: Label
 var icon: TextureRect
 var band_alpha := 0.8 # over a white 3D frame: cream text 7:1, muted 4.9:1, brass 7:1
+var max_sub_lines := 0 # 0 = as many lines as the subtitle needs; otherwise it is cut there with an ellipsis
 var _title_rect := Rect2()
 var _fl := 0.0 # flourish length actually drawn (0 = none)
 var _rule_y := -1.0 # the rule between title and subtitle (-1 = none)
@@ -102,7 +103,7 @@ func fit(max_w: float) -> void:
 	var sw := 0.0
 	var sh := 0.0
 	if subtitle_label.visible:
-		var m := _measure(subtitle_label, stext, inner_max)
+		var m := _measure(subtitle_label, stext, inner_max, max_sub_lines)
 		sw = m.x
 		sh = m.y
 	var title_w := tw + (2.0 * (_fl + 18.0 * k) if _fl > 0.0 else 0.0)
@@ -140,7 +141,7 @@ func fit(max_w: float) -> void:
 ## The size a label needs for `text`: one line hugging its width when it fits `max_w`, otherwise wrapped at
 ## `max_w`; the height counts whole lines plus the theme's line spacing (what the Label itself needs to show
 ## every line). Sets the label's autowrap mode accordingly.
-static func _measure(l: Label, text: String, max_w: float) -> Vector2:
+static func _measure(l: Label, text: String, max_w: float, max_lines: int = 0) -> Vector2:
 	var f := l.get_theme_font("font")
 	var fs := l.get_theme_font_size("font_size")
 	var spacing := float(l.get_theme_constant("line_spacing"))
@@ -153,6 +154,13 @@ static func _measure(l: Label, text: String, max_w: float) -> Vector2:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		w = max_w
 		lines = maxi(1, int(roundf(f.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, max_w, fs).y / line_h)))
+	if max_lines > 0 and lines > max_lines:
+		lines = max_lines
+		l.max_lines_visible = max_lines
+		l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	else:
+		l.max_lines_visible = -1
+		l.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	return Vector2(w, lines * line_h + (lines - 1) * spacing + 4.0)
 
 
