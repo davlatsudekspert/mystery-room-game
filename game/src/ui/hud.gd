@@ -195,7 +195,6 @@ func _layout() -> void:
 	_top_plate.set_meta("max_w", minf(top_w, 1400.0 * UITheme.wscale()))
 	_top_plate.set_meta("y", safe.y + PAD)
 	_top_plate.set_meta("row_h", corner)
-	_cap_plate.set_meta("max_w", minf(canvas.x - 2.0 * (side + PAD + corner + 20.0), 1500.0 * UITheme.wscale()))
 	# left: the inventory column, from under the Back button down to the bottom safe edge
 	var col_top := safe.y + PAD + bd + 16.0
 	_inv_span = Rect2(safe.x + PAD, col_top, UITheme.hud_column_width(), canvas.y - safe.w - PAD - col_top)
@@ -232,6 +231,14 @@ func _stack_top() -> void:
 		if _meter.visible:
 			y = maxf(y, row_bottom + _meter.get_combined_minimum_size().y + 8.0)
 	_cap_plate.set_meta("y", y)
+	# sideways the caption keeps clear of the inventory column (and the inspect / combine flyout beside the
+	# selected slot) on the left and the Hint button on the right; it is centred in what is left
+	var left := _inv_span.position.x + _inv_span.size.x + 20.0
+	if _actions.visible:
+		left += ACTION_GAP + _actions.get_combined_minimum_size().x
+	var right := canvas.x - safe.z - PAD - corner - 20.0
+	_cap_plate.set_meta("cx", (left + right) * 0.5)
+	_cap_plate.set_meta("max_w", minf(right - left, 1500.0 * UITheme.wscale()))
 	# the caption may not run into the banners at the bottom: fewer lines (with an ellipsis) when it would
 	var limit := canvas.y - safe.w - PAD - 10.0
 	for p: UIBanner in [_prompt_plate, _msg_plate]:
