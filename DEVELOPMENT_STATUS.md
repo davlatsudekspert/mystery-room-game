@@ -42,7 +42,7 @@ Exports with the custom feature `beta_unlock` open every released chapter withou
 The director plus parallel agents: Android/Google Play, iOS/TestFlight, QA and visual/UI. See `NEXT_STEPS.md`. Nothing is uploaded to a store and no tester is invited without the owner's approval.
 
 ## Chapter 3
-Design draft: `docs/CHAPTER3_DESIGN.md`.
+Design: `docs/CHAPTER3_DESIGN.md`; model contract: `docs/models/ch3.md`. The logic is complete with per-game variants (102 tests). The scene (`game/src/rooms/underground/`) is integrated: layout, the 65 views with captions, zone culling and portal cards, lights, environment and zone tones, the lift-descent intro, hotspot routing for every puzzle, variant evidence surfaces, echoes, hints and Continue. `qa/playthrough_ch3` plays the whole chapter by real 3D taps on both Chapter 2 key paths; on 2026-10-10 every remaining fallback was for a model group not built yet (B, E, F and part of D). Draw calls are 27–90 per view without those groups. Unreleased (`released: false`). Details in `docs/GAMEPLAY_QA.md`, "Chapter 3".
 
 ## QA playthrough (real 3D scene, software renderer)
 `xvfb-run -a godot --path game res://qa/playthrough.tscn -- --out=<dir>` taps the projected screen position of each part. The tap goes through the same raycast → hotspot → logic path a finger uses. A step only counts when the expected state change happens, and wrong-direction taps fail. Any logic fallback is reported as a failure.

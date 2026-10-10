@@ -343,6 +343,7 @@ func _build_eyepiece() -> void:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.vertex_color_use_as_albedo = true
+	m.vertex_color_is_srgb = true # the colours above are what the rim should show; read as linear they turn beige
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	m.no_depth_test = true
 	m.render_priority = 10
@@ -951,10 +952,16 @@ func _process(_delta: float) -> void:
 
 
 # ====================================================================== view changes
+## Close-ups whose dark metal must be read (drum symbols, lock faces, the cam drum, the socket) get a stronger
+## camera fill: at 0.9 the east drum lock stayed near black in the rendered QA.
+const BRIGHT_CLOSEUPS: Array[String] = ["drum_west", "drum_east", "cabinet_0", "cabinet_1", "cabinet_2", "meter_case",
+	"cam_drum", "growth_log", "seed_drawer", "socket_42", "recorder", "interlock_plate"]
+
+
 func view_changed_hook(id: String) -> void:
 	apply_culling(id)
 	var fill: OmniLight3D = lights["focus_fill"]
-	var e := 0.0 if cam.is_root() or id.ends_with("_mem") else 0.9
+	var e := 0.0 if cam.is_root() or id.ends_with("_mem") else (1.5 if id in BRIGHT_CLOSEUPS else 0.9)
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	_frost.visible = id.ends_with("_mem")
 	_place_eyepiece(id)

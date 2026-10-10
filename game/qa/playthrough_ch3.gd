@@ -384,11 +384,13 @@ func _target(m: String, a: Array) -> Array:
 func _edges() -> Array:
 	var s := logic.state
 	var west: bool = s["entry"] == "choir"
+	# back to the lift: the hall root views look away from the passage (a player turns with free-look, which the
+	# QA does not do), so the way back starts from a view that frames the passage mouth
 	return [
 		["lift", "choir", "lift_w", "shell_lift", "IA_passage_w", "choir", west],
-		["choir", "lift", "choir", "shell_lift", "IA_passage_w", "lift_w", west],
+		["choir", "lift", "desk", "shell_lift", "IA_passage_w", "lift_w", west],
 		["lift", "nursery", "lift_e", "shell_lift", "IA_passage_e", "nursery", not west],
-		["nursery", "lift", "nursery", "shell_lift", "IA_passage_e", "lift_e", not west],
+		["nursery", "lift", "nursery_w", "shell_lift", "IA_passage_e", "lift_e", not west],
 		["choir", "gallery", "blast_west_hall", "door_west", "IA_door_tunnel", "gallery", s["door_west_open"]],
 		["gallery", "choir", "blast_west", "door_west", "IA_door_tunnel", "choir", s["door_west_open"]],
 		["gallery", "nursery", "blast_east", "door_east", "IA_door_tunnel", "nursery", s["door_east_open"]],

@@ -111,3 +111,46 @@ All screenshots come from the software renderer in the dev container (lavapipe, 
 4. **The film and recording.** Do players understand that the crystal must sit in the screen socket while only the sharp sign is shown?
 5. **The vault overlay.** Is "on its side, smaller" in the engraving clear enough?
 6. **Pacing.** Is the stretch from the booth to the vault too long without a hint of progress?
+
+---
+
+## Chapter 3 — The Underground Facility (Level −2)
+
+### Tools
+| Check | Command | What it does |
+|---|---|---|
+| Solver playthrough | `tools/qa_run.sh -- res://qa/playthrough_ch3.tscn -- --out=<dir> --key=strand` (and `--key=leyla`, `--seed=N`, `--lens=take`, `--secret`) | `UndergroundSolver` decides each move on a copy of the game (`qa/ch3_plan.gd` records it); the playthrough walks there through the open ways (lift passages, blast doors, the shutter tunnel) and taps the part through the room's raycast. After the first wing it saves, frees the scene and rebuilds it from the save (the menu's Continue). Every fallback is reported with what the tap hit; fallbacks for models not built yet are listed per puzzle. Exit 0 = no failed step and no fallback |
+| Quick logic-flow run | `godot --headless --path game res://qa/playthrough_ch3.tscn -- --out=<dir> --quick --key=leyla` | The same taps without a renderer (the headless window is set to 16:9 so the views frame as on a phone); about 7 minutes |
+| Tap map / perf | `tools/qa_run.sh -- res://qa/tap_map.tscn -- --chapter=ch3 --key=strand --until=door_east_open --views=desk,drum_east [--perf --breakdown]` | Marks every tappable part in a view, or logs draw calls, primitives and the per-model breakdown |
+| Logic tests | `tools/run_tests.sh` | Puzzle rules, both wing orders, both lens paths, the secret, 60-seed variants, the no-softlock fuzz |
+
+### What the 3D QA found and fixed (2026-10-10)
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| The lift zone had only the cage lamp | From the lift, the lobby beyond the open gate was a black hole; the way out could not be seen | Two unshadowed omnis over the passage mouths (group L) |
+| `desk`, `switch_room`, `choir_s` and `nursery_w` culled the lobby while framing a passage mouth | The opening showed the fogged background as a flat teal slab | Those views draw group L too (the lobby is 27 draw calls) |
+| The eyepiece rim's vertex colours were read as linear | Every port view was framed by a bright beige disc instead of a dark brass rim | `vertex_color_is_srgb` on the rim material |
+| Camera fill of 0.9 on dark steel | The east drum lock's symbols were nearly black | Fill 1.5 in the close-ups that must be read (drum locks, cabinets, case, cam drum, log, drawer, socket, recorder, plate) |
+| A tap right after a cinematic or a camera move is dropped (`RoomBase._on_tap` while `cam.transitioning`) | QA only: the autoclave door after the growth and the second port-rim tap fell back | The playthrough waits for the camera, as a finger would |
+| The headless window is square | QA only: the master knob and the port rims fell outside the frame | The headless run sets a 16:9 window |
+
+### Status
+| Area | Level | Evidence |
+|---|---|---|
+| Logic: 11 puzzles, both wing orders, both lens paths, the secret, per-game variants, softlock fuzz | AUTOMATED TESTED (logic) | `tools/run_tests.sh`: 102 tests, 0 failures |
+| Scene: §1.2 layout, the 65 §2 views with captions, §1.4 zone culling and portal cards, §1.5 lights (one shadowed spot per zone), environment, zone room tones, the lift descent intro, `SceneManager.room_ready` / CrashGuard safe levels | INTEGRATED | `game/src/rooms/underground/underground_room.gd`, `underground_data.gd` |
+| Hotspot routing of every puzzle to `UndergroundLogic`; visuals rendered from `logic.state`; the nine variant evidence surfaces (§11); kept echoes, the 1979 loop, Leyla's touch, the finale and the secret; hints through `hint_goal()` / `hint_args()` | INTEGRATED | `underground_visuals.gd` |
+| Full chapter by real 3D taps, both Chapter 2 key paths | AUTOMATED TESTED (3D taps) — **waits for models** | `playthrough_ch3` on 2026-10-10 with groups A, C, part of D, G and H built. Rendered strand path: chapter complete, **63 taps, 45 fallbacks** (44 for models not built yet, 1 QA walk since fixed). Quick runs: leyla path 53 taps / 48 fallbacks (44 unbuilt), strand path 57 taps / 44 fallbacks (all unbuilt). Unbuilt-model fallbacks by puzzle: heart 15, choir 10, prisms 5, melody 4, resonance 4, interlock 2, seed 2, restore 1, grow 1 |
+| Continue: save → free the scene → rebuild from the save after the first wing | AUTOMATED TESTED (3D) | Both paths: state kept, opens at the wing's hall, gate open |
+| Models in the scene | 14 of 31 built | A (7), C (`switch_cabinet`, `interlock_plate`, `inspection_port`, `control_desk`), D (`autoclave`, `autoclave_dead`, `growth_log`), all items (G) and echoes (H). Waiting: B (7), D (`seed_library`, `growth_chart`, `prism_bench`, `spectral_seal_door`), E (4), F (2). The room spawns a model the moment its GLB is in `game/assets/models/` |
+| Views | VISUALLY VERIFIED (software renderer) | The selection in `docs/previews/ch3/` (from 50 playthrough screenshots) |
+| Audio | IMPLEMENTED | Tube and crystal tones are synthesized (`underground_tones.gd`); zone tones and the finale music fall back to Chapter 2 tracks until Chapter 3's exist |
+| Performance | Under budget so far (≤ 150 draw calls / 150k primitives) | Draw calls per view, strand path: lift 27–36, choir 52, choir_s 90, desk 86, port_b 66, rack 41, gallery 51, gallery_w 57, glass_floor 51, console 52, finale 64, nursery 54, nursery_w 70, autoclave 54, seed_library 37, prisms 66, camp 37, shutter 67; primitives 4k–43k. Groups B, E and F are not in yet; the Choir views (choir_s, desk) will gain the most and need re-measuring when B lands |
+| Released | — | `chapters.gd`: `released: false` |
+
+### Still needs human testing
+1. **The interlock plate.** Do players read the pictograms as "key into the lock face, handle to O, the next key comes free"?
+2. **The 1979 loop.** Through three ports, is it clear that the globes count the step and each port shows only some of the levers?
+3. **The chalk staircase and the meter.** Is "reading 1 = the longest tube" understood from the staircase alone?
+4. **The prism fans.** Is the additive colour on the three rims readable on a phone screen?
+5. **The ring symbols.** Outer → inner through the glass floor against the drum order on the door.

@@ -5,7 +5,7 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 **Running now (2026-10-09, afternoon):**
 - main menu redesign in the owner's "The Room" direction (gear box hero, serif text items, entrance motion);
 - Ch3 model group A (shells, lift, doors), and groups B+C (Choir Hall props, control desk, cabinets, ports);
-- Ch3 room scene integration (`underground_room.gd`, `playthrough_ch3`);
+- Ch3 room scene integration (`underground_room.gd`, `playthrough_ch3`): done for the built groups; as B, D, E and F land, rerun `playthrough_ch3` on both key paths (`--key=strand|leyla`), tap-map the new close-ups and re-measure the Choir views (choir_s 90 / desk 86 draw calls before group B);
 - store listing (letter-style description, hero screenshots).
 
 Next in the queue:
