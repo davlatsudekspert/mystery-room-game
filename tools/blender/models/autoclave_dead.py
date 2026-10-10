@@ -199,7 +199,8 @@ def qa(parts, args):
                   ("autoclave_dead", D.DEAD_POS[2], 0.0, "qa_d2_"), ("growth_log", D.world_point(D.AC_POS, 0.0,
                                                                                                 (0.30, 1.66, 0.40)),
                                                                      0.0, "qa_log_")])
-    m1 = bpy.data.objects.get("qa_d1_echo_mount")
+    # the imported instance's empty is renamed "qa_d1_echo_mount[.001]" (the build's own echo_mount takes the bare name)
+    m1 = next((o for o in bpy.data.objects if o.name.startswith("qa_d1_echo_mount")), None)
     _hb, fig_b = techs(m1, "tech_b", "qa_tb_") if m1 is not None else (None, [])
     gm = D.ghost_material()
     for f in fig_a + fig_b:
