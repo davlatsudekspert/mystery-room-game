@@ -21,6 +21,7 @@ var hints_used := 0
 var in_game := false
 var _hint_goal := ""
 var _hint_level := 0
+var _hint_levels: Dictionary = {} # goal -> the highest hint level shown for it (the hint dialog reopens there)
 var _autosave_timer: Timer
 
 
@@ -71,6 +72,10 @@ func continue_saved() -> bool:
 	var stats: Dictionary = d.get("stats", {})
 	play_time = float(stats.get("play_time", 0.0))
 	hints_used = int(stats.get("hints_used", 0))
+	var levels: Variant = stats.get("hint_levels", {})
+	if levels is Dictionary:
+		for g: Variant in levels:
+			_hint_levels[str(g)] = clampi(int(levels[g]), 0, 3)
 	return true
 
 
@@ -86,6 +91,7 @@ func _attach(id: String, l: RoomLogic) -> void:
 	logic.changed.connect(_on_logic_changed)
 	_hint_goal = ""
 	_hint_level = 0
+	_hint_levels = {}
 	chapter_started.emit(id)
 
 
@@ -102,7 +108,7 @@ func save_now() -> bool:
 	return SaveSystem.save_game({
 		"chapter": chapter_id,
 		"logic": logic.to_dict(),
-		"stats": {"play_time": play_time, "hints_used": hints_used},
+		"stats": {"play_time": play_time, "hints_used": hints_used, "hint_levels": _hint_levels},
 	})
 
 
@@ -145,12 +151,31 @@ func next_hint() -> Dictionary:
 		return {}
 	if goal != _hint_goal:
 		_hint_goal = goal
-		_hint_level = 0
+		_hint_level = int(_hint_levels.get(goal, 0)) # a goal asked about before goes on from where it was
 	_hint_level = mini(_hint_level + 1, 3)
+	_hint_levels[goal] = _hint_level
 	hints_used += 1
 	hint_shown.emit(goal, _hint_level)
-	return {"goal": goal, "level": _hint_level, "key": "hint.%s.%d" % [goal, _hint_level],
-		"args": logic.hint_args(goal, _hint_level)}
+	return _hint_entry(goal, _hint_level)
+
+
+## The hints already shown for the current goal, level 1 up to the highest reached (each like next_hint()'s
+## result), without escalating or counting a new hint: the hint dialog reopens at the highest level reached and
+## keeps the earlier ones above it. [] when none was shown yet.
+func shown_hints() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if logic == null:
+		return out
+	var goal := logic.hint_goal()
+	if goal == "":
+		return out
+	for lvl in range(1, int(_hint_levels.get(goal, 0)) + 1):
+		out.append(_hint_entry(goal, lvl))
+	return out
+
+
+func _hint_entry(goal: String, level: int) -> Dictionary:
+	return {"goal": goal, "level": level, "key": "hint.%s.%d" % [goal, level], "args": logic.hint_args(goal, level)}
 
 
 func current_hint_level() -> int:

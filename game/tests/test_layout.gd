@@ -8,7 +8,7 @@ const BUTTONS := {
 	# key: button minimum width used in the UI code (px at 1920x1080 reference, before UITheme.wscale())
 	"ui.continue": 520, "ui.new_game": 520, "ui.chapters": 520, "ui.settings": 520, "ui.quit": 520,
 	"ui.resume": 520, "ui.main_menu": 520, "ui.notebook": 520, "ui.read": 260, "ui.combine": 320,
-	"ui.close": 240, "ui.hint_more": 340, "ui.take_lens": 380, "ui.leave_lens": 380, "ui.restore": 420,
+	"ui.close": 240, "ui.hint_more": 560, "ui.hint_answer": 560, "ui.take_lens": 380, "ui.leave_lens": 380, "ui.restore": 420,
 	"ui.yes": 240, "ui.no": 240, "ui.play": 300, "ui.coming_soon": 300,
 	"ui.privacy": 380,
 }
@@ -18,7 +18,7 @@ const CONTAINERS := {
 	"ui.continue": [800, 1.0], "ui.new_game": [800, 1.0], "ui.chapters": [800, 1.0], "ui.quit": [800, 1.0],
 	"ui.settings": [620, 1.0], "ui.resume": [620, 1.0], "ui.main_menu": [620, 1.0], "ui.notebook": [620, 1.0],
 	"ui.read": ["inspect", 1.0], "ui.combine": ["inspect", 1.0], "ui.close": ["inspect", 1.0],
-	"ui.hint_more": [980, 1.0], "ui.take_lens": [1000, 1.0], "ui.leave_lens": [1000, 1.0],
+	"ui.hint_more": [980, 1.0], "ui.hint_answer": [980, 1.0], "ui.take_lens": [1000, 1.0], "ui.leave_lens": [1000, 1.0],
 	"ui.restore": [1500, 1.0], "ui.privacy": [1500, 1.0], "ui.yes": [900, 1.0], "ui.no": [900, 1.0],
 	"ui.play": [1200, 1.0], "ui.coming_soon": [1200, 1.0],
 }

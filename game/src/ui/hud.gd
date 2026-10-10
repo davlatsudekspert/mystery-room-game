@@ -886,36 +886,87 @@ func _above_bar_size() -> Vector2:
 
 
 # ====================================================================== hints
+## The hint ladder (owner feedback: hints "only help a little"): level 1 nudges, 2 says more, 3 is the answer.
+## The current rung is "Hint N of 3" over its text; the earlier rungs stay above it, smaller and muted, so nothing
+## said before is lost. The button names the next step: "Stronger hint (2/3)", then "Show the answer (3/3)"; it
+## goes away at the answer. Asked again about the same goal, the dialog opens at the highest level reached.
 func show_hint() -> void:
 	_hint_btn.badge = ""
 	var o := _open_overlay(0.55)
 	var d := UITheme.dialog(o, 980, "ui.hint", 46)
 	var v: VBoxContainer = d["body"]
-	var lvl_label := UITheme.label("", 22, UITheme.MUTED)
-	lvl_label.add_theme_font_override("font", UITheme.caps_font(false, 1))
-	lvl_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(lvl_label)
-	var text := UITheme.label("", 30)
-	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	text.custom_minimum_size = Vector2(0, round(UITheme.size(30) * 2.8)) # two lines: the panel does not jump
-	v.add_child(text)
+	var ladder := VBoxContainer.new()
+	ladder.add_theme_constant_override("separation", 18)
+	v.add_child(ladder)
 	var h: HFlowContainer = d["footer"]
-	var more := UITheme.button("ui.hint_more", 340)
+	var more := UITheme.button("ui.hint_more", 560) # wide enough for "Show the answer (3/3)"
 	var close := UITheme.button("ui.close", 240)
 	h.add_child(more)
 	h.add_child(close)
-	var show_next := func() -> void:
+	var shown: Array[Dictionary] = GameState.shown_hints()
+	if shown.is_empty():
+		var first := GameState.next_hint()
+		if not first.is_empty():
+			shown.append(first)
+			AudioManager.sfx("hint", -4.0)
+	var render := func() -> void:
+		for c in ladder.get_children():
+			ladder.remove_child(c)
+			c.queue_free()
+		for i in shown.size():
+			ladder.add_child(_hint_rung(shown[i], i == shown.size() - 1))
+		var top := int(shown[-1]["level"]) if not shown.is_empty() else 3
+		more.text = "ui.hint_more" if top <= 1 else "ui.hint_answer"
+		more.disabled = top >= 3
+		more.visible = top < 3
+	render.call()
+	more.pressed.connect(func() -> void:
 		var hint := GameState.next_hint()
 		if hint.is_empty():
 			return
 		AudioManager.sfx("hint", -4.0)
-		var args: Array = hint.get("args", [])
-		text.text = tr(hint["key"]) % args if not args.is_empty() else tr(hint["key"])
-		lvl_label.text = tr("ui.hint_level") % int(hint["level"])
-		more.disabled = int(hint["level"]) >= 3
-	show_next.call()
-	more.pressed.connect(show_next)
+		if shown.is_empty() or int(hint["level"]) > int(shown[-1]["level"]):
+			shown.append(hint)
+		render.call()
+		_scroll_to_end.call_deferred(v.get_parent() as ScrollContainer))
 	close.pressed.connect(_close_overlay)
+	_scroll_to_end.call_deferred(v.get_parent() as ScrollContainer) # reopened at a high level: the newest rung
+
+
+## One rung of the hint ladder: "Hint N of 3" (or "… the answer") in small caps over its text; the current rung in
+## full size (the heading in brass), an earlier one smaller and muted, under a hairline.
+func _hint_rung(hint: Dictionary, current: bool) -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	var lvl := int(hint["level"])
+	var head := UITheme.label(tr("ui.hint_level_answer") if lvl >= 3 else tr("ui.hint_level") % lvl, 22 if current else 20,
+		UITheme.BRASS_HI if current else UITheme.MUTED)
+	head.add_theme_font_override("font", UITheme.caps_font(current, 1))
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	head.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	box.add_child(head)
+	var args: Array = hint.get("args", [])
+	var text := UITheme.label(tr(hint["key"]) % args if not args.is_empty() else tr(hint["key"]), 30 if current else 24,
+		UITheme.CREAM if current else UITheme.MUTED)
+	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	box.add_child(text)
+	if not current:
+		var rule := UIOrnament.header_rule(12.0)
+		rule.alpha = 0.3
+		box.add_child(rule)
+	box.set_meta("hint_level", lvl)
+	return box
+
+
+## Scrolls a dialog body to its end once its layout has settled (the newest hint is at the bottom).
+func _scroll_to_end(s: ScrollContainer) -> void:
+	if s == null:
+		return
+	for i in 2:
+		await get_tree().process_frame
+	if is_instance_valid(s):
+		s.scroll_vertical = int(s.get_v_scroll_bar().max_value)
 
 
 # ====================================================================== pause
@@ -1052,7 +1103,7 @@ func show_inspect(id: String) -> void:
 	row.alignment = FlowContainer.ALIGNMENT_BEGIN
 	info.add_child(row)
 	var doc := ItemDB.document(id)
-	if doc != "":
+	if has_document(doc):
 		var read := UITheme.button("ui.read", 260)
 		read.pressed.connect(func() -> void: show_document(doc))
 		row.add_child(read)
@@ -1070,7 +1121,21 @@ func show_inspect(id: String) -> void:
 
 
 # ====================================================================== documents
+## The documents the reader can open (an item whose document is not listed here has no Read button).
+const DOCUMENTS: Array[String] = ["notebook", "letter", "photo", "evidence", "darkroom_note", "badge", "index_card",
+	"personnel_file", "tape_1996", "tape_1997", "tape_1998", "strand_letters", "strand_note", "growth_log", "poster",
+	"chalkboard", "routing_chart"]
+
+
+static func has_document(doc: String) -> bool:
+	return DOCUMENTS.has(doc)
+
+
+## Opens a document in the reader. An unknown id (a chapter's documents still to come) opens nothing.
 func show_document(doc: String) -> void:
+	if not has_document(doc):
+		push_warning("HUD: no reader page for document «%s»" % doc)
+		return
 	match doc:
 		"notebook":
 			_show_notebook(0)
