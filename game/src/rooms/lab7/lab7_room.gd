@@ -1602,6 +1602,11 @@ func _play_ending() -> void:
 	hud.call("caption", tr("cap.door"))
 	_wake_corridor()
 	await get_tree().create_timer(2.4).timeout
+	# the door's line and then the corridor's are read before the choice covers them
+	var left: float = hud.call("caption_left")
+	while left > 0.0:
+		await get_tree().create_timer(left + 0.1).timeout
+		left = hud.call("caption_left")
 	hud.call("set_busy", false)
 	hud.call("show_choice")
 
@@ -1839,7 +1844,11 @@ func _wake_corridor() -> void:
 			var l := _corridor_lights[light_of[b]]
 			create_tween().tween_property(l, "light_energy", 0.9 if b == 0 else 1.3, 0.35)
 		AudioManager.sfx("switch_toggle", -10.0 - 2.0 * k, 0.8 - 0.05 * k)
-		if k == 1:
-			hud.call("caption", tr("cap1.corridor"), 3.2)
+		if k == 1: # after the door's line has been read
+			var left: float = hud.call("caption_left")
+			if left > 0.0:
+				get_tree().create_timer(left).timeout.connect(func() -> void: hud.call("caption", tr("cap1.corridor"), 3.2))
+			else:
+				hud.call("caption", tr("cap1.corridor"), 3.2)
 		await get_tree().create_timer(0.45).timeout
 

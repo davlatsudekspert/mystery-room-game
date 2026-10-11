@@ -1485,6 +1485,9 @@ func _finale_outcome(option: String) -> void:
 			tones.tube(r, -7.0 - 0.6 * (7 - r))
 			await get_tree().create_timer(0.55).timeout
 	await get_tree().create_timer(6.0 if option == "strand" else 2.6).timeout
+	var left: float = hud.call("caption_left") # the Array's answer is read before the chapter card covers it
+	if left > 0.0:
+		await get_tree().create_timer(left).timeout
 	_busy(false)
 	_outcome_running = false
 	hud.call("show_chapter_complete")
@@ -1527,7 +1530,7 @@ func _array_wakes() -> void:
 	await get_tree().create_timer(5.0).timeout
 	cam.go("finale")
 	hud.call("caption", tr("cap3.echoes_appear"), 6.0)
-	await get_tree().create_timer(6.0).timeout
+	await get_tree().create_timer(UITheme.read_seconds(tr("cap3.echoes_appear"), 6.0)).timeout
 	_busy(false)
 	hud.call("show_choice")
 
@@ -1549,13 +1552,14 @@ func _play_recording() -> void:
 	visuals.recorder(true)
 	hud.call("caption", tr("cap3.recorder"), 2.0)
 	AudioManager.sfx_loop("tape_hiss", true, -10.0) # a rewind restarts the recording: the hiss just keeps going
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(UITheme.read_seconds(tr("cap3.recorder"), 2.0)).timeout
 	var lines := tr("doc3.recorder").split(". ", false)
 	for line in lines:
 		if gen != _recording:
 			return
-		hud.call("caption", line.strip_edges() + ("" if line.ends_with(".") else "."), 3.0)
-		await get_tree().create_timer(3.0).timeout
+		var said := line.strip_edges() + ("" if line.ends_with(".") else ".")
+		hud.call("caption", said, 3.0)
+		await get_tree().create_timer(UITheme.read_seconds(said, 3.0)).timeout # the next line waits for the reader
 	for size: Variant in l3().melody():
 		if gen != _recording:
 			return

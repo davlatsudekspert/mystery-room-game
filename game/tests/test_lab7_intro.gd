@@ -1,16 +1,40 @@
 extends TestBase
-## Chapter 1's opening (rain, key, cards, door, maglock) and the first moments: it fits the 20 s budget, locks input
-## while it runs, a tap skips it to the settled state (door shut, lab in view, control back), and the notebook glows
-## until it is taken.
+## Chapter 1's opening (rain, key, cards, door, maglock) and the first moments: each card stays until it is read and
+## the whole opening fits a 32 s budget in every language, it locks input while it runs, a tap on a card moves on to the
+## next one, a tap after the cards skips to the settled state (door shut, lab in view, control back), and the notebook
+## glows until it is taken.
 
 
 func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
 
 
-func test_opening_fits_twenty_seconds() -> void:
-	check(Lab7Intro.duration() <= 20.0, "the opening is at most 20 s (%.1f)" % Lab7Intro.duration())
-	check(Lab7Intro.duration() >= 12.0, "and long enough for both cards to be read (%.1f)" % Lab7Intro.duration())
+func test_opening_reads_and_fits_its_budget() -> void:
+	# the cards were 3.3 s and 5.3 s on screen, too fast to read on the owner's phone in Uzbek (2026-10-11)
+	var was := TranslationServer.get_locale()
+	for loc: String in ["en", "ru", "uz"]:
+		TranslationServer.set_locale(loc)
+		for key: String in ["intro.1", "intro.2"]:
+			var text := TranslationServer.translate(key)
+			var hold := Lab7Intro.card_hold(key, 0.0)
+			check(hold >= text.length() / 12.0, "%s %s: on screen %.1f s for %d characters" % [loc, key, hold, text.length()])
+		var d := Lab7Intro.duration()
+		check(d <= 32.0 and d >= 15.0, "%s: the opening takes %.1f s untouched (a tap moves on)" % [loc, d])
+	TranslationServer.set_locale(was)
+
+
+func test_a_tap_on_a_card_moves_on() -> void:
+	var intro := Lab7Intro.new()
+	intro.set("_on_card", true)
+	var tap := InputEventMouseButton.new()
+	tap.button_index = MOUSE_BUTTON_LEFT
+	tap.pressed = true
+	intro.call("_on_input", tap)
+	check(bool(intro.get("_advance")) and not bool(intro.get("_skipped")), "a tap on a card moves to the next beat")
+	intro.set("_on_card", false)
+	intro.call("_on_input", tap)
+	check(bool(intro.get("_skipped")), "a tap after the cards skips the rest")
+	intro.free()
 
 
 func test_opening_skips_to_a_settled_room_and_the_notebook_glows() -> void:

@@ -80,7 +80,7 @@ func play(choice: String) -> void:
 	_shake(1.9, 0.012)
 	_dust_fall()
 	_bulb_stutter()
-	await _wait(2.6, false)
+	await _wait(UITheme.read_seconds(tr("cap2.rumble"), 3.6) - 1.0, false) # read before the shaft's line (~1 s of fade)
 	# 2. the shaft
 	_overlay()
 	await _fade_black(1.0, 0.35)
@@ -97,6 +97,7 @@ func play(choice: String) -> void:
 	_set_cage(CAGE_FROM)
 	await _fade_black(0.0, 0.9)
 	hud.call("caption", tr("cap2.shaft_lamps"), 4.0)
+	var lamps_at := Time.get_ticks_msec()
 	_push_down(11.0)
 	for i in LAMPS.size():
 		if _skip:
@@ -107,9 +108,10 @@ func play(choice: String) -> void:
 	_wake_bottom()
 	AudioManager.sfx("vault_bolts", -10.0, 0.45)
 	_climb(CAGE_TO, 9.0)
-	await _wait(1.2, true)
+	var lamps_left := UITheme.read_seconds(tr("cap2.shaft_lamps")) - (Time.get_ticks_msec() - lamps_at) / 1000.0
+	await _wait(maxf(1.2, lamps_left), true)
 	hud.call("caption", tr("cap2.shaft_hum"), 4.5)
-	await _wait(4.6, true)
+	await _wait(UITheme.read_seconds(tr("cap2.shaft_hum"), 4.6), true)
 	# 3. the recorder, on black
 	hud.call("caption", "", 0.1)
 	await _fade_black(1.0, 1.1 if not _skip else 0.3)
@@ -134,7 +136,7 @@ func _recorder() -> void:
 	var head := _text(tr("epi2.recorder"), 50, UITheme.CREAM, true)
 	col.add_child(head)
 	await _fade_in(head, 1.0)
-	await _wait(3.0, true)
+	await _wait(UITheme.read_seconds(head.text, 3.0), true)
 	await _fade_out(head, 0.5)
 	head.queue_free()
 	var who := UITheme.label(tr("tease2.voice_who"), 26, UITheme.MUTED)
@@ -162,7 +164,7 @@ func _recorder() -> void:
 		lines.add_child(line)
 		wave.level = 1.0
 		await _fade_in(line, 0.5)
-		await _wait(2.6 + 0.03 * tr(key).length(), true)
+		await _wait(UITheme.read_seconds(tr(key), 2.6), true)
 		wave.level = 0.12
 		await _fade_out(line, 0.4)
 		line.queue_free()
@@ -182,7 +184,8 @@ func _recorder() -> void:
 	wave.level = 0.55
 	AudioManager.haptic(60)
 	await _fade_in(voice, 0.9)
-	await _wait(3.4, true)
+	# both lines are read by now: the bracketed caption has had 2.5 s on its own
+	await _wait(UITheme.read_seconds(cap.text + " " + voice.text, 1.6 + 0.9 + 3.4) - 1.6 - 0.9, true)
 	wave.level = 0.0
 	AudioManager.sfx("deck_eject", -6.0, 0.7) # the tape runs out
 	AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.25)

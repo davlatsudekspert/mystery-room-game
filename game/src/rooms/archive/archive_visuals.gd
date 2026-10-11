@@ -772,8 +772,9 @@ func play_tape(tape: String, clear: bool) -> void:
 	for line in lines:
 		if not _tape_playing:
 			return
-		hud.call("caption", line.strip_edges() + ("" if line.ends_with(".") else "."), per)
-		await get_tree().create_timer(per).timeout
+		var said := line.strip_edges() + ("" if line.ends_with(".") else ".")
+		hud.call("caption", said, per)
+		await get_tree().create_timer(UITheme.read_seconds(said, per)).timeout # the next line waits for the reader
 	var clicks := logic.clicks_for(tape)
 	var dots := ""
 	for i in clicks:

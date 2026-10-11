@@ -42,8 +42,18 @@ const SLOT_MM := 9.0 # inventory slots (a full touch target since the tray folds
 const MARGIN := 24.0 # breathing room between panels and the safe-area edge (canvas px)
 const FALLBACK_DPI := 96.0
 const BASE_CANVAS := Vector2(1920, 1080) # project.godot viewport size
+## Reading pace for timed text (messages, captions, intro cards, tape lines). Fixed 2.5-3.5 s timers left long lines
+## half read on the owner's phone (2026-10-11, "I can't keep up"): every timed text now stays READ_LEAD_S plus one
+## second per READ_CPS characters, never less than its caller's own minimum. 12 chars/s is a relaxed subtitle pace.
+const READ_CPS := 12.0
+const READ_LEAD_S := 1.2
 
 static var _cache: Dictionary = {}
+
+
+## Seconds a player needs to read `text` comfortably, never less than `at_least`.
+static func read_seconds(text: String, at_least: float = 0.0) -> float:
+	return maxf(at_least, READ_LEAD_S + text.strip_edges().length() / READ_CPS)
 
 
 # ====================================================================== screen metrics

@@ -1244,7 +1244,7 @@ func _replay_sequence(strand_guide: bool) -> void:
 	AudioManager.haptic(120)
 	tones.chord(-12.0)
 	hud.call("caption", tr("cap4.replay"), 4.5)
-	await get_tree().create_timer(4.6).timeout
+	await get_tree().create_timer(UITheme.read_seconds(tr("cap4.replay"), 4.6)).timeout
 	if strand_guide:
 		cam.go("desk")
 		hud.call("caption", tr("cap4.strand_desk"), 5.0)

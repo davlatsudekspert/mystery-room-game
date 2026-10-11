@@ -1397,7 +1397,7 @@ func _play_film(secret: bool, echo: bool) -> void:
 	if secret:
 		visuals.show_secret_frame(true)
 		hud.call("caption", tr("film.secret"), 6.5)
-		await get_tree().create_timer(6.8).timeout
+		await get_tree().create_timer(UITheme.read_seconds(tr("film.secret"), 6.5) + 0.3).timeout # the frame stays while it is read
 		visuals.show_secret_frame(false)
 	visuals.apply_state(true)
 	if not (logic as ArchiveLogic).is_sharp():
@@ -1446,7 +1446,7 @@ func _play_finale() -> void:
 	AudioManager.sfx("film_projector_start", -6.0, 1.2)
 	cam.go("vault_reel")
 	hud.call("caption", tr("cap2.reel_41"), 4.0)
-	await get_tree().create_timer(4.2).timeout
+	await get_tree().create_timer(UITheme.read_seconds(tr("cap2.reel_41"), 4.0) + 0.2).timeout
 	# ...then the sting: the frame dims around the figure at its right edge, the camera leans in, a cold halo grows
 	AudioManager.sfx("reveal", 0.0, 0.62)
 	AudioManager.sfx("projector_charge", -10.0, 0.5)
@@ -1454,7 +1454,7 @@ func _play_finale() -> void:
 	visuals.reel_reveal(2.6)
 	_lean_in_reel(4.5)
 	hud.call("caption", tr("cap2.reel_42"), 5.5)
-	await get_tree().create_timer(5.6).timeout
+	await get_tree().create_timer(UITheme.read_seconds(tr("cap2.reel_42"), 5.5) + 0.1).timeout
 	cam.go("vault_cradle")
 	_reset_reel_view()
 	await get_tree().create_timer(1.2).timeout

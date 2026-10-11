@@ -1,8 +1,9 @@
 class_name Lab7Intro
 extends Node
-## Chapter 1's opening, about 17 s to the first prompt, a tap skips it at any moment. Rain and a heavy key in a
-## heavy lock under the first card ("Meridian Institute ... Sealed since 14 November 1979."), a distant roll of
-## thunder, the second card (the parcel), then the room by moonlight: the door, ajar, drifts on a draught and swings
+## Chapter 1's opening, about 25-30 s to the first prompt (the cards stay as long as their text takes to read, see
+## UITheme.read_seconds). A tap on a card moves on to the next beat; a tap after the cards skips the rest. Rain and a
+## heavy key in a heavy lock under the first card ("Meridian Institute ... Sealed since 14 November 1979."), a distant
+## roll of thunder, the second card (the parcel), then the room by moonlight: the door, ajar, drifts on a draught and swings
 ## shut with a slam (the lights flinch, the camera shudders, the phone buzzes), the maglock clicks and its red lamp
 ## stutters on, the camera turns to the lamp-lit desk and a calm line points at the glowing notebook.
 ## It runs in the room's own scene (the room is already built; the first thing drawn is the card, with the rain
@@ -12,8 +13,9 @@ const DOOR_AJAR_DEG := -38.0
 const DOOR_DRIFT_DEG := -31.0
 const CARD_IN_S := 0.9
 const CARD_OUT_S := 0.5
-const CARD1_HOLD_S := 2.4
+const CARD1_HOLD_S := 2.4 # the shortest holds; a card stays until its text is read (UITheme.read_seconds)
 const CARD2_HOLD_S := 4.4
+const SCENE_S := 1.7 + 0.5 + 0.9 + 1.0 + 2.1 # the room part after the cards: drift, swing, slam, maglock, hand-over
 const REVEAL_S := 1.0
 const LAYER := 40
 
@@ -27,16 +29,23 @@ var _hint: Label
 var _tweens: Array[Tween] = []
 var _skipped := false
 var _finished := false
+var _on_card := false # a card is up: a tap moves on to the next beat instead of skipping the whole opening
+var _advance := false
 var _lamp_base := 0.0
 var _flicker_bases: Dictionary = {}
 var _glint: FirstGlint
 
 
-## Seconds from the first frame to the first prompt when nobody taps (QA and the 20 s budget).
+## How long a card holds after its fade-in, in the current language.
+static func card_hold(key: String, at_least: float) -> float:
+	return UITheme.read_seconds(TranslationServer.translate(key), at_least)
+
+
+## Seconds from the first frame to the first prompt when nobody taps, in the current language (QA and the budget).
 static func duration() -> float:
-	var card1 := CARD_IN_S + CARD1_HOLD_S + CARD_OUT_S
-	var card2 := CARD_IN_S + CARD2_HOLD_S + CARD_OUT_S
-	return card1 + card2 + 1.7 + 0.5 + 0.9 + 1.0 + 2.1
+	var card1 := CARD_IN_S + card_hold("intro.1", CARD1_HOLD_S) + CARD_OUT_S
+	var card2 := CARD_IN_S + card_hold("intro.2", CARD2_HOLD_S) + CARD_OUT_S
+	return card1 + card2 + SCENE_S
 
 
 ## Starts the opening on a fresh Chapter 1 (called by the room once everything is built).
@@ -113,7 +122,10 @@ func _fit_font(canvas: Vector2, safe: Vector4) -> void:
 
 func _on_input(event: InputEvent) -> void:
 	if (event is InputEventMouseButton or event is InputEventScreenTouch) and event.pressed:
-		skip()
+		if _on_card:
+			_advance = true # the reader is done with this card
+		else:
+			skip()
 
 
 ## Jumps to the end state: door shut, lamp on, the lab in view, control back.
@@ -140,15 +152,13 @@ func run() -> void:
 	hud.call("set_busy", true)
 	_prep()
 	var hint_tw := _tween()
-	hint_tw.tween_property(_hint, "modulate:a", 0.8, 0.8).set_delay(1.2)
-	hint_tw.tween_interval(6.0)
-	hint_tw.tween_property(_hint, "modulate:a", 0.0, 1.0)
+	hint_tw.tween_property(_hint, "modulate:a", 0.8, 0.8).set_delay(1.2) # it goes with the cards (the reveal)
 	AudioManager.sfx("intro_key", -4.0)
-	if await _card("intro.1", CARD1_HOLD_S):
+	if await _card("intro.1", card_hold("intro.1", CARD1_HOLD_S)):
 		_finish()
 		return
 	AudioManager.sfx("intro_thunder", -13.0) # no gap: the second card rises as the first goes
-	if await _card("intro.2", CARD2_HOLD_S):
+	if await _card("intro.2", card_hold("intro.2", CARD2_HOLD_S)):
 		_finish()
 		return
 	# --- the room: the door, ajar, drifts on a draught
@@ -174,7 +184,8 @@ func run() -> void:
 	AudioManager.sfx("maglock_release", -4.0, 0.8)
 	_lamp_on(true)
 	AudioManager.haptic(40)
-	hud.call("caption", tr(room.get("logic").intro_caption_key()), 3.0)
+	var maglock := tr(room.get("logic").intro_caption_key())
+	hud.call("caption", maglock, 3.0)
 	if await _wait(1.0):
 		_finish()
 		return
@@ -184,17 +195,26 @@ func run() -> void:
 	_black = null
 	_hand_over()
 	_finished = true # a tap now is just play; nothing is left to skip
-	await get_tree().create_timer(2.1).timeout
+	await get_tree().create_timer(maxf(2.1, UITheme.read_seconds(maglock, 3.0) - 1.0)).timeout # it is read first
 	_first_prompt()
 
 
-## One card: fades in, holds, fades out. True when skipped meanwhile.
+## One card: fades in, holds (a tap moves on), fades out. True when skipped meanwhile.
 func _card(key: String, hold: float) -> bool:
 	_label.text = tr(key)
 	var tw := _tween()
 	tw.tween_property(_box, "modulate:a", 1.0, CARD_IN_S).set_trans(Tween.TRANS_SINE)
-	if await _wait(CARD_IN_S + hold):
+	_advance = false
+	_on_card = true
+	var t := 0.0
+	while t < CARD_IN_S + hold and not _skipped and not _advance:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+	_on_card = false
+	if _skipped:
 		return true
+	if tw.is_running():
+		tw.kill() # a tap during the fade-in: fade out from where it is
 	var out := _tween()
 	out.tween_property(_box, "modulate:a", 0.0, CARD_OUT_S).set_trans(Tween.TRANS_SINE)
 	return await _wait(CARD_OUT_S)
@@ -334,7 +354,8 @@ func _finish() -> void:
 		ml.light_energy = _lamp_base
 	_to_lab(true)
 	hud.call("set_busy", false)
-	hud.call("caption", tr(room.get("logic").intro_caption_key()), 3.0)
+	var maglock := tr(room.get("logic").intro_caption_key())
+	hud.call("caption", maglock, 3.0)
 	_hand_over()
 	if _black != null:
 		var tw := create_tween()
@@ -342,4 +363,4 @@ func _finish() -> void:
 		tw.tween_callback(_black.queue_free)
 		_black.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_black = null
-	get_tree().create_timer(2.0).timeout.connect(_first_prompt)
+	get_tree().create_timer(UITheme.read_seconds(maglock, 2.0)).timeout.connect(_first_prompt) # the maglock line first

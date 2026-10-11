@@ -58,6 +58,7 @@ var _msg_on := false # the message banner is showing (from message() until its f
 var _cap_on := false # the same for the caption
 var _msg_at := 0 # when each was shown: the newer of the two keeps its place when both do not fit
 var _cap_at := 0
+var _cap_read_until := 0 # msec: when the current caption has been on long enough to be read (caption_left)
 var _meter_label: Label
 
 const PAD := UITheme.HUD_PAD # gap between HUD controls and the safe-area edge
@@ -805,7 +806,7 @@ func _found_item(text: String) -> String:
 
 
 ## A message at the bottom. A found item gets the full banner: its icon, its name in small caps and its
-## one-line description.
+## one-line description. It stays `seconds`, or longer when the text needs more time to read (UITheme.read_seconds).
 func message(text: String, seconds: float = 2.8) -> void:
 	_found_id = _found_item(text)
 	if _found_id != "":
@@ -813,12 +814,13 @@ func message(text: String, seconds: float = 2.8) -> void:
 		_msg_plate.set_icon(icons.get_icon(_found_id))
 		_msg_plate.max_sub_lines = 3 # the full description is in Inspect; the banner stays a banner at Extra large
 		_message.text = tr(logic.item_desc_key(_found_id))
-		seconds = maxf(seconds, 4.5)
+		seconds = UITheme.read_seconds(tr(ItemDB.name_key(_found_id)) + " " + _message.text, maxf(seconds, 4.5))
 	else:
 		_msg_plate.set_title("")
 		_msg_plate.set_icon(null)
 		_msg_plate.max_sub_lines = 0
 		_message.text = text
+		seconds = UITheme.read_seconds(text, seconds)
 	_message.modulate.a = 1.0 # (QA scripts blank the label itself to detect the next message as new)
 	if _msg_tween and _msg_tween.is_valid():
 		_msg_tween.kill()
@@ -840,6 +842,8 @@ func message(text: String, seconds: float = 2.8) -> void:
 
 func caption(text: String, seconds: float = 3.5) -> void:
 	_caption_line.text = text
+	seconds = UITheme.read_seconds(text, seconds) # callers give a minimum; long lines stay long enough to read
+	_cap_read_until = Time.get_ticks_msec() + int(seconds * 1000.0) if text.strip_edges() != "" else 0
 	if _cap_tween and _cap_tween.is_valid():
 		_cap_tween.kill()
 	_cap_on = text.strip_edges() != ""
@@ -856,6 +860,11 @@ func caption(text: String, seconds: float = 3.5) -> void:
 		_cap_on = false
 		_cap_plate.set_meta("on", false))
 	_cap_tween.tween_property(_cap_plate, "modulate:a", 0.0, 0.6)
+
+
+## Seconds until the current caption has been read: a scripted scene waits this long before its next line or card.
+func caption_left() -> float:
+	return maxf(0.0, (_cap_read_until - Time.get_ticks_msec()) / 1000.0)
 
 
 func set_view(id: String, is_root: bool, caption_key: String) -> void:
@@ -1722,7 +1731,7 @@ func play_intro() -> void:
 		tw.tween_property(lbl, "modulate:a", 1.0, 1.0)
 		tw.tween_property(rule_top, "modulate:a", 1.0, 1.2)
 		tw.tween_property(rule_bottom, "modulate:a", 1.0, 1.2)
-		await _wait_tap_or(o, 6.0)
+		await _wait_tap_or(o, 1.0 + UITheme.read_seconds(lbl.text, 5.0)) # the fade-in, then the read; a tap moves on
 		var tw2 := create_tween().set_parallel(true)
 		tw2.tween_property(lbl, "modulate:a", 0.0, 0.6)
 		tw2.tween_property(rule_top, "modulate:a", 0.0, 0.6)
@@ -1745,9 +1754,13 @@ func play_intro() -> void:
 		await get_tree().create_timer(hold - 1.6).timeout
 	o.queue_free()
 	set_busy(false)
+	# each line is read before the next replaces it: the opening's own caption (Chapter 3's descent), the chapter's
+	# goal, then the controls tip
+	if caption_left() > 0.0:
+		await get_tree().create_timer(minf(caption_left(), 6.0)).timeout
 	if logic.intro_caption_key() != "":
 		caption(tr(logic.intro_caption_key()))
-	await get_tree().create_timer(1.2).timeout
+	await get_tree().create_timer(maxf(1.2, caption_left())).timeout
 	caption(tr("tut.look") + "  " + tr("tut.tap"), 5.0)
 
 
