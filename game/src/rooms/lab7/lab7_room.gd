@@ -815,22 +815,32 @@ func _on_tap(screen: Vector2) -> void:
 		return
 	if hs == "":
 		return
-	# Using a selected item takes priority (except tools that are "worn", like the UV lamp).
-	if logic.selected != "" and logic.selected != "uv_lamp":
-		var target := _use_target(hs, part)
-		if target != "" and _in_reach(hs):
-			var item := logic.selected
-			var ev := logic.use_item_on(item, target)
-			if ev.has("nothing_happens"):
-				hud.call("message", RoomBase.no_use_text(item, ev))
-				AudioManager.ui("ui_error")
-			else:
-				logic.select_item("")
-			return
+	if _use_selected(hs, part):
+		return
 	if not _in_reach(hs):
 		_focus(hs)
 		return
 	_interact(hs, part, r)
+
+
+## An item in hand meets the tapped hotspot first (except tools that are "worn", like the UV lamp). -> true when the
+## tap was spent using it. An item that does nothing there says so, goes back in the bag, and the tap then does what it
+## does with empty hands: the owner held Leyla's notebook at the desk drawer and every tap on its wheels only said
+## "doesn't fit here" (2026-10-11).
+func _use_selected(hs: String, part: String) -> bool:
+	if logic.selected == "" or logic.selected == "uv_lamp":
+		return false
+	var target := _use_target(hs, part)
+	if target == "" or not _in_reach(hs):
+		return false
+	var item := logic.selected
+	var ev := logic.use_item_on(item, target)
+	logic.select_item("")
+	if not ev.has("nothing_happens"):
+		return true
+	hud.call("caption", RoomBase.no_use_text(item, ev), 2.5) # the top line: the tap's own message keeps the bottom
+	AudioManager.ui("ui_error")
+	return false
 
 
 func _in_reach(hotspot: String) -> bool:

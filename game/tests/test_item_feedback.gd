@@ -42,3 +42,37 @@ func test_message_text() -> void:
 		check(msg.contains(name) and msg != TranslationServer.translate("msg.nothing"), "%s: names the item: %s" % [loc, msg])
 		eq(RoomBase.no_use_text("crystal_lens", ["nothing_happens"]), str(TranslationServer.translate("msg.nothing")), "%s: wrong moment" % loc)
 	TranslationServer.set_locale(was)
+
+
+## The owner held Leyla's notebook at the desk drawer and every tap on its wheels said "doesn't fit here", so the
+## drawer never turned (2026-10-11). An item with no use at the tapped place now steps aside: it goes back in the bag,
+## the tap is not spent, and the wheel turns as with empty hands.
+func test_an_item_in_hand_never_blocks_a_tap() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	SaveSystem.save_path = "user://test_item_feedback.json"
+	GameState.start_new("ch1")
+	var room := (load("res://src/rooms/lab7/lab7.tscn") as PackedScene).instantiate()
+	tree.root.add_child.call_deferred(room)
+	await tree.process_frame
+	await tree.process_frame
+	for c in room.get_children():
+		if c is Lab7Intro:
+			c.skip()
+	for i in 6:
+		await tree.process_frame
+	var l: Lab7Logic = room.get("logic")
+	l.take("notebook")
+	l.select_item("notebook")
+	(room.get("cam") as RoomCamera).go("drawer", true)
+	var spent: bool = room.call("_use_selected", "desk", "IA_drawer_digit_0")
+	check(not spent, "the notebook does not spend the tap on a drawer wheel")
+	eq(l.selected, "", "it goes back in the bag")
+	var before := int(l.state["drawer"][0])
+	room.call("_interact", "desk", "IA_drawer_digit_0", {"pos": Vector3(0, 10, 0)}) # the tap above the wheel's axis
+	check(int(l.state["drawer"][0]) != before, "the wheel turns")
+	AudioManager.stop_all_ambience(0.0)
+	AudioManager.stop_music(0.0)
+	room.queue_free()
+	await tree.process_frame
+	SaveSystem.delete_game()
+	SaveSystem.save_path = SaveSystem.SAVE_PATH

@@ -329,21 +329,31 @@ func _on_tap(screen: Vector2) -> void:
 		return
 	if hs == "":
 		return
-	if logic.selected != "" and not ItemDB.is_tool_item(logic.selected):
-		var target := use_target(hs, p)
-		if target != "" and in_reach(hs):
-			var item: String = logic.selected
-			var ev: Array = logic.call("use_item_on", item, target)
-			if ev.has("nothing_happens"):
-				hud.call("message", no_use_text(item, ev))
-				AudioManager.ui("ui_error")
-			else:
-				logic.select_item("")
-			return
+	if use_selected(hs, p):
+		return
 	if not in_reach(hs):
 		focus(hs)
 		return
 	interact(hs, p, r)
+
+
+## An item in hand meets the tapped hotspot first (tools that are "worn" aside). -> true when the tap was spent using
+## it. An item that does nothing there says so, goes back in the bag, and the tap then does what it does with empty
+## hands (Chapter 1's notebook at the drawer wheels blocked every tap, owner 2026-10-11).
+func use_selected(hs: String, p: String) -> bool:
+	if logic.selected == "" or ItemDB.is_tool_item(logic.selected):
+		return false
+	var target := use_target(hs, p)
+	if target == "" or not in_reach(hs):
+		return false
+	var item: String = logic.selected
+	var ev: Array = logic.call("use_item_on", item, target)
+	logic.select_item("")
+	if not ev.has("nothing_happens"):
+		return true
+	hud.call("caption", no_use_text(item, ev), 2.5) # the top line: the tap's own message keeps the bottom
+	AudioManager.ui("ui_error")
+	return false
 
 
 ## A hotspot is directly operable from its own view or any deeper view of the same object.
