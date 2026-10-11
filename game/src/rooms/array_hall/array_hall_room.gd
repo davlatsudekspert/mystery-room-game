@@ -160,6 +160,7 @@ func _build_models() -> void:
 	_tap_pads()
 	_enclosure_taps()
 	_chalk_look()
+	_calm_metal(["cage", "glass_tower"])
 	for extra in ArrayHallData.ECHO_MODELS:
 		if not ResourceLoader.exists("res://assets/models/%s.glb" % extra):
 			missing_models.append(extra)
@@ -197,6 +198,28 @@ func _chalk_look() -> void:
 	m.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
 	for mi in ModelUtil.find_meshes(chalk):
 		mi.material_override = m
+
+
+## The cage and the glass tower's base are big dark-steel and aged-brass surfaces seen from about a metre: the shared
+## materials' fine normal grain turned into a coarse orange glitter under the warm lamps (specular aliasing, worst
+## without MSAA). Here those two materials get a softer normal and a grain twice as large.
+func _calm_metal(ids: Array[String]) -> void:
+	var calm := {}
+	for id in ids:
+		var root: Node3D = models.get(id)
+		if root == null:
+			continue
+		for mi in ModelUtil.find_meshes(root):
+			for i in mi.mesh.get_surface_count():
+				var mat := mi.get_active_material(i) as BaseMaterial3D
+				if mat == null or not mat.resource_name in ["M_Steel_Dark", "M_Brass_Aged"]:
+					continue
+				if not calm.has(mat):
+					var c := mat.duplicate() as BaseMaterial3D
+					c.normal_scale = 0.3
+					c.uv1_scale = mat.uv1_scale * 0.5
+					calm[mat] = c
+				mi.set_surface_override_material(i, calm[mat])
 
 
 func _register(id: String, n: Node3D, hotspot: String) -> void:
