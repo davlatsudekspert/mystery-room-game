@@ -95,6 +95,7 @@ S = [
 ("ui.hint_more", "Stronger hint (2/3)", "Яснее (2/3)", "Aniqroq (2/3)"),
 ("ui.hint_answer", "Show the answer (3/3)", "Показать ответ (3/3)", "Javobni ochish (3/3)"),
 ("ui.hint_level", "Hint %d of 3", "Подсказка %d из 3", "%d-maslahat (3 tadan)"),
+("ui.hint_for_next", "For the next step, which may be elsewhere in the room.", "Для следующего шага: он может быть в другом месте комнаты.", "Keyingi qadam uchun: u xonaning boshqa joyida boʻlishi mumkin."),
 ("ui.hint_level_answer", "Hint 3 of 3: the answer", "Подсказка 3 из 3: ответ", "3-maslahat (3 tadan): javob"),
 ("ui.inspect", "Inspect", "Осмотреть", "Koʻrib chiqish"),
 ("ui.combine", "Combine", "Объединить", "Birlashtirish"),

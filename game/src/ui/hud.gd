@@ -1059,6 +1059,11 @@ func show_hint() -> void:
 	var o := _open_overlay(0.55)
 	var d := UITheme.dialog(o, 980, "ui.hint", 46)
 	var v: VBoxContainer = d["body"]
+	# hints follow the room's order, not the close-up on screen: the owner read the box's three-knob answer at the
+	# four-digit safe and thought it was the safe's (2026-10-11)
+	var next := UITheme.label("ui.hint_for_next", 22, UITheme.MUTED)
+	next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(next)
 	var ladder := VBoxContainer.new()
 	ladder.add_theme_constant_override("separation", 18)
 	v.add_child(ladder)
