@@ -83,6 +83,7 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 - Only original or CC0 material (music and sound from the game itself).
 
 ## Game
+0. **Small parts, read without a pinch (owner, 2026-10-11):** Panel 7's switches (~3.5 mm), I–V numerals (1.6 mm) and traces (0.3 mm) on a 20:9 phone. A pinch now magnifies every close-up up to 2.5×; next, make the plate itself readable: larger switch plates, lamps and numerals and thicker traces (tools/blender panel7 + tools/textures/make_decals.py panel, tap areas in lab7_room.gd), then the same audit for every close-up with small parts (`tap_map --tap-size`, Ch4's small parts).
 1. **Chapter 2 release:** finish the player review (agent), fix its findings, then set `released: true` for ch2 in `game/src/core/chapters.gd` and update `test_premium_rules`. Tester builds already open it through the `beta_unlock` export feature.
 2. **Chapter 2 performance:** done for the budget: the hall view is 144 draw calls / 86k primitives. Next is FPS on real phones: the debug build's FPS line, then `tap_map --breakdown` for any view that drops.
 3. **Chapter 3:** the model contract `docs/models/ch3.md` (agent), then the Blender build agents (2–3 at a time), the scene, variants (docs/VARIANTS.md list) and a real-scene playthrough on both Chapter 2 key paths.
