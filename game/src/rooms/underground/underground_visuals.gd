@@ -1080,10 +1080,21 @@ func leyla_touch(i: int) -> void:
 		_fade(n, 0.0, 0.9, 1.0)
 	AudioManager.sfx("reveal", -4.0, 0.85)
 	await get_tree().create_timer(1.3).timeout
+	var glow: OmniLight3D = null
 	if drawer:
-		# a faint cold glow on the wood, and the drawer gives a little under her hand: an emission of 1.2 (then 0.35)
-		# washed the whole front into a flat white (then pale blue) card in the rendered QA
-		ModelUtil.set_emission(drawer, true, LUMEN, 0.1)
+		# a small cold light in front of the drawer, and the drawer gives a little under her hand. An emission on the
+		# drawer itself (1.2, then 0.35, then 0.1) washed its dark walnut front into a flat white / grey card in every
+		# rendered QA; a light keeps the wood's grain and lights the glyph
+		glow = OmniLight3D.new()
+		glow.light_color = LUMEN
+		glow.light_energy = 0.0
+		glow.omni_range = 0.6
+		glow.light_specular = 0.2
+		room.add_child(glow)
+		# the drawer front's middle (the seed_drawer view's F_i, UndergroundRoom.prepare_view), 0.18 m out into the room
+		var lib_xf := model("seed_library").global_transform if model("seed_library") else Transform3D(Basis(Vector3.UP, deg_to_rad(-90.0)), Vector3(13.0, 0.0, -0.6))
+		glow.global_position = lib_xf * Vector3((col - 1.5) * 0.33, 1.50 - 0.26 * row, 0.69 + 0.18)
+		room.create_tween().tween_property(glow, "light_energy", 1.4, 0.5)
 		if int(logic.state["seed_drawer"]) != i:
 			_slide(drawer, Vector3(0, 0, 0.035), true, 0.35)
 			get_tree().create_timer(1.6).timeout.connect(func() -> void:
@@ -1094,9 +1105,11 @@ func leyla_touch(i: int) -> void:
 	await get_tree().create_timer(1.4).timeout
 	if n:
 		room.call("set_present", n, false)
+	if glow:
+		var out := room.create_tween()
+		out.tween_property(glow, "light_energy", 0.0, 1.2)
+		out.tween_callback(glow.queue_free)
 	await get_tree().create_timer(1.5).timeout
-	if drawer:
-		ModelUtil.set_emission(drawer, false)
 
 
 ## The secret: Leyla, 1998, kneels by the 42nd socket and lays her hand on it.

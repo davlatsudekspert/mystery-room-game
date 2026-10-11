@@ -227,31 +227,50 @@ func _sweep_check(l: UndergroundLogic, helper: Variant) -> String:
 
 # ====================================================================== the opening (--opening)
 ## A New Game as a player starts it (no capture mode): the two intro cards, the lift's descent, the arrival and the
-## gate. Shots at these seconds of real time after the scene is added; the cards wait 6 s each untapped.
-const OPENING_SHOTS: Array[float] = [2.0, 8.0, 14.4, 16.8, 18.4, 19.9, 21.6, 23.4]
+## gate. The cards are shot 1.2 s and 7.8 s after the room is in (they wait 6 s each untapped); the descent is shot at
+## these seconds after the shaft starts to move (the software renderer takes several seconds to build the scene, so
+## a clock from the start would land on the cards).
+const OPENING_SHOTS: Array[float] = [1.0, 2.8, 4.6, 6.0, 7.2, 8.6, 10.2]
 
 
 func _opening() -> void:
 	room = (load(SCENE) as PackedScene).instantiate()
 	get_tree().root.add_child.call_deferred(room)
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var t0 := Time.get_ticks_msec()
+	for at: float in [1.2, 7.8]:
+		await _opening_shot(t0, at, "card")
+	var shaft: Node3D = room.call("part", "shell_lift", "intro_shaft")
+	var waited := 0
+	while shaft != null and not shaft.visible and waited < 2400:
+		waited += 1
+		await get_tree().process_frame
+	var t1 := Time.get_ticks_msec()
+	_log("descent starts %.1f s after the room is in" % ((t1 - t0) / 1000.0))
 	for at in OPENING_SHOTS:
-		while (Time.get_ticks_msec() - t0) / 1000.0 < at:
-			await get_tree().process_frame
-		await RenderingServer.frame_post_draw
-		shot_n += 1
-		var p := "%s/%02d_opening_%04.1fs.png" % [out_dir, shot_n, (Time.get_ticks_msec() - t0) / 1000.0]
-		if DisplayServer.get_name() != "headless":
-			get_viewport().get_texture().get_image().save_png(p)
-		var hud := room.get("hud") as Node
-		var cap := ""
-		if hud and hud.get("_caption_line"):
-			cap = str((hud.get("_caption_line") as Label).text) if bool(hud.get("_cap_on")) else ""
-		_log("shot %s  view %s  caption \"%s\"" % [p.get_file(), str((room.get("cam") as RoomCamera).current()), cap])
+		await _opening_shot(t1, at, "descent")
 	var busy_end := bool((room.get("hud") as Node).get("_busy"))
-	_log(("✓ " if not busy_end else "✗ ") + "opening: input %s after %.1f s" % ["free" if not busy_end else "STILL LOCKED", OPENING_SHOTS[-1]])
+	_log(("✓ " if not busy_end else "✗ ") + "opening: input %s %.1f s after the descent began" % [
+		"free" if not busy_end else "STILL LOCKED", OPENING_SHOTS[-1]])
 	print("QA_DONE exit=%d" % (0 if not busy_end else 1))
 	get_tree().quit(0 if not busy_end else 1)
+
+
+func _opening_shot(t0: int, at: float, label: String) -> void:
+	while (Time.get_ticks_msec() - t0) / 1000.0 < at:
+		await get_tree().process_frame
+	if DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw # never emitted without a renderer
+	shot_n += 1
+	var p := "%s/%02d_opening_%s_%04.1fs.png" % [out_dir, shot_n, label, (Time.get_ticks_msec() - t0) / 1000.0]
+	if DisplayServer.get_name() != "headless":
+		get_viewport().get_texture().get_image().save_png(p)
+	var hud := room.get("hud") as Node
+	var cap := ""
+	if hud and hud.get("_caption_line") and bool(hud.get("_cap_on")):
+		cap = str((hud.get("_caption_line") as Label).text)
+	_log("shot %s  view %s  caption \"%s\"" % [p.get_file(), str((room.get("cam") as RoomCamera).current()), cap])
 
 
 ## --finale-only: the logic is played to the awake Array without a scene, then the room is built at the finale and the
