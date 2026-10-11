@@ -37,7 +37,8 @@ from sounds import load_all as _load_core  # noqa: E402
 
 # Sound modules registered here in addition to ``sounds.MODULES``.
 # Chapter 2 (Records Archive B): props, room tone and its two music cues.
-EXTRA_MODULES = ("archive", "music_archive", "menu_box", "intro_ch1")
+# Chapter 3 (Underground Facility): the four zone ambiences and the two music cues.
+EXTRA_MODULES = ("archive", "music_archive", "menu_box", "intro_ch1", "underground", "music_underground")
 
 
 def load_all() -> dict:
@@ -52,6 +53,10 @@ REPO = HERE.parent.parent
 OUT_ROOT = REPO / "game" / "assets" / "audio"
 README = HERE / "README.md"
 TRUE_PEAK_CEILING = -1.0
+# Loops whose encoded wrap-point step reaches this fraction of the file's own 99.9th-percentile sample step
+# are re-seated (see ``_reseat_loop``). The Chapter 1 and 2 loops all measure below 0.45, so they never are.
+SEAM_RETRY_RATIO = 0.8
+SEAM_TRIES = 16
 
 
 def _clean_loop(x: np.ndarray) -> np.ndarray:
@@ -63,6 +68,39 @@ def _encode(x: np.ndarray, out_path: Path, tmpdir: str) -> None:
     wav = os.path.join(tmpdir, out_path.stem + ".wav")
     export.write_wav(wav, x)
     export.encode_ogg(wav, str(out_path), channels=2 if x.ndim == 2 else 1)
+
+
+def _reseat_loop(x: np.ndarray, dec: np.ndarray, out_path: Path, tmp: str, info: dict) -> tuple[np.ndarray, np.ndarray]:
+    """Vorbis codes the first and last frames of a file independently, so the encoded wrap-point step is partly
+    the codec's own error. For a steady, low-frequency bed (a hum) whose normal sample steps are tiny, that
+    error can reach the size of a normal step. A loop is circular, so starting it somewhere else changes
+    nothing audible: try other starts (golden-ratio fractions of the loop, deterministic) and keep the one
+    with the cleanest encoded seam. Only runs when the first encode is within ``SEAM_RETRY_RATIO`` of failing;
+    a start that would push the true peak over the ceiling is never kept."""
+    first = loops.seam_report(dec)
+    if first["jump_ratio"] < SEAM_RETRY_RATIO and first["ok"]:
+        return x, dec
+    n = x.shape[-1]
+    original = out_path.read_bytes()
+    best = (first["jump_ratio"] if first["ok"] else 9.0 + first["jump_ratio"], original, x, dec)
+    for k in range(1, SEAM_TRIES + 1):
+        y = np.roll(x, -int(round(n * ((k * 0.6180339887498949) % 1.0))), axis=-1)
+        _encode(y, out_path, tmp)
+        d = export.decode(str(out_path), 2)
+        rep = loops.seam_report(d)
+        score = rep["jump_ratio"] if rep["ok"] else 9.0 + rep["jump_ratio"]
+        if score < best[0]:
+            best = (score, out_path.read_bytes(), y, d)
+        if score < 0.5:
+            break
+    out_path.write_bytes(best[1])
+    lm = export.loudness(str(out_path))
+    if lm["true_peak_dbtp"] > TRUE_PEAK_CEILING:  # never trade the peak rule for a cleaner seam
+        out_path.write_bytes(original)
+        return x, dec
+    info["loudness"] = lm
+    info["seam_reseated"] = bool(best[1] != original)
+    return best[2], best[3]
 
 
 def render(name: str, qa_dir: str | None) -> dict:
@@ -127,6 +165,8 @@ def render(name: str, qa_dir: str | None) -> dict:
             _, data, p, dec, x = best
             out_path.write_bytes(data)
             info["decoded_peak_dbfs"] = round(p, 2)
+        if spec.loop and spec.lufs is not None:
+            x, dec = _reseat_loop(x, dec, out_path, tmp, info)
 
         info["duration_s"] = round(dec.shape[-1] / SR, 3)
         # loudest 100 ms RMS: a quick, comparable 'how loud does it feel' figure for mixing

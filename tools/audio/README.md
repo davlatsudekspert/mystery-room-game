@@ -6,13 +6,15 @@ No paid services or AI audio tools are used. Re-running the generator gives the 
 
 ```bash
 pip install -r tools/audio/requirements.txt     # numpy, scipy, Pillow
-python3 tools/audio/synth_all.py                 # regenerate all 82 files
+python3 tools/audio/synth_all.py                 # regenerate all 95 files
 python3 tools/audio/synth_all.py --only ui_tap,reveal --qa-dir /tmp/audio_qa   # a subset plus spectrogram PNGs
 python3 tools/audio/synth_all.py --module archive,music_archive --readme      # one chapter's modules, merged into the table
+python3 tools/audio/synth_all.py --module underground,music_underground --readme --jobs 2   # Chapter 3 (6 files)
 python3 tools/audio/synth_all.py --list          # list registered sounds
 ```
 
 The Chapter 1 set (40 files) took about 70 s on 4 cores. The Chapter 2 modules (42 files) took about 2 min with `--jobs 2`; `music_archive` alone is about 2 min of that.
+The Chapter 3 modules (6 files) took about 1.6 min with `--jobs 2`; `music_underground` alone is about 1 min.
 
 You also need `ffmpeg` with libvorbis (for encoding and loudness measurement) and `sox` (for verification decoding).
 A full run (no `--only`/`--module`) also rewrites the asset table below. A partial run leaves it alone unless `--readme` is given, which replaces or adds only the rendered files' rows.
@@ -58,6 +60,7 @@ Loops are built **circularly**, so the wrap point is not special:
 - Reverb tails that ring past the end are overlap-added back onto the start (`wrap_tail`, which is circular convolution).
 - `amb_lab_dark` and `amb_archive` are then rotated so the file starts at its calmest moment (`rotate_to_calm_point`). The Vorbis encoder codes the first and last frames independently, so a calm seam is safest.
 - `loops.crossfade_loop()` (render extra tail and equal-power crossfade it over the start) is available for material that cannot be built circularly. The current loops do not need it.
+- Steady, low-frequency beds (the Chapter 3 hums) have tiny normal sample steps, so the codec's own error at the file edges can reach the size of one (their first encodes measured 0.85-1.2 against a limit of 1). `synth_all.render()` therefore re-seats a loop whose encoded seam ratio is 0.8 or more: the loop is circular, so it tries up to 16 other, deterministic start points (golden-ratio fractions of the loop) and keeps the cleanest encoded seam, never one that breaks the true-peak ceiling. `amb_choir`, `amb_lift` and `amb_nursery` are re-seated this way; every Chapter 1 and 2 loop measures below 0.45 and is untouched (re-rendered files are byte-identical to the committed ones).
 
 The seam check on each encoded loop compares two things:
 - The last→first sample jump against the file's own 99.9th-percentile sample step. A ratio below 1 is indistinguishable from normal motion.
@@ -84,8 +87,10 @@ The run fails (exit code 1) if a loop fails either check.
 | `sounds/ui.py`, `mechanisms.py`, `electrical.py`, `story.py`, `ambience.py`, `music_tracks.py` | the sound definitions (`@sound(...)` registry) |
 | `sounds/archive.py` | Chapter 2, Records Archive B: shutter, compressor and pneumatic post, catalogue and card punch, lockers and hiding places, receiver, tape deck (with the speech-like murmur engine), rotary dial, film and slide projectors, crystals, vault, `amb_archive`, and the Chapter 2 room IRs (`archive`, `vault`, `booth`, `amb`) |
 | `sounds/music_archive.py` | `music_archive` and `music_archive_finale` (reuses the pad, bass, celesta and master helpers of `music_tracks.py`) |
+| `sounds/underground.py` | Chapter 3, Underground Facility: `amb_choir`, `amb_gallery`, `amb_nursery`, `amb_lift` (hum builder on loop-periodic partials, narrow resonating bands, sympathetic glass tones, the four room IRs, `_settle`) |
+| `sounds/music_underground.py` | `music_underground` and `music_underground_finale` (reuses the e-piano, wow and pad helpers of `music_archive.py`; adds the crystal tube bell, the low pulse, the overtone choir and the bowed glass) |
 
-`sounds/__init__.py` imports the Chapter 1 modules (`MODULES`). `synth_all.py` adds the Chapter 2 modules through its `EXTRA_MODULES` list.
+`sounds/__init__.py` imports the Chapter 1 modules (`MODULES`). `synth_all.py` adds the Chapter 2 and 3 modules through its `EXTRA_MODULES` list.
 
 ## Godot notes
 
@@ -99,6 +104,12 @@ The run fails (exit code 1) if a loop fails either check.
   - `music_archive_finale` is a seamless 64 s loop, not a one-off cue, because `AudioManager.music()` loops every music stream. It builds up to its peak (F6 over Fmaj7/A at 32–40 s) and thins out on C7sus4, which falls back into the opening Fmaj9.
   - `receiver_static` is played by a plain `AudioStreamPlayer` in `archive_visuals.gd`. Its `.ogg.import` therefore ships with `loop=true`; the optional loops `compressor_loop`, `slide_fan_loop` and `tape_hiss` do too.
   - `film_projector_loop` is a 22 s one-shot bed (fade-in 1.2 s, fade-out 2.5 s), not a loop, because the room plays it once through `AudioManager.sfx()`.
+- **Chapter 3 (Underground Facility) audio:**
+  - `underground_room.gd` asks for `amb_choir`, `amb_gallery`, `amb_nursery` and `amb_lift` (one per zone, `ZONE_TONE`) and for `music_underground` / `music_underground_finale`; each falls back to a Chapter 1-2 track only if the file is missing. `AudioManager` sets `loop = true` at runtime, so the `.import` files keep the default `loop=false`.
+  - The four ambiences are 60 s loops at -24 LUFS, like `amb_archive`, but **none has a noise bed**. Each is a tonal bed (a hum built only from E and its fifth, so it agrees with the score; in the gallery, narrow bands a few Hz wide at E and B pitches) plus sparse details. The only noise is band-limited (the gallery's bands, the rumbles below 260 Hz) or confined to short events (the nursery's four steam puffs of about 3 s at 1.1-5.2 kHz, cooling ticks, creak friction). By comparison `amb_archive` holds a steady bed from 50 Hz to 5 kHz.
+  - Above 1 kHz the choir, gallery and lift hold only the upper partials of their rare glass tones, drips, contactors and creaks. The nursery adds its lamp buzz (up to about 1.7 kHz), the steam puffs and the ticks. On phone speakers the 100-660 Hz hum partials carry the beds; the 41-82 Hz fundamentals do not.
+  - `music_underground` is a 160 s loop (8 sections x 20 s at 48 BPM), `music_underground_finale` an 80 s loop (8 x 10 s). Neither has a hiss layer; the tape character is wow and flutter only. `music_underground` has no pulse and no arpeggio in its first and last 20 s, so the loop point falls in its calmest part. The finale's pulse is shifted off the loop point for the same reason.
+  - The low pulse (every 2.5 s, in the 2nd to the 7th of the 8 sections of `music_underground`) keeps 2nd and 3rd harmonics at 165-250 Hz so a phone speaker still carries it. It is mixed dry (not through the hall) so every hit stays distinct.
 - **Music start:** the loops are circular, so position 0 is mid-texture (the last chord's pad is still releasing). Fade music in over about 2 s, or let the `AudioManager` crossfade handle it.
 - **Suggested playback levels:**
   - `amb_power_hum` is mastered to -24 LUFS like the rain bed. Its 100 Hz body is strong on headphones, so start it about 8–10 dB under `amb_lab_dark`, or duck the rain slightly when power comes back.
@@ -209,18 +220,24 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/vault_wheel.ogg` | 2.47 s | no | peak -1.2 dBFS | 20 KB | synth | Spoked vault wheel heaved round: heavy gear grind, ratchet clunks, a final clunk |
 | `sfx/wheel_tick.ogg` | 0.34 s | no | peak -1.1 dBFS | 7 KB | synth | Brass combination wheel moving one detent (crisp click) |
 | `ambience/amb_archive.ogg` | 1:00.0 | yes | -24.1 LUFS | 747 KB | synth | Records Archive B: deep room tone, the Array humming far below, a slow clock, ticking pipes, distant canisters in the tubes |
+| `ambience/amb_choir.ogg` | 1:00.0 | yes | -24.0 LUFS | 298 KB | synth | Choir Hall: a low transformer hum on E, faint crystal-tube resonances singing in sympathy, two far contactors (no noise bed) |
+| `ambience/amb_gallery.ogg` | 1:00.0 | yes | -24.0 LUFS | 366 KB | synth | Resonance Gallery: air singing across the glass floor in narrow bands, faint crystal answers from the memorial wall, a distant drip into the deep hall (no noise bed) |
 | `ambience/amb_lab_dark.ogg` | 1:00.0 | yes | -24.2 LUFS | 867 KB | synth | Lab 7 in the dark: rain on the window, distant wind, low room tone, rare drips and creaks |
+| `ambience/amb_lift.ogg` | 1:00.0 | yes | -24.0 LUFS | 234 KB | synth | Freight lift shaft: the hoist's power hum on E, slow shaft air with a faint low whistle, rare cable creaks (no noise bed) |
+| `ambience/amb_nursery.ogg` | 1:00.0 | yes | -24.0 LUFS | 463 KB | synth | Nursery: a warm low hum, three growth-lamp buzzes beating slowly, soft steam puffs and cooling ticks from the autoclaves (no noise bed) |
 | `ambience/amb_power_hum.ogg` | 20.00 s | yes | -24.0 LUFS | 314 KB | synth | Restored power: subtle 50 Hz transformer hum with harmonics and faint electrical hiss |
 | `music/music_archive.ogg` | 2:30.0 | yes | -20.0 LUFS | 2453 KB | synth | Archive underscore: A minor analog pads, tine e-piano, vibraphone, soft pluck arpeggio with tape echo and wow |
 | `music/music_archive_finale.ogg` | 1:04.0 | yes | -20.0 LUFS | 1083 KB | synth | Vault finale: tender celesta theme with e-piano over warm F major strings, a borrowed minor iv, glass light |
 | `music/music_lab.ogg` | 2:40.0 | yes | -20.0 LUFS | 1957 KB | synth | Gameplay underscore: low, sparse D-pedal pads, rare soft celesta, distant metallic swells |
 | `music/music_menu.ogg` | 2:30.0 | yes | -20.0 LUFS | 2180 KB | synth | Main menu theme: slow evolving D minor pads, sparse celesta melody with echoes, deep hall |
+| `music/music_underground.ogg` | 2:40.0 | yes | -20.0 LUFS | 2142 KB | synth | Underground underscore: slow E Dorian pads, glass-tube bells with a shimmering twin, a low pulse at 48 BPM, an overtone choir and tape wow |
+| `music/music_underground_finale.ogg` | 1:20.0 | yes | -20.0 LUFS | 1117 KB | synth | Underground finale: the Array answers; a tender bell theme with e-piano over warm E major strings, a held E, lights rising, a borrowed minor iv |
 | `music/stinger_chapter_complete.ogg` | 8.47 s | no | -20.0 LUFS | 124 KB | synth | Chapter complete: Bbmaj7 lifts to a warm D major add9 bloom; a last high 9th and a faint b6 linger |
 <!-- ASSET-TABLE:END -->
 
 ## Known limitations
 
-- Everything was checked by measurement and spectrogram, not by ear. Timbre choices, especially the door creak and the music voicings, deserve a listening pass on a phone speaker and on headphones.
+- Everything, the Chapter 3 files included, was checked by measurement and spectrogram, not by ear. Timbre choices, especially the door creak and the music voicings, deserve a listening pass on a phone speaker and on headphones.
 - Phone speakers roll off below about 200 Hz. The heaviest impacts (`door_slam`, `safe_open`, `breaker_*`, `projector_fire`) keep much of their weight in the 50–150 Hz range, so they will sound lighter on phones.
 - `amb_lab_dark` is a 60 s loop. Its rare events (four drips, three creaks) repeat every minute, which an attentive player may notice in a long session. `amb_archive` behaves the same way: three distant canisters, five pipe-tick clusters, two paper rustles, two creaks and one relay repeat every minute.
 - The tape murmur has the rhythm and intonation of speech, but its vowel targets are random. It was checked by spectrogram only, and it deserves a listen to confirm it never resembles real words.
