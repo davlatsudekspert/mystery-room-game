@@ -632,6 +632,8 @@ func run() -> void:
 	await _settle(2.5)
 	await shot("chapter_complete")
 	step("Chapter 3 card → chapter card", hud.get("_overlay") != null)
+	var still := AudioManager.looping_sfx() # the cliffhanger's tape hiss must have stopped with the tape
+	step("No sound effect left looping (%s)" % ("none" if still.is_empty() else ", ".join(still)), still.is_empty())
 	_finish()
 
 

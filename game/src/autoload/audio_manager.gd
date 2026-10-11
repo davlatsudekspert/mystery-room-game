@@ -11,6 +11,7 @@ var _music: Array[AudioStreamPlayer] = []
 var _music_idx := 0
 var _music_name := ""
 var _amb: Dictionary = {} # name -> AudioStreamPlayer
+var _loops: Dictionary = {} # sfx_loop name -> AudioStreamPlayer
 var sfx_count := 0 # one-shots played so far (QA: "did that tap make a sound?")
 var last_sfx := ""
 
@@ -61,7 +62,7 @@ func stream(category: String, name: String) -> AudioStream:
 
 
 func sfx(name: String, volume_db: float = 0.0, pitch: float = 1.0, bus: String = "SFX") -> void:
-	var s := stream("sfx", name)
+	var s := once_stream(name)
 	if s == null:
 		return
 	sfx_count += 1
@@ -74,6 +75,88 @@ func sfx(name: String, volume_db: float = 0.0, pitch: float = 1.0, bus: String =
 			p.bus = bus
 			p.play()
 			return
+
+
+## The stream sfx() plays: a file imported as a loop (tape_hiss) is played once here. A pooled one-shot player
+## never stops a loop, and the pool outlives every scene: on a phone the tape hiss of the Chapter 2 cliffhanger
+## kept playing over the menu and every later chapter. Sounds that should loop go through sfx_loop().
+func once_stream(name: String) -> AudioStream:
+	var s := stream("sfx", name)
+	if s == null or not loops(s):
+		return s
+	var key := "sfx/%s#once" % name
+	if not _cache.has(key):
+		push_warning("AudioManager.sfx(\"%s\"): the file loops; played once. Use sfx_loop() for a loop." % name)
+		var once := s.duplicate() as AudioStream
+		_set_loop(once, false)
+		_cache[key] = once
+	return _cache[key]
+
+
+static func loops(s: AudioStream) -> bool:
+	if s is AudioStreamOggVorbis:
+		return (s as AudioStreamOggVorbis).loop
+	if s is AudioStreamMP3:
+		return (s as AudioStreamMP3).loop
+	if s is AudioStreamWAV:
+		return (s as AudioStreamWAV).loop_mode != AudioStreamWAV.LOOP_DISABLED
+	return false
+
+
+static func _set_loop(s: AudioStream, on: bool) -> void:
+	if s is AudioStreamOggVorbis:
+		(s as AudioStreamOggVorbis).loop = on
+	elif s is AudioStreamMP3:
+		(s as AudioStreamMP3).loop = on
+	elif s is AudioStreamWAV:
+		(s as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD if on else AudioStreamWAV.LOOP_DISABLED
+
+
+## A sound effect that loops until it is turned off (the tape hiss under a recording): `on` starts it or changes its
+## volume, `on` false fades it out. Every loop also stops when the scene changes (SceneManager.goto).
+func sfx_loop(name: String, on: bool, volume_db: float = 0.0, pitch: float = 1.0, fade: float = 0.3) -> void:
+	if on and not _loops.has(name):
+		var s := stream("sfx", name)
+		if s == null:
+			return
+		_set_loop(s, true)
+		var p := AudioStreamPlayer.new()
+		p.bus = "SFX"
+		p.stream = s
+		p.pitch_scale = pitch
+		p.volume_db = -60.0
+		add_child(p)
+		p.play()
+		_loops[name] = p
+		create_tween().tween_property(p, "volume_db", volume_db, maxf(fade, 0.01))
+	elif not on and _loops.has(name):
+		var p: AudioStreamPlayer = _loops[name]
+		_loops.erase(name)
+		var tw := create_tween()
+		tw.tween_property(p, "volume_db", -60.0, maxf(fade, 0.01))
+		tw.tween_callback(p.queue_free)
+	elif on and _loops.has(name):
+		create_tween().tween_property(_loops[name], "volume_db", volume_db, maxf(fade, 0.01))
+
+
+func sfx_loop_playing(name: String) -> bool:
+	return _loops.has(name)
+
+
+## QA: the sound effects still looping (sfx_loop names, and any pooled player holding a loop, which must not happen).
+func looping_sfx() -> Array[String]:
+	var out: Array[String] = []
+	for n: String in _loops:
+		out.append(n)
+	for p in _pool:
+		if p.playing and p.stream != null and loops(p.stream):
+			out.append("pool:" + p.stream.resource_path.get_file())
+	return out
+
+
+func stop_sfx_loops(fade: float = 0.3) -> void:
+	for n: String in _loops.keys():
+		sfx_loop(n, false, 0.0, 1.0, fade)
 
 
 func ui(name: String = "ui_tap") -> void:

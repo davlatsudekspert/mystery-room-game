@@ -85,6 +85,7 @@ func goto(path: String, fade_time: float = 0.45) -> void:
 	_loading.add_theme_font_size_override("font_size", UITheme.size(28))
 	_loading.visible = true
 	await _frames_drawn(1)
+	AudioManager.stop_sfx_loops(0.2) # a loop belongs to the scene that started it (the tape hiss under a recording)
 	var stage := "load:" + path.get_file().get_basename()
 	CrashGuard.mark(stage)
 	get_tree().paused = false

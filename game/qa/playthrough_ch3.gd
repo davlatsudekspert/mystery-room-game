@@ -1032,6 +1032,8 @@ func _finale() -> void:
 	await shot("chapter_complete")
 	_log(("✓ " if logic.is_complete() and hud.get("_overlay") != null else "✗ ") +
 		"finale: trust %s -> the Array answers, then the chapter card (%.1f s after the answer shot)" % [choice, waited])
+	var still := AudioManager.looping_sfx() # the descent's and the recorder's tape hiss must have stopped
+	_log(("✓ " if still.is_empty() else "✗ ") + "no sound effect left looping (%s)" % ("none" if still.is_empty() else ", ".join(still)))
 	await _finished_continue_check()
 
 

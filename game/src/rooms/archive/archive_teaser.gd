@@ -130,7 +130,7 @@ func play(choice: String) -> void:
 func _recorder() -> void:
 	var col := _card_column()
 	AudioManager.sfx("deck_play", -2.0, 0.9)
-	AudioManager.sfx("tape_hiss", -10.0)
+	AudioManager.sfx_loop("tape_hiss", true, -10.0)
 	var head := _text(tr("epi2.recorder"), 50, UITheme.CREAM, true)
 	col.add_child(head)
 	await _fade_in(head, 1.0)
@@ -185,6 +185,7 @@ func _recorder() -> void:
 	await _wait(3.4, true)
 	wave.level = 0.0
 	AudioManager.sfx("deck_eject", -6.0, 0.7) # the tape runs out
+	AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.25)
 	var tw := room.create_tween().set_parallel(true)
 	tw.tween_property(cap, "modulate:a", 0.0, 0.8)
 	tw.tween_property(voice, "modulate:a", 0.0, 0.8)

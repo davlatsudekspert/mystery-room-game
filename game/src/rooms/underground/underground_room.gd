@@ -1346,10 +1346,14 @@ func play_opening_camera() -> void:
 	AudioManager.ambience("amb_power_hum", true, -14.0, 1.0)
 	AudioManager.sfx("projector_charge", -10.0, 0.5)
 	# halfway down, the Chapter 2 cliffhanger answers: the same tape hiss, far below, a click, then only the hum
-	get_tree().create_timer(2.4).timeout.connect(func() -> void:
-		AudioManager.sfx("tape_hiss", -16.0, 0.9)
-		hud.call("caption", tr("cap3.descent"), 4.2))
-	get_tree().create_timer(4.4).timeout.connect(func() -> void: AudioManager.sfx("deck_eject", -14.0, 0.8))
+	# a tween of the room, not a SceneTree timer: if the player leaves during the descent, nothing starts afterwards
+	var hiss := create_tween()
+	hiss.tween_callback(func() -> void:
+		AudioManager.sfx_loop("tape_hiss", true, -16.0, 0.9, 0.4)
+		hud.call("caption", tr("cap3.descent"), 4.2)).set_delay(2.4)
+	hiss.tween_callback(func() -> void:
+		AudioManager.sfx("deck_eject", -14.0, 0.8)
+		AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.15)).set_delay(2.0)
 	if shaft:
 		var base := shaft.position
 		shaft.visible = true
@@ -1544,7 +1548,7 @@ func _play_recording() -> void:
 	var gen := _recording
 	visuals.recorder(true)
 	hud.call("caption", tr("cap3.recorder"), 2.0)
-	AudioManager.sfx("tape_hiss", -10.0)
+	AudioManager.sfx_loop("tape_hiss", true, -10.0) # a rewind restarts the recording: the hiss just keeps going
 	await get_tree().create_timer(2.0).timeout
 	var lines := tr("doc3.recorder").split(". ", false)
 	for line in lines:
@@ -1561,3 +1565,4 @@ func _play_recording() -> void:
 	await get_tree().create_timer(0.8).timeout
 	if gen == _recording:
 		visuals.recorder(false)
+		AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.6)
