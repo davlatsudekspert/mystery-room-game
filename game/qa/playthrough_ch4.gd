@@ -172,6 +172,10 @@ var _walks := 0
 var _solved: Array[String] = []
 var _early_done := false
 var screen_spec := ""
+var feet_only := false
+var advance_key := "" # --advance=<state key>: the solver plays the game (no scene) up to that state, the run starts there
+var _rise_shooting := false
+var _wound_shots: Array[int] = []
 var walk_only := false
 
 
@@ -202,6 +206,10 @@ func _ready() -> void:
 			do_continue = false
 		elif a == "--walk":
 			walk_only = true
+		elif a == "--feet":
+			feet_only = true
+		elif a.begins_with("--advance="):
+			advance_key = a.substr(10)
 		elif a.begins_with("--reload-every="):
 			reload_every = int(a.substr(15))
 		elif a.begins_with("--screen="):
@@ -221,7 +229,14 @@ func _ready() -> void:
 		"ch3_echoes": 4 if secret else 0}}
 	GameState.start_new("ch4")
 	logic = GameState.logic
-	GameState.events.connect(func(ev: Array[String]) -> void: _events.append_array(ev))
+	if advance_key != "":
+		var guard_adv := 0
+		while not bool(logic.state.get(advance_key, false)) and guard_adv < 800:
+			guard_adv += 1
+			ArrayHallSolver.step(logic, choice)
+		logic.select_item("")
+		_early_done = true
+	GameState.events.connect(_on_game_events)
 	var t0 := Time.get_ticks_msec()
 	_build_room()
 	await get_tree().process_frame
@@ -265,6 +280,21 @@ func _apply_screen(spec: String) -> void:
 	var safe := Rect2i(int(insets[0]), int(insets[1]), size.x - int(insets[0]) - int(insets[2]), size.y - int(insets[1]) - int(insets[3]))
 	Settings.set("emulate", {"size": size, "dpi": float(d["dpi"]), "safe": safe})
 	print("screen %s: window %s, canvas %s" % [spec, str(win.size), str(get_viewport().get_visible_rect().size)])
+
+
+func _on_game_events(ev: Array[String]) -> void:
+	_events.append_array(ev)
+	if not quick and ev.has("night_undone") and not _rise_shooting:
+		_rise_shooting = true
+		_rise_shots()
+
+
+## The climax is over while the harness waits for the idle scene: a frame every 1.6 s of game time from the moment the Night is
+## undone (the hall going dark, the 41 lights through the oculus, the roll board going out, the finale).
+func _rise_shots() -> void:
+	for k in 17:
+		await _settle(1.6)
+		await shot("rise_%02d" % k)
 
 
 func _expected_ending() -> String:
@@ -779,6 +809,9 @@ func run() -> void:
 	if walk_only:
 		await _walk_test()
 		return
+	if feet_only:
+		await _feet_test()
+		return
 	cam().go("lift", true)
 	await _settle(0.6)
 	await shot("lift_arrival")
@@ -824,6 +857,53 @@ func run() -> void:
 	if not logic.is_complete() and not s["night_undone"]:
 		_log("✗ chapter not completed (stopped after %d planning rounds)" % guard)
 	_finish()
+
+
+## --feet: every echo figure's feet against the surface under it (the bridge deck, the floor): the gap in metres, positive =
+## floating. Rays go down from 1 m above the figure's origin at the origin and 0.25 m to each side.
+func _feet_test() -> void:
+	for step in 6:
+		ArrayHallSolver.step(logic, "leave_lens")
+	await _settle(0.5)
+	var vis: Node = room.get("visuals")
+	var echoes: Dictionary = vis.get("_echoes")
+	var space: PhysicsDirectSpaceState3D = room.get_world_3d().direct_space_state
+	for fid: String in echoes:
+		var n: Node3D = echoes[fid]
+		_feet_report(space, str(fid), n.global_position)
+		_log("    soles of %s at y %.3f (origin y %.3f), mesh bounds low %.3f" % [fid, _soles(n), n.global_position.y, _soles(n) - n.global_position.y])
+	# Strand's ghost where each replay minute puts him
+	var ghost: Node3D = vis.get("_ghost")
+	for minute in [ArrayHallLogic.FLASH_MINUTE, logic.m_keeper(), logic.m_rings(), logic.m_sun(), 1]:
+		logic.state["wheel"] = minute
+		logic.state["reversing"] = true
+		vis.set("_ghost_minute", -1)
+		vis.call("_place_ghost")
+		_feet_report(space, "ghost@%d" % minute, ghost.global_position)
+		_log("    soles of the ghost at y %.3f (pose %s)" % [_soles(ghost), str(ghost.get_meta("pose", ""))])
+	_finish()
+
+
+func _feet_report(space: PhysicsDirectSpaceState3D, label: String, at: Vector3) -> void:
+	var gaps: Array[String] = []
+	for off: Vector3 in [Vector3.ZERO, Vector3(0.25, 0, 0), Vector3(-0.25, 0, 0), Vector3(0, 0, 0.25), Vector3(0, 0, -0.25)]:
+		var from := at + off + Vector3(0, 1.0, 0)
+		var q := PhysicsRayQueryParameters3D.create(from, from + Vector3(0, -6.0, 0))
+		var h := space.intersect_ray(q)
+		gaps.append("%.2f" % (at.y - float(h["position"].y)) if not h.is_empty() else "none")
+	_log("  feet %s at (%.2f, %.2f, %.2f): gap to the surface below %s" % [label, at.x, at.y, at.z, str(gaps)])
+
+
+## The lowest point of the visible meshes of a figure (world y): its soles.
+func _soles(n: Node3D) -> float:
+	var low := INF
+	for mi in ModelUtil.find_meshes(n):
+		if not mi.visible:
+			continue
+		var ab := mi.get_aabb()
+		for k in 8:
+			low = minf(low, (mi.global_transform * ab.get_endpoint(k)).y)
+	return low
 
 
 ## --walk: the zone changes alone (every root view and Panel 0 from the bridge, by taps), twice, in an odd order. Needs power
@@ -946,7 +1026,7 @@ func _continue_check(label: String = "", reversal: bool = false) -> void:
 		_log("✗ continue: the save could not be written or read back")
 		GameState.logic = logic
 	logic = GameState.logic
-	GameState.events.connect(func(ev: Array[String]) -> void: _events.append_array(ev))
+	GameState.events.connect(_on_game_events)
 	_build_room()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -1129,6 +1209,14 @@ func _milestones() -> void:
 				or e.begins_with("wound:") or e.begins_with("echo_released"):
 			if not e.begins_with("wound:") or not quick:
 				_log("  event %s" % e)
+			if e.begins_with("wound:") and not quick:
+				var minute := int(e.substr(6))
+				if minute in [6, 4, 2, 1] and not _wound_shots.has(minute):
+					_wound_shots.append(minute)
+					await wait_idle()
+					await view("bridge") # the hall: the crowd, the echoes and the beams at that minute
+					await _settle(1.6)
+					await shot("reversal_minute_%d" % minute)
 	_events.clear()
 
 
@@ -1176,11 +1264,6 @@ func _echo_point(n: Node3D) -> Vector2:
 
 
 func _finale() -> void:
-	if not quick:
-		# the rise (41 lights through the oculus, the board going out) is a cinematic: a frame in each of its four camera moves
-		for t: float in [3.0, 4.6, 5.4, 4.5]:
-			await _settle(t)
-			await shot("rise")
 	await wait_idle(90.0)
 	var hud: Node = room.get("hud")
 	var w := 0

@@ -101,6 +101,7 @@ var _crowd_int := 0.0
 var _crowd_m := 7.0
 var _crowd_target_m := 7.0
 var _echo_mat: ShaderMaterial
+var _echo_base_mat: ShaderMaterial
 var _echoes: Dictionary = {} # figure id -> Node3D
 var _ghost: Node3D
 var _ghost_minute := -1
@@ -136,6 +137,8 @@ func _ready() -> void:
 	_record_rest()
 	_echo_mat = ShaderMaterial.new()
 	_echo_mat.shader = load("res://src/fx/echo.gdshader")
+	_echo_base_mat = ShaderMaterial.new()
+	_echo_base_mat.shader = load("res://src/fx/array_echo_base.gdshader")
 	_build_evidence()
 	_build_orbs()
 	_build_beams()
@@ -575,10 +578,25 @@ func _make_echo(fid: String, model_name: String, pose: String, xf: Transform3D, 
 		mi.material_override = mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_show_pose(n, pose)
+	_add_base(n)
 	_cull_tag(n, groups)
 	room.call("set_present", n, false)
 	_echoes[fid] = n
 	return n
+
+
+## A pool of light under the figure's feet (the figure's origin is between its feet, on the floor): the ground to stand on.
+func _add_base(n: Node3D) -> void:
+	var quad := QuadMesh.new()
+	quad.orientation = PlaneMesh.FACE_Y
+	quad.size = Vector2(0.78, 0.78)
+	var base := MeshInstance3D.new()
+	base.name = "echo_base"
+	base.mesh = quad
+	base.material_override = _echo_base_mat.duplicate()
+	base.position = Vector3(0.0, 0.012, 0.0)
+	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	n.add_child(base)
 
 
 ## Show one pose object of an echo GLB (poses are root-level meshes; a single-pose GLB shows its body).
@@ -592,7 +610,7 @@ func _show_pose(n: Node3D, pose: String) -> void:
 				chosen = cand
 	if chosen != "":
 		for c in n.get_children():
-			if c is MeshInstance3D:
+			if c is MeshInstance3D and str(c.name) != "echo_base":
 				(c as MeshInstance3D).visible = str(c.name) == chosen
 	n.set_meta("pose", pose)
 

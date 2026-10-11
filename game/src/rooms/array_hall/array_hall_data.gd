@@ -124,6 +124,8 @@ const VIEWS := {
 	# the watch room
 	"watch": [Vector3(6.5, 1.7, 0.0), Vector3(12.7, 1.5, 0.0), 64.0, true, "HWw", "", ""],
 	"locker_17": [Vector3(12.15, 1.0, 1.75), Vector3(13.45, 0.55, 1.64), 40.0, false, "Ww", "", ""],
+	# cinematic: the roll board seen through the open gate while its lamps go out (the rise)
+	"rise_board": [Vector3(10.3, 1.5, 0.5), Vector3(13.9, 1.0, -0.6), 40.0, false, "HWw", "", ""],
 	"post_station": [Vector3(12.5, 1.28, -2.45), Vector3(13.5, 0.82, -2.95), 46.0, false, "Ww", "", ""],
 	# cinematic only
 	"rise_core": [Vector3(0.0, 2.9, 5.2), Vector3(0.0, 6.2, 0.0), 70.0, false, "HKRId", "", ""],
@@ -144,7 +146,7 @@ static func zone_of(view: String) -> String:
 			return "apse"
 		"booth", "booth_gate", "gear_box":
 			return "booth"
-		"watch", "locker_17", "post_station":
+		"watch", "locker_17", "post_station", "rise_board":
 			return "watch"
 		"island", "collar", "core", "drawer", "drawer_mark", "gate_1", "gate_2", "gate_3", "gate_4", "rise_core", "rise_up", "finale":
 			return "island"
@@ -177,7 +179,7 @@ const CAPTION := {
 	"gate_2": "obj4.gate_2", "gate_3": "obj4.gate_3", "gate_4": "obj4.gate_4", "collar": "obj4.collar",
 	"core": "obj4.core", "drawer": "obj4.core", "drawer_mark": "obj4.core", "apse": "obj4.apse", "sun_pedestal": "obj4.sun_pedestal",
 	"iris": "obj4.iris", "booth": "obj4.booth", "booth_gate": "obj4.booth", "gear_box": "obj4.gear_box",
-	"watch": "obj4.watch", "locker_17": "obj4.locker", "post_station": "obj4.post_station",
+	"watch": "obj4.watch", "rise_board": "obj4.watch", "locker_17": "obj4.locker", "post_station": "obj4.post_station",
 	"rise_core": "obj4.oculus", "rise_up": "obj4.oculus", "finale": "obj4.core",
 }
 

@@ -811,7 +811,7 @@ func view_changed_hook(id: String) -> void:
 	else:
 		apply_culling(id)
 	var fill: OmniLight3D = lights["focus_fill"]
-	var e := 0.0 if cam.is_root() else (1.5 if id in BRIGHT_CLOSEUPS else 0.8)
+	var e := 0.0 if (cam.is_root() or id == "rise_board") else (1.5 if id in BRIGHT_CLOSEUPS else 0.8)
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	visuals.view_changed(id)
 	_zone_mood(ArrayHallData.zone_of(id))
@@ -1335,7 +1335,7 @@ func _finale_rise() -> void:
 	for k in 6:
 		tones.rise_note(8 + k, -15.0)
 		await get_tree().create_timer(0.85).timeout
-	cam.go("watch")
+	cam.go("rise_board")
 	visuals.rise_lamps(0.1)
 	await get_tree().create_timer(4.4).timeout
 	if ending == "true":
