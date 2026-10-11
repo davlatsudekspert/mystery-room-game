@@ -8,6 +8,7 @@ Folder names: <R>/<chapter>_<shape>_<lang>, chapter ch1|ch2, shape 169 (16:9, 25
 ipad (2752x2064), lang en|ru. A store size is only written when all its renders exist in that language.
 
     python3 tools/store/make_store_graphics.py --renders=<R>     # writes docs/store/**
+    python3 tools/store/make_store_graphics.py --renders=<R> --screenshots-only   # only the gameplay screenshots
     python3 tools/store/make_store_graphics.py --check-text      # character / byte counts of the listing texts
     python3 tools/store/make_store_graphics.py --table           # file / pixel / size table for README.md
 
@@ -336,6 +337,8 @@ def main() -> int:
     ap.add_argument("--langs", default="en,ru")
     ap.add_argument("--check-text", action="store_true")
     ap.add_argument("--table", action="store_true", help="print the README file table")
+    ap.add_argument("--screenshots-only", action="store_true",
+        help="rewrite only the gameplay screenshots (new HUD); keep the icon, feature graphic and hero frame")
     a = ap.parse_args()
     if a.check_text:
         return 0 if check_text() else 1
@@ -345,11 +348,13 @@ def main() -> int:
     if not a.renders:
         ap.error("--renders is required")
     langs = a.langs.split(",")
-    icon()
-    for lang in langs:
-        feature(a.renders, lang)
+    if not a.screenshots_only:
+        icon()
+        for lang in langs:
+            feature(a.renders, lang)
     screenshots(a.renders, langs)
-    hero(a.renders, langs)
+    if not a.screenshots_only:
+        hero(a.renders, langs)
     contact_sheet()
     print("written to", OUT)
     return 0
