@@ -179,6 +179,7 @@ func _run() -> void:
 		cam.go(v, true)
 		await _settle(0.9)
 		if perf_only:
+			print("tap_map: perf view %s" % v) # progress: tools/qa_run.sh kills a run whose log stops growing
 			# the room's reflection probe captures over several frames, and the software renderer runs at a few
 			# frames per second: wait for it, or the shot shows the room darker than any phone would
 			await _settle(2.5)
