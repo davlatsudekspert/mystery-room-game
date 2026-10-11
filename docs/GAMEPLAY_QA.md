@@ -432,8 +432,8 @@ A review as a veteran of *The Room* would play it, on both key paths, with the f
 | The choice cut to the card; the recorder clicked on off-screen; the blast door rolled behind the drum close-up; the desk woke up behind the player | `_finale_outcome` + `finale_answer` (the Array answers in the new `answer` view, the trusted figure brightens, then the card); `_seal_opens` (seal → camp → the recorder clicks on); `_door_rolls`; `_desk_wakes` (globe power-on test) |
 | Open doors and the shutter showed flat tinted cards | `PORTAL_SHADER`: a dim room down a tunnel, same quad and draw call |
 | Shutter crystals 1–3 at 7.0–8.5 mm (open shutter, no-steal rule); prism buttons 8.0 × 8.5 mm; meter-case wheels 2.5 mm wide | Tap boxes per crystal bay (`CRYSTAL_TAP`) and per apron button (`BUTTON_TAP`); `shutter` 0.1 m higher, fov 50 → 42; `meter_case` 0.3 m closer, fill 0.7 |
-| The opening played a door slam, a maglock and Chapter 1's lab ambience (left running under the Choir Hall) | `intro_impact()` (the room's own beat); halfway down, `cap3.descent` with the far tape hiss and click |
-| Leyla's touched drawer blew out to a flat card; tapped crystals gave no light | A faint glow and a 3.5 cm give of the drawer; a tapped crystal glints (never during the recording) |
+| The opening played a door slam, a maglock and Chapter 1's lab ambience (left running under the Choir Hall); the descent's rock box ran out into flat fog; "Tap to continue" stayed up through the descent | `intro_impact()` (the room's own beat); halfway down, `cap3.descent` with the far tape hiss and click; `INTRO_SHAFT_RISE` 6 m; the prompt fades with the cards (`hud.gd`, one line) |
+| Leyla's touched drawer blew out to a flat card; tapped crystals gave no light | A small cold light in front of the drawer (an emission always flattened the walnut) and a 3.5 cm give; a tapped crystal glints (never during the recording) |
 
 New QA options of `playthrough_ch3.gd`: `--opening` (shots of a New Game's first 24 s: cards, descent, arrival), `--finale-only [--choice=…] [--secret]` (the solver plays to the last move off-screen, then the secret's echo, the Array waking, the choice and the answer as shots). The full run now also waits out and shoots the first look, checks that the Array answers before the chapter card, and checks Continue on the finished save.
 
@@ -462,6 +462,8 @@ tap-size: 79 different parts, each at its best view: under 9 mm: 17 raw, 0 with 
 ```
 --finale-only --choice=strand / leyla / leyla --secret (rendered, 8ea17ad)   ✓ finale only: trust <choice>, the Array answers, then the chapter card   QA_DONE exit=0 (each)
 tap_map --perf --screen=phone61, 56 views, array_awake (rendered)        perf[blast_west]: draw calls 121, primitives 85967   (the most; limit 150)
+tap_map --perf --screen=phone61, 56 views, case_open (rendered)          the most: choir_s 96, desk 95
+--opening --key=leyla (rendered, last fix)                               ✓ opening: input free 10.2 s after the descent began
 ```
 Per view, the only control still under 9 mm with the tap assist is `IA_tube_6` in the `rack` overview (1.5 × 7.5 mm), whose assist stops at its own slot or bench place (the same action); it is over 9 mm in `rack_close` and `bench`. Before/after sheets: `docs/previews/ch3/review_*.jpg`.
 
