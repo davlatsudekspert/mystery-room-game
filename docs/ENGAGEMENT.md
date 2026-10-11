@@ -1,4 +1,6 @@
-# Engagement review: Chapters 1 and 2
+# Engagement review: Chapters 1, 2 and 3
+
+Chapters 1 and 2 are reviewed first (2026-10-10). Chapter 3, the first paid chapter, follows at the end of this file (2026-10-11).
 
 **Date:** 2026-10-10. **Why now:** Chapters 1 and 2 are free, and the US$4.99 purchase unlocks Chapters 3 and 4. The end of Chapter 2 is where a player decides to buy. The owner's brief: the first two chapters must pull the player in, and their ending must leave the player wanting more.
 
@@ -194,3 +196,114 @@ The final look of each is in the reveal and teaser shots.
 3. **The hand-off wording.** *"Continue the story"* and *"Not now"* on the card, and the line *"One purchase unlocks both; no ads, ever."* (true per `docs/MONETIZATION.md`). Should the price appear on the card itself, or only in the purchase screen, as now?
 4. **Length of the cliffhanger.** About 45 s unskipped, plus 11 s for the reel. A tap shortens every beat; first-time players should probably see it whole.
 5. **Playtest questions.** Do players find the whisper secret? Do they look at the vault after the clunk? Do they stall on the mirrors? Can they say why they go to the archive?
+
+---
+
+# Chapter 3: The Underground Facility (Level −2)
+
+**Date:** 2026-10-11. **Why now:** Chapter 3 is the next chapter to open for testers, and the first one behind the US$4.99 purchase. It has to feel better than the free chapters. The owner's brief: look at it as the best players of *The Room* would, and only then release it to testers.
+
+**Method.** The same as for Chapters 1 and 2:
+- rendered solver playthroughs on both Chapter 2 key paths (`qa/playthrough_ch3.tscn --key=strand` and `--key=leyla`), before and after this pass, and every one of their screenshots;
+- targeted phone-aspect renders (`qa/tap_map.tscn --perf --screen=phone61`) of the views in question;
+- the new `--opening` mode of the playthrough, which films a New Game's first 24 seconds as a player sees them (the intro cards, the descent, the arrival);
+- the code of every caption, message, sound and camera move a solved step triggers, and the per-game variants (`docs/VARIANTS.md`, `UndergroundLogic.apply_seed`) checked against what is on screen.
+
+Minutes are first-time-player **estimates** (35–45 minutes, the design target); the solver's own time (about 8 minutes) says nothing about humans. No one has played Chapter 3 on a phone yet.
+
+## The curiosity curve
+
+### Strand's key (the Choir Hall first)
+| Min | What the player sees and does | Curiosity | Type |
+|---|---|---|---|
+| 0–1 | The cards: *"The tag on Strand's key reads: 'For the Choir.'"*, *"Level −2. The machine floor that fed the Array."* The cage sinks past caged lamps; the hum grows. **New:** halfway down, the tape hiss of the Chapter 2 cliffhanger, a click, then only the hum. The gate rattles open | 4 → 5 | hook |
+| 1–3 | The Choir Hall: dark brick, three transformers, the tube rack, a dead desk with a lockout tag, Strand's lit glass office, the switch room | 4 | hook |
+| 3–7 | **W1 interlock forward.** The enamel plate says it all in pictograms; heavy clacks, a key trapped, the next one freed; the office door swings | 4 | aha |
+| 7–10 | **W2 Strand's office.** The 1977 diagnosis (*"Two years, perhaps three…"*), *"My heart keeps the count"*, the ECG strip on the lamp, the meter case | 4 | story + aha |
+| 10–15 | **W3 the Choir.** Measure seven tubes with the meter, read the chalk staircase, rehang, strike: a clean chord | 3 | aha (small), **dead risk** while measuring |
+| 15–17 | **W1b backward.** Close the office, four keys back, isolators ON. **New:** the camera turns to the desk; its lamp glows and the five step globes light one by one, a power-on test | 2 → 3 | **dead risk** |
+| 17–22 | **W4 witness ports.** A man from 1979 flickers at the desk; each port sees part of his run; the globes count the step | 5 | wow + aha |
+| 22–24 | The hall starts: the chord, the transformers, the arcs; the west blast door rolls onto the Gallery | 5 | wow |
+| 24–26 | **New: the first look.** The first walk into the Gallery leans over the rail: 30 m below, the Array's four rings wake one by one, each with a low bell, and a sign lights on each | 3 → 5 | wow (before: a grey card, see below) |
+| 26–28 | **H1 drum lock.** The four signs onto the wheels. **New:** the camera steps back and the east door rolls open onto the Nursery | 4 | aha |
+| 28–32 | The Nursery: frost on the autoclaves, the seed library (leave path: Leyla's echo touches a drawer), a crystal grown in eight seconds | 4–5 | reveal + wow |
+| 32–35 | **E3 prism fans:** the seal drinks the light. **New:** the camera walks into Leyla's camp and her recorder clicks on by itself | 5 | story peak |
+| 35–38 | **E4 melody**, by ear or by waveform; the shutter slides open onto the Gallery | 4 | aha |
+| 38–42 | The console: the cradle, two knobs, the figure locks; 41 lights rise up the shaft; Strand and Leyla stand in the light. Trust one. **New:** the Array answers before the card | 5 | wow + choice |
+
+### Leyla's key (the Nursery first)
+| Min | What the player sees and does | Curiosity | Type |
+|---|---|---|---|
+| 0–1 | The same descent with *"For the Nursery"*; the far tape hiss now points straight at where she is going | 5 | hook |
+| 1–3 | Cold tiles, four autoclaves (one working), the seed library, a prism bench before a sealed door with three receptors | 4 | hook |
+| 3–6 | **E1 seed:** Leyla's 1998 echo touches a drawer (leave path), or the mental rotation from her log (take path) | 4 | reveal / aha |
+| 6–10 | **E2** chart → cam pegs → a crystal grows behind the glass in eight seconds | 5 | wow |
+| 10–14 | **E3** fans; the seal opens; **new:** into the camp, and the recorder Chapter 2 promised clicks on: her voice | 5 | story peak |
+| 14–17 | **E4** melody; the shutter opens onto the Gallery | 4 | aha |
+| 17–19 | **New:** the first look down the shaft | 5 | wow |
+| 19–21 | **H1**; **new:** the west door rolls open in view: the Choir Hall | 4 | aha |
+| 21–37 | The Choir Hall: W1, W2 (Strand's diagnosis), W3, W1b, W4, the hall starts and power reaches the console | 3–5 | the same dead risk at W3 + W1b |
+| 37–41 | The finale | 5 | wow + choice |
+
+**Reading the curve.** The chapter has more set pieces than either free chapter (the 1979 operator, the eight-second crystal, the hall starting, the first look, the 41 lights), and the Leyla path is strong from the first minute to the last. Before this pass its three biggest moments were undersold: the Array seen through the glass floor was a flat grey card, the recorder that Chapter 2 ends on clicked on while the player stood at the prism bench, and the finale choice cut straight to a statistics card. The one stretch that still sags is W3 + W1b on the Choir side (about six minutes of measuring, rehanging and turning keys back); it now ends on a visible reward, but its middle is unchanged.
+
+## Findings, ranked by player impact
+
+| # | Finding | Effect on a player | Status |
+|---|---|---|---|
+| 1 | **The seed library was a coin flip in every real game.** Leyla's log shows the seed's cross-section with a clockwise arrow and *"Sketched a third of a turn off."* The arrow reads two ways (how the sketch is turned, or which way to turn it). The canonical game keeps the other reading out of the library (`test_seed_glyphs_and_rotation`: *"turning the wrong way finds no drawer"*), but the per-game variants, which every player gets (`GameState` picks a random seed), always put it in a drawer: `glyphs = [right, rotate(right, 1), rotate(right, -1), …]`, and `rotate(right, -1)` is the sketch turned the other way | Half of the players who reason correctly grow a cloudy crystal and cannot tell whether the seed or the pegs were wrong | **Fixed** (`UndergroundLogic._draw_seed_library`): the other reading is never in a drawer, as in the canonical game; the sketch as drawn and the one-notch twins stay as distractors. The variant test checks it for 60 seeds × both wings |
+| 2 | **The first look down the shaft was a diagram on a grey card.** The shared `M_Glass` (near-white, alpha 0.25) is lit from above by the Gallery's key spot and from below by the Array's up-light, so the 30 m drop read as a flat milky disc; the signs were pale cyan on pale cyan rings, the star a thin sparkle (`docs/previews/ch3/review_glass_floor.jpg`, left) | The chapter's centrepiece and the code for the Gallery's door: no depth, no awe, and the star hard to read | **Fixed**: dark, clear glass for the floor; the signs in warm cream, drawn bolder (the star's arms), with a near-black rim, so they read on their rings; **and the first look is staged** (below) |
+| 3 | **Continue on a finished save stranded the player.** Quit on the chapter card, tap Continue: a finished Level −2 opened at the entry hall with nothing to tap and no card (Chapters 1 and 2 had this bug and were fixed in their engagement pass). A save made during the finale offered the choice over the entry hall | A tester who quits at the end cannot reach Chapter 4 from the game | **Fixed**: a finished save opens on the Gallery in the light with the chapter card; a finale save opens on the two figures with the choice |
+| 4 | **The finale choice cut straight to the statistics card.** The Array's answer (*"…forty-one lights stop circling and wait"* / *"…a forty-second light turns toward you"*) existed only as card text | The paid chapter's ending is a dialog and a table | **Fixed**: the chosen piece seats, the camera looks up the shaft, and the Array answers: Strand, one held chord and the 41 lights slow to a stop; Leyla, the note falls tube by tube, the lights go out one by one and a single warm light rises to the glass. The epilogue line is the caption; then the card |
+| 5 | **The recorder clicked on off-screen.** Chapter 2's cliffhanger ends on *"Somewhere below, a recorder clicks on"* and the Chapter 3 card promises *"a recorder that is still turning"*. When the seal opened, the captions rolled while the camera stayed on the prism bench (`36_solved_prisms`) | The payoff of the purchase moment happens behind the player's back | **Fixed**: the camera watches the camp door slide, walks into the camp, and there the recorder clicks on (deck sound, haptic, reels turning); control returns while the tape plays |
+| 6 | **The open doors were painted slabs.** Every open blast door and the shutter showed its portal card, a flat unshaded tint (gallery, finale, prism bench, port memories) | The most visible "placeholder" look in the chapter, right in the finale frame | **Fixed**: the card draws a dim room down a short tunnel (dark sides and ceiling, a lit band where the far lamps hang, a faint floor). Same quad, same one draw call |
+| 7 | **The blast door rolled open behind the close-up.** After the drum lock took the code, the camera stayed on the lock; the door slid out of sight (`27_solved_rings`: a flat grey edge) | The second wing's reveal is not seen | **Fixed**: the camera steps back to the door's view as it rolls, and the other wing is drawn through it |
+| 8 | **Shutter crystals 1–3 under 9 mm** once the shutter is open (7.0–8.5 mm with the tap assist: the tunnel lining behind them is an interactive part, and the assist never replaces a direct hit). The **prism-bench buttons** 8.0 × 8.5 mm (neighbours on both sides) | Missed taps on the chapter's melody puzzle | **Fixed**: each crystal has a box over its own bay of the frame and the `shutter` view is 0.1 m higher and 8° narrower (the crystals are about 1.2× larger and are the subject of the frame); each apron button has a box over its share of the apron |
+| 9 | **The desk woke up behind the player.** All isolators ON makes the desk live, but the player stands at the cabinets, facing away | No feedback that W1b is done; the globes that W4 depends on were never introduced | **Fixed**: the camera turns to the desk, the live lamp glows and the five globes light one by one and go dark (a power-on test that shows what they count, not which lever is which) |
+| 10 | **The arrival did not answer the cliffhanger,** and its sounds were wrong. The HUD's generic opening played a door slam and a maglock at the start of a lift descent, and started Chapter 1's lab ambience, which nothing turned off on Strand's path: it played under the whole Choir Hall | The first minute after the purchase felt like Chapter 1 | **Fixed**: the room has its own opening beat (no slam, no lab ambience); halfway down, a caption and the far tape hiss and click answer Chapter 2's last scene |
+| 11 | **Leyla's touched drawer blew out** into a flat white card (`29_evidence_seed_library`) | A glowing rectangle instead of a drawer | **Fixed**: a soft cold glow on the wood |
+| 12 | **The meter case was too far:** its three wheels 2–3 mm wide on a phone, the sun / moon / star over them unreadable | The W2 lock is legible only by guessing left to right | **Fixed**: the close-up is 0.3 m nearer (and its fill lower, so the cream tiles do not blow out) |
+| 13 | **Tapped crystals gave no light.** A tapped crystal swung and rang, but did not shine | Weak tactile feedback on the melody | **Fixed**: a tapped crystal glints for a moment. Never during the recording: which crystal sings which note stays a matter of ear and waveform |
+| 14 | The ECG strip's bracket signs are about 1 mm on a phone, and the lamp's clip covers the moon's sign | The strip is still read left to right, which matches the case's wheels, and level 2 of the hint names the strip | **Not fixed**: needs a reader picture of the strip (the HUD's document reader, another agent's file) or a model change |
+| 15 | W3 + W1b procedure stretch (about 6 minutes) | The one sag in the curve | **In part**: W1b now ends on the desk waking (item 9). The puzzles are unchanged on purpose (no thinking removed) |
+| 16 | Audio: Chapter 3 has no ambience or music of its own; the zones fall back to Chapters 1–2 tracks (the Gallery plays the archive's room tone) | The Gallery's "wind up the shaft" is missing | **Not fixed** (audio pipeline, `tools/audio`) |
+| 17 | The drum lock's brass bezels are the brightest thing in their close-up; the symbols read clearly | Possible glare at maximum phone brightness | Not changed; check on a phone |
+
+## What changed (this pass)
+All in Chapter 3's own files (`game/src/rooms/underground/*`, `game/qa/playthrough_ch3.gd`, `tools/localization/strings_ch3.py`), plus one assertion in `game/tests/test_underground_puzzles.gd` and one test there. No puzzle answer, rule or hint changed; every variant still comes from the seed.
+
+- **Logic** (`underground_logic.gd`): the seed library never holds the sketch turned the other way (finding 1). `look("gallery" | "gallery_w")` emits `array_first_look` once per game, after the Gallery wakes (new state key `array_seen`, presentation only; older saves load with it false).
+- **The first look** (`UndergroundRoom._first_look`, `UndergroundVisuals.array_first_look`): only a walk into the Gallery triggers it (`_enter_gallery`), so QA tools that jump between views never do. About 9 s; control returns in the glass-floor view, where the signs can be studied.
+- **Staged moments:** `_seal_opens` (seal → camp → the recorder clicks on), `_door_rolls` (the drum lock → the door's view), `_desk_wakes` (the desk and its globe test), `_finale_outcome` and `UndergroundVisuals.finale_answer` (the Array answers the choice; the chapter card waits for it).
+- **Look:** dark glass for the floor; the ring-sign shader (`RING_SYM_SHADER`: bold fill, dark rim, fade-in); the portal-card shader (`PORTAL_SHADER`); Leyla's drawer glow 1.2 → 0.35; the crystal glint.
+- **Taps and framing:** crystal and apron-button tap boxes; `shutter` and `meter_case` cameras (`underground_data.gd`).
+- **Opening and resume:** `intro_impact()` (the room's own opening beat), the descent caption and sounds, `_resume_completed()`, the finale-resume framing.
+- **Strings** (EN, RU, UZ): `cap3.descent`, `cap3.array_wakes`.
+- **QA** (`playthrough_ch3.gd`): `--opening` (shots of a New Game's first 24 s); the walk into the Gallery waits out and shoots the first look; the finale checks that the Array answers and that the chapter card follows; a new check that Continue on a finished save opens on the chapter card.
+
+## Verification
+Every line below was printed by a run on 2026-10-11. Rendered runs go through `tools/qa_run.sh` (software Vulkan in the dev container, 1280 × 720 frames). The two rendered playthroughs ran on commit `8ab6e1a` (every fix above except three later presentation tweaks: the `answer` camera with the trusted figure brightening, the rising lights lingering over the glass, and Leyla's drawer giving a little). Those tweaks, in `8ea17ad`, were run through the headless quick playthroughs below and the full tests.
+
+| Check | Result, as printed |
+|---|---|
+| `playthrough_ch3 --key=strand` (rendered) | `✓ continue: scene rebuilt from the save (state kept, opens at choir, gate open)`, `✓ finale: trust leyla -> the Array answers, then the chapter card (3.8 s after the answer shot)`, `✓ continue on a finished save: the chapter card again, opens at finale`, `taps through the 3D scene: 108, logic fallbacks: 0 (0 of them for models not built yet)`, `QA_DONE exit=0` |
+| `playthrough_ch3 --key=leyla` (rendered) | `✓ continue: scene rebuilt from the save (state kept, opens at nursery, gate open)`, the same two finale lines, `taps through the 3D scene: 104, logic fallbacks: 0 (0 of them for models not built yet)`, `QA_DONE exit=0` |
+| Before this pass, `--key=strand` (rendered, commit `7cdc137`) | `taps through the 3D scene: 108, logic fallbacks: 0 (0 of them for models not built yet)`, `QA_DONE exit=0`; the finale went straight to the card, and there was no check of a finished save |
+| Seed variants, `--quick --key=strand --seed=5` and `--quick --key=leyla --seed=9` (headless) | `taps through the 3D scene: 104, logic fallbacks: 0 (0 of them for models not built yet)` and `taps through the 3D scene: 102, logic fallbacks: 0 (0 of them for models not built yet)`, each with the continue, finale and finished-save lines ✓, `QA_DONE exit=0` |
+| Final code (`8ea17ad`), `--quick --key=strand` / `--key=leyla` | `taps through the 3D scene: 102, logic fallbacks: 0 …` / `taps through the 3D scene: 100, logic fallbacks: 0 …`, the same ✓ lines, `QA_DONE exit=0` |
+| `tap_map --chapter=ch3 --hud-check --tap-size`, all 55 views, headless | phone61 `camp_open`: `hud-check (phone61): 172 controls in 55 views, 0 failures, 33 banner warnings (312 focus-only controls and 3 slivers not checked)`; phone61 `shutter_open`: `hud-check (phone61): 174 controls in 55 views, 0 failures, 34 banner warnings (314 focus-only controls and 3 slivers not checked)`; phone61 `case_open`: `hud-check (phone61): 177 controls in 55 views, 0 failures, 42 banner warnings (269 focus-only controls and 4 slivers not checked)`; phone61 `array_awake`: `hud-check (phone61): 174 controls in 55 views, 0 failures, 34 banner warnings (314 focus-only controls and 3 slivers not checked)`; tablet10 `camp_open`: `hud-check (tablet10): 152 controls in 55 views, 0 failures, 23 banner warnings (281 focus-only controls and 0 slivers not checked)`; tablet10 `shutter_open`: `hud-check (tablet10): 154 controls in 55 views, 0 failures, 24 banner warnings (282 focus-only controls and 0 slivers not checked)` |
+| `--tap-size` (phone61) | before (`shutter_open`): `tap-size: 79 different parts, each at its best view: under 9 mm: 25 raw, 4 with assist (IA_q_left, IA_tcrystal_1, IA_tcrystal_2, IA_tcrystal_3)`; after: `tap-size: 79 different parts, each at its best view: under 9 mm: 17 raw, 0 with assist` (`camp_open`, `shutter_open`, `array_awake`; `case_open`: 78 parts, 17 raw, 0 with assist). Per view, the one control still under 9 mm with the assist is `IA_tube_6` in the `rack` overview (1.5 × 7.5 mm hanging, 7.0 × 1.5 mm on the bench): the assist stops at its own slot or bench place, which does the same thing (a tap on the place lifts or hangs that tube), and it measures over 9 mm in `rack_close` and `bench`. The shutter crystals are now 12.0–13.0 × 14.5–15.0 mm raw, the apron buttons 10.5 × 15.0 mm with the assist, the meter-case wheels 4.5–7.5 × 14.0–16.0 mm raw. tablet10: `under 9 mm: 9 raw, 0 with assist` |
+| Performance (rendered, HUD included) | the most in any measured view: `perf[nursery]: draw calls 91, primitives 46791` (both runs); finale 62, choir_s 88, desk 79, camp 68, shutter 57, glass_floor 24; the phone-aspect renders of the changed views (2340 × 1080): `perf[blast_east]: draw calls 107` the most. Limit 150 |
+| `tools/run_tests.sh` / `qa/check_scripts.tscn` | `223 tests, 29466 checks, 0 failures`; `checked 128 scripts, 0 broken` |
+
+Screenshots (`docs/previews/ch3/`): `review_glass_floor.jpg`, `review_first_look.jpg`, `review_portals.jpg`, `review_seal_camp.jpg`, `review_door_roll.jpg`, `review_desk_wake.jpg`, `review_shutter.jpg`, `review_meter_case.jpg`, `review_ending.jpg` (before = commit `7cdc137`, after = commit `8ab6e1a`, both from the rendered strand runs; the Gallery shot is a phone-aspect render).
+
+## Verdict
+**Ready to open to closed testers** (the director sets `released: true`). No known puzzle is unfair any more on any per-game variant; both key paths finish by real taps with 0 fallbacks, Continue holds after the first wing and after the ending, every control has a target of at least 9 mm on a 6.1" phone in its own close-up, and no measured view is above 107 draw calls (limit 150). The paid chapter now delivers its three set pieces on screen (the first look, the recorder, the Array's answer) instead of in captions.
+
+What testers should be asked, and what still stands before a public release:
+1. **A phone run** (none yet): brightness of the dark Choir Hall and the glow of the drum bezels on an OLED screen at maximum brightness; whether the desk levers and the hook key are hit at once with the tap assist.
+2. **The ECG strip** (finding 14): can testers read the three bracket signs, or do they count left to right? If they stall, the strip needs a reader picture.
+3. **W3 + W1b** (finding 15): does the measuring and the reversal feel like chores?
+4. **Audio** (finding 16): Chapter 3 still borrows the earlier chapters' ambience and music.
+5. The playtest questions of `docs/GAMEPLAY_QA.md` ("Still needs human testing").

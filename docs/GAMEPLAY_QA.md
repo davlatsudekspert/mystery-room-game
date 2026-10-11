@@ -420,6 +420,47 @@ Open issues:
 
 Verdict for `released: true`: **ready for a closed-testing release, not yet for the public one.** For: 204 tests with 0 failures, the 300-game sweep and 6 clean reload runs (30 to 49 mid-wing Continues each) with no softlock or drift, both key paths rendered with 102 to 108 taps, 0 fallbacks and Continue passing, seed variants clean, the HUD check at 0 failures on 4 screens and 5 game states, every level 1 and 2 hint naming an object in three languages. Against: open issue 1 (a phone player may not be able to hit the desk levers and the hook key at all, and the first puzzle needs them), open issue 3 (an unexplained crash), and no device run. One phone playtest of the desk, the meter case and the shutter crystals, plus a Continue test, would settle it; if the tap-assist radius lands in `RoomBase`, rerun `playthrough_ch3` and the hud-check once.
 
+### Player-experience pass (2026-10-11)
+A review as a veteran of *The Room* would play it, on both key paths, with the findings ranked by player impact in `docs/ENGAGEMENT.md` ("Chapter 3"). What it changed, in short (no answer, rule or hint changed):
+
+| Finding | Fix |
+|---|---|
+| **Fairness:** every real game (a random variant seed) put both readings of Leyla's turning arrow in the seed library, so the right drawer was a coin flip; only the canonical game (seed 0) avoided it | `_draw_seed_library` never adds the sketch turned the other way; `test_variants_are_solvable_unique_and_saved` checks it on 60 seeds × both wings |
+| The glass floor read as a grey card (milky shared glass lit from both sides); the signs pale on pale, the star thin | Dark clear glass for `IA_glass_floor`; the ring signs in warm cream, bolder, with a near-black rim (`RING_SYM_SHADER`, quads × 1.22) |
+| The chapter's big first look was not staged | The first walk into the awake Gallery (`_enter_gallery` → `look()` → `array_first_look`, once per game, state `array_seen`): rings wake one by one with a low bell, then the signs light; control returns in `glass_floor` |
+| Continue on a finished save opened a finished Level −2 with nothing to tap; a finale save showed the choice over the entry hall | `_resume_completed()` (the finale view and the chapter card); a finale save opens on the two figures |
+| The choice cut to the card; the recorder clicked on off-screen; the blast door rolled behind the drum close-up; the desk woke up behind the player | `_finale_outcome` + `finale_answer` (the Array answers in the new `answer` view, the trusted figure brightens, then the card); `_seal_opens` (seal → camp → the recorder clicks on); `_door_rolls`; `_desk_wakes` (globe power-on test) |
+| Open doors and the shutter showed flat tinted cards | `PORTAL_SHADER`: a dim room down a tunnel, same quad and draw call |
+| Shutter crystals 1–3 at 7.0–8.5 mm (open shutter, no-steal rule); prism buttons 8.0 × 8.5 mm; meter-case wheels 2.5 mm wide | Tap boxes per crystal bay (`CRYSTAL_TAP`) and per apron button (`BUTTON_TAP`); `shutter` 0.1 m higher, fov 50 → 42; `meter_case` 0.3 m closer, fill 0.7 |
+| The opening played a door slam, a maglock and Chapter 1's lab ambience (left running under the Choir Hall) | `intro_impact()` (the room's own beat); halfway down, `cap3.descent` with the far tape hiss and click |
+| Leyla's touched drawer blew out to a flat card; tapped crystals gave no light | A faint glow and a 3.5 cm give of the drawer; a tapped crystal glints (never during the recording) |
+
+New QA options of `playthrough_ch3.gd`: `--opening` (shots of a New Game's first 24 s: cards, descent, arrival), `--finale-only [--choice=…] [--secret]` (the solver plays to the last move off-screen, then the secret's echo, the Array waking, the choice and the answer as shots). The full run now also waits out and shoots the first look, checks that the Array answers before the chapter card, and checks Continue on the finished save.
+
+Verification (every line as printed; rendered runs through `tools/qa_run.sh`, software Vulkan, 1280 × 720):
+```
+rendered --key=strand (commit 8ab6e1a)  ✓ continue: scene rebuilt from the save (state kept, opens at choir, gate open)
+                                        ✓ finale: trust leyla -> the Array answers, then the chapter card (3.8 s after the answer shot)
+                                        ✓ continue on a finished save: the chapter card again, opens at finale
+                                        taps through the 3D scene: 108, logic fallbacks: 0 (0 of them for models not built yet)
+                                        QA_DONE exit=0
+rendered --key=leyla  (commit 8ab6e1a)  ✓ continue: scene rebuilt from the save (state kept, opens at nursery, gate open)
+                                        (the same finale and finished-save lines)
+                                        taps through the 3D scene: 104, logic fallbacks: 0 (0 of them for models not built yet)
+                                        QA_DONE exit=0
+--quick --key=strand --seed=5           taps through the 3D scene: 104, logic fallbacks: 0 ...  QA_DONE exit=0
+--quick --key=leyla --seed=9            taps through the 3D scene: 102, logic fallbacks: 0 ...  QA_DONE exit=0
+--quick strand / leyla (commit 8ea17ad) taps through the 3D scene: 102 / 100, logic fallbacks: 0 ...  QA_DONE exit=0
+hud-check (phone61): 172 controls in 55 views, 0 failures, 33 banner warnings (312 focus-only controls and 3 slivers not checked)   [camp_open]
+hud-check (phone61): 174 controls in 55 views, 0 failures, 34 banner warnings (314 focus-only controls and 3 slivers not checked)   [shutter_open, array_awake]
+hud-check (phone61): 177 controls in 55 views, 0 failures, 42 banner warnings (269 focus-only controls and 4 slivers not checked)   [case_open]
+hud-check (tablet10): 152 controls in 55 views, 0 failures, 23 banner warnings (281 focus-only controls and 0 slivers not checked)  [camp_open]
+hud-check (tablet10): 154 controls in 55 views, 0 failures, 24 banner warnings (282 focus-only controls and 0 slivers not checked)  [shutter_open]
+tap-size: 79 different parts, each at its best view: under 9 mm: 17 raw, 0 with assist      (phone61; before: 25 raw, 4 with assist)
+223 tests, 29466 checks, 0 failures        checked 128 scripts, 0 broken
+```
+Per view, the only control still under 9 mm with the tap assist is `IA_tube_6` in the `rack` overview (1.5 × 7.5 mm), whose assist stops at its own slot or bench place (the same action); it is over 9 mm in `rack_close` and `bench`. Draw calls (HUD included): at most 91 in the rendered runs (`nursery`), 107 in the phone-aspect renders (`blast_east`). Before/after sheets: `docs/previews/ch3/review_*.jpg`.
+
 ### Status
 | Area | Level | Evidence |
 |---|---|---|
@@ -435,6 +476,7 @@ Verdict for `released: true`: **ready for a closed-testing release, not yet for 
 | Performance | Under budget (≤ 150 draw calls / 150k primitives) | Every model built; `tap_map --perf` (HUD included), worst case over the states `case_open`, `crystal_grown`, `camp_open`, `gallery_awake`, `array_awake`, 2026-10-10. Draw calls per view: **choir_s 145**, desk 135, nursery 132, nursery_w 123, prisms 123, choir 117, finale 113, seed_library 110, port_b 104, switch_room 97, console 95, rack 91, gallery_w 88, office_door 87, office 85, autoclave 85, gallery 84, camp 83, recorder 83, drum_east 78, bench 74, glass_floor 77, seal 76, shutter 76, cam_drum 76, cabinet_1 75, ecg_lamp 73, meter_case 76, drum_west 72, cradle 71, growth_log 71, memorial 70, socket_42 70, interlock_plate 68, lift 58; primitives 9k to 57k (finale the most). `--breakdown` of the two worst: the scene alone is 85 (choir_s) and 75 (desk) draw calls, **the HUD adds about 60** (UX's). Biggest scene contributors in choir_s: three switch cabinets 9 each, control desk 12, shell 8, meter case 8, office desk 7, strand office 6. No batching was needed: the cabinets' numeral and lock-symbol meshes are shown per state (`_apply_cabinets`) and the dials, levers and lamps animate, so `ModelUtil.merge_static` would save about 3 calls per cabinet at the price of a second set of visibility rules. Re-measure after any HUD growth: choir_s has 5 calls of margin |
 | Set dressing (camp, shutter wall, memorial niche) | VISUALLY VERIFIED (software renderer), AUTOMATED | Art pass of 2026-10-10, see "Set dressing" above: 3 models + 1 atlas + 2 CC0 props, no colliders; worst-case draw calls 133 (shutter, `array_awake`); `playthrough_ch3 --quick` 102 / 100 taps, 0 fallbacks; hud-check clean in every dressed view |
 | Release-candidate QA (HUD at 4 screens, rendered playthroughs, mid-wing Continue, hints) | AUTOMATED TESTED + VISUALLY VERIFIED | 2026-10-10, see "Release-candidate QA": hud-check 0 failures at phone61 and tablet10 (7 and 2 before), strand and leyla rendered `108` and `104` taps with 0 fallbacks and Continue passing, 30 to 49 mid-wing reloads per run without drift, 300-game logic sweep clean, hints at levels 1 and 2 name their object. Open: 28 of 62 tap targets under 9 mm, one unexplained headless crash |
+| Player-experience pass (fairness, set pieces, resume after the ending, tap boxes, opening) | AUTOMATED TESTED + VISUALLY VERIFIED (software renderer) | 2026-10-11, see "Player-experience pass" and `docs/ENGAGEMENT.md`: rendered strand / leyla 108 / 104 taps with 0 fallbacks, Continue after the first wing and after the ending, hud-check 0 failures on phone61 (4 states) and tablet10 (2 states), 0 parts under 9 mm with the assist at their best view, at most 107 draw calls |
 | Released | — | `chapters.gd`: `released: false` |
 
 ### Still needs human testing
