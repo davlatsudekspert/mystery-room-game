@@ -4,7 +4,7 @@ extends TestBase
 ## exists, every model the layout names is built, every message the room can say is translated, and the chapter's
 ## documents have reader pages. (The scene itself is exercised by qa/playthrough_ch4.tscn.)
 
-const GROUPS := "HBPKRISTWElwt"
+const GROUPS := "HBPKRISTWElwtsd"
 
 
 func test_every_view_has_a_caption_a_zone_and_known_groups() -> void:

@@ -7,7 +7,7 @@ extends RoomBase
 
 ## Render layer for meshes the reflection probes must not capture (glowing lamp glass), as in Chapters 2 and 3.
 const NO_PROBE_LAYER := 1 << 19
-const ALL_GROUPS := "HBPKRISTWElwt"
+const ALL_GROUPS := "HBPKRISTWElwtsd"
 const DRAG_PX_PER_STEP := 26.0
 const INTRO_SECONDS := 10.5
 const PROBE_WARMUP_FRAMES := 5
@@ -42,6 +42,20 @@ func _ready() -> void:
 	env.glow_intensity = 0.42
 	env.glow_bloom = 0.0
 	env.glow_hdr_threshold = 1.25
+	# polished and painted steel is metal: without something to reflect it renders black. A dim cold sky (reflections only,
+	# the background stays black) gives every metal part a faint rim wherever the reflection probe does not reach.
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color("1c2a36")
+	sky_mat.sky_horizon_color = Color("3a4a58")
+	sky_mat.ground_horizon_color = Color("2c3640")
+	sky_mat.ground_bottom_color = Color("10161c")
+	sky_mat.sun_angle_max = 0.0
+	var sky := Sky.new()
+	sky.sky_material = sky_mat
+	sky.radiance_size = Sky.RADIANCE_SIZE_64
+	sky.process_mode = Sky.PROCESS_MODE_INCREMENTAL
+	env.sky = sky
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	_build_models()
 	_build_lights()
 	build_camera()
@@ -128,6 +142,8 @@ func _build_models() -> void:
 			continue
 		_register(id, n, e[3])
 		_finish_model(id, n)
+		if e.size() > 4:
+			tag_cull(n, str(e[4]))
 	# the four mirror towers stand on their rings (the rings turn, the towers go with them)
 	for k in 4:
 		var mount := part("array_rings", "tower_mount_%d" % (k + 1))
@@ -329,6 +345,8 @@ func _build_lights() -> void:
 	_light("watch_front", "omni", Vector3(9.6, 2.3, 0.0), Color("ffd7a8"), 0.9, 5.5, "W")
 	_light("booth_front", "omni", Vector3(0.0, 2.5, -9.4), Color("ffd7a8"), 0.8, 5.5, "T")
 	_light("bay_lamp", "omni", Vector3(0.0, 2.7, 10.4), Color("ffd29a"), 0.9, 7.5, "l")
+	_light("locker_lamp", "omni", Vector3(12.0, 1.95, 1.7), Color("ffd7a8"), 1.5, 3.4, "w") # the lockers' doors are dark steel
+	_light("post_lamp", "omni", Vector3(12.2, 1.9, -2.3), Color("ffd7a8"), 1.2, 3.2, "w")
 	_light("drawer_glow", "omni", Vector3(0.0, 3.62, 1.72), lumen, 0.0, 1.8, "I")
 	_light("lift_lamp", "omni", _at("shell_lift4", "lift_light", Vector3(0.0, 5.8, 16.4)), Color("ffd29a"), 0.9, 8.0, "l")
 	_light("lift_spill", "omni", Vector3(4.6, 3.8, 13.6), Color("9fd8ff"), 1.6, 8.0, "l") # the hall's cold glow over the bridge
@@ -782,7 +800,7 @@ func _process(_delta: float) -> void:
 
 # ====================================================================== view changes
 ## Close-ups whose dark metal must be read (lock faces, the digit wheels, the dial) get a stronger camera fill.
-const BRIGHT_CLOSEUPS: Array[String] = ["gate_1", "gate_2", "gate_3", "gate_4", "collar", "core", "drawer", "chronometer",
+const BRIGHT_CLOSEUPS: Array[String] = ["lift_chalk", "gate_1", "gate_2", "gate_3", "gate_4", "collar", "core", "drawer", "chronometer",
 	"desk", "panel0", "gear_box", "booth_gate", "locker_17", "post_station", "sun_pedestal", "iris", "hatch_1", "hatch_2",
 	"hatch_3", "hatch_4"]
 

@@ -929,9 +929,14 @@ func _do_use(c: Array, t: Array) -> void:
 ## (--reload-every): it only reports a failure. `reversal` is the mid-reversal check (also reports a pass).
 func _continue_check(label: String = "", reversal: bool = false) -> void:
 	await wait_idle()
+	await _settle(2.5) # cosmetic timers (the canister knocking back out, lamp sparks) are over: only the resting scene is compared
 	var before := _snap(logic)
 	var sig_before := await _stable_sig()
 	var here := cam().current()
+	if OS.get_environment("CH4_DBG") != "":
+		var cn := node_of("post_station4", "IA_post_canister")
+		if cn:
+			_log("  DBG canister before reload: local %s, canister state '%s', parcel_sent %s" % [str(cn.transform.origin), str(logic.state["canister"]), str(logic.state["parcel_sent"])])
 	var saved := GameState.save_now()
 	room.queue_free()
 	await get_tree().process_frame
@@ -947,6 +952,10 @@ func _continue_check(label: String = "", reversal: bool = false) -> void:
 	await get_tree().process_frame
 	await _settle(1.2)
 	await wait_idle()
+	if OS.get_environment("CH4_DBG") != "":
+		var cn2 := node_of("post_station4", "IA_post_canister")
+		if cn2:
+			_log("  DBG canister after reload: local %s" % str(cn2.transform.origin))
 	var start := cam().current()
 	var same := _snap(logic) == before
 	var ok := loaded and same and start == str(room.call("start_view")) and not bool(room.call("_fresh_start"))
@@ -1167,6 +1176,11 @@ func _echo_point(n: Node3D) -> Vector2:
 
 
 func _finale() -> void:
+	if not quick:
+		# the rise (41 lights through the oculus, the board going out) is a cinematic: a frame in each of its four camera moves
+		for t: float in [3.0, 4.6, 5.4, 4.5]:
+			await _settle(t)
+			await shot("rise")
 	await wait_idle(90.0)
 	var hud: Node = room.get("hud")
 	var w := 0

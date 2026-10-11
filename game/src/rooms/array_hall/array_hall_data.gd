@@ -29,20 +29,21 @@ const LAYOUT := {
 	"cage": ["cage", Vector3(0.0, 2.5, 0.0), 0.0, "island", "parts", "I"],
 	"glass_tower": ["glass_tower", Vector3(0.0, 2.5, 0.0), 0.0, "island", "parts", "I"],
 	"core_crystal": ["core_crystal", Vector3(0.0, 2.5, 0.0), 0.0, "core", "parts", "I"],
-	"cradle": ["cradle", Vector3(0.0, 2.5, 0.0), 0.0, "core", "parts", "I"],
-	"heart_drawer": ["heart_drawer", Vector3(0.0, 2.5, 0.0), 0.0, "drawer", "parts", "I"],
+	"cradle": ["cradle", Vector3(0.0, 2.5, 0.0), 0.0, "core", "parts", "d"],
+	"heart_drawer": ["heart_drawer", Vector3(0.0, 2.5, 0.0), 0.0, "drawer", "parts", "d"],
 	# the Sun apse
 	"sun_lamp": ["sun_lamp", Vector3(-13.0, 1.8, 0.0), 0.0, "apse", "parts", "S"],
 	"sun_iris": ["sun_iris", Vector3(-11.8, 1.8, 0.0), 90.0, "iris", "parts", "S"],
-	"sun_pedestal": ["sun_pedestal", Vector3(-12.0, 0.0, 2.4), 90.0, "sun_pedestal", "parts", "S"],
+	"sun_pedestal": ["sun_pedestal", Vector3(-12.0, 0.0, 2.4), 90.0, "sun_pedestal", "parts", "s"],
 	# Strand's booth (the desk, box and orrery hang on the previous model's mounts: MOUNTED)
 	"booth": ["booth", Vector3(0.0, 0.0, -13.0), 0.0, "booth", "parts", "T"],
 	# the watch room (fixtures on the room's mounts)
 	"watch_room": ["watch_room", Vector3(12.7, 0.0, 0.0), -90.0, "watch", "parts", "W"],
 }
-## id -> [model, parent model id, mount empty, hotspot]: models spawned on a mount of another model.
+## id -> [model, parent model id, mount empty, hotspot, optional culling group of its own]: models spawned on a mount of
+## another model (the booth's desk, box and orrery are seen only from inside the booth: group t, not from across the hall).
 const MOUNTED := {
-	"booth_desk": ["booth_desk", "booth", "desk_mount", "gear_box"],
+	"booth_desk": ["booth_desk", "booth", "desk_mount", "gear_box", "t"],
 	"strand_box4": ["strand_box4", "booth_desk", "box_mount", "gear_box"],
 	"orrery": ["orrery", "strand_box4", "orrery_mount", "gear_box"],
 	"roll_board": ["roll_board", "watch_room", "board_mount", "board"],
@@ -101,21 +102,21 @@ const VIEWS := {
 	"hatch_3": [Vector3(0.0, 3.35, 6.85), Vector3(0.0, 0.65, 6.45), 50.0, false, "KR", "", ""],
 	"hatch_4": [Vector3(0.0, 3.35, 4.85), Vector3(0.0, 0.65, 4.45), 50.0, false, "KR", "", ""],
 	# the island: cage, collar, Core, cradle and drawer
-	"island": [Vector3(0.0, 5.2, 7.3), Vector3(0.0, 3.6, 0.0), 62.0, true, "HKRI", "", ""],
-	"gate_1": [Vector3(0.40, 3.9, 4.18), Vector3(0.40, 3.62, 2.38), 46.0, false, "RI", "", ""],
-	"gate_2": [Vector3(-4.18, 3.9, 0.40), Vector3(-2.38, 3.62, 0.40), 46.0, false, "RI", "", ""],
-	"gate_3": [Vector3(-0.40, 3.9, -4.18), Vector3(-0.40, 3.62, -2.38), 46.0, false, "RI", "", ""],
-	"gate_4": [Vector3(4.18, 3.9, -0.40), Vector3(2.38, 3.62, -0.40), 46.0, false, "RI", "", ""],
-	"collar": [Vector3(0.0, 3.85, 2.7), Vector3(0.0, 3.7, 1.22), 40.0, false, "I", "", ""],
-	"core": [Vector3(0.0, 4.9, 2.7), Vector3(0.0, 3.95, 0.3), 52.0, false, "I", "", ""],
+	"island": [Vector3(0.0, 5.2, 7.3), Vector3(0.0, 3.6, 0.0), 62.0, true, "HKRId", "", ""],
+	"gate_1": [Vector3(0.40, 3.9, 4.18), Vector3(0.40, 3.62, 2.38), 46.0, false, "RId", "", ""],
+	"gate_2": [Vector3(-4.18, 3.9, 0.40), Vector3(-2.38, 3.62, 0.40), 46.0, false, "RId", "", ""],
+	"gate_3": [Vector3(-0.40, 3.9, -4.18), Vector3(-0.40, 3.62, -2.38), 46.0, false, "RId", "", ""],
+	"gate_4": [Vector3(4.18, 3.9, -0.40), Vector3(2.38, 3.62, -0.40), 46.0, false, "RId", "", ""],
+	"collar": [Vector3(0.0, 3.85, 2.7), Vector3(0.0, 3.7, 1.22), 40.0, false, "Id", "", ""],
+	"core": [Vector3(0.0, 5.2, 3.4), Vector3(0.0, 3.95, 0.3), 50.0, false, "Id", "", ""],
 	# the open drawer's pads lie behind its front panel and under the collar's digit housing (no camera sees them): the three
 	# things hover in front of the housing once the drawer is open
-	"drawer": [Vector3(0.0, 3.9, 2.4), Vector3(0.0, 3.42, 1.56), 46.0, false, "I", "", ""],
-	"drawer_mark": [Vector3(0.5, 3.75, 2.4), Vector3(0.0, 3.15, 0.7), 46.0, false, "I", "", ""],
+	"drawer": [Vector3(0.0, 3.9, 2.4), Vector3(0.0, 3.42, 1.56), 46.0, false, "Id", "", ""],
+	"drawer_mark": [Vector3(0.5, 3.75, 2.4), Vector3(0.0, 3.15, 0.7), 46.0, false, "Id", "", ""],
 	# the Sun apse
-	"apse": [Vector3(-5.5, 1.7, 0.3), Vector3(-12.5, 1.8, 0.0), 62.0, true, "HSR", "", ""],
-	"sun_pedestal": [Vector3(-10.2, 1.5, 2.8), Vector3(-12.0, 1.1, 2.4), 52.0, false, "HS", "", ""],
-	"iris": [Vector3(-8.8, 1.8, 0.0), Vector3(-11.8, 1.8, 0.0), 40.0, false, "HS", "", ""],
+	"apse": [Vector3(-5.5, 1.7, 0.3), Vector3(-12.5, 1.8, 0.0), 62.0, true, "HSRs", "", ""],
+	"sun_pedestal": [Vector3(-10.2, 1.5, 2.8), Vector3(-12.0, 1.1, 2.4), 52.0, false, "HSs", "", ""],
+	"iris": [Vector3(-8.8, 1.8, 0.0), Vector3(-11.8, 1.8, 0.0), 40.0, false, "HSs", "", ""],
 	# Strand's booth
 	"booth": [Vector3(0.0, 1.7, -6.5), Vector3(0.0, 3.2, -13.0), 62.0, true, "HTt", "", ""],
 	"booth_gate": [Vector3(-2.2, 1.55, -8.9), Vector3(0.4, 1.25, -11.3), 48.0, false, "HTt", "", ""],
@@ -125,9 +126,9 @@ const VIEWS := {
 	"locker_17": [Vector3(12.15, 1.0, 1.75), Vector3(13.45, 0.55, 1.64), 40.0, false, "Ww", "", ""],
 	"post_station": [Vector3(12.5, 1.28, -2.45), Vector3(13.5, 0.82, -2.95), 46.0, false, "Ww", "", ""],
 	# cinematic only
-	"rise_core": [Vector3(0.0, 2.9, 5.2), Vector3(0.0, 6.2, 0.0), 70.0, false, "HKRI", "", ""],
-	"rise_up": [Vector3(0.0, 4.4, 2.4), Vector3(0.0, 12.4, 0.0), 72.0, false, "HKRI", "", ""],
-	"finale": [Vector3(0.0, 4.9, 2.9), Vector3(0.0, 4.0, 0.2), 56.0, false, "HKRI", "", ""],
+	"rise_core": [Vector3(0.0, 2.9, 5.2), Vector3(0.0, 6.2, 0.0), 70.0, false, "HKRId", "", ""],
+	"rise_up": [Vector3(0.0, 4.4, 2.4), Vector3(0.0, 12.4, 0.0), 72.0, false, "HKRId", "", ""],
+	"finale": [Vector3(0.0, 4.9, 2.9), Vector3(0.0, 4.0, 0.2), 56.0, false, "HKRId", "", ""],
 }
 
 ## The zone a view stands in (for the room tone and the mood).

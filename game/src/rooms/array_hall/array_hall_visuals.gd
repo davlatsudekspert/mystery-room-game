@@ -43,6 +43,7 @@ const DIAL_STEP_DEG := -60.0
 const NUMBER_STEP_DEG := -40.0
 const SEND_PULL_DEG := 50.0
 const CANISTER_KNOCK := 0.35
+const CANISTER_UP := -0.5
 const GATE_FOLD := 0.15
 const OSCULUS_SLIDE := 1.7
 ## The slope normal of the master desk (docs/models/ch4_b.md): the chronometer hand turns about it.
@@ -1132,6 +1133,8 @@ func _apply_watch(animated: bool) -> void:
 	if canister:
 		var loaded: bool = s["canister"] != ""
 		ModelUtil.set_emission(canister, loaded, Color("9fe6ff"), 0.55)
+		if s["parcel_sent"]:
+			_slide(canister, Vector3(0, 0, CANISTER_UP), animated, 0.4) # gone up the tube (a loaded game shows the same)
 	# the board: forty-one lamps, lit when the hall has power (the forty-second is Leyla's)
 	_apply_board(animated)
 
@@ -1802,7 +1805,7 @@ func canister_send(returns: bool) -> void:
 		_slide(c, Vector3(0, 0, CANISTER_KNOCK), true, 0.3)
 		get_tree().create_timer(1.0).timeout.connect(func() -> void: _slide(c, Vector3.ZERO, true, 0.5))
 	else:
-		_slide(c, Vector3(0, 0, -0.5), true, 0.4)
+		_slide(c, Vector3(0, 0, CANISTER_UP), true, 0.4)
 
 
 func snap_durations(on: bool) -> void:
