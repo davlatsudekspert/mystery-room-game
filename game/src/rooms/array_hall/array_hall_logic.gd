@@ -911,6 +911,7 @@ func use_item_on(item: String, target: String) -> Array[String]:
 			if target.begins_with("gate_"):
 				_use_tower_key(item, target)
 			else:
+				_emit("not_for_here") # this item has no use here at all (the room names it), not just not yet
 				_emit("nothing_happens")
 	return _end()
 

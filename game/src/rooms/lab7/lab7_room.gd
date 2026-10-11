@@ -819,9 +819,10 @@ func _on_tap(screen: Vector2) -> void:
 	if logic.selected != "" and logic.selected != "uv_lamp":
 		var target := _use_target(hs, part)
 		if target != "" and _in_reach(hs):
-			var ev := logic.use_item_on(logic.selected, target)
+			var item := logic.selected
+			var ev := logic.use_item_on(item, target)
 			if ev.has("nothing_happens"):
-				hud.call("message", tr("msg.nothing"))
+				hud.call("message", RoomBase.no_use_text(item, ev))
 				AudioManager.ui("ui_error")
 			else:
 				logic.select_item("")

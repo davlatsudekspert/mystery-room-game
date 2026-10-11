@@ -807,9 +807,13 @@ func use_item_on(item: String, target: String) -> Array[String]:
 				_emit("seed_returned:%d" % int(state["seed_from"]))
 				state["seed_from"] = -1
 			else:
+				if item != "seed_crystal":
+					_emit("not_for_here")
 				_emit("nothing_happens")
 		"autoclave":
 			if not item in ["seed_crystal", "cloudy_crystal"] or not zone_open("nursery"):
+				if not item in ["seed_crystal", "cloudy_crystal"]:
+					_emit("not_for_here")
 				_emit("nothing_happens")
 			elif state["ac_closed"]:
 				_emit("autoclave_shut")
@@ -821,12 +825,14 @@ func use_item_on(item: String, target: String) -> Array[String]:
 				_emit("autoclave_loaded")
 		"lift_gate_west", "lift_gate_east":
 			if not item in ["strand_key", "leyla_key"]:
+				_emit("not_for_here")
 				_emit("nothing_happens")
 			elif (item == "strand_key") == (target == "lift_gate_west"):
 				_emit("gate_open")
 			else:
 				_emit("gate_wrong_key")
 		_:
+			_emit("not_for_here") # this item has no use here at all (the room names it), not just not yet
 			_emit("nothing_happens")
 	return _end()
 

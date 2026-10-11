@@ -81,7 +81,8 @@ func test_buttons_fit_on_phone_at_max_auto_scale() -> void:
 	## no single button may be wider than the narrowest panel or column it appears in.
 	for user in [1.0, 1.5]:
 		_set_screen(MAX_PHONE, user)
-		check(UITheme.auto_scale() >= 2.5, "the 480 dpi phone gets a large automatic boost (%.2f)" % UITheme.auto_scale())
+		# the densest screen we emulate: a large boost (2.44 at the 2.4 mm Normal), so this is the worst case
+		check(UITheme.auto_scale() >= 2.0, "the 480 dpi phone gets a large automatic boost (%.2f)" % UITheme.auto_scale())
 		var m := _button_metrics()
 		var font: Font = m["font"]
 		var size: int = m["size"]
@@ -138,7 +139,7 @@ func test_hud_messages_fit_on_phone_at_max_auto_scale() -> void:
 
 
 func test_auto_scale_reaches_readable_sizes() -> void:
-	## Phones and tablets: body text reaches a 3 mm cap height at Normal, nothing is below MIN_TEXT_MM, touch
+	## Phones and tablets: body text reaches BODY_CAP_MM (2.4 mm) cap height at Normal, nothing is below MIN_TEXT_MM, touch
 	## targets >= 9 mm, inventory slots >= 8 mm; titles still lead body text; Large / Extra large multiply.
 	for dev: Dictionary in [IPHONE, {"size": Vector2i(1920, 1080), "dpi": 400.0}, MAX_PHONE, TABLET]:
 		_set_screen(dev, 1.0)

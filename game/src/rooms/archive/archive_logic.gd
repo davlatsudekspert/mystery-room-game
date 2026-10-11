@@ -840,6 +840,7 @@ func use_item_on(item: String, target: String) -> Array[String]:
 			elif item in CRYSTALS and target in ["port_left", "port_right"]:
 				_use_crystal_on_port(item, target)
 			else:
+				_emit("not_for_here") # this item has no use here at all (the room names it), not just not yet
 				_emit("nothing_happens")
 	return _end()
 

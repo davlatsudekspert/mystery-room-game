@@ -2,8 +2,8 @@ class_name UITheme
 extends RefCounted
 ## Design tokens (docs/UI_UX.md, docs/ART_DIRECTION.md), the generated Godot Theme, and the screen-aware sizing
 ## that keeps text readable and targets tappable on phones:
-##   - auto text scale: body text (26 canvas px) is raised until it is ~2.6 mm tall on the player's screen
-##     (Android 16sp / iOS 17pt body text), from the screen's dpi and the canvas stretch. Titles are raised less,
+##   - auto text scale: body text (26 canvas px) is raised until its capitals are BODY_CAP_MM tall on the player's
+##     screen (a little above Android 16sp / iOS 17pt body text), from the screen's dpi and the canvas stretch. Titles are raised less,
 ##     so the hierarchy is compressed on small screens instead of everything getting huge.
 ##   - the player's Settings → Text size multiplies on top.
 ##   - touch targets are at least TOUCH_MM (inventory slots SLOT_MM) on the physical screen.
@@ -28,10 +28,12 @@ const FONT_HAND := "res://assets/fonts/Caveat-Variable.ttf"
 
 const BODY_PX := 26 # theme body size (canvas px at scale 1)
 const BUTTON_PX := 34 # button text: display serif in small caps (a smaller x-height than the sans body text)
-const BODY_CAP_MM := 3.0 # target cap height of body text at Settings → Text size "Normal" (readable at arm's length)
+## Target cap height of body text at Settings → Text size "Normal". 3.0 mm (2026-10-10) read as too big on the owner's
+## 20:9 Android phone even at Normal (2026-10-11): 2.4 mm, and Large (×1.25) gives the old 3.0 mm.
+const BODY_CAP_MM := 2.4
 const CAP_EM := 0.714 # Noto Sans: cap height / em
 const BODY_MM := BODY_CAP_MM / CAP_EM # target em height of body text on the physical screen (~4.2 mm)
-const MIN_TEXT_MM := 3.0 # em height: nothing the player must read is smaller than this
+const MIN_TEXT_MM := 2.6 # em height: nothing the player must read is smaller than this (iOS/Android minimum ~1.9 mm)
 const TITLE_PX := 72 # from BODY_PX up to here the boost tapers to TITLE_BOOST of the body's (titles still lead)
 const TITLE_BOOST := 0.5
 const AUTO_MAX := 3.2 # cap: very small/dense screens get scrolling, not ever-larger text

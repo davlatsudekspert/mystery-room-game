@@ -332,9 +332,10 @@ func _on_tap(screen: Vector2) -> void:
 	if logic.selected != "" and not ItemDB.is_tool_item(logic.selected):
 		var target := use_target(hs, p)
 		if target != "" and in_reach(hs):
-			var ev: Array = logic.call("use_item_on", logic.selected, target)
+			var item: String = logic.selected
+			var ev: Array = logic.call("use_item_on", item, target)
 			if ev.has("nothing_happens"):
-				hud.call("message", tr("msg.nothing"))
+				hud.call("message", no_use_text(item, ev))
 				AudioManager.ui("ui_error")
 			else:
 				logic.select_item("")
@@ -346,6 +347,15 @@ func _on_tap(screen: Vector2) -> void:
 
 
 ## A hotspot is directly operable from its own view or any deeper view of the same object.
+## What an item in hand says when it does nothing: "Crystal lens doesn't fit here." when it has no use at this
+## target at all (the logic emits not_for_here), so a player stops trying it there; "Nothing happens." when it is
+## the right item at the wrong moment. Chapter 1's room (not a RoomBase) uses it too.
+static func no_use_text(item: String, ev: Array) -> String:
+	if ev.has("not_for_here") and item != "":
+		return TranslationServer.translate("msg.not_for_here") % TranslationServer.translate(ItemDB.name_key(item))
+	return TranslationServer.translate("msg.nothing")
+
+
 func in_reach(hs: String) -> bool:
 	var v := hotspot_view(hs)
 	var cur := cam.current()

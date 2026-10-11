@@ -77,6 +77,7 @@ S = [
 
 # ---------------------------------------------------------------- feedback messages
 ("msg.nothing", "Nothing happens.", "Ничего не происходит.", "Hech narsa boʻlmadi."),
+("msg.not_for_here", "%s doesn't fit here.", "%s сюда не подходит.", "%s bu yerga mos kelmaydi."),
 ("msg.door_sealed", "Sealed. The magnetic lock hums; its lamp glows red.", "Заперто. Магнитный замок гудит, его лампа горит красным.", "Yopiq. Magnit qulf gʻuvillaydi, chirogʻi qizil yonmoqda."),
 ("msg.drawer_locked", "Locked. Four brass wheels hold it shut.", "Заперто. Его держат четыре латунных колеса.", "Qulflangan. Uni toʻrtta jez gʻildirak ushlab turibdi."),
 ("msg.drawer_opened", "Click — the drawer slides open.", "Щелчок — ящик выдвигается.", "Chiq — tortma ochildi."),
