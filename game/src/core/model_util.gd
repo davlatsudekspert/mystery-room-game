@@ -60,7 +60,7 @@ static func merge_static(root: Node3D, prefix: String) -> MeshInstance3D:
 		if mi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 			shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		for i in mi.mesh.get_surface_count():
-			var key := [mi.get_active_material(i), mi.mesh.surface_get_format(i) & (Mesh.ARRAY_FORMAT_CUSTOM_BASE - 1)]
+			var key := [mi.get_active_material(i), _merge_format(mi.mesh, i)]
 			if not tools.has(key):
 				var st := SurfaceTool.new()
 				st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -78,6 +78,24 @@ static func merge_static(root: Node3D, prefix: String) -> MeshInstance3D:
 	for mi in sources:
 		mi.visible = false
 	return merged
+
+
+## The vertex attributes that keep merged surfaces apart: SurfaceTool fills a missing color with black and a
+## missing tangent with zero. Works for any Mesh (only ArrayMesh exposes surface_get_format to scripts; the
+## primitive meshes of the code-built props do not).
+static func _merge_format(mesh: Mesh, i: int) -> int:
+	const ATTRS := Mesh.ARRAY_FORMAT_TANGENT | Mesh.ARRAY_FORMAT_COLOR
+	if mesh is ArrayMesh:
+		return (mesh as ArrayMesh).surface_get_format(i) & ATTRS
+	var arrays := mesh.surface_get_arrays(i)
+	var f := 0
+	var tangents: Variant = arrays[Mesh.ARRAY_TANGENT]
+	if tangents is PackedFloat32Array and not (tangents as PackedFloat32Array).is_empty():
+		f |= Mesh.ARRAY_FORMAT_TANGENT
+	var colors: Variant = arrays[Mesh.ARRAY_COLOR]
+	if colors is PackedColorArray and not (colors as PackedColorArray).is_empty():
+		f |= Mesh.ARRAY_FORMAT_COLOR
+	return f
 
 
 static func apply_materials(root: Node) -> void:
