@@ -77,6 +77,11 @@ How the work is organised (from 2026-10-09): the main session is the game direct
    - record real voices for the tape;
    - the wording of the Chapter 3 card's hand-off, and whether its price shows on the card.
 
+## Launch: Instagram and YouTube in EN, RU and UZ (owner, 2026-10-11)
+- At release, post on Instagram and YouTube in all three languages. The owner posts from their own accounts; nothing is posted by us.
+- To prepare: a 30–60 s trailer per language (gameplay captured with Godot's movie writer, so picture and sound are the game's own; on-screen text and captions in that language), 3–5 short vertical clips (Reels / Shorts) of the strongest moments (UV page, the beam lock, the tape voices, the Array waking), a cover image, and the post texts in EN/RU/UZ.
+- Only original or CC0 material (music and sound from the game itself).
+
 ## Game
 1. **Chapter 2 release:** finish the player review (agent), fix its findings, then set `released: true` for ch2 in `game/src/core/chapters.gd` and update `test_premium_rules`. Tester builds already open it through the `beta_unlock` export feature.
 2. **Chapter 2 performance:** done for the budget: the hall view is 144 draw calls / 86k primitives. Next is FPS on real phones: the debug build's FPS line, then `tap_map --breakdown` for any view that drops.
