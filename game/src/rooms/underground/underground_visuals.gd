@@ -1081,8 +1081,14 @@ func leyla_touch(i: int) -> void:
 	AudioManager.sfx("reveal", -4.0, 0.85)
 	await get_tree().create_timer(1.3).timeout
 	if drawer:
-		# a soft cold glow on the wood: at 1.2 the drawer front blew out to a flat white card (rendered QA)
-		ModelUtil.set_emission(drawer, true, LUMEN, 0.35)
+		# a faint cold glow on the wood, and the drawer gives a little under her hand: an emission of 1.2 (then 0.35)
+		# washed the whole front into a flat white (then pale blue) card in the rendered QA
+		ModelUtil.set_emission(drawer, true, LUMEN, 0.1)
+		if int(logic.state["seed_drawer"]) != i:
+			_slide(drawer, Vector3(0, 0, 0.035), true, 0.35)
+			get_tree().create_timer(1.6).timeout.connect(func() -> void:
+				if int(logic.state["seed_drawer"]) != i:
+					_slide(drawer, Vector3.ZERO, true, 0.5))
 	await get_tree().create_timer(2.6).timeout
 	_fade(n, 0.9, 0.0, 1.4)
 	await get_tree().create_timer(1.4).timeout
@@ -1214,6 +1220,11 @@ func _play_loop(delta: float) -> void:
 ## rings dim, and a single warm light, the forty-second, comes up the shaft and turns toward the glass.
 func finale_answer(option: String) -> void:
 	_answer = option
+	# the one trusted steps into the light, the other fades back
+	var chosen: Node3D = _echoes.get("strand_offer" if option == "strand" else "leyla_offer")
+	var other: Node3D = _echoes.get("leyla_offer" if option == "strand" else "strand_offer")
+	_fade(chosen, 0.85, 1.0, 1.5)
+	_fade(other, 0.85, 0.25, 3.0)
 	var tw := room.create_tween()
 	if option == "strand":
 		tw.tween_property(self, "_rise_speed", 0.0, 3.0).set_ease(Tween.EASE_OUT)
@@ -1260,10 +1271,12 @@ func _rise(delta: float) -> void:
 		var f := fmod(_rise_t * 0.09 + i / 41.0, 1.0)
 		var ang := i * 2.39996 + _rise_t * 0.4
 		var r := lerpf(4.5, 0.9, f)
-		var p := bottom.lerp(top, f) + Vector3(cos(ang) * r, 0, sin(ang) * r)
+		# quick up the dark shaft, slow over the last metres: a linear climb left one or two of the 41 above the glass at
+		# any moment, so the finale showed a stray dot instead of lights rising (rendered QA); now about ten hang there
+		var p := bottom.lerp(top, pow(f, 0.3)) + Vector3(cos(ang) * r, 0, sin(ang) * r)
 		# Leyla's answer: they go out one after another (a light's own threshold in 0..1 against the fade)
 		var k := clampf((_rise_fade - fmod(i * 0.618, 1.0) * 0.9) * 4.0, 0.0, 1.0) if _answer == "leyla" else 1.0
-		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * lerpf(1.6, 0.7, f) * maxf(k, 0.001)), p))
+		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * lerpf(1.6, 1.1, f) * maxf(k, 0.001)), p))
 
 
 # ====================================================================== momentary motions and effects

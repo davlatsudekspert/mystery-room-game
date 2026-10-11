@@ -67,6 +67,7 @@ var _reload_failed := 0
 var _sig_parts := 0
 var _sizes: Dictionary = {} # "view model/part" -> Vector2: the tapped part's visible size in mm at phone61 scale
 var opening := false # --opening: a New Game's first half minute (intro cards, the descent, the arrival), as shots
+var finale_only := false # --finale-only: the solver wakes the Array off-screen, then the choice and its answer as shots
 
 
 func _ready() -> void:
@@ -96,6 +97,8 @@ func _ready() -> void:
 			sweep_seeds = int(a.substr(14))
 		elif a == "--opening":
 			opening = true
+		elif a == "--finale-only":
+			finale_only = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if sweep:
 		_logic_sweep()
@@ -112,6 +115,9 @@ func _ready() -> void:
 	GameState.events.connect(func(ev: Array[String]) -> void: _events.append_array(ev))
 	if opening:
 		await _opening()
+		return
+	if finale_only:
+		await _finale_only()
 		return
 	var t0 := Time.get_ticks_msec()
 	_build_room()
@@ -246,6 +252,63 @@ func _opening() -> void:
 	_log(("✓ " if not busy_end else "✗ ") + "opening: input %s after %.1f s" % ["free" if not busy_end else "STILL LOCKED", OPENING_SHOTS[-1]])
 	print("QA_DONE exit=%d" % (0 if not busy_end else 1))
 	get_tree().quit(0 if not busy_end else 1)
+
+
+## --finale-only: the logic is played to the awake Array without a scene, then the room is built at the finale and the
+## choice (--choice=strand|leyla) is made: shots of the Array's answer every 2 s, then the chapter card.
+func _finale_only() -> void:
+	# off-screen up to the last move before the 42nd-socket secret (with --secret) or the Array waking
+	var guard := 0
+	while guard < 800:
+		guard += 1
+		var copy := UndergroundLogic.new()
+		copy.from_dict(logic.to_dict())
+		UndergroundSolver.step(copy, choice)
+		if copy.state["array_awake"] or (copy.state["true_ending"] and not logic.state["true_ending"]):
+			break
+		UndergroundSolver.step(logic, choice)
+	_build_room()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await _settle(1.5)
+	cam().go("console", true)
+	await _settle(2.0)
+	# the rest with the room live: the secret's echo, then the Array waking, each as the room stages it
+	while not logic.state["array_awake"] and guard < 900:
+		guard += 1
+		var had_true: bool = logic.state["true_ending"]
+		UndergroundSolver.step(logic, choice)
+		if logic.state["true_ending"] and not had_true:
+			await _settle(3.0)
+			await shot("secret_echo")
+			await wait_idle()
+			await shot("secret_after")
+	if logic.state["array_awake"]:
+		await _settle(2.5)
+		await shot("array_rise")
+		await wait_idle(40.0)
+	var hud0: Node = room.get("hud")
+	var w := 0
+	while w < 80 and hud0.get("_overlay") == null:
+		w += 1
+		await _settle(0.25)
+	await shot("finale_" + choice)
+	hud0.call("_close_overlay")
+	logic.choose_ending(choice)
+	for k in 4:
+		await _settle(2.0)
+		await shot("answer_%s_%d" % [choice, k])
+	var hud: Node = room.get("hud")
+	var waited := 0.0
+	while hud.get("_overlay") == null and waited < 20.0:
+		await _settle(0.25)
+		waited += 0.25
+	await _settle(1.5)
+	await shot("card_" + choice)
+	var ok := logic.is_complete() and hud.get("_overlay") != null
+	_log(("✓ " if ok else "✗ ") + "finale only: trust %s, the Array answers, then the chapter card" % choice)
+	print("QA_DONE exit=%d" % (0 if ok else 1))
+	get_tree().quit(0 if ok else 1)
 
 
 # ====================================================================== helpers

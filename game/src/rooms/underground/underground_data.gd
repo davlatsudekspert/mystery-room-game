@@ -171,6 +171,8 @@ const VIEWS := {
 	"grow": [Vector3(8.55, 1.3, -2.3), Vector3(8.55, 1.2, -3.1), 56.0, false, "N", "", ""],
 	"array_rise": [Vector3(0.0, 1.7, 3.6), Vector3(0.0, 2.6, -0.5), 66.0, false, "GS", "", ""],
 	"secret": [Vector3(0.6, 1.5, -1.8), Vector3(1.7, 0.9, -3.3), 52.0, false, "G", "", ""],
+	# the Array answers the finale choice: across the shaft, the risen lights between the two figures and the memorial
+	"answer": [Vector3(0.0, 1.8, 3.4), Vector3(0.0, 1.5, 0.0), 60.0, false, "GS", "", ""],
 }
 
 ## The zone a view stands in (for Back, music and the room tone).
@@ -217,7 +219,7 @@ const CAPTION := {
 	"console": "obj3.console", "scope": "obj3.console", "strand_plate": "obj3.console", "cradle": "obj3.console",
 	"memorial": "obj3.memorial", "socket_42": "obj3.memorial", "secret": "obj3.memorial",
 	"drum_west": "obj3.blast_door", "drum_east": "obj3.blast_door", "blast_west": "obj3.blast_door",
-	"blast_east": "obj3.blast_door", "finale": "obj3.gallery", "array_rise": "obj3.gallery",
+	"blast_east": "obj3.blast_door", "finale": "obj3.gallery", "array_rise": "obj3.gallery", "answer": "obj3.gallery",
 	"nursery": "obj3.nursery", "nursery_w": "obj3.nursery", "autoclave": "obj3.autoclave", "cam_drum": "obj3.autoclave",
 	"growth_log": "obj3.autoclave", "grow": "obj3.autoclave", "chart": "obj3.chart", "seed_library": "obj3.library",
 	"seed_drawer": "obj3.library", "prisms": "obj3.prisms", "seal": "obj3.seal", "camp": "obj3.camp",

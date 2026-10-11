@@ -1465,7 +1465,7 @@ func _finale_outcome(option: String) -> void:
 	AudioManager.sfx("lens_insert", -2.0)
 	AudioManager.haptic(60)
 	await get_tree().create_timer(1.2).timeout
-	cam.go("array_rise")
+	cam.go("answer")
 	await get_tree().create_timer(0.8).timeout
 	hud.call("caption", tr("epi3.strand" if option == "strand" else "epi3.leyla"), 6.5)
 	visuals.finale_answer(option)

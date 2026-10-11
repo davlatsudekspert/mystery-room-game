@@ -59,7 +59,7 @@
 - **Choir staircase:** the 7 heights.
 - **Startup:** the lever order.
 - **Heart strip:** the peak counts.
-- **Seed:** which drawer.
+- **Seed:** which drawer. The library never holds the sketch turned the other way, so Leyla's turning arrow cannot be read two ways (as in the canonical game; fixed 2026-10-11, `docs/ENGAGEMENT.md`).
 - **Autoclave:** the curve.
 - **Prism:** the rims.
 - **Melody:** the crystal order.
