@@ -423,7 +423,7 @@ func test_chapter_list_purchase_button() -> void:
 
 
 ## The purchase screen with the mock store: price on the button, a visible Restore purchases, the tester reset;
-## the chapter list offers Play for the free Chapters 1-2 and sells nothing that is not released.
+## the chapter list offers Play for the free Chapters 1-2, sells the released Chapter 3 and nothing unreleased.
 func test_purchase_screen() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	Premium.path = ENT
@@ -439,7 +439,7 @@ func test_purchase_screen() -> void:
 	menu.call("_show_chapters")
 	await tree.process_frame
 	var host: Control = menu.get("_panel_host")
-	check(_find(host, "ui.buy") == null, "nothing to buy in the list: Chapter 2 is free, Chapters 3-4 are not released")
+	check(_find(host, "ui.buy") != null, "the released Chapter 3 offers the purchase (Chapter 2 is free, Chapter 4 unreleased)")
 	check(_find(host, "ui.play") != null and not _find(host, "ui.play").disabled, "Chapter 2 offers Play without a purchase")
 	menu.call("_show_purchase")
 	await tree.process_frame

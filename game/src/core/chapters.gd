@@ -11,7 +11,7 @@ const LIST: Array[Dictionary] = [
 		"product": "", "released": true}, # free since 2026-10-10 (Chapters 1-2 free, full_game unlocks 3-4); 3D playthroughs + player review
 	{"id": "ch3", "number": 3, "title": "chapter.ch3.title", "subtitle": "chapter.ch3.subtitle",
 		"scene": "res://src/rooms/underground/underground.tscn", "logic": "res://src/rooms/underground/underground_logic.gd",
-		"product": "full_game", "released": false}, # scene in integration (models arriving by group); unreleased
+		"product": "full_game", "released": true}, # opened to testers 2026-10-11 after the RC QA and the gamer-eye review; players need full_game (payments still off)
 	{"id": "ch4", "number": 4, "title": "chapter.ch4.title", "subtitle": "chapter.ch4.subtitle",
 		"scene": "res://src/rooms/array_hall/array_hall.tscn", "logic": "res://src/rooms/array_hall/array_hall_logic.gd",
 		"product": "full_game", "released": false}, # scene built (QA: qa/playthrough_ch4.tscn); unreleased: the director decides
