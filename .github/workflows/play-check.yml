@@ -1,0 +1,29 @@
+# MYSTERY ROOM — read-only Google Play check (ubuntu, ~1 min; manual trigger only).
+# tools/android/play_check.py opens an API edit, reads the testing tracks, the store listing texts' lengths and the
+# number of uploaded graphics, then DELETES the edit: nothing is ever committed, so nothing changes in Play Console.
+# It prints no e-mail addresses, keys or tokens. Uses the existing PLAY_SERVICE_ACCOUNT_JSON (testing-track access
+# to this app only).
+name: Google Play check (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  play-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install PyJWT
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "PyJWT==2.10.1" "cryptography==44.0.2"
+
+      - name: Read-only Google Play check
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: '"$RUNNER_TEMP/venv/bin/python" tools/android/play_check.py'
