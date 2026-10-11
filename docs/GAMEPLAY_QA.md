@@ -493,3 +493,109 @@ Per view, the only control still under 9 mm with the tap assist is `IA_tube_6` i
 5. **The ring symbols.** Outer → inner through the glass floor against the drum order on the door.
 6. **The recorder keys.** On a phone, are the two ivory piano keys found at once, and is ◀◀ / ▶ read as rewind / play? (Render: readable at 1280 x 720; a phone screen is smaller.)
 7. **Brightness.** The Choir Hall is dark by design (the rack and the transformers stay near black at default brightness); the drum windows' brass frames and the console's lamp jewels are the brightest things on screen. Check both at default and at maximum brightness on an OLED phone.
+
+---
+
+## Chapter 4 — The Experiment (the Array Hall, the unnumbered floor)
+
+Scene: `game/src/rooms/array_hall/` (`array_hall_room.gd` taps / lights / culling / sequences, `array_hall_visuals.gd` the state -> picture, `array_hall_data.gd` the tables, `array_hall_tones.gd` the synthesised sound), `game/qa/playthrough_ch4.gd`. `chapters.gd` keeps `released: false`.
+
+### Tools
+| Check | Command | What it does |
+|---|---|---|
+| Solver playthrough | `tools/qa_run.sh --stall=1500 -- res://qa/playthrough_ch4.tscn -- --out=<dir> --key=strand\|leyla --lens=take\|leave --trust=strand\|leyla [--secret] [--seed=N] [--screen=phone61] [--speed=3]` | `ArrayHallSolver` decides each move on a copy of the game (the `Plan` class inside the script records it); the playthrough walks there like a player (Back to the bridge, then the hall's landmarks: the stairs, the Sun's lamp, the booth, the watch room, the glass tower, the catwalk; Panel 0 through the pier wall) and taps the part through the room's raycast. Before power the carried key opens its own gate (Strand's the booth, Leyla's the watch room; Leyla's note comes out of locker 17). It presses Continue twice (after the cage opens and in the middle of the reversal) and compares every tappable part before and after. Every fallback is reported with what the tap hit; a part of a model that is not built is listed per puzzle. Exit 0 = no failed step and no fallback |
+| Quick logic-flow run | `godot --headless --path game res://qa/playthrough_ch4.tscn -- --out=<dir> --quick --speed=6 --key=… --lens=… --trust=… [--secret] [--reload-every=N]` | The same taps without a renderer (game time runs 6 times faster); the whole chapter in about 75 seconds. `--reload-every=N` quits and presses Continue after every Nth step |
+| Walk test | `… playthrough_ch4.tscn -- --out=<dir> --quick --walk` | The zone changes alone: lift, Panel 0, apse, booth, watch room, catwalk, island, the bridge and back, in an odd order, every one by taps on the landmark |
+| Advance | `… playthrough_ch4.tscn -- --out=<dir> --advance=pawl_fitted [--no-continue] …` | The solver plays the game without the scene up to a state key (`power`, `iris_open`, `align_done`, `cage_open`, `tower_open`, `heart_open`, `pawl_fitted`, ...), the run starts there: the reversal, the rise and the ending by taps in a few minutes instead of an hour. Frames: `rise_NN` every 1.6 s of game time once the Night is undone, `reversal_minute_N` from the bridge |
+| Feet | `… playthrough_ch4.tscn -- --out=<dir> --quick --feet` | Each echo figure's origin and soles against the collider surface below, Strand's ghost at each replay minute, the crowd's circles |
+| Debug aid | `CH4_DBG=1 …` | On a failed landmark or tap, prints what a 21 x 21 grid of taps resolves to (model/hotspot, the collider that answered) |
+| Tap map / perf | `tools/qa_run.sh --stall=1500 -- res://qa/tap_map.tscn -- --chapter=ch4 --screen=phone61 --views=… [--until=<state>] --perf [--breakdown]` | Draw calls (HUD included) and a clean PNG per view. `--perf` prints nothing until the end: pass `--stall=1500` and keep a run to about 10 views. `--until`: `power`, `iris_open`, `align_done`, `cage_open`, `tower_open`, `heart_open`, `pawl_fitted`, `reversing`, `night_undone`; `--key --lens --trust --secret` set the profile |
+| HUD check | `godot --headless --path game res://qa/tap_map.tscn -- --chapter=ch4 --views=<all 33> --hud-check --screen=phone61\|tablet10 [--until=<state>]` | Geometry, raycast and HUD layout need no renderer: every control must have its tap point on screen, clear of the HUD and 6 mm from the edge |
+| Logic and scene-table tests | `tools/run_tests.sh` | `test_array_hall_puzzles.gd` (rules, variants, no-softlock fuzz) and `test_array_hall_scene.gd` (views, captions, hotspots, models, reader pages) |
+
+### What the 3D QA found and fixed (2026-10-10)
+| Problem | Effect on a player | Fix |
+|---|---|---|
+| `freight_lift` is a 12 m tall cage (2.3 m square) that stands on the bridge's back edge | the bridge camera was inside it: a black post down the middle of the bridge view, and its trimesh swallowed every tap towards the stairs, the catwalk and the booth (6 of the 12 zone walks failed) | drawn only in the lift-bay views (group `l`) |
+| The technicians' kept echoes stand between the handwheels | wheel I (and IV) could not be tapped while the hall replays: the echo's tap box was in front of it | `ArrayHallRoom.raycast`: an echo is a hologram, a control behind it takes the tap; the echo is tapped where nothing it hides can be worked |
+| The heart drawer's pads lie under the digit housing (the lock box sits directly on the drawer's front panel) | no camera can see the pawl, the watch and the letter: from the front the panel's top edge meets the box's bottom edge, from above the housing's top covers them | when the drawer opens the three things rise from the velvet and hover in front of the housing (lumen glow, finger-sized pads); the `drawer` camera looks at them |
+| The hall's polished and painted steel reflected nothing (black cage, lockers and frames); the reflection probe was drawn only in views that include the shell and captured whatever the first view showed | black door fronts and gates, no rim on the cage | a dim cold sky for reflections, the probe drawn in every view, and the first 5 frames draw the whole hall so the probe captures all of it |
+| Dark views: the apse, the watch room and booth fronts, the bay, locker 17, the post station, the chalk | the lamp, the pedestal, the lockers and the chalk mark were silhouettes | `apse_lamp`, `watch_front`, `booth_front`, `bay_lamp`, `locker_lamp`, `post_lamp`, stronger camera fill for `lift_chalk`, `hall_fill` 0.28 -> 0.4 |
+| Bridge view 157 draw calls with the replay running (limit 150) | stutter risk on a phone | the booth's desk / box / orrery (group `t`), the sun pedestal (`s`) and the cradle and drawer (`d`) are drawn only from views that can see them: 127 in the same state |
+| Continue differences: knob rotation, the post canister after the parcel was sent (it stayed where the animation left it) | a loaded game showed a different scene | knob and wheel turns derive from the logic state; the sent canister sits at its end position when `parcel_sent` |
+| Echo figures read as hovering above the deck (the director's review of the first replay frame: Strand's ghost at the desk) | the geometry is right (the `--feet` check: gap 0.00 m, soles on the deck) but an additive hologram with no contact cue looks as if it floats | `array_echo_base.gdshader`: a thin ring of light on the floor under every echo figure, faded with the figure |
+| The roll board's lamps going out (the rise) could not be seen: the watch-room camera shows the board through the gate's lattice, far away | the climax's second beat was lost | cinematic view `rise_board` (through the open door, 40 degrees) used by the rise; no camera fill |
+| Tap targets at the frame edge in `island`, `sun_pedestal`, `drawer` | HUD-check failures (4.4 to 5.9 mm from the edge) | cameras: `island` 0.9 m further back, `sun_pedestal` fov 52, `drawer` fov 46 |
+| Landmark taps (stairs, booth, watch room, catwalk, glass tower) found nothing from the bridge | a player could not walk on | stairs tap boxes at the bridge's back corners (looked at by turning round and down), opaque strips on the booth's and the watch room's glass, the pier wall for Panel 0, the island from the catwalk |
+
+### HUD check (`tap_map --chapter=ch4 --hud-check`, all 33 views, headless)
+`hud-check (phone61): 156 controls in 33 views, 0 failures, 46 banner warnings (70 focus-only controls and 4 slivers not checked)`, `hud-check (tablet10): 141 controls in 33 views, 0 failures, 21 banner warnings (59 focus-only controls and 1 slivers not checked)` at the start state. 0 failures in every other state, both screens (`power`, `iris_open`, `align_done`, `cage_open`, `tower_open`, `heart_open`, `pawl_fitted`, `reversing`): phone61 `52` to `63` controls, tablet10 `48` to `59`. (The control count drops from the start state because the hall's zones are locked without power: their parts count as controls of every view until the zone opens, then as focus-only controls.) Before the fixes: 4 failures on phone61, 1 on tablet10 (table above).
+
+### Playthroughs
+Rendered at 2340 x 1080 (`--screen=phone61`, software Vulkan), every step by taps on the real scene, canonical answers (seed 0), exit 0 and 0 fallbacks on all three:
+```
+dawn   (--key=leyla --lens=leave --trust=leyla)           taps through the 3D scene: 139 (24 zone walks), logic fallbacks: 0 (0 of them for models not built yet)
+       ✓ continue after the cage opened (140 tappable parts compared)  ✓ continue mid-reversal (minute 03:15, 144 parts)  ✓ ending dawn   QA_DONE exit=0
+keeper (--key=strand --lens=take --trust=strand)          taps through the 3D scene: 139 (24 zone walks), logic fallbacks: 0
+       ✓ continue after the cage opened (140)  ✓ continue mid-reversal (144)  ✓ ending keeper   QA_DONE exit=0
+true   (--key=leyla --lens=leave --trust=leyla --secret)  taps through the 3D scene: 152 (26 zone walks), logic fallbacks: 0
+       ✓ continue after the cage opened (112)  ✓ continue mid-reversal (113)  ✓ ending true     QA_DONE exit=0
+```
+All 16 profile combinations (Chapter 2 key x Chapter 1 lens x Chapter 3 trust x secret), headless `--quick --speed=6`, final code: **16 of 16 reach the ending the profile asks for** (`keeper` when Strand was trusted, `dawn` when Leyla was, `true` with the secret), **0 fallbacks, 0 failed steps, both Continue checks passed, `QA_DONE exit=0`**, 125 to 140 taps each (the key paths differ in the opening: Strand's key opens the booth, Leyla's the watch room and Leyla's note comes out of locker 17). Echo figures: `models not built yet: none`, `echo figures standing in: none` (all eight group I models are in the scene).
+
+Mid-chapter Continue (`--reload-every=N`: quit and press Continue after every Nth step, then compare every tappable part by name, place and size): `--key=leyla --lens=leave --trust=leyla --reload-every=4`: 22 checks, 0 failed; `--key=strand --lens=take --trust=strand --secret --seed=17 --reload-every=5`: 19 checks, 0 failed. (The first run of the second command found one real difference: the post canister after "send parcel" stayed where the animation left it; the scene now derives it from `parcel_sent`.)
+
+The rise and the three endings, rendered from the state `pawl_fitted` (`--advance=pawl_fitted`, the solver plays the game up to there, then the reversal and the finale are played by taps; final code): dawn, keeper and true each 0 fallbacks, `QA_DONE exit=0` (56, 56 and 69 taps). The harness takes a frame every 1.6 s of game time while the Night is undone (`rise_00` ... `rise_16`) and one from the bridge at the reversal minutes 03:16 and 03:14 (the minutes the Night's steps stand on).
+
+`playthrough_ch4 --walk`: the 12 zone changes (lift, Panel 0, apse, booth, watch room, catwalk, island, bridge and back, in an odd order) all by taps on the landmark: 12 of 12, 0 fallbacks.
+
+`playthrough_ch4 --feet`: every echo figure's feet against the surface below them (rays at the origin and 0.25 m to each side) and the soles of the figure's mesh: the gap is 0.00 m for the four kept echoes, Strand's figure at the desk and Leyla, and for Strand's ghost at each replay minute and the 41 crowd figures (their circles, 3.8, 5.5, 7.5, 9.5 and 12.6 m, lie in the channels between the ring bands 4.10-4.89, 6.10-6.89, 8.10-8.89 and 10.10-10.89 m, measured on the ring meshes; the rings have no colliders, so this one is by the numbers) (the clerk stands on the watch room's carpet, 0.03 m above the hall floor the ray hits: 0.03).
+
+### Previews (phone aspect, 2340 x 1080 rendered, stored at 1560 x 720, no marks)
+`docs/previews/ch4/`: `01_hall_arrival.jpg` (the bridge on arrival, the hall dark), `02_bridge_desk.jpg` (the master desk once the hall has power), `03_panel0_powered.jpg` (Panel 0 solved, the 1998 technician's echo at its lever), `04_rings_replay.jpg` (the bridge while the hall replays: beams, rings, 41 echoes, the technicians' echoes), `05_catwalk_towers.jpg` (the catwalk over the rings, the beam folding tower to tower), `06_cage_open_reliquary.jpg` (the glass tower, the Core awake behind it), `07_core_awake.jpg` (the Core and the cradle with the lens seated), `08_sun_iris.jpg` (the Sun's iris), `09_booth_powered.jpg` (Strand's booth), `10_watch_room_clerk.jpg` (the watch room with the clerk's echo at the post station), `11_reversal_0316.jpg` and `11b_reversal_0314.jpg` (the bridge in the middle of the reversal: the crowd, Strand's ghost at the keeper, then the Array coming apart), `12_drawer_open.jpg` (the heart drawer's three things), `13_rise_oculus.jpg` (41 lights through the oculus), `14_rise_roll_board.jpg` (the roll board's lamps going out), `15_ending_dawn.jpg`, `16_ending_keeper.jpg` and `17_ending_true.jpg` (the Core, and in the true ending the forty-second light in the oculus shaft). Rendered with `tap_map --perf --screen=phone61` and `playthrough_ch4 --screen=phone61`, stored at 1560 x 720.
+
+### Draw calls (`tap_map --perf --screen=phone61`, HUD included, worst case per view over the states)
+Final code, worst case over the states `start`, `power`, `align_done` (the hall replays), `heart_open`, `reversing`, `night_undone` (`tap_map --chapter=ch4 --perf --screen=phone61`, 2340 x 1080, software Vulkan; the HUD is in the count; a run holds 6 to 12 views because `--perf` prints nothing until its end). 37 views, **worst case 131 (the bridge while time runs back), every other view 105 or fewer**; primitives at most 140,434 (the bridge):
+
+| Draw calls | Views |
+|---|---|
+| 131 | `bridge` (reversing; 123 with the replay on, 111 at the start) |
+| 105 | `bridge_up` |
+| 82 | `handwheels` |
+| 71, 68, 60, 56 | `island`, `catwalk`, `finale`, `rise_core` |
+| 51 to 44 | `bay_hero` 51, `core` 49, `gate_4` 48, `panel0` 47, `gate_2` 47, `drawer_mark` 47, `apse` 44, `gate_1` 44, `gate_3` 44 |
+| 39 to 25 | `drawer` 39, `desk` 39, `lift` 38, `collar` 37, `booth` 35, `booth_gate` 33, `chronometer` 31, `watch` 30, `iris` 29, `gear_box` 27, `sun_pedestal` 26, `rise_up` 25, `lift_in` 25 |
+| 20 or fewer | `hatch_1` to `hatch_4` 17 to 20, `locker_17` 17, `lift_chalk` 17, `post_station` 16; `rise_board` 27 |
+
+What it took: the first renders had the bridge at 157 with the replay on. `--breakdown` showed the booth (19 calls), the watch room (14), the sun pedestal, the cradle and the drawer drawn from across the hall; they now have culling groups of their own (`t`, `s`, `d`: drawn only from the views that can see them), and the 12 m freight-lift cage is drawn only in the lift-bay views. The echoes' pools of light add one call per visible echo (the bridge in `reversing`: 127 -> 131).
+
+### Open issues
+1. **Tiny tap targets.** The playthrough measures the visible part on a 6.1" phone and finds 10 under 9 mm on both sides: Panel 0's switches 2.0 x 2.1 mm, the four tower keys 2.2 x 5.7 mm, locker 17's note 6.0 x 2.6 mm, the drawer's three things 5 to 8 mm, the booth box's fourth knob 8.1 x 6.2 mm. Tap areas around the switches, keys and knobs (`TAP_PADS`, 0.2 to 0.4 m) and the finger assist (`TapAssist`, 5 mm) widen what answers a tap; the playthrough taps the middle of the visible part, so it reports 0 assisted taps and the pads' effect on a real finger is not measured.
+2. **Rendering is software Vulkan only.** Light levels, the beam ribbons, the additive echoes and their pools of light, the oculus shaft and the 8-spot budget were looked at in 2340 x 1080 frames; none of it was seen on a phone GPU or an OLED. The hall is dark by design.
+3. **Strings the director may want to touch.** The choice overlay says "The forty-one are gone into the morning" in all three endings (in the true ending a forty-second rose last), and the rise caption always says "Forty-one lights rise". The tags and the board are 41 + 1 by design.
+4. **Leyla's chalk mark** (`lift_chalk`) is readable but dim; the bay's walls are near black by design.
+5. **The cage and the glass tower's base** show a coarse noisy texture from 1 m (the Blender side).
+6. **Audio** is synthesised at run time and was not heard.
+7. `tap_map --perf` cannot run headless (it hangs); it needs the render queue, which other agents share (a 10-view run waited 15 to 40 minutes some evenings).
+8. `DEVELOPMENT_STATUS.md` and `NEXT_STEPS.md` were not edited by the scene agent (shared files): the Status table below is the source.
+
+### Status
+| Area | Level | Evidence |
+|---|---|---|
+| Logic: 12 puzzles, three endings, 16 profile combinations, per-game variants, softlock fuzz | AUTOMATED TESTED (logic) | `tools/run_tests.sh`: 223 tests, 29479 checks, 0 failures (2026-10-11) |
+| Scene: hub layout, 37 views with captions, zone culling (groups H B P K R I S T W E l w t s d), lights, reflection sky and probe, the opening, the sequences (power, iris, replay, cage, tower, drawer, reversal, rise), `SceneManager.room_ready` / CrashGuard | INTEGRATED | `array_hall_room.gd`, `array_hall_visuals.gd`, `array_hall_data.gd` |
+| Every puzzle's hotspots routed to `ArrayHallLogic`, the picture derived from `logic.state` (a loaded game reproduces the scene) | INTEGRATED | the Continue comparisons above |
+| Full chapter by real 3D taps, all 16 profile combinations (headless) and one rendered run per ending | AUTOMATED TESTED (3D taps) | `playthrough_ch4` rendered dawn, keeper and true: 139 / 139 / 152 taps, 0 fallbacks, Continue passes; headless: 16 of 16 combinations, 0 fallbacks |
+| Continue after the cage opens, in the middle of the reversal and after every Nth step | AUTOMATED TESTED (3D) | see Playthroughs |
+| Views | VISUALLY VERIFIED (software renderer) | `docs/previews/ch4/` |
+| Audio | IMPLEMENTED | the hum, the beat loops, the chimes, the ratchet and the swell are synthesised at run time (`array_hall_tones.gd`); nothing was heard on a real speaker |
+| Performance | Under budget (<= 150 draw calls) | see Draw calls |
+| Released | — | `chapters.gd`: Chapter 4 `released: false` |
+
+### Still needs human testing
+1. **The beam folds.** Is it clear from the bridge, the catwalk and the island that each tower throws the beam on to the next ring? (Rendered at 2340 x 1080 under software Vulkan only.)
+2. **The reversal.** Does the minute-by-minute unwinding read as a climax: the time wheel, the crowd turning from the flash, the 41 lights, the three endings?
+3. **The drawer.** Do players tap the three things hovering in front of the housing at once?
+4. **The collar and the cage close-ups.** The cage and the glass tower's base show a coarse noisy texture from 1 m; check it on a phone.
+5. **Brightness.** The hall is dark by design (unpowered bridge, apse, lift bay); the Core, the beams and the oculus shaft are the brightest things. Check at default and maximum brightness on an OLED phone.
+6. **Audio.** The synthesised hum, beats and chimes against a real speaker and headphones.

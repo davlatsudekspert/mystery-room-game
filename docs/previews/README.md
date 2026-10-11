@@ -28,3 +28,6 @@ These cover the trilingual language picker, the dimmed settings panel, the main 
 
 ## `engagement/`: the engagement pass on Chapters 1–2 (2026-10-10, `docs/ENGAGEMENT.md`)
 Before/after frames from `qa/ch1_reveal_shots.tscn` (the bookcase reveal and the ending, run on the code before and after), `qa/playthrough_ch2.tscn` (seed 777) and `qa/teaser_shots.tscn` (the Chapter 2 finale, the cliffhanger and the Chapter 3 card in its three store states). The table of files is in `docs/ENGAGEMENT.md` → Verification.
+
+## `ch4/`: the Array Hall (Chapter 4, 2026-10-11, `docs/GAMEPLAY_QA.md` -> Chapter 4)
+Real Godot renders, 2340 x 1080 (phone61), stored at 1560 x 720, no marks: `01_hall_arrival` ... `17_ending_true` follow the chapter (arrival on the dark bridge, the powered desk, Panel 0, the replay with the echoes on the bridge, the catwalk, the opened cage, the Core, the Sun's iris, the booth, the watch room, the reversal at 03:16 and 03:14, the heart drawer, the 41 lights through the oculus, the roll board going out, the three endings). Made with `tap_map --perf --screen=phone61` and `playthrough_ch4 --screen=phone61`.

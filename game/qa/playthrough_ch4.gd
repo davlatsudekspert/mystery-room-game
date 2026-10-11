@@ -872,6 +872,19 @@ func _feet_test() -> void:
 		var n: Node3D = echoes[fid]
 		_feet_report(space, str(fid), n.global_position)
 		_log("    soles of %s at y %.3f (origin y %.3f), mesh bounds low %.3f" % [fid, _soles(n), n.global_position.y, _soles(n) - n.global_position.y])
+	# the 41 crowd figures stand at y 0 in the channels between the rings (the ring meshes have no colliders: their radial bands are
+	# 4.10-4.89, 6.10-6.89, 8.10-8.89 and 10.10-10.89 m, the crowd's circles 3.8, 5.5, 7.5, 9.5 and 12.6 m): the collider surface under each
+	var worst := 0.0
+	var on_ring := 0
+	var crowd_pos: Array = vis.get("_crowd_pos")
+	for p in crowd_pos:
+		var from := Vector3(p.x, 3.0, p.y)
+		var h := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + Vector3(0, -6.0, 0)))
+		var top := float(h["position"].y) if not h.is_empty() else 0.0
+		if top > 0.02:
+			on_ring += 1
+		worst = maxf(worst, top)
+	_log("  feet crowd: %d figures, highest surface under any of them %.2f m above their soles, %d of them with a surface above y 0.02" % [crowd_pos.size(), worst, on_ring])
 	# Strand's ghost where each replay minute puts him
 	var ghost: Node3D = vis.get("_ghost")
 	for minute in [ArrayHallLogic.FLASH_MINUTE, logic.m_keeper(), logic.m_rings(), logic.m_sun(), 1]:
