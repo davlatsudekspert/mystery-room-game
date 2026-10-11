@@ -96,7 +96,9 @@ const VIEWS := {
 	"office_door": [Vector3(-9.0, 1.5, 2.65), Vector3(-10.2, 1.1, 2.75), 50.0, false, "C", "", ""],
 	"office": [Vector3(-10.5, 1.6, 2.35), Vector3(-12.55, 0.85, 2.95), 56.0, false, "C", "", ""],
 	"ecg_lamp": [Vector3(-12.0, 1.3, 2.3), Vector3(-12.62, 1.06, 2.45), 40.0, false, "C", "", ""],
-	"meter_case": [Vector3(-12.05, 1.25, 3.3), Vector3(-12.6, 0.84, 3.3), 40.0, false, "C", "", ""],
+	# 0.3 m closer than the first framing (player-experience review, 2026-10-11): the three wheels and the signs over
+	# them were 2 to 3 mm wide on a phone and the signs unreadable; the case now fills the frame, the open tray included
+	"meter_case": [Vector3(-12.22, 1.06, 3.3), Vector3(-12.58, 0.83, 3.3), 40.0, false, "C", "", ""],
 	# hud-check at 16:9 and 20:9 (extra screens): the west passage's tap point sat under the bag button / 0.2 mm from the edge;
 	# 0.2 m west puts the passage inside the frame on 16:9, 19.5:9, 20:9 and 4:3
 	"switch_room": [Vector3(-8.5, 1.65, 1.75), Vector3(-8.5, 1.4, 4.0), 58.0, false, "CL", "", ""],
@@ -156,7 +158,9 @@ const VIEWS := {
 	"prisms": [Vector3(6.1, 1.6, 2.1), Vector3(6.1, 0.75, 0.0), 56.0, false, "N", "camp_open", "K"],
 	"seal": [Vector3(6.1, 1.3, -0.3), Vector3(6.1, 1.15, -0.97), 44.0, false, "N", "camp_open", "K"],
 	"camp": [Vector3(7.25, 1.6, -1.5), Vector3(4.9, 1.2, -2.8), 62.0, false, "K", "shutter_open", "GS"],
-	"shutter": [Vector3(6.55, 1.55, -2.6), Vector3(4.66, 1.6, -2.6), 50.0, false, "K", "shutter_open", "GS"],
+	# the crystals are the puzzle: 0.1 m higher and 8 degrees narrower than the first framing, so they hang in the upper
+	# middle of the frame at 1.3x the size (player-experience review, 2026-10-11); the shutter's opening stays in view
+	"shutter": [Vector3(6.5, 1.62, -2.6), Vector3(4.66, 1.7, -2.6), 42.0, false, "K", "shutter_open", "GS"],
 	# from the north-east and higher than the first framing: the scope's screen faces that way, and its top no longer
 	# hides the recorder's two ivory keys (their ◀◀ / ▶ were foreshortened to slivers from 25 degrees)
 	"recorder": [Vector3(5.3, 1.38, -2.2), Vector3(5.0, 0.84, -1.68), 34.0, false, "K", "camp_open", "N"],

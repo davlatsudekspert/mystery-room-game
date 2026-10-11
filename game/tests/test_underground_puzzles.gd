@@ -257,6 +257,25 @@ func test_leave_path_echo_and_take_path_none() -> void:
 	check(choir_first.look("seed_library").is_empty(), "not before the Nursery is reachable")
 
 
+## The first walk into the awake Gallery stages the first look down at the Array, once per game, on either wing order.
+func test_first_look_at_the_array_once() -> void:
+	for key: String in ["strand_key", "leyla_key"]:
+		var l := _new(key)
+		check(l.look("gallery").is_empty() and l.look("gallery_w").is_empty(), "%s: nothing while the Gallery sleeps" % key)
+		var guard := 0
+		while not l.state["gallery_awake"] and guard < 400:
+			guard += 1
+			UndergroundSolver.step(l, "leyla")
+		check(l.state["gallery_awake"], "%s: the first wing wakes the Gallery" % key)
+		check(l.look("seed_library").has("array_first_look") == false, "%s: only the Gallery's own views" % key)
+		var ev := l.look("gallery" if key == "strand_key" else "gallery_w")
+		check(ev.has("array_first_look") and l.state["array_seen"], "%s: the first look plays: %s" % [key, str(ev)])
+		check(l.look("gallery").is_empty() and l.look("gallery_w").is_empty(), "%s: only once" % key)
+		var copy := UndergroundLogic.new()
+		copy.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
+		check(copy.look("gallery").is_empty(), "%s: a reload remembers it" % key)
+
+
 func test_autoclave_cloudy_remelt_and_clear() -> void:
 	var l := _new("leyla_key")
 	check(l.pull_start_lever().has("autoclave_not_closed"), "door open")
@@ -572,6 +591,8 @@ func test_variants_are_solvable_unique_and_saved() -> void:
 			var back := UndergroundLogic.rotate_glyph(l.seed_sketch(), -1)
 			ok = ok and g.count(back) == 1 and g.find(back) == l.seed_right()
 			ok = ok and UndergroundLogic.rotate_glyph(back, 1) != back and g.has(l.seed_sketch())
+			# the arrow read the other way finds no drawer (as in the canonical game): never a coin flip
+			ok = ok and not g.has(UndergroundLogic.rotate_glyph(l.seed_sketch(), 1))
 			# E2
 			var c := l.pegs_target()
 			ok = ok and int(c[0]) != int(c[1]) and int(c[1]) != int(c[2])

@@ -145,6 +145,7 @@ func default_state() -> Dictionary:
 		"shutter_open": false,
 		# Gallery
 		"gallery_awake": false,
+		"array_seen": false, # the first look down at the waking Array has played (presentation only)
 		"door_west_open": false,
 		"door_east_open": false,
 		"drums": [0, 0, 0, 0],
@@ -560,12 +561,16 @@ func open_seed_drawer(i: int) -> Array[String]:
 	return _end()
 
 
-## The camera arrived at a view. Leave path: Leyla's echo shows the right drawer once.
+## The camera arrived at a view. Leave path: Leyla's echo shows the right drawer once. The first time the player
+## stands in the awake Gallery (either root view), the room stages the first look down at the Array (once per game).
 func look(view: String) -> Array[String]:
 	_begin()
 	if view == "seed_library" and zone_open("nursery") and not state["has_lens"] and not state["echo_guided"]:
 		state["echo_guided"] = true
 		_emit("leyla_echo:%d" % seed_right())
+	if view in ["gallery", "gallery_w"] and state["gallery_awake"] and not state["array_awake"] and not state["array_seen"]:
+		state["array_seen"] = true
+		_emit("array_first_look")
 	return _end()
 
 
@@ -1141,21 +1146,26 @@ func apply_seed(game_seed: int) -> void:
 
 
 ## Twelve distinct lattice glyphs. The right seed is never three-fold symmetric. The library also holds the
-## sketch as drawn (not turned back), the glyph turned the wrong way, and one-notch twins of the right seed.
+## sketch as drawn (not turned back) and one-notch twins of the right seed. It never holds the sketch turned the
+## OTHER way (the right glyph turned two thirds): Leyla's arrow can be read as "how the sketch is turned" or as "turn
+## it this way", and with both answers in the library that reading was a coin flip (the canonical game always
+## avoided it; the per-game variants did not). With only one of them present, a wrong reading finds no drawer and
+## the player turns the other way (player-experience review, docs/ENGAGEMENT.md).
 func _draw_seed_library(rng: RandomNumberGenerator) -> void:
 	var right := ""
 	while right == "" or rotate_glyph(right, 1) == right:
 		right = _random_glyph(rng)
-	var glyphs: Array = [right, rotate_glyph(right, 1), rotate_glyph(right, -1)]
+	var wrong_way := rotate_glyph(right, -1)
+	var glyphs: Array = [right, rotate_glyph(right, 1)]
 	for e: int in _shuffled(rng, [0, 1, 2, 3, 4, 5]):
 		if glyphs.size() >= 6:
 			break
 		var twin := right.substr(0, e) + ("0" if right[e] == "1" else "1") + right.substr(e + 1)
-		if twin.count("1") > 0 and twin.count("1") < 6 and not glyphs.has(twin):
+		if twin.count("1") > 0 and twin.count("1") < 6 and not glyphs.has(twin) and twin != wrong_way:
 			glyphs.append(twin)
 	while glyphs.size() < SEED_GLYPHS.size():
 		var g := _random_glyph(rng)
-		if not glyphs.has(g):
+		if not glyphs.has(g) and g != wrong_way:
 			glyphs.append(g)
 	glyphs = _shuffled(rng, glyphs)
 	state["v_glyphs"] = glyphs

@@ -51,6 +51,37 @@ const AMBER := Color("ffaa3c")
 const GREEN := Color("4dff7a")
 const RED := Color("ff3b2f")
 const BAND_COLOR := {1: Color(1.0, 0.25, 0.18), 2: Color(0.25, 1.0, 0.35), 4: Color(0.3, 0.45, 1.0)}
+## The Array's ring signs through the glass floor: the decal's shape (white on clear) drawn bolder, in warm cream, with
+## a near-black rim around it. `lit` 0..1 fades the sign in (the first look); `glow` dims it while the Gallery sleeps.
+## The quad is scaled by `grow`, and the art is drawn back at its old size inside it, so the rim fits.
+const RING_SYM_GROW := 1.22
+const RING_SYM_SHADER := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, blend_mix;
+uniform sampler2D sym : source_color, filter_linear_mipmap, repeat_disable;
+uniform vec3 fill : source_color = vec3(1.0, 0.9, 0.68);
+uniform vec3 rim_color : source_color = vec3(0.015, 0.02, 0.025);
+uniform float grow = 1.22;
+uniform float bold = 0.022;
+uniform float rim = 0.07;
+uniform float glow = 1.0;
+uniform float lit = 1.0;
+float cover(vec2 uv, float r) {
+	float a = texture(sym, uv).a;
+	for (int i = 0; i < 12; i++) {
+		float t = 6.2831853 * float(i) / 12.0;
+		a = max(a, texture(sym, uv + vec2(cos(t), sin(t)) * r).a);
+	}
+	return a;
+}
+void fragment() {
+	vec2 uv = (UV - 0.5) * grow + 0.5;
+	float f = smoothstep(0.3, 0.6, cover(uv, bold));
+	float o = smoothstep(0.15, 0.45, max(cover(uv, rim), cover(uv, rim * 0.55)));
+	ALBEDO = mix(rim_color, fill * glow, f);
+	ALPHA = max(f, o * 0.9) * lit;
+}
+"""
 
 var room: Node3D
 var logic: UndergroundLogic
@@ -80,6 +111,10 @@ var _osc_amp := 0.0
 var _osc_size := 0
 var _recorder_playing := false
 var _growing := false
+var _ring_reveal := false # the first look owns the rings' glow while it runs
+var _rise_speed := 1.0 # the rising lights' clock: 0 = held (Strand's answer)
+var _rise_fade := 1.0 # 1 = all forty-one lit; 0 = all gone out (Leyla's answer)
+var _answer := "" # the finale choice once the Array answers it (finale_answer)
 var _drag_dir: Dictionary = {} # knob / turntable -> current tap direction (ping-pong between the end stops)
 
 
@@ -98,6 +133,7 @@ func _ready() -> void:
 	_build_echoes()
 	_build_fans()
 	_build_prism_taps()
+	_build_crystal_taps()
 	_build_arcs()
 	_build_rising()
 	_own_bulb_material()
@@ -253,18 +289,33 @@ func _build_evidence() -> void:
 	var osc := _shader("res://src/fx/osc_wave.gdshader")
 	_mats["osc"] = osc
 	_set_slot(part("oscillograph", "osc_screen") as MeshInstance3D, "M_Shader_Quad", osc)
-	# H1 the ring symbols: one emissive decal per ring, from this game's drum target
+	# H1 the ring symbols: one decal per ring, from this game's drum target. Warm cream like the drum lock's own
+	# symbols, drawn bolder than the art (the star's thin arms) and ringed in near-black, so a sign that sits on its
+	# pale ring still stands out (it was pale on pale; player-experience review). The quad grows by RING_SYM_GROW
+	# so the dark rim has room around the art without shrinking the sign.
+	var sym_shader := Shader.new()
+	sym_shader.code = RING_SYM_SHADER
 	for r in 4:
 		var q := part("array_below", "ring_sym_%d" % r) as MeshInstance3D
-		var sm := StandardMaterial3D.new()
-		sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-		sm.alpha_scissor_threshold = 0.4
-		sm.albedo_texture = _tex(DECALS + SYMBOL_FILES[int(logic.drum_target()[r])] + ".png")
-		sm.albedo_color = LUMEN
-		sm.cull_mode = BaseMaterial3D.CULL_DISABLED
+		var sm := ShaderMaterial.new()
+		sm.shader = sym_shader
+		sm.set_shader_parameter("sym", _tex(DECALS + SYMBOL_FILES[int(logic.drum_target()[r])] + ".png"))
+		sm.set_shader_parameter("grow", RING_SYM_GROW)
 		_mats["ring_sym_%d" % r] = sm
-		_set_slot(q, "M_Shader_Quad", sm)
+		if _set_slot(q, "M_Shader_Quad", sm):
+			q.scale = Vector3.ONE * RING_SYM_GROW
+	# the glass floor: the shared M_Glass (near-white, alpha 0.25) is lit from above by the Gallery's key spot and from
+	# below by the Array's up-light, so the whole shaft read as a milky grey card with a diagram on it. Dark, clear
+	# glass lets the 30 m drop and the glowing rings show through; the probe still gives it a sheen.
+	var glass := part("shell_gallery", "IA_glass_floor") as MeshInstance3D
+	if glass:
+		var gm := StandardMaterial3D.new()
+		gm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		gm.albedo_color = Color(0.05, 0.08, 0.09, 0.2)
+		gm.metallic = 0.0
+		gm.metallic_specular = 0.45
+		gm.roughness = 0.12
+		glass.material_override = gm
 	# H2 Strand's plate (engraved) and the live scope
 	var plate := _shader("res://src/fx/lissajous.gdshader")
 	plate.set_shader_parameter("fa", int(logic.freq_target()[0]))
@@ -449,6 +500,29 @@ func _build_prism_taps() -> void:
 		var n := part("prism_bench", "IA_prism_" + which) as Node3D
 		if n != null:
 			room.call("add_tap_area", n, PRISM_TAP, "", "IA_prism_" + which, Vector3(0.0, 0.10, 0.0))
+	# the four nudge buttons on the apron are 2 mm on a phone and 0.12 m apart: each gets a box over its share of the
+	# apron, taller than the button and out toward the player (the prism cubes stop 0.23 m behind them), so the tap
+	# assist no longer runs into the neighbouring button and the box beside it (8.0 x 8.5 mm before; QA 2026-10-11)
+	for b: String in ["IA_p_left", "IA_p_right", "IA_q_left", "IA_q_right"]:
+		var n := part("prism_bench", b) as Node3D
+		if n != null:
+			room.call("add_tap_area", n, BUTTON_TAP, "", b, Vector3(0.0, -0.02, 0.05))
+
+
+## The apron buttons' tap boxes (see _build_prism_taps).
+const BUTTON_TAP := Vector3(0.11, 0.16, 0.16)
+## Leyla's tuning crystals are 2 to 3.4 cm thick and hang 0.28 m apart: 0.5 to 1.5 mm wide on a phone from the shutter
+## view. Each gets a box over its own bay of the frame (0.24 m wide, from the hang point down past its tip), so a
+## finger anywhere near one rings that one, and the box is hit directly (the tunnel lining behind the open shutter is
+## an interactive part too, and the tap assist never replaces a direct hit: 7 to 8.5 mm before; QA 2026-10-11).
+const CRYSTAL_TAP := Vector3(0.24, 0.30, 0.12)
+
+
+func _build_crystal_taps() -> void:
+	for s in range(1, 5):
+		var c := part("crystal_shutter", "IA_tcrystal_%d" % s) as Node3D
+		if c != null:
+			room.call("add_tap_area", c, CRYSTAL_TAP, "", "IA_tcrystal_%d" % s, Vector3(0.0, -0.15, 0.0))
 
 
 func _fan_origin(which: String) -> Vector3:
@@ -714,6 +788,23 @@ func _apply_desk(animated: bool) -> void:
 		tag.visible = not s["desk_armed"]
 
 
+## The desk comes alive (UndergroundRoom._desk_wakes): the five step globes light one by one with a relay click each,
+## hold, and go dark again. Leaves them as the state says.
+func globe_test() -> void:
+	if _loop_port != "":
+		return
+	for k in range(1, 6):
+		_set_globes(k)
+		AudioManager.sfx("relay_click", -6.0, 0.9 + 0.06 * k)
+		await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(0.6).timeout
+	_set_globes(0)
+	AudioManager.sfx("relay_click", -8.0, 0.7)
+	await get_tree().create_timer(0.3).timeout
+	if _loop_port == "":
+		_set_globes(int(logic.state["step"]) if not logic.state["hall_started"] else 5)
+
+
 func _set_globes(lit: int) -> void:
 	var g: ShaderMaterial = _mats.get("globes")
 	if g:
@@ -751,15 +842,13 @@ func _apply_gallery(animated: bool) -> void:
 	# asleep the rings are dormant glass (a cool grey tint, almost no emission); awake they glow but stay under the
 	# glow threshold (1.1, RoomBase.make_environment), so only the answering Array blooms
 	for r in 4:
-		var m := _mats.get("ring_%d" % r) as BaseMaterial3D
-		if m:
-			# answering: a cyan glow, not flat white (2.2 on near-white glass clipped the rings and their symbols to white)
-			m.emission = Color(0.25, 0.7, 1.0) if array else Color(0.8118, 0.9647, 1.0) # the library lumen: x1.5 clipped to white
-			m.emission_energy_multiplier = 1.3 if array else (0.55 if awake else 0.15)
-			m.albedo_color = Color(0.4, 0.75, 0.92) if array else (Color(0.55, 0.7, 0.78) if awake else Color(0.4, 0.48, 0.53))
-		var sym := _mats.get("ring_sym_%d" % r) as BaseMaterial3D
+		if _ring_reveal:
+			break # the first look is lighting them one by one (array_first_look)
+		_ring_glow(r, awake, array)
+		var sym := _mats.get("ring_sym_%d" % r) as ShaderMaterial
 		if sym:
-			sym.albedo_color = Color(LUMEN, 1.0) * (1.0 if awake else 0.45)
+			sym.set_shader_parameter("glow", 1.0 if awake else 0.45)
+			sym.set_shader_parameter("lit", 1.0)
 	var up := (room.get("lights") as Dictionary).get("array_up") as Light3D
 	if up:
 		up.light_energy = 2.2 if array else (2.0 if awake else 1.0)
@@ -788,6 +877,50 @@ func _apply_gallery(animated: bool) -> void:
 	_held_item("socket_42", sock, part("memorial_wall", "socket_42_mount"), sock != "", "Item_socket_42")
 	if _rising:
 		room.call("set_present", _rising, array) # not .visible: zone culling rewrites that on every view change
+
+
+## One ring's glass in its state: dormant, awake, or answering (`level` overrides the emission for the first look).
+func _ring_glow(r: int, awake: bool, array: bool, level: float = -1.0) -> void:
+	var m := _mats.get("ring_%d" % r) as BaseMaterial3D
+	if m == null:
+		return
+	# answering: a cyan glow, not flat white (2.2 on near-white glass clipped the rings and their symbols to white)
+	m.emission = Color(0.25, 0.7, 1.0) if array else Color(0.8118, 0.9647, 1.0) # the library lumen: x1.5 clipped to white
+	m.emission_energy_multiplier = level if level >= 0.0 else (1.3 if array else (0.55 if awake else 0.15))
+	m.albedo_color = Color(0.4, 0.75, 0.92) if array else (Color(0.55, 0.7, 0.78) if awake else Color(0.4, 0.48, 0.53))
+
+
+## The first look down through the glass floor once the Gallery is awake (UndergroundRoom._first_look): the four rings
+## wake one by one, outer to inner, each with a low bell, and then the four signs light on them. It shows where the
+## door's code is without saying it. Leaves the rings and signs as apply_state would.
+func array_first_look() -> void:
+	_ring_reveal = true
+	for r in 4:
+		_ring_glow(r, false, false, 0.05)
+		var sym := _mats.get("ring_sym_%d" % r) as ShaderMaterial
+		if sym:
+			sym.set_shader_parameter("glow", 1.0)
+			sym.set_shader_parameter("lit", 0.0)
+	await get_tree().create_timer(1.0).timeout
+	var tones: UndergroundTones = room.get("tones")
+	for r in 4:
+		var m := _mats.get("ring_%d" % r) as BaseMaterial3D
+		if m:
+			room.create_tween().tween_property(m, "emission_energy_multiplier", 0.55, 0.9).from(0.05) \
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		if tones:
+			tones.tube(r + 1, -12.0) # the outer ring rings lowest
+		AudioManager.haptic(25)
+		await get_tree().create_timer(0.75).timeout
+	await get_tree().create_timer(0.4).timeout
+	AudioManager.sfx("reveal", -6.0, 0.8)
+	for r in 4:
+		var sym := _mats.get("ring_sym_%d" % r) as ShaderMaterial
+		if sym:
+			room.create_tween().tween_method(func(v: float) -> void: sym.set_shader_parameter("lit", v), 0.0, 1.0, 1.1)
+	await get_tree().create_timer(1.2).timeout
+	_ring_reveal = false
+	_apply_gallery(false)
 
 
 func _apply_nursery(animated: bool) -> void:
@@ -948,7 +1081,8 @@ func leyla_touch(i: int) -> void:
 	AudioManager.sfx("reveal", -4.0, 0.85)
 	await get_tree().create_timer(1.3).timeout
 	if drawer:
-		ModelUtil.set_emission(drawer, true, LUMEN, 1.2)
+		# a soft cold glow on the wood: at 1.2 the drawer front blew out to a flat white card (rendered QA)
+		ModelUtil.set_emission(drawer, true, LUMEN, 0.35)
 	await get_tree().create_timer(2.6).timeout
 	_fade(n, 0.9, 0.0, 1.4)
 	await get_tree().create_timer(1.4).timeout
@@ -1075,8 +1209,44 @@ func _play_loop(delta: float) -> void:
 		ModelUtil.set_emission(lens, true, LUMEN, 0.6 + 0.6 * absf(sin(_loop_t * 2.0)))
 
 
+## The Array's answer to the finale choice (UndergroundRoom._finale_outcome). Strand: the forty-one lights slow and
+## stop circling, held in place, and the rings burn steady. Leyla: they rise faster and fade out one by one, the
+## rings dim, and a single warm light, the forty-second, comes up the shaft and turns toward the glass.
+func finale_answer(option: String) -> void:
+	_answer = option
+	var tw := room.create_tween()
+	if option == "strand":
+		tw.tween_property(self, "_rise_speed", 0.0, 3.0).set_ease(Tween.EASE_OUT)
+		return
+	tw.tween_property(self, "_rise_speed", 2.6, 2.0)
+	tw.parallel().tween_property(self, "_rise_fade", 0.0, 5.5)
+	for r in 4:
+		var m := _mats.get("ring_%d" % r) as BaseMaterial3D
+		if m:
+			room.create_tween().tween_property(m, "emission_energy_multiplier", 0.35, 5.0)
+	# the forty-second light: warm, alone, rising to just under the glass (one small mesh, only for this moment)
+	var mi := MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.09
+	sphere.height = 0.18
+	sphere.radial_segments = 12
+	sphere.rings = 6
+	var m42 := StandardMaterial3D.new()
+	m42.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m42.albedo_color = Color(1.0, 0.86, 0.62)
+	sphere.material = m42
+	mi.mesh = sphere
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	room.add_child(mi)
+	var c := part("array_below", "array_center")
+	var from := c.global_position if c else Vector3(0, -30, 0)
+	mi.global_position = from + Vector3(0.6, 0.0, 0.4)
+	var up := room.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	up.tween_property(mi, "global_position", Vector3(0.25, 1.9, 0.6), 6.5)
+
+
 func _rise(delta: float) -> void:
-	_rise_t += delta
+	_rise_t += delta * _rise_speed
 	var mm := _rising.multimesh
 	var bottom := Vector3(0, -30, 0)
 	var top := Vector3(0, 2.6, 0)
@@ -1091,7 +1261,9 @@ func _rise(delta: float) -> void:
 		var ang := i * 2.39996 + _rise_t * 0.4
 		var r := lerpf(4.5, 0.9, f)
 		var p := bottom.lerp(top, f) + Vector3(cos(ang) * r, 0, sin(ang) * r)
-		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * lerpf(1.6, 0.7, f)), p))
+		# Leyla's answer: they go out one after another (a light's own threshold in 0..1 against the fade)
+		var k := clampf((_rise_fade - fmod(i * 0.618, 1.0) * 0.9) * 4.0, 0.0, 1.0) if _answer == "leyla" else 1.0
+		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * lerpf(1.6, 0.7, f) * maxf(k, 0.001)), p))
 
 
 # ====================================================================== momentary motions and effects
@@ -1165,11 +1337,40 @@ func crystal_ring(size: int, swing: bool = true) -> void:
 	var c := part("crystal_shutter", "IA_tcrystal_%d" % size)
 	if c and swing:
 		pull_node(c, Vector3.BACK, 7.0, 0.25)
+		_crystal_glint(c as MeshInstance3D) # only when tapped: the recording's notes must stay a matter of ear and waveform
 	_osc_size = size
 	_osc_amp = 1.0
 	var osc: ShaderMaterial = _mats.get("osc")
 	if osc:
 		osc.set_shader_parameter("cycles", 2.0 + 2.0 * (5 - size))
+
+
+## A tapped crystal glints for a moment (its glass only, under the glow threshold), so the eye finds the note the ear
+## hears. Never during Leyla's recording: which crystal sings which note is the puzzle (by ear or by the waveforms).
+func _crystal_glint(c: MeshInstance3D) -> void:
+	if c == null or c.mesh == null:
+		return
+	for i in c.mesh.get_surface_count():
+		var src := c.mesh.surface_get_material(i)
+		if src == null or not src.resource_name.begins_with("M_Crystal"):
+			continue
+		var m := c.get_surface_override_material(i) as BaseMaterial3D
+		if m == null:
+			var act := c.get_active_material(i) as BaseMaterial3D
+			if act == null:
+				continue
+			m = act.duplicate() as BaseMaterial3D
+			m.set_meta("rest", act.emission_energy_multiplier if act.emission_enabled else 0.0)
+			m.emission_enabled = true
+			m.emission = LUMEN
+			c.set_surface_override_material(i, m)
+		var k := "glint:%d:%d" % [c.get_instance_id(), i]
+		if _tweens.has(k) and (_tweens[k] as Tween).is_valid():
+			(_tweens[k] as Tween).kill()
+		var tw := room.create_tween()
+		tw.tween_property(m, "emission_energy_multiplier", float(m.get_meta("rest", 0.0)), 1.0).from(1.0) \
+			.set_ease(Tween.EASE_OUT)
+		_tweens[k] = tw
 
 
 func damp_crystals() -> void:

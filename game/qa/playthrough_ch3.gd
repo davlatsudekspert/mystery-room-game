@@ -13,6 +13,7 @@ extends Node
 ##        the same state and the same tappable parts in all three zones)
 ##        [--logic-sweep] [--sweep-seeds=N] (no scene: random take / return / use actions interleaved with solver steps,
 ##        a save round trip after every step, and a completion check from each saved state, for both key paths)
+##        [--opening] (a New Game's first 24 s as a player sees them: intro cards, the descent, the arrival; shots only)
 ## (through the render queue: tools/qa_run.sh --log=<file> -- res://qa/playthrough_ch3.tscn -- …)
 ## A quick logic-flow run without screenshots: godot --headless --path game res://qa/playthrough_ch3.tscn -- …
 ## Exit code 0 = chapter completed with no failed step and no fallback.
@@ -65,6 +66,7 @@ var _reload_checks := 0
 var _reload_failed := 0
 var _sig_parts := 0
 var _sizes: Dictionary = {} # "view model/part" -> Vector2: the tapped part's visible size in mm at phone61 scale
+var opening := false # --opening: a New Game's first half minute (intro cards, the descent, the arrival), as shots
 
 
 func _ready() -> void:
@@ -92,6 +94,8 @@ func _ready() -> void:
 			sweep = true
 		elif a.begins_with("--sweep-seeds="):
 			sweep_seeds = int(a.substr(14))
+		elif a == "--opening":
+			opening = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if sweep:
 		_logic_sweep()
@@ -106,6 +110,9 @@ func _ready() -> void:
 	GameState.start_new("ch3")
 	logic = GameState.logic
 	GameState.events.connect(func(ev: Array[String]) -> void: _events.append_array(ev))
+	if opening:
+		await _opening()
+		return
 	var t0 := Time.get_ticks_msec()
 	_build_room()
 	await get_tree().process_frame
@@ -210,6 +217,35 @@ func _sweep_check(l: UndergroundLogic, helper: Variant) -> String:
 	if JSON.stringify(copy.to_dict()) != JSON.stringify(l.to_dict()):
 		return "save round trip differs"
 	return ""
+
+
+# ====================================================================== the opening (--opening)
+## A New Game as a player starts it (no capture mode): the two intro cards, the lift's descent, the arrival and the
+## gate. Shots at these seconds of real time after the scene is added; the cards wait 6 s each untapped.
+const OPENING_SHOTS: Array[float] = [2.0, 8.0, 14.4, 16.8, 18.4, 19.9, 21.6, 23.4]
+
+
+func _opening() -> void:
+	room = (load(SCENE) as PackedScene).instantiate()
+	get_tree().root.add_child.call_deferred(room)
+	var t0 := Time.get_ticks_msec()
+	for at in OPENING_SHOTS:
+		while (Time.get_ticks_msec() - t0) / 1000.0 < at:
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		shot_n += 1
+		var p := "%s/%02d_opening_%04.1fs.png" % [out_dir, shot_n, (Time.get_ticks_msec() - t0) / 1000.0]
+		if DisplayServer.get_name() != "headless":
+			get_viewport().get_texture().get_image().save_png(p)
+		var hud := room.get("hud") as Node
+		var cap := ""
+		if hud and hud.get("_caption_line"):
+			cap = str((hud.get("_caption_line") as Label).text) if bool(hud.get("_cap_on")) else ""
+		_log("shot %s  view %s  caption \"%s\"" % [p.get_file(), str((room.get("cam") as RoomCamera).current()), cap])
+	var busy_end := bool((room.get("hud") as Node).get("_busy"))
+	_log(("✓ " if not busy_end else "✗ ") + "opening: input %s after %.1f s" % ["free" if not busy_end else "STILL LOCKED", OPENING_SHOTS[-1]])
+	print("QA_DONE exit=%d" % (0 if not busy_end else 1))
+	get_tree().quit(0 if not busy_end else 1)
 
 
 # ====================================================================== helpers
@@ -560,6 +596,12 @@ func _walk_to(zone: String) -> void:
 		if ok and _zone() == edge[1]:
 			taps_ok += 1
 			_log("  walk %s -> %s (%s)" % [here, edge[1], edge[4]])
+			# the first walk into the awake Gallery stages the first look at the Array (input is locked meanwhile)
+			if room.get("_cinematic"):
+				await _settle(3.2)
+				await shot("first_look_waking")
+				await wait_idle()
+				await shot("first_look_" + cam().current())
 		else:
 			var why := _hit(edge[3], edge[4])
 			taps_fallback += 1
@@ -897,9 +939,41 @@ func _finale() -> void:
 		await _perf("finale")
 	await shot("finale_echoes")
 	logic.choose_ending(choice) # the choice overlay's button
-	await _settle(2.5)
+	# the Array answers the choice (UndergroundRoom._finale_outcome), then the chapter card
+	await _settle(4.5)
+	await shot("finale_answer_" + choice)
+	var waited := 0.0
+	while hud.get("_overlay") == null and waited < 25.0:
+		await _settle(0.25)
+		waited += 0.25
+	await _settle(1.5)
 	await shot("chapter_complete")
-	_log(("✓ " if logic.is_complete() else "✗ ") + "finale: trust %s -> chapter complete" % choice)
+	_log(("✓ " if logic.is_complete() and hud.get("_overlay") != null else "✗ ") +
+		"finale: trust %s -> the Array answers, then the chapter card (%.1f s after the answer shot)" % [choice, waited])
+	await _finished_continue_check()
+
+
+## A player quits on the chapter card and taps Continue: the finished save must open on the chapter card again (the
+## Gallery in the light behind it), not in a finished Level −2 with nothing to tap. Built as the menu does it
+## (no capture mode).
+func _finished_continue_check() -> void:
+	var saved := GameState.save_now()
+	room.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var loaded := saved and GameState.continue_saved()
+	logic = GameState.logic
+	room = (load(SCENE) as PackedScene).instantiate()
+	get_tree().root.add_child.call_deferred(room)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await _settle(3.0)
+	var hud: Node = room.get("hud")
+	var card := hud != null and hud.get("_overlay") != null
+	var at := cam().current()
+	_log(("✓ " if loaded and card and at == "finale" else "✗ ") +
+		"continue on a finished save: %s, opens at %s" % ["the chapter card again" if card else "NO CARD", at])
+	await shot("continue_finished")
 
 
 func _finish() -> void:

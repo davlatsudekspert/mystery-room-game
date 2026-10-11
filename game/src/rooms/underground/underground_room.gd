@@ -28,6 +28,7 @@ var _knob_acc := 0.0
 var _lantern_t := 0.0
 var _dress := true # the set dressing (models, its lights); QA renders "before" shots with --no-dress
 var _recording := 0 # playback generation of Leyla's recorder (a rewind restarts it)
+var _outcome_running := false # the Array answers the finale choice; the chapter card waits for it
 ## The brass rim of a crystal port framing the port views: in a port view the camera sits at the lens, so the
 ## port's own ring is behind it; tapping this rim (IA_port_ring) switches between now and the kept memory.
 var eyepiece: Node3D
@@ -67,7 +68,12 @@ func _ready() -> void:
 	_music(false)
 	if fresh:
 		hud.call("play_intro")
-	elif not capture_mode and l3().state["array_awake"] and not l3().state["complete"]:
+	elif not capture_mode and l3().state["complete"]:
+		_resume_completed()
+	elif not capture_mode and l3().state["array_awake"]:
+		# quit during the finale: the two figures in the light and the choice again, not the entry hall with a dialog
+		_ending = true
+		cam.go("finale", true)
 		get_tree().create_timer(1.2).timeout.connect(func() -> void: hud.call("show_choice"))
 	SceneManager.room_ready(self) # safe graphics before the first frame is drawn
 
@@ -78,6 +84,15 @@ func _exit_tree() -> void:
 
 func l3() -> UndergroundLogic:
 	return logic as UndergroundLogic
+
+
+## A save made after the choice (the player quit on the chapter card): the Gallery in the light and the chapter card
+## again, with its way on to Chapter 4, instead of a finished Level −2 with nothing left to tap (as Chapters 1 and 2 do).
+func _resume_completed() -> void:
+	_ending = true
+	cam.go("finale", true)
+	await get_tree().create_timer(0.8).timeout
+	hud.call("show_chapter_complete")
 
 
 ## Where a continued game starts: the entry wing's hall.
@@ -349,8 +364,33 @@ func _build_views() -> void:
 		cam.add_view(id, v[0], v[1], v[2], v[3])
 
 
-## Portal cards (§1.4): an unshaded quad at the far end of an open tunnel, tinted with the hidden zone's light.
+## Portal cards (§1.4): an unshaded quad at the far end of an open tunnel, tinted with the hidden zone's light. A flat
+## tint read as a painted slab in every open blast door and in the shutter (player-experience review); the card now
+## draws a dim room seen down a short tunnel: dark walls at the sides, a darker ceiling, a lit band where the far
+## lamps hang and a faint floor. One draw call each, as before; never above the glow threshold.
+const PORTAL_SHADER := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, shadows_disabled;
+uniform vec3 tint : source_color = vec3(0.7);
+float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+void fragment() {
+	vec2 uv = UV;
+	float side = min(uv.x, 1.0 - uv.x);
+	float walls = smoothstep(0.02, 0.32, side);
+	float band = exp(-pow((uv.y - 0.42) / 0.2, 2.0));
+	float lamp = exp(-(pow((uv.x - 0.5) * 2.2, 2.0) + pow((uv.y - 0.3) * 3.2, 2.0)) * 3.0);
+	float floor_glow = smoothstep(0.7, 1.0, uv.y) * 0.25;
+	float ceiling = smoothstep(0.25, 0.0, uv.y);
+	float b = 0.06 + (0.42 * band + 0.38 * lamp + floor_glow) * walls - 0.05 * ceiling;
+	b *= 0.92 + 0.08 * hash(floor(uv * vec2(48.0, 72.0)));
+	ALBEDO = clamp(tint * b * 0.42, vec3(0.0), vec3(0.6));
+}
+"""
+
+
 func _build_portals() -> void:
+	var sh := Shader.new()
+	sh.code = PORTAL_SHADER
 	for pid: String in UndergroundData.PORTALS:
 		var p: Array = UndergroundData.PORTALS[pid]
 		var mi := MeshInstance3D.new()
@@ -358,10 +398,9 @@ func _build_portals() -> void:
 		var q := QuadMesh.new()
 		q.size = p[4]
 		mi.mesh = q
-		var m := StandardMaterial3D.new()
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		m.cull_mode = BaseMaterial3D.CULL_DISABLED
-		m.albedo_color = (p[5] as Color) * 0.32
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		m.set_shader_parameter("tint", p[5] as Color)
 		mi.material_override = m
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mi)
@@ -666,7 +705,7 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 			elif UndergroundData.zone_of(cam.current()) == "gallery":
 				_walk("camp")
 			else:
-				_walk("gallery_w")
+				_enter_gallery("gallery_w")
 		"console":
 			_interact_console(p)
 		"memorial":
@@ -688,6 +727,14 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 			_interact_recorder(p)
 		"shutter":
 			_interact_shutter(p)
+
+
+## The player walks into the Gallery (through a blast door or the shutter tunnel): the first time it is awake, the
+## room stages the first look down at the Array (UndergroundLogic.look, once per game). Only a walk-in counts, so the
+## QA tools that jump between views never set it off.
+func _enter_gallery(view: String) -> void:
+	_walk(view)
+	l3().look(view)
 
 
 func _entry_side() -> String:
@@ -838,7 +885,7 @@ func _interact_door(side: String, p: String) -> void:
 	if zone != "gallery":
 		# the hall side: walk through when open
 		if open:
-			_walk("gallery" if side == "west" else "gallery_w")
+			_enter_gallery("gallery" if side == "west" else "gallery_w")
 		else:
 			_say("msg.c3_door_sealed")
 			AudioManager.sfx("drawer_locked", -6.0, 0.6)
@@ -1034,7 +1081,7 @@ func view_changed_hook(id: String) -> void:
 	var fill: OmniLight3D = lights["focus_fill"]
 	var e := 0.0 if cam.is_root() or id.ends_with("_mem") else (1.5 if id in BRIGHT_CLOSEUPS else 0.9)
 	if id == "meter_case":
-		e = 1.15 # the dials are cream tiles on black: 1.5 blew the letter beside the case out to flat white
+		e = 0.7 # cream tiles on black, and the camera (with its fill) now 0.3 m closer: 1.5, then 1.15, blew them out
 	create_tween().tween_property(fill, "light_energy", e, 0.6)
 	_frost.visible = id.ends_with("_mem")
 	_place_eyepiece(id)
@@ -1086,7 +1133,8 @@ func _on_events(ev: Array[String]) -> void:
 	var seq := ""
 	for e in ev:
 		_feedback(e)
-		if e in ["hall_started", "array_awake", "secret_echo"] or e.begins_with("grew:") or e == "shutter_open":
+		if e in ["hall_started", "array_awake", "secret_echo", "array_first_look", "seal_open", "solved:rings"] \
+				or e.begins_with("grew:") or e == "shutter_open":
 			seq = e if seq == "" else seq
 	visuals.apply_state(true)
 	apply_culling(cam.current())
@@ -1100,6 +1148,12 @@ func _on_events(ev: Array[String]) -> void:
 			_array_wakes()
 		"secret_echo":
 			_secret()
+		"array_first_look":
+			_first_look()
+		"seal_open":
+			_seal_opens()
+		"solved:rings":
+			_door_rolls(l3().sealed_door())
 	if seq.begins_with("grew:"):
 		_grow(seq == "grew:clear")
 
@@ -1177,6 +1231,7 @@ func _feedback(e: String) -> void:
 			visuals.breaker_trip()
 		"desk_live":
 			AudioManager.sfx("power_on", -4.0)
+			_desk_wakes()
 		"blast_door_open":
 			_say("msg.c3_blast_door")
 			AudioManager.sfx("vault_door_open", -2.0, 0.8)
@@ -1209,8 +1264,10 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("slide_clunk", -8.0, 1.4)
 		"seal_open":
 			AudioManager.sfx("vault_bolts", -4.0, 1.2)
-		"recorder_clicks", "recorder_play":
+		"recorder_play":
 			_play_recording()
+		"recorder_clicks":
+			pass # _seal_opens walks into the camp first, then the recorder clicks on
 		"crystal_note":
 			tones.crystal(int(arg))
 			visuals.crystal_ring(int(arg))
@@ -1233,8 +1290,11 @@ func _feedback(e: String) -> void:
 			AudioManager.sfx("key_turn")
 		"solved":
 			AudioManager.sfx("puzzle_solved", -5.0)
+		"choice":
+			_finale_outcome(arg)
 		"chapter_complete":
-			hud.call("show_chapter_complete")
+			if not _outcome_running:
+				hud.call("show_chapter_complete") # else the card follows the Array's answer (_finale_outcome)
 
 
 ## The seed_drawer view follows the open drawer: F_i + (−0.30, 0.36, 0) looking at F_i + (0.10, −0.04, 0) (§2).
@@ -1261,6 +1321,13 @@ func opening_seconds() -> float:
 	return INTRO_SECONDS
 
 
+## The HUD plays its own opening beat (a door slam, a maglock and Chapter 1's lab ambience) unless the room has one.
+## Level −2's is the lift's descent (play_opening_camera): the slam and the maglock were the wrong sounds for a lift,
+## and the lab ambience then stayed under the whole Choir Hall (nothing turned it off on Strand's path).
+func intro_impact() -> void:
+	pass
+
+
 ## Called by the HUD intro: the freight lift sinks through rock, caged lamps pass upward, the hum grows; on arrival
 ## the entry gate folds open.
 func play_opening_camera() -> void:
@@ -1277,6 +1344,11 @@ func play_opening_camera() -> void:
 	cam.go(_lift_view(), true)
 	AudioManager.ambience("amb_power_hum", true, -14.0, 1.0)
 	AudioManager.sfx("projector_charge", -10.0, 0.5)
+	# halfway down, the Chapter 2 cliffhanger answers: the same tape hiss, far below, a click, then only the hum
+	get_tree().create_timer(2.4).timeout.connect(func() -> void:
+		AudioManager.sfx("tape_hiss", -16.0, 0.9)
+		hud.call("caption", tr("cap3.descent"), 4.2))
+	get_tree().create_timer(4.4).timeout.connect(func() -> void: AudioManager.sfx("deck_eject", -14.0, 0.8))
 	if shaft:
 		var base := shaft.position
 		shaft.visible = true
@@ -1322,6 +1394,93 @@ func _hall_start(door: bool) -> void:
 	cam.go(back if back != "" and not back.begins_with("port_") else "choir")
 	await get_tree().create_timer(0.8).timeout
 	_busy(false)
+
+
+## The first time the player stands in the awake Gallery: the camera leans over the rail and looks down the shaft,
+## and the Array's four rings wake one by one, then their four signs light (UndergroundVisuals.array_first_look). It
+## is the chapter's big first look (design: "the first look down through the Gallery floor"), and it shows where the
+## sealed door's code is without saying it. Control returns in the glass-floor view, where the signs can be studied;
+## Back leads to the Gallery.
+func _first_look() -> void:
+	_busy(true)
+	while cam.transitioning: # the walk in first: a moment to take in the Gallery
+		await get_tree().process_frame
+	await get_tree().create_timer(0.8).timeout
+	cam.go("glass_floor")
+	AudioManager.sfx("projector_charge", -12.0, 0.45) # a deep swell from the shaft
+	await get_tree().create_timer(0.6).timeout
+	hud.call("caption", tr("cap3.array_wakes"), 6.0)
+	await visuals.array_first_look()
+	await get_tree().create_timer(0.8).timeout
+	_busy(false)
+
+
+## The drum lock takes the code: the camera steps back from the lock so the blast door is seen rolling open onto the
+## other wing (it used to roll behind the close-up). Control returns in the door's view.
+func _door_rolls(side: String) -> void:
+	_busy(true)
+	AudioManager.haptic(160)
+	await get_tree().create_timer(0.5).timeout
+	cam.go("blast_" + side)
+	await get_tree().create_timer(3.2).timeout
+	_busy(false)
+
+
+## The spectral seal drinks the light: the camera watches the camp door slide, walks into Leyla's camp, and there her
+## recorder clicks on by itself (the Chapter 2 epilogue's "somewhere below, a recorder clicks on", paid off where it
+## stands). Control returns while the tape plays on.
+func _seal_opens() -> void:
+	_busy(true)
+	await get_tree().create_timer(0.5).timeout
+	cam.go("seal")
+	await get_tree().create_timer(2.4).timeout
+	cam.go("camp")
+	await get_tree().create_timer(1.6).timeout
+	AudioManager.sfx("deck_play", -4.0)
+	AudioManager.haptic(40)
+	_play_recording()
+	await get_tree().create_timer(1.2).timeout
+	_busy(false)
+
+
+## Every isolator is back ON: the camera turns to the control desk, its lamp glows and the five step globes light
+## one by one and go dark again, a power-on test. It shows where the next goal is and what the globes count (the
+## operator's steps, seen later through the crystal ports) without saying which lever is which.
+func _desk_wakes() -> void:
+	_busy(true)
+	await get_tree().create_timer(0.7).timeout
+	cam.go("desk")
+	await get_tree().create_timer(1.1).timeout
+	await visuals.globe_test()
+	await get_tree().create_timer(0.4).timeout
+	_busy(false)
+
+
+## The Array answers the finale choice before the chapter card: the chosen piece seats in the console, the camera
+## looks up the shaft, and the forty-one lights either stop and wait (Strand: one held chord) or rise and go out,
+## the note falling (Leyla). The epilogue's first line is the caption. Then the card.
+func _finale_outcome(option: String) -> void:
+	_outcome_running = true
+	_busy(true)
+	AudioManager.sfx("lens_insert", -2.0)
+	AudioManager.haptic(60)
+	await get_tree().create_timer(1.2).timeout
+	cam.go("array_rise")
+	await get_tree().create_timer(0.8).timeout
+	hud.call("caption", tr("epi3.strand" if option == "strand" else "epi3.leyla"), 6.5)
+	visuals.finale_answer(option)
+	if option == "strand":
+		tones.chord(true, -5.0)
+		get_tree().create_timer(1.6).timeout.connect(func() -> void: tones.chord(true, -8.0))
+		get_tree().create_timer(3.2).timeout.connect(func() -> void: tones.chord(true, -11.0))
+	else:
+		for r in range(7, 0, -1): # the note falls, slowly, like a breath let out
+			tones.tube(r, -7.0 - 0.6 * (7 - r))
+			await get_tree().create_timer(0.55).timeout
+	await get_tree().create_timer(6.0 if option == "strand" else 2.6).timeout
+	_busy(false)
+	_outcome_running = false
+	hud.call("show_chapter_complete")
 
 
 ## Leyla's crystals open the shutter to the Gallery.
