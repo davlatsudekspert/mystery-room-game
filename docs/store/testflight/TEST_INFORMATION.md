@@ -4,7 +4,7 @@ Where it goes: App Store Connect → the app → **TestFlight** → Additional �
 - Internal testers (App Store Connect users of the team) do not need this page.
 - **External testers** do. The first build of a version also goes to TestFlight App Review, which reads this page and the review contact fields.
 - `<...>` marks a value the **owner** fills in. Do not invent e-mails or phone numbers.
-- Chapters 1 and 2 are free (owner decision, 2026-10-10). Test builds are exported with `beta_unlock`, which opens the paid Chapters 3–4 once they are released, and real payments stay disabled (`docs/release/IOS_TESTFLIGHT.md`). The texts below say so.
+- Chapters 1 and 2 are free (owner decision, 2026-10-10). Test builds are exported with `beta_unlock`, which opens the paid chapters once they are released, and real payments stay disabled (`docs/release/IOS_TESTFLIGHT.md`). Since 2026-10-11 (build 10) Chapter 3 is released, so testers play Chapters 1–3; Chapter 4 stays locked. The texts below say so.
 
 ---
 
@@ -15,7 +15,7 @@ Mystery Room: Lost Institute is a 3D escape-room mystery for iPhone and iPad, pl
 
 On 14 November 1979 every clock in the Meridian Institute stopped at 03:17, and forty-one scientists were never seen again. You explore their rooms, solve logical puzzles built from brass mechanisms, light and shadow, and slowly uncover what happened.
 
-This beta contains Chapter 1 "The Locked Laboratory" and Chapter 2 "The Missing Scientist". Both chapters are free. There are no purchases, ads, accounts or network features in this build. The game is fully playable in English, Russian and Uzbek.
+This beta contains Chapter 1 "The Locked Laboratory", Chapter 2 "The Missing Scientist" and Chapter 3 "The Underground Facility". In the store, Chapters 1 and 2 will be free and Chapter 3 will come with the full game; in this beta all three are open and free. There are no purchases, ads, accounts or network features in this build. The game is fully playable in English, Russian and Uzbek.
 ```
 
 ### Russian (optional localization)
@@ -24,13 +24,13 @@ Mystery Room: Lost Institute — 3D-головоломка-побег для iPh
 
 14 ноября 1979 года все часы в институте «Меридиан» остановились в 03:17, и сорок один учёный бесследно исчез. Вы исследуете их комнаты, решаете логичные головоломки из латунных механизмов, света и тени и постепенно узнаёте, что произошло.
 
-В бета-версии есть Глава 1 «Запертая лаборатория» и Глава 2 «Пропавший учёный». Обе главы бесплатны. В этой сборке нет покупок, рекламы, аккаунтов и сетевых функций. Игра полностью доступна на английском, русском и узбекском.
+В бета-версии есть Глава 1 «Запертая лаборатория», Глава 2 «Пропавший учёный» и Глава 3 «Подземный комплекс». В магазине главы 1 и 2 будут бесплатными, а глава 3 войдёт в полную игру; в этой бета-версии все три открыты бесплатно. В этой сборке нет покупок, рекламы, аккаунтов и сетевых функций. Игра полностью доступна на английском, русском и узбекском.
 ```
 
 ## What to Test (per build)
 ### English (U.S.)
 ```text
-Please play Chapter 1 "The Locked Laboratory" to the end, then Chapter 2 "The Missing Scientist". Then tell us:
+Please play Chapter 1 "The Locked Laboratory" to the end, then Chapter 2 "The Missing Scientist" and Chapter 3 "The Underground Facility". Then tell us:
 1. Where you got stuck, and which hint level (1, 2 or 3) helped.
 2. Any text that is cut off, overlaps or is hard to read. Please name the language (English, Russian or Uzbek).
 3. Taps that did nothing or opened the wrong object.
@@ -41,7 +41,7 @@ To send feedback, take a screenshot in the game, or use the TestFlight app. Than
 
 ### Russian (optional localization)
 ```text
-Пройдите, пожалуйста, Главу 1 «Запертая лаборатория» до конца, затем Главу 2 «Пропавший учёный». Напишите нам:
+Пройдите, пожалуйста, Главу 1 «Запертая лаборатория» до конца, затем Главу 2 «Пропавший учёный» и Главу 3 «Подземный комплекс». Напишите нам:
 1. Где вы застряли и какой уровень подсказки (1, 2 или 3) помог.
 2. Обрезанный, наложенный или плохо читаемый текст. Укажите язык (английский, русский или узбекский).
 3. Нажатия, которые ничего не сделали или открыли не тот предмет.
@@ -68,5 +68,5 @@ To send feedback, take a screenshot in the game, or use the TestFlight app. Than
 | Review notes | see below |
 
 ```text
-No sign-in is needed and the game works fully offline. This is a test build: Chapters 1 and 2 are free, and all purchase code is disabled. The game is landscape only. The hint button (light bulb, top right) gives three levels of hints for the current puzzle; level 3 tells the answer. Chapter 1 takes about 30-60 minutes.
+No sign-in is needed and the game works fully offline. This is a test build: Chapters 1-3 are open for free, and all purchase code is disabled. The game is landscape only. The hint button (light bulb, top right) gives three levels of hints for the current puzzle; level 3 tells the answer. Chapter 1 takes about 30-60 minutes.
 ```

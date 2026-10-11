@@ -1,0 +1,59 @@
+You are helping me open EXTERNAL TestFlight testing for my iOS game in App Store Connect, in this Chrome browser. I am already logged in. Talk to me in Uzbek. The App Store Connect interface is in Russian.
+
+SAFETY RULES — follow them strictly:
+- Work ONLY on the app "Mystery Room: Lost Institute" (bundle ID com.mysteryroom.forgotteninstitute, Apple ID 6820786933). Do NOT open or change any other app in this account (for example FORENSIC EXPERT or any other): they are separate projects.
+- Work ONLY in the TestFlight tab. Do NOT touch the App Store tab or "Распространение": do not edit version 1.0, do not add it for review, do not change the app name, prices, availability, in-app purchases or App Privacy.
+- Do NOT change Internal testing (the group "Ichki testerlar" stays as it is).
+- Never type or store passwords or 2-step codes. If a login or verification is needed, stop and ask me.
+- The review contact (name, phone, e-mail) and the feedback e-mail are MY data: ask me for them, type them only into the form, do not repeat them in the chat.
+- Tester e-mail addresses are personal data: type them only into App Store Connect.
+- Before "Отправить на проверку" (Submit for Beta App Review), before enabling a public link, and before any step that cannot be undone, stop and ask me "Davom etaymi?".
+- If the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- At the end, give me a short report in Uzbek.
+
+STEP 1 — Test information (TestFlight → Дополнительно → Информация о тестировании). Fill in or fix:
+  - Beta App Description (English (U.S.)): the text below.
+  - Feedback e-mail: ask me.
+  - Privacy Policy URL: https://sites.google.com/view/mysteryroom-privacy
+  - Marketing URL: leave empty.
+  - Beta App Review Information: contact first name, last name, phone, e-mail — ask me. Sign-in required: NO.
+  - Review notes: the text below.
+  - Save.
+
+STEP 2 — External group: Внешнее тестирование → "+" → group name "Mystery Room testers" → Create.
+
+STEP 3 — Add the build: in that group → Сборки → "+" → choose build 10 (version 0.1.0). Use ONLY build 10: it has all the latest fixes.
+  - "What to Test" (Что тестировать): the English text below.
+  - If Apple asks about encryption / export compliance: "None of the algorithms mentioned above" (the build already declares no non-exempt encryption).
+  - Ask me "Davom etaymi?", then submit for Beta App Review (Отправить на проверку).
+  - Tell me: the first build of a version is reviewed by Apple, usually within about a day (sometimes longer). Later builds of the same version often need no new review.
+
+STEP 4 — Testers (after the review is approved, or now if the page allows adding them):
+  - Ask me which way I want:
+    a) Public link: in the group → enable "Публичная ссылка" (ask me first). Optionally limit it to 100 testers. Copy the link and give it to me. Anyone with the link can install the TestFlight app and then the game.
+    b) By e-mail: "Тестировщики" → "+" → add the e-mails I give you.
+  - Each tester installs the free "TestFlight" app from the App Store, then opens the link or the invitation e-mail.
+
+STEP 5 — Report in Uzbek: done / waiting for Apple / what I must do.
+
+================================================================
+BETA APP DESCRIPTION (English (U.S.))
+Mystery Room: Lost Institute is a 3D escape-room mystery for iPhone and iPad, played in landscape.
+
+On 14 November 1979 every clock in the Meridian Institute stopped at 03:17, and forty-one scientists were never seen again. You explore their rooms, solve logical puzzles built from brass mechanisms, light and shadow, and slowly uncover what happened.
+
+This beta contains Chapter 1 "The Locked Laboratory", Chapter 2 "The Missing Scientist" and Chapter 3 "The Underground Facility". In the store, Chapters 1 and 2 will be free and Chapter 3 will come with the full game; in this beta all three are open and free. There are no purchases, ads, accounts or network features in this build. The game is fully playable in English, Russian and Uzbek.
+
+================================================================
+WHAT TO TEST (English (U.S.))
+Please play Chapter 1 "The Locked Laboratory" to the end, then Chapter 2 "The Missing Scientist" and Chapter 3 "The Underground Facility". Then tell us:
+1. Where you got stuck, and which hint level (1, 2 or 3) helped.
+2. Any text that is cut off, overlaps or is hard to read. Please name the language (English, Russian or Uzbek).
+3. Taps that did nothing or opened the wrong object.
+4. How smoothly it runs: your iPhone or iPad model and iOS version, and whether the device got hot.
+5. Any crash or freeze, and what you did just before it.
+To send feedback, take a screenshot in the game, or use the TestFlight app. Thank you for testing!
+
+================================================================
+REVIEW NOTES (Beta App Review)
+No sign-in is needed and the game works fully offline. This is a test build: Chapters 1-3 are open for free, and all purchase code is disabled. The game is landscape only. The hint button (light bulb, top right) gives three levels of hints for the current puzzle; level 3 tells the answer. Chapter 1 takes about 30-60 minutes.
