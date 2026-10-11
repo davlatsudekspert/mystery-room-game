@@ -83,10 +83,14 @@ def main() -> int:
             print("- %s: title '%s', short %d chars, full %d chars" % (lang, li.get("title", ""),
                 len(li.get("shortDescription", "")), len(li.get("fullDescription", ""))))
             counts = []
+            hashes = []
             for it in IMAGE_TYPES:
                 imgs = call(tok, "GET", "/edits/%s/listings/%s/%s" % (edit, lang, it)).get("images", [])
                 counts.append("%s %d" % (it, len(imgs)))
+                hashes += ["%s:%s" % (it, str(im.get("sha256", ""))[:16]) for im in imgs]
             print("    graphics: " + ", ".join(counts))
+            if hashes: # sha256 prefixes: compare with the files in docs/store/google_play (sha256sum)
+                print("    sha256: " + " ".join(hashes))
     finally:
         call(tok, "DELETE", "/edits/%s" % edit) # discard: nothing is ever committed
         print("\n(the API edit was deleted; nothing was changed)")
