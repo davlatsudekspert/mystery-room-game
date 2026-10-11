@@ -9,10 +9,10 @@ No build reaches testers until every line below has been run and has passed. A f
    - `check_glb_names.py` → 0 reserved names.
 2. **Real 3D play** of every released chapter, run by the director himself on a seed that no agent used:
    - rendered `playthrough*.tscn` → 0 fallbacks and 0 taps under a HUD control;
-   - Continue works mid-chapter;
+   - Continue works mid-chapter (every playthrough quits and Continues on its own: Ch1 before P6, P10 and P12, Ch2 before P5, P8 and P12, Ch3 mid-chapter and on a finished save; Ch1 and Ch2 print `continue checks: 3, failed 0`, Ch3 its `✓ continue` lines);
    - every variant answer matches what is on screen.
-3. **Phone layout:** tap_map `--hud-check` at phone61 (19.5:9) and tablet10 (4:3) → 0 failures for every changed view.
-4. **Phone speed:** tap_map `--perf` → every view ≤ 150 draw calls with the HUD.
+3. **Phone layout:** tap_map `--views=all --hud-check` at phone61 (19.5:9) and tablet10 (4:3) → 0 failures. Read the view count in the result line: `0 controls in 0 views` is not a pass (tap_map now exits 1 on a check of no views).
+4. **Phone speed:** tap_map `--views=all --perf --screen=phone61` → every view ≤ 150 draw calls with the HUD.
 5. **Look:** the director views the key screenshots (openings, reveals, endings, new or changed views) the way a The Room player would. Anything dark, floating, clipped, unreadable or over-bright stops the build.
 6. **Store safety:**
    - `REAL_PAYMENTS_ENABLED = false` unless the owner approved otherwise in writing;

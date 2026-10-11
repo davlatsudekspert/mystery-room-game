@@ -5,6 +5,7 @@ extends Node
 ##   orange = only 1–2 do (a small or mostly covered target);
 ##   red    = none do; the part most often hit instead is named.
 ## Run: xvfb-run -a godot --path game res://qa/tap_map.tscn -- --chapter=ch2 --views=cat_drawer,splicer --out=<dir>
+##        (--views=all: every camera view of the room; a check of no views is an error, not an empty pass)
 ##        [--steps=N] (solver steps first) [--do=open_cat_drawer:4,pick_divider:1] (logic calls; an argument that
 ##        is not an int is passed as a string, e.g. turn_freq:x:1) [--until=booth_open] (solver steps until that
 ##        state key is true) [--lens=take|leave] [--key=strand|leyla] (ch3, ch4: the Chapter 2 key path)
@@ -163,6 +164,15 @@ func _run() -> void:
 		var p := f[1].split(",")
 		var t := f[2].split(",")
 		cam.add_view(f[0], Vector3(float(p[0]), float(p[1]), float(p[2])), Vector3(float(t[0]), float(t[1]), float(t[2])), float(f[3]))
+	if views.size() == 1 and views[0] == "all":
+		views = PackedStringArray(cam.views.keys())
+	var user_args := OS.get_cmdline_user_args()
+	if views.is_empty() and (user_args.has("--hud-check") or user_args.has("--perf") or user_args.has("--tap-size")):
+		# a check of no views passes by saying nothing: "hud-check: 0 controls in 0 views, 0 failures" is not a pass
+		print("✗ a check of no views (--views=a,b or --views=all)")
+		print("QA_DONE exit=1")
+		get_tree().quit(1)
+		return
 	for v in views:
 		if room.has_method("prepare_view"):
 			room.call("prepare_view", v)

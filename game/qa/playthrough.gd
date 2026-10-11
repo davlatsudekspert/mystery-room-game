@@ -3,6 +3,7 @@ extends Node
 ## (raycast → hotspot → logic), falling back to direct logic calls only for models that are still
 ## placeholders. Saves a screenshot per step and a report. Exit code 0 = chapter completed.
 ## Run: xvfb-run godot --path game res://qa/playthrough.tscn -- --out=<dir> [--lang=ru] [--from=p7] [--to=p9] [--seed=N]
+##        [--no-continue] (skip the quit-and-Continue checks before P6, P10 and P12)
 
 var out_dir := "/tmp"
 var room: Node3D
@@ -14,6 +15,9 @@ var taps_fallback := 0
 var taps_under_hud := 0 # taps whose point lies under a HUD control (a finger would hit the HUD, not the room)
 var _from := 1 # --from=pN: the solver plays everything before puzzle N, the 3D run starts there
 var _to := 99 # --to=pN: stop after puzzle N
+var _continue := true # --no-continue: no quit-and-Continue checks
+var _continue_checks := 0
+var _continue_failed := 0
 
 ## State that must hold before section N starts (the solver advances until it does).
 const FROM_READY := {
@@ -41,21 +45,118 @@ func _ready() -> void:
 			_from = int(a.substr(8))
 		if a.begins_with("--to=p"):
 			_to = int(a.substr(6))
+		if a == "--no-continue":
+			_continue = false
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_save.json"
 	GameState.start_new("ch1")
 	logic = GameState.logic
 	_advance_to(_from)
 	var t0 := Time.get_ticks_msec()
+	await _load_room()
+	_log("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
+	await _settle(1.0)
+	await _perf("lab_root")
+	await run()
+
+
+func _load_room() -> void:
 	room = (load("res://src/rooms/lab7/lab7.tscn") as PackedScene).instantiate()
 	room.set("capture_mode", true)
 	get_tree().root.add_child.call_deferred(room)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	_log("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
-	await _settle(1.0)
-	await _perf("lab_root")
-	await run()
+
+
+## A player quits here and taps Continue: the save is written, the room freed and rebuilt from the save. The rebuilt
+## room must hold the same state, open at the lab and show every tappable part where it was. The run then goes on
+## in the rebuilt room, so the rest of the chapter is also played after a Continue. The caller takes the new
+## `logic` (and the new room's HUD) for its later steps.
+func _continue_check(label: String) -> void:
+	if not _continue:
+		return
+	logic.select_item("")
+	var before := _snap()
+	var sig_before := await _stable_sig()
+	var saved := GameState.save_now()
+	room.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var loaded := saved and GameState.continue_saved()
+	if not loaded:
+		GameState.logic = logic
+	logic = GameState.logic
+	await _load_room()
+	await _settle(1.2)
+	var start := cam().current()
+	var same := _snap() == before
+	var sig_after := await _stable_sig()
+	var ok := loaded and same and start == "lab" and sig_after == sig_before
+	_continue_checks += 1
+	if not ok:
+		_continue_failed += 1
+	_log("%s continue %s: room rebuilt from the save (%s, state %s, opens at %s, %d tappable parts %s)%s" % [
+		"✓" if ok else "✗", label, "loaded" if loaded else "NOT LOADED", "kept" if same else "DIFFERS", start,
+		sig_before.count("\n") + 1, "unchanged" if sig_after == sig_before else "CHANGED",
+		"" if sig_after == sig_before else _sig_diff(sig_before, sig_after)])
+	cam().go("lab", true)
+	await _settle(0.5)
+	await shot("continue_" + label)
+
+
+## What the save holds, by value (a new game's typed arrays load back untyped: same values, same game).
+func _snap() -> String:
+	return JSON.stringify(logic.to_dict(), "", true)
+
+
+## Every tappable part (own collider on, visible in the tree) with its position and orientation, once nothing moves
+## any more (the bookcase swings for a few seconds). The darkroom is sampled from its own view once it is open.
+func _stable_sig() -> String:
+	var sig := await _scene_sig()
+	for _i in 12:
+		await _settle(0.6)
+		var again := await _scene_sig()
+		if again == sig:
+			return sig
+		sig = again
+	return sig
+
+
+func _scene_sig() -> String:
+	var lines: Array[String] = []
+	var where: Array[String] = ["lab"]
+	if logic.state["shelf_open"]:
+		where.append("darkroom")
+	for v in where:
+		cam().go(v, true)
+		await _settle(0.35)
+		for n in room.find_children("*", "StaticBody3D", true, false):
+			var b := n as StaticBody3D
+			if b.collision_layer == 0 or not b.is_visible_in_tree() or str(b.get_meta("part", "")) == "":
+				continue
+			var o := b.global_position
+			var x := b.global_transform.basis.x
+			if str(b.get_meta("part")).begins_with("Shard_"):
+				x = Vector3.ZERO # a Lumen shard lies at a random angle each time the room is built: only where it is counts
+			lines.append("%s|%s|%d,%d,%d|%d,%d,%d" % [v, str(b.get_meta("part")), roundi(o.x * 100.0), roundi(o.y * 100.0),
+				roundi(o.z * 100.0), roundi(x.x * 10.0), roundi(x.y * 10.0), roundi(x.z * 10.0)])
+	cam().go("lab", true)
+	lines.sort()
+	return "\n".join(lines)
+
+
+func _sig_diff(a: String, b: String) -> String:
+	var la := a.split("\n")
+	var lb := b.split("\n")
+	var only_a: Array[String] = []
+	var only_b: Array[String] = []
+	for l in la:
+		if not lb.has(l):
+			only_a.append(l)
+	for l in lb:
+		if not la.has(l):
+			only_b.append(l)
+	return " | before only: %s | after only: %s" % [str(only_a.slice(0, 4)), str(only_b.slice(0, 4))]
 
 
 func _ready_for(k: int) -> bool:
@@ -373,6 +474,10 @@ func run() -> void:
 		step("P5 compartment → breaker handle", func() -> bool: return L.has_item("breaker_handle"))
 	# --- Panel 7 (P6)
 	if _from <= 6 and 6 <= _to:
+		await _continue_check("p6")
+		L = logic
+		s = L.state
+		hud = room.get("hud")
 		cam().go("lab")
 		await _settle(0.8)
 		await view("panel")
@@ -423,6 +528,10 @@ func run() -> void:
 		await shard("bookshelf_top", "bookshelf_top") # rides on the swung bookcase
 	# --- darkroom shadow + recording (P10)
 	if _from <= 10 and 10 <= _to:
+		await _continue_check("p10")
+		L = logic
+		s = L.state
+		hud = room.get("hud")
 		cam().go("darkroom")
 		await _settle(1.2)
 		await shot("darkroom")
@@ -473,6 +582,10 @@ func run() -> void:
 		step("P11 projector tuned → beam", func() -> bool: return s["beam_on"])
 	# --- mirrors (P12)
 	if _from <= 12 and 12 <= _to:
+		await _continue_check("p12")
+		L = logic
+		s = L.state
+		hud = room.get("hud")
 		await view("mirror_b")
 		L.select_item("mirror_item")
 		await act("mirror_stand_b", "IA_mirror_mount", func() -> bool: return s["mirror_b_mounted"], func() -> void: L.use_item_on("mirror_item", "mirror_stand_b"), "mount mirror")
@@ -516,10 +629,11 @@ func run() -> void:
 func _finish() -> void:
 	_log("taps through 3D scene: %d, logic fallbacks (missing models/placeholders): %d" % [taps_ok, taps_fallback])
 	_log("taps under a HUD control: %d (window %dx%d)" % [taps_under_hud, get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y])
+	_log("continue checks: %d, failed %d%s" % [_continue_checks, _continue_failed, "" if _continue else " (--no-continue)"])
 	var f := FileAccess.open(out_dir + "/playthrough_report.txt", FileAccess.WRITE)
 	f.store_string("\n".join(report) + "\n")
 	SaveSystem.delete_game()
 	var ok: bool = logic.state["complete"] if _to >= 12 else not report.any(func(l: String) -> bool: return l.begins_with("✗"))
-	var qa_exit: int = 0 if ok and taps_fallback == 0 else 1
+	var qa_exit: int = 0 if ok and taps_fallback == 0 and _continue_failed == 0 else 1
 	print("QA_DONE exit=%d" % qa_exit) # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit(qa_exit)
