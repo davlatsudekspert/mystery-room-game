@@ -2,7 +2,8 @@ class_name RoomCamera
 extends Camera3D
 ## View-stack camera for point-and-explore rooms.
 ## Root views allow free look (yaw 360°, clamped pitch, pinch zoom); focus views are fixed close-ups
-## entered by tapping hotspots and left with Back. Transitions are tweened (or shortened with reduce_motion).
+## entered by tapping hotspots and left with Back. A pinch in a close-up magnifies it (up to MAG_MAX, around the
+## fingers) for small print and small parts; leaving the close-up resets it. Transitions are tweened (or shortened with reduce_motion).
 ## Feel: drags and pinches move a goal that the camera follows smoothly every frame (uneven touch rates never
 ## jitter), a released swipe glides on and slows down, and longer moves between views take a little longer and
 ## ease back along a gentle arc instead of a straight line.
@@ -15,6 +16,7 @@ const FOV_MIN := 32.0
 const FOV_MAX := 72.0
 const FOLLOW := 16.0 # 1/s: how quickly the view follows the finger (higher = snappier)
 const GLIDE_DAMP := 5.0 # 1/s: how quickly a released swipe slows down
+const MAG_MAX := 2.5 # close-ups: how far a pinch magnifies (owner, 2026-10-11: Panel 7 read too small on a phone)
 
 var views: Dictionary = {} # id -> {pos: Vector3, target: Vector3, fov: float, root: bool}
 var stack: Array[String] = []
@@ -30,6 +32,10 @@ var _fov_goal := 60.0
 var _glide := Vector2.ZERO # deg/s (yaw, pitch) carried on after the finger lifts
 var _dragging := false
 var _last_drag_ms := 0
+var _mag := 1.0 # close-up magnification goal and the camera's slide along its own plane (metres, x right, y up)
+var _pan := Vector2.ZERO
+var _mag_now := 1.0
+var _pan_now := Vector2.ZERO
 
 
 func add_view(id: String, pos: Vector3, target: Vector3, view_fov: float = 50.0, root: bool = false) -> void:
@@ -169,11 +175,51 @@ func release() -> void:
 		_glide = _glide.limit_length(240.0)
 
 
-func zoom(factor: float) -> void:
-	if not is_root() or transitioning:
+## A pinch by `factor` around `center` (viewport px; negative = the middle of the screen): root views change the
+## field of view, close-ups magnify.
+func zoom(factor: float, center: Vector2 = Vector2(-1.0, -1.0)) -> void:
+	if transitioning or stack.is_empty():
+		return
+	if not is_root():
+		_magnify(factor, center)
 		return
 	_fov_goal = clampf(_fov_goal / factor, FOV_MIN, FOV_MAX)
 	zoom_fov = _fov_goal
+
+
+## How far the current close-up is magnified (1 = as framed).
+func magnification() -> float:
+	return _mag
+
+
+## Close-ups: the point under the fingers stays there while the view narrows (the camera slides along its own plane),
+## and the view never leaves the close-up's own frame.
+func _magnify(factor: float, center: Vector2) -> void:
+	var m := clampf(_mag * factor, 1.0, MAG_MAX)
+	if is_equal_approx(m, _mag):
+		return
+	var vp := get_viewport().get_visible_rect()
+	var aspect := vp.size.x / vp.size.y
+	var h0 := _half_height(views[current()])
+	var uv := Vector2.ZERO # the pinch point, -1..1 from the middle of the screen (y up)
+	if center.x >= 0.0:
+		uv = Vector2((center.x - vp.position.x) / vp.size.x * 2.0 - 1.0, 1.0 - (center.y - vp.position.y) / vp.size.y * 2.0)
+	_pan += Vector2(uv.x * aspect, uv.y) * (h0 / _mag - h0 / m)
+	_mag = m
+	var lim := h0 * (1.0 - 1.0 / m)
+	_pan = Vector2(clampf(_pan.x, -lim * aspect, lim * aspect), clampf(_pan.y, -lim, lim))
+
+
+## Half the visible height, in metres, at a close-up's target (its framed subject).
+func _half_height(v: Dictionary) -> float:
+	return (v["pos"] as Vector3).distance_to(v["target"]) * tan(deg_to_rad(float(v["fov"])) * 0.5)
+
+
+func _reset_magnify() -> void:
+	_mag = 1.0
+	_mag_now = 1.0
+	_pan = Vector2.ZERO
+	_pan_now = Vector2.ZERO
 
 
 ## Applies yaw/pitch at once (QA tools aim this way) and makes them the goal, so nothing drifts afterwards.
@@ -227,6 +273,7 @@ func _view_transform(id: String) -> Transform3D:
 func _move_to(t: Transform3D, target_fov: float, instant: bool) -> void:
 	if _tween != null and _tween.is_valid():
 		_tween.kill()
+	_reset_magnify() # a new view (or a re-aimed one) starts as framed; the move starts from the magnified camera
 	if instant:
 		global_transform = t
 		fov = target_fov
@@ -259,12 +306,14 @@ func _process(delta: float) -> void:
 	if is_root():
 		_follow(delta)
 		return
-	if Settings.get_value("reduce_motion"):
-		return
-	if not is_root():
+	var v: Dictionary = views[current()]
+	var base := _view_transform(current())
+	var k := 1.0 - exp(-FOLLOW * delta)
+	_mag_now = lerpf(_mag_now, _mag, k)
+	_pan_now = _pan_now.lerp(_pan, k)
+	var off := Vector3(_pan_now.x, _pan_now.y, 0.0)
+	if not Settings.get_value("reduce_motion"):
 		var t := Time.get_ticks_msec() / 1000.0
-		var v: Dictionary = views[current()]
-		var base := _view_transform(current())
-		var sway := Vector3(sin(t * 0.5) * 0.002, sin(t * 0.7) * 0.0015, 0.0)
-		global_transform = Transform3D(base.basis, base.origin + base.basis * sway)
-		fov = v["fov"]
+		off += Vector3(sin(t * 0.5) * 0.002, sin(t * 0.7) * 0.0015, 0.0) / _mag_now # the sway stays as small on screen
+	global_transform = Transform3D(base.basis, base.origin + base.basis * off)
+	fov = rad_to_deg(2.0 * atan(tan(deg_to_rad(float(v["fov"])) * 0.5) / _mag_now))

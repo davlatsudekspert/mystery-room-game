@@ -166,7 +166,7 @@ func build_input() -> void:
 	touch.drag_ended.connect(func(_p: Vector2) -> void:
 		_drag_captured = false
 		cam.release())
-	touch.pinched.connect(func(f: float) -> void: cam.zoom(f))
+	touch.pinched.connect(func(f: float) -> void: cam.zoom(f, touch.pinch_center))
 	touch.two_finger_tap.connect(go_back)
 
 

@@ -15,6 +15,7 @@ const TAP_MAX_MS := 380
 
 var _touches: Dictionary = {} # index -> {start: Vector2, pos: Vector2, t: int, moved: float}
 var _pinch_dist := 0.0
+var pinch_center := Vector2.ZERO # where the last pinch (or wheel step) happened, in viewport px
 var _multi := false
 var _dragging := false
 var enabled := true
@@ -58,6 +59,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _touches.size() >= 2:
 			var nd := _two_dist()
 			if _pinch_dist > 1.0 and nd > 1.0:
+				var ks := _touches.keys()
+				pinch_center = ((_touches[ks[0]]["pos"] as Vector2) + (_touches[ks[1]]["pos"] as Vector2)) * 0.5
 				pinched.emit(nd / _pinch_dist)
 			_pinch_dist = nd
 		elif not _multi:
@@ -70,12 +73,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+			pinch_center = mb.position
 			pinched.emit(1.08)
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			pinch_center = mb.position
 			pinched.emit(1.0 / 1.08)
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_RIGHT:
 			two_finger_tap.emit()
 	elif event is InputEventMagnifyGesture:
+		pinch_center = (event as InputEventMagnifyGesture).position
 		pinched.emit((event as InputEventMagnifyGesture).factor)
 
 

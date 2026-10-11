@@ -877,6 +877,8 @@ func set_view(id: String, is_root: bool, caption_key: String) -> void:
 	_closeup = not is_root
 	if _closeup:
 		set_bag_open(false)
+		if not _busy and caption_left() <= 0.0:
+			_tip_once("zoom", "tut.zoom") # close-ups magnify with a pinch (small print, small parts)
 	elif was_closeup:
 		set_bag_open(bool(Settings.get_value("inventory_open")))
 	set_caption(caption_key)
