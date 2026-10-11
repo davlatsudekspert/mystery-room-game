@@ -40,7 +40,9 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 | Google Play product, License testing, service-account permission | waiting: the owner (bank verification pending) |
 | Apple Small Business Program, EU DSA trader status | waiting: the owner, before release |
 | Weekly store statistics report | after the public release |
-| Closed testing, production, public release | each needs a separate approval |
+| Google Play closed testing | approved by the owner 2026-10-11; release 0.1.0 (13) in Google's review; 12 testers × 14 days still to run (docs/release/GOOGLE_PLAY_TESTING.md) |
+| TestFlight external testing | prompt ready (docs/store/CLAUDE_PROMPT_TESTFLIGHT_EXTERNAL.txt), build 10; waiting for the owner's assistant |
+| Production, public release | each needs a separate approval |
 
 **QA fixes (2026-10-10):**
 - Done:

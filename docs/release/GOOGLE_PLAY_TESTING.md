@@ -24,6 +24,17 @@ _Last updated: 2026-10-09. Package `com.mysteryroom.forgotteninstitute`. Sources
 
 ---
 
+## Closed testing submitted (2026-10-11)
+| | |
+|---|---|
+| Status | Track "Закрытое тестирование - Alpha" active; release **0.1.0 (13)** (versionCode 13, added from the library, EN/RU notes from `docs/release/whatsnew/`) is **in Google's review** («проходит проверку») |
+| Production | Locked until a closed test with at least 12 testers runs 14 days in a row (the app's own Dashboard says so). Opted-in testers so far: 0 |
+| Countries | Uzbekistan (add a tester's country before they try to install) |
+| Testers | the e-mail lists "Mystery Room yopiq test" and "Hasharchilar testerlari" (the owner's choice; the second belongs to another app and is only ticked, never edited). "MYSTERY ROOM internal" is not on this track: an internal tester cannot join the closed test until they leave the internal one |
+| Store listing | EN and RU texts from `docs/store/google_play/LISTING.md`; graphics from the package of 2026-10-11 (icon, feature graphic, current-HUD screenshots EN/RU); assets declared as created or modified with AI |
+| Done by | the owner's browser assistant with `docs/store/CLAUDE_PROMPT_PLAY_CLOSED_TEST.txt` |
+| Next | after the review: copy the opt-in link (Testers tab), send it to the testers; each tester opens it on the phone, accepts and installs from Play. Later builds go to this track from CI (`play_track: alpha`), not before the first review is finished |
+
 ## Internal testing is live (2026-10-10)
 | | |
 |---|---|
