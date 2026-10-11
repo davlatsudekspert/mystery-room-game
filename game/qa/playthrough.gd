@@ -15,6 +15,7 @@ var taps_fallback := 0
 var taps_under_hud := 0 # taps whose point lies under a HUD control (a finger would hit the HUD, not the room)
 var _from := 1 # --from=pN: the solver plays everything before puzzle N, the 3D run starts there
 var _to := 99 # --to=pN: stop after puzzle N
+var _hold := "" # --hold=<item>: tap everything with this item in hand, as a player who picked it up and forgot it
 var _continue := true # --no-continue: no quit-and-Continue checks
 var _continue_checks := 0
 var _continue_failed := 0
@@ -41,6 +42,8 @@ func _ready() -> void:
 			TranslationServer.set_locale(a.substr(7))
 		if a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7)) # this game's own answers (docs/VARIANTS.md)
+		if a.begins_with("--hold="):
+			_hold = a.substr(7)
 		if a.begins_with("--from=p"):
 			_from = int(a.substr(8))
 		if a.begins_with("--to=p"):
@@ -344,6 +347,10 @@ func step(label: String, cond: Callable) -> void:
 ## Tap a 3D part; succeed only if `cond` becomes true. Otherwise apply `fallback` (logic call).
 func act(model: String, part: String, cond: Callable, fallback: Callable, label: String = "", frac: Vector2 = Vector2.ZERO) -> void:
 	if not cond.call():
+		# --hold: an empty-handed tap is made with the held item in hand instead (the owner held the notebook at the
+		# drawer and every tap said "doesn't fit here", 2026-10-11); the item must step aside and the tap still work
+		if _hold != "" and logic.selected == "" and logic.has_item(_hold):
+			logic.select_item(_hold)
 		await tap_part(model, part, frac)
 		await _settle(0.25)
 	if cond.call():
