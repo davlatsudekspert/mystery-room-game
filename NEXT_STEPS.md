@@ -2,6 +2,11 @@
 
 How the work is organised (from 2026-10-09): the main session is the game director. Helper agents run in parallel; their results are reviewed and committed to `main`. If a session stops, the next one continues from this file, `DEVELOPMENT_STATUS.md`, `docs/GAMEPLAY_QA.md` and `docs/QUALITY_REPORT.md`.
 
+**State on 2026-10-11 (morning):**
+- Test builds out: Android 0.1.0 (12) on Play internal testing and TestFlight build 9, built from main 43b1f35 after the full release gate (docs/RELEASE_GATE.md; evidence in docs/TESTING_ON_DEVICE.md). **Chapter 3 is open to testers** (`beta_unlock`; in the store it needs `full_game`, payments stay off). Chapter 4 stays locked.
+- The gate found and fixed: the Chapter 2 aisle sign stopped on a script error (`merge_static` on primitive meshes); `tap_map --hud-check` without `--views` checked 0 views and still printed 0 failures (now `--views=all`, and a check of no views fails); the perf loop was killed by the qa_run watchdog (now prints progress). Ch1 and Ch2 playthroughs now quit and Continue three times each.
+- Next: the Chapter 4 gamer-eye review and its open items (small parts, the "forty-one" text, Leyla's chalk mark, coarse cage/tower texture, audio); Chapter 3 open items (ECG bracket signs, audio, the tubes → interlock stretch).
+
 **State on 2026-10-10 (evening):**
 - Test builds out: Android 0.1.0 (10) on Play internal testing (completed, 39 testers) and TestFlight build 7 (VALID). Both carry the fixes for the owner's Chapter 1 phone report: the bag, taps through the HUD, Panel 7 framing, the Back order, the hint ladder, the UV light, the notebook icons and the safe clue chain. Verified on main: Ch1 playthroughs (seeds 4242 and 1337) and Ch2 (both lens paths) with 0 fallbacks and 0 taps under a HUD control; tap_map `--hud-check` with 0 failures on 36 Ch1 and 34 Ch2 views; 151 tests, 0 failures.
 - Chapter 3: every model is built (groups A–H) and integrated, with 0 fallbacks on both key paths (strand 102 taps, leyla 100) and Continue passing. Draw calls are at most 145 (choir_s) with the HUD.
@@ -14,20 +19,21 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 | Text readability, Normal / Large / XL, overlap-free HUD | done |
 | Inventory bag, taps through the HUD, Android Back order, 3-level hints, soft UV page | done (Android 10 / TF 7) |
 | Panel 7 framing, notebook icons, safe → poster clue | done |
-| Panel 7 different on every phone (wiring variants) | in progress |
+| Panel 7 different on every phone (wiring variants) | done (8 wirings; Android 11 / TF 8) |
 | Home-screen name "Mystery Room" (iOS and Android) | done |
 | App icon A / B / C | waiting: the owner's choice (B recommended) |
 | Six localization terms | waiting: the owner (LOCALIZATION_REVIEW.md) |
 | Bloom and dark spots in Ch1 and Ch2, mechanism feedback | done |
-| iOS black screen on New Game | iOS starts at safe level 1 (no MSAA); waiting for the owner's TF 7 test, then TF 8 |
-| Menu gear box alive and opening (The Room style) | in progress |
-| Premium language screen, captivating first 3 minutes | in progress |
-| Credits (Yuldashali Abdurakhmonov & Aliyorbek Toshtemirov) and licenses | in progress |
+| iOS black screen on New Game | iOS starts at safe level 1 (no MSAA); the 3 crashes Apple shows are on build 5; waiting for the owner's iPhone test of TF 9 |
+| Menu gear box alive and opening (The Room style) | done (Android 11 / TF 8) |
+| Premium language screen, captivating first 3 minutes | done (Android 11 / TF 8) |
+| Credits (Yuldashali Abdurakhmonov & Aliyorbek Toshtemirov) and licenses | done (Android 11 / TF 8) |
 | Chapters 1–2 free, full_game ($4.99) → Chapters 3–4 | done (code, docs, App Store Connect texts) |
-| Chapters 1–2 "better than The Room", Chapter 2 cliffhanger | in progress (Opus) |
-| HUD draw calls | in progress |
-| Chapter 3: models, scene, dressing | done; release-candidate QA in progress |
-| Chapter 4: design, logic, tests | done; models A–E done, F–H in progress, I next, then the scene |
+| Chapters 1–2 "better than The Room", Chapter 2 cliffhanger | done (engagement pass and cliffhanger; Android 11 / TF 8) |
+| HUD draw calls | done (3–8 calls) |
+| Chapter 3: models, scene, dressing | done; gamer-eye review done; open to testers (Android 12 / TF 9) |
+| Chapter 4: design, logic, tests | done; models A–I and the scene done (16 profiles → 3 endings, 0 fallbacks); unreleased until its gamer-eye review |
+| Release gate before every test build | done (docs/RELEASE_GATE.md; first full run for Android 12 / TF 9) |
 | Google Play product, License testing, service-account permission | waiting: the owner (bank verification pending) |
 | Apple Small Business Program, EU DSA trader status | waiting: the owner, before release |
 | Weekly store statistics report | after the public release |

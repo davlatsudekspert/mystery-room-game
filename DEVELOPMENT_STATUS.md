@@ -1,6 +1,8 @@
 # Development Status
 
-_Last updated: 2026-10-10_
+_Last updated: 2026-10-11_
+
+**2026-10-11:** Android 0.1.0 (12) on Play internal testing and TestFlight build 9 (main 43b1f35) open **Chapters 1–3** to testers; Chapter 4 stays locked, payments stay off. Built only after the full release gate (`docs/RELEASE_GATE.md`): 225 tests / 0 failures and 128 scripts / 0 broken on a clean worktree; rendered playthroughs of Chapters 1–3 on new seeds with 0 fallbacks, 0 taps under the HUD and every quit-and-Continue check passing; the HUD check on all 129 views at 19.5:9 and 4:3 with 0 failures; at most 129 draw calls in any view (limit 150). Evidence: `docs/TESTING_ON_DEVICE.md`.
 
 | Phase | Status | Verified evidence |
 |---|---|---|
@@ -88,6 +90,7 @@ Chapters 1 and 2 are free, and the end of Chapter 2 is the purchase moment. `doc
 - **Verified:** Ch1 seeds 4242 / 1337 (100 taps, 0 fallbacks each); Ch2 seed 777 leave / take (94 / 86 taps, 0 fallbacks, the cliffhanger included); `--hud-check` 0 failures on the touched views.
 
 ## Chapter 3
+**Open to testers since 2026-10-11** (Android 12 / TF 9; in the store it needs `full_game`).
 Design: `docs/CHAPTER3_DESIGN.md`; model contract: `docs/models/ch3.md`. The logic is complete with per-game variants (102 tests). The scene (`game/src/rooms/underground/`) is integrated: layout, the 65 views with captions, zone culling and portal cards, lights, environment and zone tones, the lift-descent intro, hotspot routing for every puzzle, variant evidence surfaces, echoes, hints and Continue. `qa/playthrough_ch3` plays the whole chapter by real 3D taps on both Chapter 2 key paths; on 2026-10-10 every remaining fallback was for a model group not built yet (B, E, F and part of D). Draw calls are 27–90 per view without those groups. Unreleased (`released: false`). Details in `docs/GAMEPLAY_QA.md`, "Chapter 3".
 
 ## Chapter 4
