@@ -1,0 +1,118 @@
+You are helping me put my Android game into CLOSED TESTING in Google Play Console, in this Chrome browser. I am already logged in. Talk to me in Uzbek. The Play Console interface is in Russian.
+
+SAFETY RULES — follow them strictly:
+- Work ONLY on the app "Mystery Room" (package com.mysteryroom.forgotteninstitute). Do NOT open, edit, publish, pause or delete any other app in this developer account. Other apps there are a separate live business and must stay untouched. Do not edit any email list or Google Group that another app uses.
+- Never type, read aloud or store passwords, 2-step codes, keys, keystore or service-account files. If a login or verification is needed, stop and ask me to do it.
+- The ONLY release you may create is on CLOSED TESTING (Закрытое тестирование). Do NOT touch Production (Рабочая версия) or Open testing (Открытое тестирование). Do NOT change or stop Internal testing (Внутреннее тестирование): it keeps running.
+- Do NOT upload any file as a build. The build is already in the app's library (versionCode 13).
+- Do NOT create in-app products, subscriptions or prices. The app stays free. Do NOT change the payments profile, users and permissions, API access, app signing or any account-level setting.
+- Legal or terms checkboxes: show them to me and let ME tick them.
+- Before "Start rollout" (Начать развертывание), "Send for review" (Отправить на проверку) and any other step that cannot be undone, stop and ask me "Davom etaymi?".
+- Tester e-mail addresses are personal data: type them only into Play Console. Do not repeat them in the chat and do not save them anywhere else.
+- If the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- At the end, give me a short report in Uzbek: what was done, what is left, what needs my action.
+
+STEP 0 — Look first, change nothing:
+Open the app's Dashboard (Панель управления) and tell me:
+  a) which setup tasks are still incomplete;
+  b) whether Production is locked until a closed test runs with at least 12 testers for 14 days (look for "Apply for production" / "Подать заявку на доступ к рабочей версии" or a 12-tester / 14-day requirement);
+  c) the app's current name in Play;
+  d) Internal testing: its status and its latest release (it should be "0.1.0 (13)").
+
+STEP 1 — App content (Правила и программы → Контент приложения). Check every item; fill in or fix only what is missing or different:
+  - Политика конфиденциальности: https://sites.google.com/view/mysteryroom-privacy — open the link first and check that it loads.
+  - Доступ к приложению: all functionality is available without special access (no logins).
+  - Реклама: No, the app has no ads.
+  - Возрастные ограничения (IARC): if it is already submitted, leave it. If not: category Game; violence No; fear Yes (dark rooms and ghost-like "echo" figures, no blood); sexual content No; bad language No; drugs/alcohol/tobacco No; gambling No; users interact No; shares location No; purchases of digital goods No (payments are switched off); unrestricted internet No. Use the developer account e-mail; confirm it with me.
+  - Целевая аудитория и контент: ages 13–15, 16–17 and 18+ only. Never select any age under 13. "May unintentionally appeal to children": No.
+  - Безопасность данных (Data safety): "Does your app collect or share any of the required user data types?" → No. (The game has no internet permission, no accounts, no ads, no analytics; progress stays on the phone.) Submit.
+  - Рекламный идентификатор: No, not used.
+  - Государственные приложения: No. Финансовые функции: none. Здоровье: not a health app. Новостные приложения: No. COVID-19: No.
+
+STEP 2 — Store settings (Настройки магазина):
+  - App or game: Игра. Category: Головоломки (Puzzle). Tags: the closest available (Puzzle, Escape room, Mystery, Adventure).
+  - Contact e-mail: the developer account e-mail (confirm with me). Leave website and phone empty. Save.
+
+STEP 3 — Main store listing (Основная страница в Google Play). Default language en-US; then the translation ru-RU (Переводы → Управление переводами → add your own translation).
+  - App name: if a name is already set, KEEP it and tell me what it is. Only if it is empty, use the title below.
+  - Short and full descriptions: use the texts below exactly. If different texts are there now, replace them.
+  - Graphics (I will give you the files from my computer; ask me for the folder):
+      app icon: icon_512.png (512×512);
+      feature graphic: feature_graphic_en-US.jpg (1024×500);
+      phone screenshots: the 2560×1440 JPG files from screenshots/en-US (in their number order); for ru-RU, the files from screenshots/ru-RU (the icon and feature graphic stay the same).
+    My developer is rendering NEW screenshots of the current game. If I do not have them yet, do steps 4–5 first and this graphics part last.
+  - Save.
+
+STEP 4 — Closed testing track (Тестирование → Закрытое тестирование → the existing default track → Управление треком):
+  - Страны и регионы: ask me where my testers live. Add Uzbekistan and those countries (if I say "all", select all).
+  - Тестировщики: choose "Списки адресов электронной почты" → "Создать список" named "MYSTERY ROOM closed test" → I will give you the e-mails (at least 12; 15–20 is safer) → save, and make sure only this list is ticked.
+  - Feedback URL or e-mail (shown to testers): ask me (for example a Telegram group link or an e-mail).
+  - Tell me this rule: a person who is in the INTERNAL test cannot join the closed test until they leave the internal test (open the internal-test link and choose "Leave the program"). Closed-test testers should be people who are not internal testers.
+  - Save.
+
+STEP 5 — Closed testing release:
+  - On the same track: Создать выпуск → "Добавить из библиотеки" (Add from library) → choose versionCode 13 (0.1.0 (13)). Do not upload anything.
+  - Release name: 0.1.0 (13).
+  - Release notes: paste the EN and RU notes below.
+  - Next → show me every error and warning. The warnings "no deobfuscation file" and "no native debug symbols" are normal for this game; anything else, stop and ask.
+  - Ask me "Davom etaymi?", then start the rollout to Closed testing (Начать развертывание / Сохранить и опубликовать).
+  - Then open Обзор публикации (Publishing overview). If it shows changes waiting ("Отправить изменения на проверку"), ask me, then send them for review.
+
+STEP 6 — The invitation link:
+  - Testers tab → copy the opt-in link ("Присоединиться через Интернет" / "Скопировать ссылку") and give it to me.
+  - Tell me: the link starts working only after Google's review is finished and the release shows as available to testers. A first review can take from a few hours to several days. Each tester must open the link on the phone, accept, then install the game from Google Play. For the 12-testers rule, each one must stay in the test for 14 days in a row.
+
+STEP 7 — Report in Uzbek: done / left / what I must do.
+
+================================================================
+RELEASE NOTES
+[en-US]
+Test build. Chapters 1, 2 and 3 are open (in the store, Chapter 3 comes with the full game; testers play it free). Please play as far as you can and tell us: where you got stuck and which hint helped, any text that is cut off or too small, and how smoothly it runs on your phone (model and Android version). Every new game has its own puzzle answers. Thank you for testing!
+[ru-RU]
+Тестовая сборка. Открыты главы 1, 2 и 3 (в магазине глава 3 входит в полную игру; тестировщики играют бесплатно). Пройдите, пожалуйста, сколько сможете, и напишите нам: где вы застряли и какая подсказка помогла, есть ли обрезанный или слишком мелкий текст и насколько плавно игра идёт на вашем телефоне (модель и версия Android). В каждой новой игре свои ответы на загадки. Спасибо за помощь!
+
+================================================================
+STORE TEXTS (use exactly)
+[en-US]
+Title (only if empty): Mystery Room: Lost Institute
+Short description: A 3D mystery escape room. Light remembers. Find out what it kept.
+Full description:
+If this reaches you, the Institute has kept its silence long enough.
+Every clock in the building stopped at 03:17, and forty-one of us never came home.
+I hid what I could: in drawers, in ink that only one lamp can show, in plain sight.
+Search slowly. Nothing in that room is there by chance.
+The light remembers. Ask it gently.
+Laboratory 7. Please finish what I could not. — L.
+
+◆ ——— ◆
+
+Chapters 1 and 2 are free to play in full. One purchase that unlocks the rest of the investigation, Chapters 3 and 4, is planned and not on sale yet.
+
+• Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
+• One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
+• Most puzzle answers change with every new game, so no walkthrough can solve it for you
+• Fully playable in English, Russian and Uzbek
+• No ads and no data collected. Works offline
+
+[ru-RU]
+Title (only if empty): Mystery Room: Забытый институт
+Short description: 3D-головоломка-побег. Свет помнит. Узнайте, что он сохранил.
+Full description:
+Если это дошло до тебя, институт молчал достаточно долго.
+Все часы в здании остановились в 03:17, и сорок один из нас так и не вернулся домой.
+Я спрятала всё, что смогла: в ящиках, в чернилах, которые видны лишь под одной лампой, на самом виду.
+Ищи не спеша. В той комнате ничего не лежит случайно.
+Свет помнит. Спроси его бережно.
+Лаборатория 7. Пожалуйста, закончи то, что не смогла я. — Л.
+
+◆ ——— ◆
+
+Главы 1 и 2 бесплатны целиком. Одна покупка, открывающая остальное расследование — главы 3 и 4, — запланирована и пока не продаётся.
+
+• Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
+• Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
+• Большинство ответов меняется в каждой новой игре: прохождение из интернета за вас её не решит
+• Полностью на английском, русском и узбекском
+• Без рекламы и без сбора данных. Работает без интернета
+
+(Google Play has no Uzbek store-listing language; the game itself is fully in Uzbek.)
