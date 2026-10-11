@@ -33,6 +33,7 @@ _Last updated: 2026-10-09. Package `com.mysteryroom.forgotteninstitute`. Sources
 | Testers | the e-mail lists "Mystery Room yopiq test" and "Hasharchilar testerlari" (the owner's choice; the second belongs to another app and is only ticked, never edited). "MYSTERY ROOM internal" is not on this track: an internal tester cannot join the closed test until they leave the internal one |
 | Store listing | EN and RU texts from `docs/store/google_play/LISTING.md`; graphics from the package of 2026-10-11 (icon, feature graphic, current-HUD screenshots EN/RU); assets declared as created or modified with AI |
 | Done by | the owner's browser assistant with `docs/store/CLAUDE_PROMPT_PLAY_CLOSED_TEST.txt` |
+| Verified (read-only `play-check.yml`, run 2) | alpha and internal: release 0.1.0 (13), status completed, notes en-US + ru-RU. Listing en-US and ru-RU texts set; the icon, the feature graphic and all 7 + 7 phone screenshots match the package files by sha256. The API lists the screenshots out of number order (en-US 02, 04, 08, 05, 03, 06, 07): the owner's assistant was asked to drag them into 02…08. No tablet screenshots (optional) |
 | Next | after the review: copy the opt-in link (Testers tab), send it to the testers; each tester opens it on the phone, accepts and installs from Play. Later builds go to this track from CI (`play_track: alpha`), not before the first review is finished |
 
 ## Internal testing is live (2026-10-10)
