@@ -159,9 +159,44 @@ func _build_models() -> void:
 		_finish_model(id, n)
 	_tap_pads()
 	_enclosure_taps()
+	_chalk_look()
 	for extra in ArrayHallData.ECHO_MODELS:
 		if not ResourceLoader.exists("res://assets/models/%s.glb" % extra):
 			missing_models.append(extra)
+
+
+## Leyla's sign and "1998" on the lift's back wall: the plain M_Chalk read as dim brown paint in the dark bay. Real chalk
+## is grainy and catches any light, so the strokes get a chalk-grain albedo and a faint glow of their own (still far
+## below the Lumen glow), enough to read from the lift without a lamp of their own.
+func _chalk_look() -> void:
+	var chalk := part("shell_lift4", "leyla_chalk")
+	if chalk == null:
+		return
+	var grain := FastNoiseLite.new()
+	grain.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	grain.frequency = 0.09
+	grain.fractal_octaves = 3
+	var tex := NoiseTexture2D.new()
+	tex.width = 256
+	tex.height = 256
+	tex.seamless = true
+	tex.noise = grain
+	tex.color_ramp = Gradient.new()
+	tex.color_ramp.set_color(0, Color(0.62, 0.6, 0.56)) # the dusty, thin parts of a stroke
+	tex.color_ramp.set_color(1, Color(1.0, 0.98, 0.94)) # where the chalk lies thick
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color("f1ece0")
+	m.albedo_texture = tex
+	m.uv1_triplanar = true # the strokes are flat inlays without useful UVs
+	m.uv1_scale = Vector3(6, 6, 6)
+	m.roughness = 1.0
+	m.emission_enabled = true
+	m.emission = Color("e8e2d2")
+	m.emission_energy_multiplier = 0.3
+	m.emission_texture = tex
+	m.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
+	for mi in ModelUtil.find_meshes(chalk):
+		mi.material_override = m
 
 
 func _register(id: String, n: Node3D, hotspot: String) -> void:
