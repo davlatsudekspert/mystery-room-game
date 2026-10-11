@@ -1737,6 +1737,9 @@ func play_intro() -> void:
 		AudioManager.haptic(120)
 	var fade := create_tween()
 	fade.tween_property(o, "color:a", 0.0, 1.6)
+	# the cards are over: "Tap to continue" goes with them (it stayed on screen through Chapter 3's 7.6 s lift descent,
+	# where a tap does nothing; Chapter 3 player-experience review, docs/ENGAGEMENT.md)
+	fade.parallel().tween_property(tap, "modulate:a", 0.0, 0.5)
 	await fade.finished
 	if hold > 1.6:
 		await get_tree().create_timer(hold - 1.6).timeout

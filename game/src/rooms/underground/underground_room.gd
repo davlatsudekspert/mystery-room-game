@@ -11,6 +11,7 @@ const NO_PROBE_LAYER := 1 << 19
 const ALL_GROUPS := "CGSNKLJ"
 const DRAG_PX_PER_STEP := 26.0
 const INTRO_SECONDS := 7.6
+const INTRO_SHAFT_RISE := 6.0
 
 var visuals: UndergroundVisuals
 var tones: UndergroundTones
@@ -1353,7 +1354,9 @@ func play_opening_camera() -> void:
 		var base := shaft.position
 		shaft.visible = true
 		var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		tw.tween_property(shaft, "position", base + Vector3(0, 9.0, 0), 5.6)
+		# 6 m, not 9: the box ends 6 m below the cage floor, and after 7 m its bottom edge came into the view through
+		# the gate, showing the empty fog below it as a flat teal slab for the last seconds (rendered QA, --opening)
+		tw.tween_property(shaft, "position", base + Vector3(0, INTRO_SHAFT_RISE, 0), 5.6)
 		await tw.finished
 		shaft.visible = false
 		shaft.position = base

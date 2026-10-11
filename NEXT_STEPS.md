@@ -39,10 +39,7 @@ How the work is organised (from 2026-10-09): the main session is the game direct
   - Glass-floor signs are about 8.5 mm on a phone.
   - Chapter 2 hall: 153 → 133 draw calls.
   - Tap assist: Chapter 3 controls under 9 mm, 54 → 7.
-- Open:
-  - The shutter crystals 1–3 sit on the large IA_tunnel_shutter, so the assist's no-steal rule keeps them at 7–8.5 mm. Give the crystals their own priority or reframe.
-  - The glass-floor star is pale on pale glass; darken it or add a rim.
-  - The prism knobs at the screen edge are 8.5 mm.
+- Done 2026-10-11 (Chapter 3 player-experience pass, `docs/ENGAGEMENT.md` → "Chapter 3"): the shutter crystals and the prism buttons have their own tap boxes and the shutter view is reframed (tap-size: 0 controls under 9 mm with the assist at their best view); the glass-floor signs are cream with a dark rim on dark glass. The same pass fixed a seed-library coin flip in every per-game variant, Continue on a finished save, and staged the first look, the recorder, the door roll and the Array's answer. Its verdict: ready for closed testers.
 - The Chapter 3 release candidate is ready for closed testing (hud-check 0 failures on phone and tablet, rendered strand and leyla runs with 0 fallbacks, Continue passes, 300-game logic sweep clean). It is not yet ready for a public release until a phone check of the desk levers, the hook key and Continue.
 
 **Running now:**
