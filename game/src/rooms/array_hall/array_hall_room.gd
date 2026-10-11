@@ -1321,7 +1321,7 @@ func _finale_rise() -> void:
 	tones.hum(false)
 	tones.beat(0, 0)
 	AudioManager.music(_track("music", ["music_array_hall_end", "music_archive_finale"]), 3.0)
-	hud.call("caption", tr("cap4.rise"), 4.0)
+	hud.call("caption", tr("cap4.rise_keeper" if l4().state["trust_strand"] else "cap4.rise"), 4.0) # forty when Strand stays
 	await get_tree().create_timer(1.2).timeout
 	visuals.start_rise(ending)
 	visuals.time_wave(1.6)
@@ -1340,6 +1340,7 @@ func _finale_rise() -> void:
 	await get_tree().create_timer(4.4).timeout
 	if ending == "true":
 		cam.go("rise_up")
+		hud.call("caption", tr("cap4.rise_42"), 4.0)
 		visuals.finale_phase()
 		await get_tree().create_timer(9.5).timeout
 	else:

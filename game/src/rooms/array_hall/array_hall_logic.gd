@@ -983,8 +983,13 @@ func choice_options() -> Array:
 	return [["take_lens", "ui.lens4_take"], ["leave_lens", "ui.lens4_leave"]]
 
 
+## Who is gone into the morning: the forty-one, without Strand when he stays (the Keeper), with the forty-second once
+## the parcel is posted (the true ending). One sentence for each, so the count is never wrong.
 func choice_prompt_key() -> String:
-	return "ui.choice_lens4_prompt"
+	var stays: bool = state["trust_strand"]
+	if state["parcel_sent"]:
+		return "ui.choice_lens4_prompt_true_keeper" if stays else "ui.choice_lens4_prompt_true"
+	return "ui.choice_lens4_prompt_keeper" if stays else "ui.choice_lens4_prompt"
 
 
 func choose_ending(option: String) -> Array[String]:

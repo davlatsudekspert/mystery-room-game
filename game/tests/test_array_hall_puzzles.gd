@@ -566,7 +566,8 @@ func test_every_hint_and_runtime_key_is_translated() -> void:
 		var row := csv.get_csv_line()
 		if row.size() >= 4:
 			keys[row[0]] = row
-	var must: Array[String] = ["ui.lens4_take", "ui.lens4_leave", "ui.choice_lens4_prompt", "ui.echoes", "cap4.lift",
+	var must: Array[String] = ["ui.lens4_take", "ui.lens4_leave", "ui.choice_lens4_prompt", "ui.choice_lens4_prompt_keeper",
+		"ui.choice_lens4_prompt_true", "ui.choice_lens4_prompt_true_keeper", "cap4.rise_keeper", "cap4.rise_42", "ui.echoes", "cap4.lift",
 		"intro4.strand_key", "intro4.leyla_key", "intro4.2", "epi4.dawn", "epi4.keeper", "epi4.true", "epi4.strand_stays",
 		"epi4.parcel", "epi4.lens_taken", "epi4.lens_left", "epi4.echoes", "epi4.all_light", "epi4.end",
 		"item.strand_key.desc4", "item.leyla_key.desc4", "item.crystal_lens.desc_recorded", "achv.collect_ch4"]
@@ -871,3 +872,15 @@ func test_hint_goal_always_listed() -> void:
 			if g != "done" and not ArrayHallLogic.GOALS.has(g):
 				check(false, "seed %d: unknown goal %s" % [seed, g])
 				break
+
+
+## The finale's count matches the ending: forty-one gone at Dawn, forty when Strand stays (the Keeper), forty-two after
+## the parcel (true), forty-one with the forty-second among them when both happen.
+func test_finale_prompt_counts_the_lights() -> void:
+	var want := {[false, false]: "ui.choice_lens4_prompt", [true, false]: "ui.choice_lens4_prompt_keeper",
+		[false, true]: "ui.choice_lens4_prompt_true", [true, true]: "ui.choice_lens4_prompt_true_keeper"}
+	for k: Array in want:
+		var l := ArrayHallLogic.new()
+		l.state["trust_strand"] = k[0]
+		l.state["parcel_sent"] = k[1]
+		eq(l.choice_prompt_key(), str(want[k]), "trust Strand %s, parcel %s" % [k[0], k[1]])
