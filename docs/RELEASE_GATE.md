@@ -11,6 +11,7 @@ No build reaches testers until every line below has been run and has passed. A f
    - rendered `playthrough*.tscn` → 0 fallbacks and 0 taps under a HUD control;
    - Continue works mid-chapter (every playthrough quits and Continues on its own: Ch1 before P6, P10 and P12, Ch2 before P5, P8 and P12, Ch3 mid-chapter and on a finished save; Ch1 and Ch2 print `continue checks: 3, failed 0`, Ch3 its `✓ continue` lines);
    - every variant answer matches what is on screen.
+   - **chaos player, per released chapter, seeds 1, 2 and 3:** `tools/chaos_run.sh --chapter=ch1|ch2|ch3 --seed=N` (about 10 minutes each, run one after the other) → the last line must read `violations 0, script errors 0`. It plays the wrong paths a real player takes (wrong item in hand, hammered controls, Back, hints, bag, view jumps) and checks that input never sticks, an item in hand never blocks a tap, Back always leads out, no soft-lock and that the solver can still finish (`game/qa/chaos.gd`).
 3. **Phone layout:** tap_map `--views=all --hud-check` at phone61 (19.5:9) and tablet10 (4:3) → 0 failures. Read the view count in the result line: `0 controls in 0 views` is not a pass (tap_map now exits 1 on a check of no views).
 4. **Phone speed:** tap_map `--views=all --perf --screen=phone61` → every view ≤ 150 draw calls with the HUD.
 5. **Look:** the director views the key screenshots (openings, reveals, endings, new or changed views) the way a The Room player would. Anything dark, floating, clipped, unreadable or over-bright stops the build.
