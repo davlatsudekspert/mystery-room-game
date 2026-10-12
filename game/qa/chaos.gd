@@ -9,7 +9,8 @@ extends Node
 ##        [--warm=N] (solver steps played before the room opens; default by seed: a fresh game, 40 %, 75 % of the chapter)
 ##        [--size=WxH] (window size, default 640x360: the 1920x1080 canvas is scaled, so the layout is the same; 0x0 keeps the project's)
 ##        [--trace] (one line per tap: view, part, item, whether the room got it)
-##        [--only=walkback] (stress run: every step jumps to a random view, maybe takes an item or taps, then presses Back until the pause menu opens)
+##        [--only=walkback|continue] (stress runs: every step jumps to a random view, maybe takes an item or taps, then presses Back until
+##        the pause menu opens; or taps and then quits and Continues from the save)
 ##        [--to-finale] (the nudges go on up to the finale question, which the chaos then answers: the run ends with the chapter)
 ##        [--nudge=P] (chance per step that the solver makes 1–3 real moves, default 0.10, so the chaos reaches
 ##        later puzzles; it stops before the last two puzzles, so the chapter is never completed by it)
@@ -318,6 +319,11 @@ func _chaos_step() -> void:
 		await _step_overlay()
 		return
 	_overlay_steps = 0
+	if only == "continue":
+		await _act_tap(rng.randi_range(1, 3))
+		if _overlay() == null:
+			await _act_continue()
+		return
 	if only == "walkback":
 		await _act_view()
 		if rng.randf() < 0.5:
@@ -344,8 +350,10 @@ func _chaos_step() -> void:
 		await _act_back()
 	elif r < 0.84:
 		await _act_walkback()
-	elif r < 0.90:
+	elif r < 0.89:
 		await _act_bag()
+	elif r < 0.905:
+		await _act_continue()
 	else:
 		await _act_item()
 
@@ -494,6 +502,32 @@ func _act_walkback() -> void:
 	if _overlay() != null and not bool(_overlay().get_meta("locked", false)):
 		await _press_back()
 		_check("pause_close", _overlay() == null, "Back did not close the pause menu")
+
+
+## Quit and Continue from whatever state the chaos left: the save is written, the room freed and rebuilt from the save.
+## The rebuilt room must hold the same state and take input again (the playthroughs do this only on the right path).
+func _act_continue() -> void:
+	_count("continue")
+	_ctx_part = "Continue"
+	_ctx_item = logic.selected
+	var before := JSON.stringify(logic.to_dict(), "", true)
+	var saved := GameState.save_now()
+	room.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var loaded := saved and GameState.continue_saved()
+	if not loaded:
+		GameState.logic = logic # carry on with the game in memory
+	logic = GameState.logic
+	await _open_room()
+	await _settle(1.0)
+	if not loaded:
+		_viol("continue", "Continue could not load the save the game had just written (saved %s)" % str(saved))
+	elif JSON.stringify(logic.to_dict(), "", true) != before:
+		_viol("continue", "the state after Continue differs from the state that was saved")
+	_check("continue_input", touch.enabled and not _flag(hud, "_busy"), "input is locked in the room rebuilt by Continue")
+	if not logic.is_complete():
+		_check("continue_hint", logic.hint_goal() != "", "no hint goal after Continue")
 
 
 ## Opens or closes the bag from its HUD button.
