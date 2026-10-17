@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One chaos-player run (game/qa/chaos.gd) with the log check, and the one summary line.
 #
-#   tools/chaos_run.sh --chapter=ch1|ch2|ch3 --seed=N [--steps=400] [--out=<dir>] [--log=<file>] [--warm=N] [--nudge=P] [--trace]
+#   tools/chaos_run.sh --chapter=ch1|ch2|ch3|ch4 --seed=N [--steps=400] [--out=<dir>] [--log=<file>] [--warm=N] [--nudge=P] [--trace]
 #
 # The scene plays a chapter like a messy real player and prints its violations; this wrapper runs it through
 # tools/qa_run.sh (Xvfb, software Vulkan, stall watchdog) and then reads the log for script errors: every
@@ -23,7 +23,7 @@ for a in "$@"; do
 		*) ARGS+=("$a") ;;
 	esac
 done
-[ "$CHAPTER" != "?" ] || { echo "usage: tools/chaos_run.sh --chapter=ch1|ch2|ch3 --seed=N [--steps=400] [--out=<dir>] [--log=<file>]" >&2; exit 2; }
+[ "$CHAPTER" != "?" ] || { echo "usage: tools/chaos_run.sh --chapter=ch1|ch2|ch3|ch4 --seed=N [--steps=400] [--out=<dir>] [--log=<file>]" >&2; exit 2; }
 LOG="${LOG:-$(mktemp /tmp/chaos.XXXXXX.log)}"
 
 "$ROOT/tools/qa_run.sh" --stall="${CHAOS_STALL:-300}" --log="$LOG" -- res://qa/chaos.tscn -- "${ARGS[@]}" >&2

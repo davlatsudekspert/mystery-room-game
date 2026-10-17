@@ -4,7 +4,7 @@ extends Node
 ## player get stuck. The playthrough scripts only play the correct path; this one plays the wrong ones.
 ## Run: tools/chaos_run.sh --chapter=ch1 --seed=1 [--steps=400]   (adds the log check; prints the one summary line)
 ##  or: tools/qa_run.sh --log=<file> -- res://qa/chaos.tscn -- --chapter=ch2 --seed=3 --steps=400 [--out=<dir>]
-##        --chapter=ch1|ch2|ch3  --seed=N (the run's dice and the game's puzzle variant)  --steps=N (default 400)
+##        --chapter=ch1|ch2|ch3|ch4  --seed=N (the run's dice and the game's puzzle variant)  --steps=N (default 400)
 ##        [--out=<dir>] (writes chaos_report.txt and a screenshot at the first violation)
 ##        [--warm=N] (solver steps played before the room opens; default by seed: a fresh game, 40 %, 75 % of the chapter)
 ##        [--size=WxH] (window size, default 640x360: the 1920x1080 canvas is scaled, so the layout is the same; 0x0 keeps the project's)
@@ -30,9 +30,10 @@ extends Node
 ## script errors it finds in the log) and `QA_DONE exit=N` (0 = no violation).
 
 const SCENES := {"ch1": "res://src/rooms/lab7/lab7.tscn", "ch2": "res://src/rooms/archive/archive.tscn",
-	"ch3": "res://src/rooms/underground/underground.tscn"}
+	"ch3": "res://src/rooms/underground/underground.tscn", "ch4": "res://src/rooms/array_hall/array_hall.tscn"}
 ## The finale answers each chapter's solver ends with (one is drawn per run).
-const ENDINGS := {"ch1": ["take_lens", "leave_lens"], "ch2": ["leyla_key", "strand_key"], "ch3": ["leyla", "strand"]}
+const ENDINGS := {"ch1": ["take_lens", "leave_lens"], "ch2": ["leyla_key", "strand_key"], "ch3": ["leyla", "strand"],
+	"ch4": ["take_lens", "leave_lens"]}
 ## The share of the solver's steps played before the room opens, by seed: 1 fresh game, 2 about 40 %, 3 about 75 %, then again.
 const WARM := [0.0, 0.4, 0.75]
 const BUSY_LIMIT := 60.0 # seconds: a cinematic or a camera move that lasts longer is a stuck input
@@ -112,7 +113,7 @@ func _log(line: String) -> void:
 # ====================================================================== run
 func _run() -> void:
 	if not SCENES.has(chapter):
-		print("chaos: unknown chapter %s (ch1, ch2 or ch3)" % chapter)
+		print("chaos: unknown chapter %s (ch1, ch2, ch3 or ch4)" % chapter)
 		print("QA_DONE exit=2")
 		get_tree().quit(2)
 		return
@@ -151,7 +152,8 @@ func _start_game() -> void:
 	SaveSystem.save_path = "user://qa_chaos_save_%d.json" % OS.get_process_id()
 	SaveSystem.profile_path = "user://qa_chaos_profile_%d.json" % OS.get_process_id()
 	GameState.profile = {"choices": {"ch1_lens": lens, "ch1_shards": 5 if secret else 2, "ch2_key": key,
-		"ch2_echoes": 3 if secret else 1}}
+		"ch2_echoes": 3 if secret else 1,
+		"ch3_trust": "strand" if rng.randi() % 2 == 0 else "leyla", "ch3_true_ending": secret, "ch3_echoes": 4 if secret else 1}}
 	GameState.start_new(chapter)
 	logic = GameState.logic
 	var total := _solver_length()
@@ -180,6 +182,8 @@ func _solver_length() -> int:
 
 func _solver_step(l: RoomLogic) -> void:
 	match chapter:
+		"ch4":
+			ArrayHallSolver.step(l as ArrayHallLogic, ending)
 		"ch3":
 			UndergroundSolver.step(l as UndergroundLogic, ending)
 		"ch2":
@@ -239,6 +243,8 @@ func _finish() -> void:
 
 func _solve(l: RoomLogic) -> bool:
 	match chapter:
+		"ch4":
+			return ArrayHallSolver.solve(l as ArrayHallLogic, ending)
 		"ch3":
 			return UndergroundSolver.solve(l as UndergroundLogic, ending)
 		"ch2":

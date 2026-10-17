@@ -38,7 +38,9 @@ from sounds import load_all as _load_core  # noqa: E402
 # Sound modules registered here in addition to ``sounds.MODULES``.
 # Chapter 2 (Records Archive B): props, room tone and its two music cues.
 # Chapter 3 (Underground Facility): the four zone ambiences and the two music cues.
-EXTRA_MODULES = ("archive", "music_archive", "menu_box", "intro_ch1", "underground", "music_underground")
+# Chapter 4 (Array Hall): the three zone ambiences and the two music cues.
+EXTRA_MODULES = ("archive", "music_archive", "menu_box", "intro_ch1", "underground", "music_underground",
+                 "array_hall", "music_array_hall")
 
 
 def load_all() -> dict:

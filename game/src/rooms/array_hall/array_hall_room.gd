@@ -23,6 +23,7 @@ var _echo_bodies: Array[StaticBody3D] = []
 var _warm_frames := 0 # frames the whole hall stays drawn so the reflection probe captures all of it
 var _warm_view := ""
 var _zone := ""
+var _tone := ""
 var _knob_acc := 0.0
 var _drag_kind := ""
 var _drag_model := ""
@@ -881,6 +882,11 @@ const ZONE_AMBIENT := {"bridge": Color("22323f"), "lift": Color("2d2a26"), "pane
 	"island": Color("1f3340"), "apse": Color("28302f"), "booth": Color("2c2a24"), "watch": Color("2a2e30")}
 
 
+## The room tone of each zone: the big hall, the Core's own note, the small warm rooms (an older track if a file is missing).
+const ZONE_TONE := {"bridge": "amb_array_hall", "lift": "amb_array_hall", "panel": "amb_array_hall", "catwalk": "amb_array_hall",
+	"apse": "amb_array_hall", "island": "amb_array_core", "booth": "amb_array_rooms", "watch": "amb_array_rooms"}
+
+
 ## Each zone has its own ambient tint (the Core's cold light on the island, the warm lamps of the booth).
 func _zone_mood(zone: String) -> void:
 	if zone == "" or zone == _zone:
@@ -888,6 +894,12 @@ func _zone_mood(zone: String) -> void:
 	_zone = zone
 	if env:
 		create_tween().tween_property(env, "ambient_light_color", ZONE_AMBIENT.get(zone, Color("22323f")), 1.2)
+	var want := _track("ambience", [ZONE_TONE.get(zone, "amb_array_hall"), "amb_power_hum"])
+	var had: String = _tone if _tone != "" else want
+	if had != want:
+		AudioManager.ambience(had, false)
+	_tone = want
+	AudioManager.ambience(want, true, -6.0)
 
 
 func _track(kind: String, names: Array) -> String:

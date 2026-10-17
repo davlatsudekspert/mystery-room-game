@@ -88,6 +88,7 @@ The run fails (exit code 1) if a loop fails either check.
 | `sounds/archive.py` | Chapter 2, Records Archive B: shutter, compressor and pneumatic post, catalogue and card punch, lockers and hiding places, receiver, tape deck (with the speech-like murmur engine), rotary dial, film and slide projectors, crystals, vault, `amb_archive`, and the Chapter 2 room IRs (`archive`, `vault`, `booth`, `amb`) |
 | `sounds/music_archive.py` | `music_archive` and `music_archive_finale` (reuses the pad, bass, celesta and master helpers of `music_tracks.py`) |
 | `sounds/underground.py` | Chapter 3, Underground Facility: `amb_choir`, `amb_gallery`, `amb_nursery`, `amb_lift` (hum builder on loop-periodic partials, narrow resonating bands, sympathetic glass tones, the four room IRs, `_settle`) |
+| `sounds/array_hall.py`, `sounds/music_array_hall.py` | Chapter 4, Array Hall: `amb_array_hall`, `amb_array_core`, `amb_array_rooms` (reuse the Chapter 3 hum / band / settle builders; hum on A, the Core's note) and `music_array_hall`, `music_array_hall_reversal` (A Dorian, bell pairs a few cents apart, 48 BPM pulse) |
 | `sounds/music_underground.py` | `music_underground` and `music_underground_finale` (reuses the e-piano, wow and pad helpers of `music_archive.py`; adds the crystal tube bell, the low pulse, the overtone choir and the bowed glass) |
 
 `sounds/__init__.py` imports the Chapter 1 modules (`MODULES`). `synth_all.py` adds the Chapter 2 and 3 modules through its `EXTRA_MODULES` list.
@@ -220,6 +221,9 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/vault_wheel.ogg` | 2.47 s | no | peak -1.2 dBFS | 20 KB | synth | Spoked vault wheel heaved round: heavy gear grind, ratchet clunks, a final clunk |
 | `sfx/wheel_tick.ogg` | 0.34 s | no | peak -1.1 dBFS | 7 KB | synth | Brass combination wheel moving one detent (crisp click) |
 | `ambience/amb_archive.ogg` | 1:00.0 | yes | -24.1 LUFS | 747 KB | synth | Records Archive B: deep room tone, the Array humming far below, a slow clock, ticking pipes, distant canisters in the tubes |
+| `ambience/amb_array_core.ogg` | 1:00.0 | yes | -24.0 LUFS | 288 KB | synth | The Core: its own note A held with octave and fifth, a narrow shimmer, slow glass answers (no noise bed) |
+| `ambience/amb_array_hall.ogg` | 1:00.0 | yes | -24.0 LUFS | 313 KB | synth | Array Hall: a deep mains hum on A, faint breathing air over the rings, rare glass-tower answers, a far contactor and a ring settling (no noise bed) |
+| `ambience/amb_array_rooms.ogg` | 1:00.0 | yes | -24.0 LUFS | 372 KB | synth | Booth and watch room: a lamp transformer's hum, the floor's A beneath it, a wall clock, a pencil, a pipe (no noise bed) |
 | `ambience/amb_choir.ogg` | 1:00.0 | yes | -24.0 LUFS | 298 KB | synth | Choir Hall: a low transformer hum on E, faint crystal-tube resonances singing in sympathy, two far contactors (no noise bed) |
 | `ambience/amb_gallery.ogg` | 1:00.0 | yes | -24.0 LUFS | 366 KB | synth | Resonance Gallery: air singing across the glass floor in narrow bands, faint crystal answers from the memorial wall, a distant drip into the deep hall (no noise bed) |
 | `ambience/amb_lab_dark.ogg` | 1:00.0 | yes | -24.2 LUFS | 867 KB | synth | Lab 7 in the dark: rain on the window, distant wind, low room tone, rare drips and creaks |
@@ -228,6 +232,8 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `ambience/amb_power_hum.ogg` | 20.00 s | yes | -24.0 LUFS | 314 KB | synth | Restored power: subtle 50 Hz transformer hum with harmonics and faint electrical hiss |
 | `music/music_archive.ogg` | 2:30.0 | yes | -20.0 LUFS | 2453 KB | synth | Archive underscore: A minor analog pads, tine e-piano, vibraphone, soft pluck arpeggio with tape echo and wow |
 | `music/music_archive_finale.ogg` | 1:04.0 | yes | -20.0 LUFS | 1083 KB | synth | Vault finale: tender celesta theme with e-piano over warm F major strings, a borrowed minor iv, glass light |
+| `music/music_array_hall.ogg` | 2:40.0 | yes | -20.0 LUFS | 2176 KB | synth | Array Hall underscore: slow A Dorian pads, tube bells in pairs a few cents apart (the beat), a low pulse at 48 BPM, an overtone organ on A and tape wow |
+| `music/music_array_hall_reversal.ogg` | 1:20.0 | yes | -20.0 LUFS | 1095 KB | synth | Array Hall reversal: the night's chords fall as the pulse doubles, descending bell runs and climbing bowed glass, a flash on Esus4, then the lights rising into a held A |
 | `music/music_lab.ogg` | 2:40.0 | yes | -20.0 LUFS | 1957 KB | synth | Gameplay underscore: low, sparse D-pedal pads, rare soft celesta, distant metallic swells |
 | `music/music_menu.ogg` | 2:30.0 | yes | -20.0 LUFS | 2180 KB | synth | Main menu theme: slow evolving D minor pads, sparse celesta melody with echoes, deep hall |
 | `music/music_underground.ogg` | 2:40.0 | yes | -20.0 LUFS | 2142 KB | synth | Underground underscore: slow E Dorian pads, glass-tube bells with a shimmering twin, a low pulse at 48 BPM, an overtone choir and tape wow |
