@@ -81,6 +81,20 @@ func test_premium_rules() -> void:
 	p.path = "user://test_ent.cfg"
 	p.revoke_all_for_tests()
 	check(not p.REAL_PAYMENTS_ENABLED, "real payments must stay disabled")
+	# --- store release mode (PAID_CHAPTERS_ENABLED = false, no beta_unlock): Ch1-2 free, Ch3-4 locked, no purchase UI
+	check(not p.PAID_CHAPTERS_ENABLED, "the first store release ships Chapters 1-2 only")
+	check(not p.paid_ui_enabled(), "store mode: no purchase UI")
+	check(not p.store_open(), "store mode: no purchase screen")
+	check(p.can_play("ch1") and p.can_play("ch2"), "store mode: Chapters 1 and 2 play")
+	p.owned["full_game"] = true # even a stale entitlement does not open the paid chapters in store mode
+	check(not p.can_play("ch3") and not p.can_play("ch4"), "store mode: Chapters 3 and 4 stay locked")
+	p.owned.erase("full_game")
+	check(not Premium.purchase_ui_allowed(false, false), "store: no purchase UI")
+	check(Premium.purchase_ui_allowed(false, true), "tester builds keep their purchase tools")
+	check(Premium.purchase_ui_allowed(true, false), "the paid update shows the purchase UI")
+	check(Premium.unlocks_without_purchase(true, false), "beta_unlock opens Chapters 3-4 for testers")
+	check(not Premium.unlocks_without_purchase(false, false), "store build: nothing unlocks without a purchase")
+	p.force_paid_ui_for_tests = true # the rest tests the later paid update
 	check(not p.tester_build(), "only exports with the beta_unlock feature open paid chapters for testers")
 	check(p.can_play("ch1"), "chapter 1 is free")
 	check(p.can_play("ch2"), "chapter 2 is free too, with no purchase (owner, 2026-10-10)")
@@ -126,6 +140,7 @@ func test_business_model_chapters_1_2_free() -> void:
 	SaveSystem.delete_game()
 	SaveSystem.save_path = SaveSystem.SAVE_PATH
 	DirAccess.remove_absolute("user://test_model_ent.cfg")
+	Premium.force_paid_ui_for_tests = false
 	Premium.path = Premium.PATH
 
 

@@ -238,6 +238,8 @@ func _run() -> void:
 		await _overlay_shot(hud, "show_document", ["badge"], "%s_picture" % lang)
 		await _overlay_shot(hud, "show_choice", [], "%s_choice" % lang, 0.8)
 		await _overlay_shot(hud, "show_chapter_complete", [], "%s_chapter_complete" % lang, 1.4)
+		GameState.chapter_id = "ch2" # the end of Chapter 2 as the store build shows it: Chapter 3 coming soon
+		await _overlay_shot(hud, "show_chapter_complete", [], "%s_chapter2_complete" % lang, 1.4)
 		hud.call("_close_overlay")
 		room.queue_free()
 		await _settle(0.5)

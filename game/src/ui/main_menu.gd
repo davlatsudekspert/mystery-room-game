@@ -427,9 +427,10 @@ func _show_chapters() -> void:
 			b.pressed.connect(_show_purchase)
 		row.add_child(b)
 		v.add_child(row)
-	var unlock := UITheme.label("ui.unlock_desc", 22, UITheme.MUTED)
-	unlock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(unlock)
+	if Premium.paid_ui_enabled(): # the store release mentions no purchase at all
+		var unlock := UITheme.label("ui.unlock_desc", 22, UITheme.MUTED)
+		unlock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(unlock)
 	var close := UITheme.button("ui.close", 260)
 	close.pressed.connect(_clear_panel)
 	(d["footer"] as Control).add_child(close)

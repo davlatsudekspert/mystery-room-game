@@ -15,6 +15,11 @@ signal price_changed(product: String, price: String)
 signal busy_changed(what: String)
 
 const REAL_PAYMENTS_ENABLED := false
+## THE single switch for the paid update. false = the first public store release (owner, 2026-10-17): Chapters 1-2
+## free, Chapters 3-4 shown plainly as "Coming soon", and no purchase UI anywhere (no Unlock/Buy, no Restore
+## purchases, no price). Set true (together with REAL_PAYMENTS_ENABLED) when the update with Chapters 3-4 ships.
+## Tester builds (beta_unlock / store_sandbox) keep their purchase tools regardless.
+const PAID_CHAPTERS_ENABLED := false
 const PRODUCTS := {"full_game": {"chapters": ["ch3", "ch4"]}} # must match the "product" fields in Chapters.LIST
 const PATH := "user://entitlements.cfg"
 
@@ -24,6 +29,8 @@ var path := PATH
 var prices: Dictionary = {}
 ## What the store is busy with: a product id during a purchase, "restore" during a restore, "" when idle.
 var busy := ""
+## Tests and the QA screens only: behave like the later paid update (PAID_CHAPTERS_ENABLED = true).
+var force_paid_ui_for_tests := false
 
 
 func _ready() -> void:
@@ -101,7 +108,16 @@ func owns_chapter(chapter_id: String) -> bool:
 	if ch.is_empty():
 		return false
 	var product: String = ch.get("product", "")
-	return product == "" or has_entitlement(product) or tester_build()
+	return product == "" or tester_build() or (paid_ui_enabled() and has_entitlement(product))
+
+
+## Whether any purchase UI (Unlock/Buy, Restore purchases, price) may be shown in this build.
+func paid_ui_enabled() -> bool:
+	return purchase_ui_allowed(PAID_CHAPTERS_ENABLED or force_paid_ui_for_tests, tester_tools())
+
+
+static func purchase_ui_allowed(paid_enabled: bool, tester: bool) -> bool:
+	return paid_enabled or tester
 
 
 ## Test builds for Google Play internal/closed testing and TestFlight open every released chapter without any
@@ -133,7 +149,7 @@ func can_reset_purchase() -> bool:
 
 ## True when this build offers the purchase screen (a store, real or mock, can be reached).
 func store_open() -> bool:
-	return provider != null and provider.is_open()
+	return paid_ui_enabled() and provider != null and provider.is_open()
 
 
 func price(product: String) -> String:

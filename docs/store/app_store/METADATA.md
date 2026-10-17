@@ -20,7 +20,7 @@ Russian letters take 2 bytes each in UTF-8, so the RU keyword list is short on p
 
 The full rationale, the Uzbek version and the fact check are in `../google_play/LISTING.md`.
 
-Payments are off in store builds, which show Chapter 2 as "coming soon". So the business-model sentence says the purchase is **planned and not on sale yet** and gives no price. The texts describe only what the build does (App Review Guideline 2.3). Promotional text, keywords and subtitle carry no price wording (Guideline 2.3.7).
+The first release ships Chapters 1 and 2 free only (owner, 2026-10-17); store builds show Chapters 3–4 as "Coming soon" and contain no purchase UI. So the business-model sentence says the story continues in coming updates and gives no price. The texts describe only what the build does (App Review Guideline 2.3). Promotional text, keywords and subtitle carry no price wording (Guideline 2.3.7).
 
 ---
 
@@ -58,7 +58,7 @@ Laboratory 7. Please finish what I could not. — L.
 
 ◆ ——— ◆
 
-Chapters 1 and 2 are free to play in full. One purchase that unlocks the rest of the investigation, Chapters 3 and 4, is planned and not on sale yet.
+Chapters 1 and 2 are free to play in full. The story continues in coming updates.
 
 • Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
 • One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
@@ -103,7 +103,7 @@ Mystery Room: Забытый институт
 
 ◆ ——— ◆
 
-Главы 1 и 2 бесплатны целиком. Одна покупка, открывающая остальное расследование — главы 3 и 4, — запланирована и пока не продаётся.
+Главы 1 и 2 бесплатны целиком. История продолжится в будущих обновлениях.
 
 • Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
 • Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
@@ -162,7 +162,7 @@ Apple's 2025+ questionnaire covers in-app controls, capabilities and content fre
 | Chance-Based Activities | Gambling | No | — |
 | Chance-Based Activities | Simulated Gambling | None | — |
 | Chance-Based Activities | Contests | None | — |
-| Chance-Based Activities | Loot Boxes | No | The planned unlock is one fixed purchase, not a random reward |
+| Chance-Based Activities | Loot Boxes | No | There is no purchase in this release |
 | Age Categories and Override | — | Not Applicable | Not a Kids-category app |
 
 **Expected result: 9+.** Apple's table puts "Infrequent horror or fear themes" at 9+, and nothing else raises it. This matches the Google Play IARC answers (fear: yes, mild) in `../PLAY_VA_APPSTORE_QOLLANMA.txt` §1.4. Review the answers again before Chapters 3–4 ship.

@@ -343,6 +343,7 @@ func test_app_store_restore_and_sync() -> void:
 func test_premium_with_a_store() -> void:
 	var keep := Premium.provider
 	Premium.path = ENT
+	Premium.force_paid_ui_for_tests = true # the later paid update
 	Premium.revoke_all_for_tests()
 	var t := _play()
 	var fb: FakeBilling = t[0]
@@ -389,6 +390,7 @@ func test_premium_with_a_store() -> void:
 	Premium.restore_finished.disconnect(on_restore)
 	Premium.revoke_all_for_tests()
 	DirAccess.remove_absolute(ENT)
+	Premium.force_paid_ui_for_tests = false
 	Premium.path = Premium.PATH
 	Premium.use_provider(keep)
 
@@ -427,6 +429,7 @@ func test_chapter_list_purchase_button() -> void:
 func test_purchase_screen() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	Premium.path = ENT
+	Premium.force_paid_ui_for_tests = true # the later paid update
 	Premium.revoke_all_for_tests()
 	var keep := Premium.provider
 	var mock := MockStoreProvider.new()
@@ -475,6 +478,7 @@ func test_purchase_screen() -> void:
 	await tree.process_frame
 	Premium.revoke_all_for_tests()
 	DirAccess.remove_absolute(ENT)
+	Premium.force_paid_ui_for_tests = false
 	Premium.path = Premium.PATH
 	Premium.use_provider(keep)
 
@@ -506,6 +510,26 @@ func test_disabled_store_offers_no_purchase() -> void:
 	check(_find(host, "ui.play") != null, "Chapters 1-2 offer Play")
 	menu.queue_free()
 	await tree.process_frame
+	DirAccess.remove_absolute(ENT)
+	Premium.path = Premium.PATH
+	Premium.use_provider(keep)
+
+
+## Store release mode: the Chapter 3 card says coming soon (no Unlock) even if a store could be reached.
+func test_store_mode_card_and_chapter_list() -> void:
+	var keep := Premium.provider
+	Premium.path = ENT
+	Premium.revoke_all_for_tests()
+	Premium.use_provider(MockStoreProvider.new()) # a reachable store must still not surface any purchase
+	check(not Premium.store_open(), "store mode hides the store even when reachable")
+	eq(load("res://src/rooms/archive/archive_teaser.gd").call("card_state"), "soon", "the Chapter 3 card: coming soon")
+	var menu_script: GDScript = load("res://src/ui/main_menu.gd")
+	var ch3 := Chapters.get_chapter("ch3")
+	eq(menu_script.call("purchase_button", ch3, Premium.can_play("ch3"), Premium.store_open(), Premium.store_sandbox(), false),
+		"", "no Unlock button in store mode")
+	Premium.force_paid_ui_for_tests = true
+	eq(load("res://src/rooms/archive/archive_teaser.gd").call("card_state"), "unlock", "paid update: the card offers Unlock")
+	Premium.force_paid_ui_for_tests = false
 	DirAccess.remove_absolute(ENT)
 	Premium.path = Premium.PATH
 	Premium.use_provider(keep)

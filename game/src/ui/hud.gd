@@ -1895,7 +1895,7 @@ func show_chapter_complete() -> void:
 			add_play.call()
 		else:
 			var released := bool(Chapters.get_chapter(next_id).get("released", false))
-			var soon := UITheme.label("ui.to_be_continued" if not released else "ui.unlock_desc", 24, UITheme.MUTED)
+			var soon := UITheme.label("ui.to_be_continued" if not released or not Premium.paid_ui_enabled() else "ui.unlock_desc", 24, UITheme.MUTED)
 			soon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			v.add_child(soon)
 			if released and Premium.store_open():

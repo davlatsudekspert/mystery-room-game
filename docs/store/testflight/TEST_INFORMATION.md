@@ -15,7 +15,7 @@ Mystery Room: Lost Institute is a 3D escape-room mystery for iPhone and iPad, pl
 
 On 14 November 1979 every clock in the Meridian Institute stopped at 03:17, and forty-one scientists were never seen again. You explore their rooms, solve logical puzzles built from brass mechanisms, light and shadow, and slowly uncover what happened.
 
-This beta contains Chapter 1 "The Locked Laboratory", Chapter 2 "The Missing Scientist" and Chapter 3 "The Underground Facility". In the store, Chapters 1 and 2 will be free and Chapter 3 will come with the full game; in this beta all three are open and free. There are no purchases, ads, accounts or network features in this build. The game is fully playable in English, Russian and Uzbek.
+This beta contains Chapter 1 "The Locked Laboratory", Chapter 2 "The Missing Scientist" and Chapter 3 "The Underground Facility". The first store release will contain Chapters 1 and 2, both free, with the story continuing in later updates; in this beta Chapters 1-3 are open and free. There are no purchases, ads, accounts or network features in this build. The game is fully playable in English, Russian and Uzbek.
 ```
 
 ### Russian (optional localization)
