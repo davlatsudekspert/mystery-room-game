@@ -327,8 +327,8 @@ func _add_panel_tap_areas() -> void:
 		return
 	for i in 5:
 		var x := [-0.22, -0.11, 0.0, 0.11, 0.22][i] as float
-		_add_tap_area(panel, Vector3(0.105, 0.17, 0.07), "panel", "IA_switch_%d" % i, false, Vector3(x, -0.085, 0.05))
-	_add_tap_area(panel, Vector3(0.20, 0.17, 0.11), "panel", "IA_main_lever", false, Vector3(0.0, -0.275, 0.06))
+		_add_tap_area(panel, Vector3(0.105, 0.20, 0.07), "panel", "IA_switch_%d" % i, false, Vector3(x, -0.085, 0.05))
+	_add_tap_area(panel, Vector3(0.20, 0.17, 0.11), "panel", "IA_main_lever", false, Vector3(0.0, -0.295, 0.06))
 
 
 func _build_lights() -> void:
@@ -527,7 +527,7 @@ func _frame_safe() -> void:
 ## title row, above the prompt, right of the inventory column), so a 20:9 phone with large text and a 4:3 tablet
 ## both see it whole. At 0.88 m the icons were cut off at the top and the handle sat under the HUD.
 const PANEL_PLATE_CENTRE := Vector3(2.966, 1.45, -1.3) # the plate's front face
-const PANEL_HALF := Vector2(0.33, 0.42) # half-size framed: the plate plus the cabinet's bezels
+const PANEL_HALF := Vector2(0.33, 0.41) # half-size framed: the plate plus the cabinet's bezels
 
 ## Strand's poster (frame 0.544 × 0.751 m, centred on the south wall) is framed the same way: all of it, header to
 ## footer, between the title and the prompt, so the dots beside every symbol can be counted (the caption is one line).

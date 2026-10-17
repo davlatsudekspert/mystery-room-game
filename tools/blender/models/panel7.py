@@ -8,10 +8,10 @@ Plate-local coordinates (metres, x right, y up, origin at plate centre) = Blende
 centre sits on the model's X = 0, Z = 0 axis.
 Parts (origins at pivots, identity rotation at rest):
   panel_plate        0.60 x 0.80, M_Decal_PanelDiagram on the front face, exact 0..1 planar UV (900:1200)
-  lamp_0..3          jewel lenses only (M_Lamp_L/G/A/V) at plate (±0.065, ±0.195; +0.30)
-  IA_switch_0..4     toggle levers at plate (−0.22..+0.22; −0.06); pivot on a horizontal X axle;
+  lamp_0..3          jewel lenses only (M_Lamp_L/G/A/V) at plate (±0.065, ±0.195; +0.27)
+  IA_switch_0..4     toggle levers at plate (−0.22..+0.22; −0.085); pivot on a horizontal X axle;
                      rest = DOWN = OFF (35° below horizontal); ON = rotate −70° about Godot X
-  IA_main_lever      breaker fork at plate (0, −0.27); rest = DOWN = OFF (40° below); ON = −80° about X
+  IA_main_lever      breaker fork at plate (0, −0.295); rest = DOWN = OFF (40° below); ON = −80° about X
     main_handle      child of IA_main_lever: bakelite grip (hide until installed)
   gauge_needle       voltmeter needle at plate (−0.25, +0.15); rest = 0 V; 220 V = −79° about Godot Z
   Static meshes are split (case l/r/t/b/back, plate, fittings, door) so no collider AABB hides the
@@ -33,13 +33,17 @@ R_OUT = 0.024
 BACK_T = 0.012
 PW, PH, PT = 0.60, 0.80, 0.004
 PY = -0.034                    # plate front face
-LAMPS = [(-0.195, 0.30, "M_Lamp_L"), (-0.065, 0.30, "M_Lamp_G"), (0.065, 0.30, "M_Lamp_A"), (0.195, 0.30, "M_Lamp_V")]
+LAMP_Z = 0.27
+LAMP_K = 1.6                   # lamp bezel / jewel scale (readable on a phone close-up)
+LAMPS = [(-0.195, LAMP_Z, "M_Lamp_L"), (-0.065, LAMP_Z, "M_Lamp_G"), (0.065, LAMP_Z, "M_Lamp_A"),
+         (0.195, LAMP_Z, "M_Lamp_V")]
 SWITCH_X = (-0.22, -0.11, 0.0, 0.11, 0.22)
-SWITCH_Z = -0.06
-SW_BASE_T = 0.005
-SW_PIVOT_Y = PY - SW_BASE_T - 0.0075
+SWITCH_Z = -0.085
+SW_K = 1.7                     # toggle / base scale (phone close-up legibility)
+SW_BASE_T = 0.006
+SW_PIVOT_Y = PY - SW_BASE_T - 0.0075 * SW_K
 SW_REST = 35.0                 # degrees below horizontal (OFF)
-LEVER_Z = -0.27
+LEVER_Z = -0.295
 LEVER_PIVOT_Y = PY - 0.019
 LEVER_REST = 40.0
 LEVER_LEN = 0.074
@@ -85,8 +89,8 @@ def build_case():
     gl.location = (0.20, -0.105, H / 2)
     tp.append(gl)
     for (lx, lz, _m) in LAMPS:
-        bez = L.lathe2("bezel", [(0.0268, -0.0005), (0.0268, 0.0028), (0.0226, 0.0086), (0.0186, 0.0094),
-                                 (0.0175, 0.0072)], segments=14, mat="M_Chrome",
+        bez = L.lathe2("bezel", [(0.0268 * LAMP_K, -0.0005), (0.0268 * LAMP_K, 0.0028), (0.0226 * LAMP_K, 0.0086),
+                                 (0.0186 * LAMP_K, 0.0094), (0.0175 * LAMP_K, 0.0072)], segments=18, mat="M_Chrome",
                        cap_bottom=False)
         L.along(bez)
         bez.location = (lx, PY, lz)
@@ -134,8 +138,8 @@ def build_plate():
 def build_lamps():
     out = []
     for j, (lx, lz, mat) in enumerate(LAMPS):
-        jw = L.lathe2(f"lamp_{j}", [(0.0176, 0.0038), (0.0176, 0.0082), (0.0152, 0.0124), (0.0104, 0.0155),
-                                    (0.0, 0.0168)], segments=12, mat=mat, cap_bottom=False)
+        jw = L.lathe2(f"lamp_{j}", [(0.0176 * LAMP_K, 0.0038), (0.0176 * LAMP_K, 0.0082), (0.0152 * LAMP_K, 0.0124),
+                                    (0.0104 * LAMP_K, 0.0155), (0.0, 0.0168 * 1.3)], segments=16, mat=mat, cap_bottom=False)
         L.along(jw)
         jw.location = (lx, PY, lz)
         out.append(jw)
@@ -146,27 +150,28 @@ def build_lamps():
 def build_switch_bases():
     parts = []
     for x in SWITCH_X:
-        base = L.curve_solid("swbase", [L.rounded_rect(0.032, 0.054, 0.0045, 2)], SW_BASE_T, bevel=0.0013,
+        base = L.curve_solid("swbase", [L.rounded_rect(0.052, 0.090, 0.007, 2)], SW_BASE_T, bevel=0.0013,
                              bevel_res=1, mat="M_Bakelite", drop_bottom=True)
         L.to_front(base, y_back=PY, x=x, z=SWITCH_Z)
-        nut = L.lathe2("nut", [(0.0082, 0.0), (0.0082, 0.0032), (0.0072, 0.0042), (0.0055, 0.0042), (0.0055, 0.0076),
-                               (0.0, 0.0076)], segments=6, mat="M_Chrome", cap_bottom=False, phase=math.pi / 6)
+        nut = L.lathe2("nut", [(0.0082 * SW_K, 0.0), (0.0082 * SW_K, 0.0032), (0.0072 * SW_K, 0.0042), (0.0055 * SW_K, 0.0042),
+                               (0.0055 * SW_K, 0.0076), (0.0, 0.0076)], segments=6, mat="M_Chrome", cap_bottom=False, phase=math.pi / 6)
         L.along(nut)
         nut.location = (x, PY - SW_BASE_T, SWITCH_Z)
         parts += [base, nut]
-        for dz in (-0.0195, 0.0195):
-            parts.append(L.flat_front("swrivet", [L.circle(0.0026, 8)], x, PY - SW_BASE_T - 0.0001, SWITCH_Z + dz,
+        for dz in (-0.033, 0.033):
+            parts.append(L.flat_front("swrivet", [L.circle(0.0042, 8)], x, PY - SW_BASE_T - 0.0001, SWITCH_Z + dz,
                                       mat="M_Chrome"))
         # ON / OFF ticks engraved on the base (top = ON)
-        parts.append(L.flat_front("on_tick", [L.circle(0.0012, 6)], x, PY - SW_BASE_T - 0.0001, SWITCH_Z + 0.0125,
+        parts.append(L.flat_front("on_tick", [L.circle(0.002, 6)], x, PY - SW_BASE_T - 0.0001, SWITCH_Z + 0.021,
                                   mat="M_Enamel_Cream"))
     return M.join(parts, "panel_switch_bases")
 
 
 def build_switch(i):
     x = SWITCH_X[i]
-    lev = L.lathe2(f"IA_switch_{i}", [(0.0, -0.0035), (0.0046, -0.0012), (0.0029, 0.0045), (0.0027, 0.021),
-                                      (0.0054, 0.0245), (0.0064, 0.0295), (0.0058, 0.0355), (0.0, 0.0388)],
+    lev = L.lathe2(f"IA_switch_{i}", [(r * SW_K, h * SW_K) for r, h in (
+                                          (0.0, -0.0035), (0.0046, -0.0012), (0.0029, 0.0045), (0.0027, 0.021),
+                                          (0.0054, 0.0245), (0.0064, 0.0295), (0.0058, 0.0355), (0.0, 0.0388))],
                    segments=8, mat="M_Chrome", band_mats=[None, None, None, "M_Bakelite", "M_Bakelite", "M_Bakelite",
                                                           "M_Bakelite"])
     L.along(lev)                                              # +Z -> -Y (toward the viewer)

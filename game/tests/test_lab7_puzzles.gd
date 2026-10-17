@@ -449,8 +449,8 @@ func test_panel_diagram_plates_match_the_wiring() -> void:
 			var y := 630
 			while y > 210 and _copper(img, sw_x[i], y - 1):
 				y -= 1
-			# the trace ends in its row's dot: the dot's centre is 13 px under the topmost copper pixel
-			var row_y := y + 13
+			# the trace ends in its row's dot: the dot's centre is 24 px under the topmost copper pixel
+			var row_y := y + 24
 			rows[i] = row_y
 			check(row_y >= 300 and row_y <= 610, "plate %d: switch %d's trace ends on a row (y %d)" % [n, i, row_y])
 			for j in 4:
@@ -469,11 +469,11 @@ func _copper(img: Image, x: int, y: int) -> bool:
 	return c.r - c.b > 0.25 and c.g < 0.55 and c.r > 0.5
 
 
-## A solid junction dot: a 21 x 21 patch nearly all copper (a plain wire crossing fills about half of it).
+## A solid junction dot: a 29 x 29 patch nearly all copper (a plain 18 px wire crossing fills about 60% of it).
 func _dot(img: Image, cx: int, cy: int) -> bool:
 	var hit := 0
-	for dy in range(-10, 11):
-		for dx in range(-10, 11):
+	for dy in range(-14, 15):
+		for dx in range(-14, 15):
 			if _copper(img, cx + dx, cy + dy):
 				hit += 1
-	return hit >= 21 * 21 * 0.85
+	return hit >= 29 * 29 * 0.85

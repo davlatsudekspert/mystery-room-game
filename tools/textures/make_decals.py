@@ -362,12 +362,12 @@ def make_panel_icons() -> None:
 PANEL_SW_X = [120.0, 285.0, 450.0, 615.0, 780.0]
 PANEL_LAMP_X = [157.5, 352.5, 547.5, 742.5]
 PANEL_ROW_Y = [595.0, 525.0, 455.0, 385.0, 315.0]  # the five rows, lowest first
-PANEL_RISER_Y = 640.0                              # just above the switch plates
-PANEL_LAMP_Y = 203.0                               # just below the lamp bezels
+PANEL_RISER_Y = 654.0                              # just above the switch plates
+PANEL_LAMP_Y = 272.0                               # just below the lamp bezels
 PANEL_GAUGE_BOTTOM = 422.0                         # the voltmeter (x 28..122, y 328..422) sits left of switch I's riser
 PANEL_COPPER = (176, 98, 56, 255)
-PANEL_WIRE, PANEL_DOT, PANEL_HOP = 9, 13, 18       # trace width, junction dot radius, hop radius (px)
-HOP_CLEAR, DOT_CLEAR = 50.0, 40.0                  # least gap between two hops / a hop and a dot on one row
+PANEL_WIRE, PANEL_DOT, PANEL_HOP = 18, 24, 24       # trace width, junction dot radius, hop radius (px)
+HOP_CLEAR, DOT_CLEAR = 66.0, 56.0                  # least gap between two hops / a hop and a dot on one row
 
 
 def panel_hops(m: list, level: list) -> list:
@@ -478,9 +478,9 @@ def panel_diagram(n: int = 0) -> Image.Image:
     d = ImageDraw.Draw(img)
     dark = (40, 34, 28, 255)
     lamp_x = [-0.195, -0.065, 0.065, 0.195]
-    lamp_y = 0.30
+    lamp_y = 0.27
     sw_x = [-0.22, -0.11, 0.0, 0.11, 0.22]
-    sw_y = -0.06
+    sw_y = -0.085
     # the copper traces of this game's wiring
     img = Image.alpha_composite(img, panel_traces(read_panel_pool()[n]))
     d = ImageDraw.Draw(img)
@@ -488,25 +488,25 @@ def panel_diagram(n: int = 0) -> Image.Image:
     # half-size 41 px = 2.7 cm, so they read from the close-up on a phone (they were 1.6 cm)
     for j, x in enumerate(lamp_x):
         q = P(x, lamp_y)
-        d.ellipse([q[0] - 40, q[1] - 40, q[0] + 40, q[1] + 40], outline=dark, width=6)
-        ix, iy = P(x, lamp_y + 0.068)
-        draw_panel_icon(d, j, ix, iy, 41, dark)
+        d.ellipse([q[0] - 66, q[1] - 66, q[0] + 66, q[1] + 66], outline=dark, width=8)
+        ix, iy = P(x, lamp_y + 0.082)
+        draw_panel_icon(d, j, ix, iy, 56, dark)
     # switch plates + roman numerals
-    f = font(F_SERIF_B, 40)
+    f = font(F_SERIF_B, 68)
     for i, x in enumerate(sw_x):
         q = P(x, sw_y)
-        d.rounded_rectangle([q[0] - 34, q[1] - 52, q[0] + 34, q[1] + 52], radius=8, outline=dark, width=5)
-        d.text(P(x, sw_y - 0.085), ["I", "II", "III", "IV", "V"][i], font=f, anchor="mm", fill=dark)
+        d.rounded_rectangle([q[0] - 46, q[1] - 74, q[0] + 46, q[1] + 74], radius=10, outline=dark, width=7)
+        d.text(P(x, sw_y - 0.1), ["I", "II", "III", "IV", "V"][i], font=f, anchor="mm", fill=dark)
     # main breaker plate with 0 / 1
-    q = P(0.0, -0.27)
+    q = P(0.0, -0.295)
     d.rounded_rectangle([q[0] - 70, q[1] - 110, q[0] + 70, q[1] + 110], radius=10, outline=dark, width=6)
-    d.text((q[0] + 100, q[1] - 85), "1", font=font(F_SANS_B, 48), anchor="mm", fill=dark)
-    d.text((q[0] + 100, q[1] + 85), "0", font=font(F_SANS_B, 48), anchor="mm", fill=dark)
+    d.text((q[0] + 104, q[1] - 85), "1", font=font(F_SANS_B, 66), anchor="mm", fill=dark)
+    d.text((q[0] + 104, q[1] + 85), "0", font=font(F_SANS_B, 66), anchor="mm", fill=dark)
     # panel number badge + lightning symbol
-    q = P(0.22, -0.30)
-    d.ellipse([q[0] - 46, q[1] - 46, q[0] + 46, q[1] + 46], outline=dark, width=6)
-    d.text(q, "7", font=font(F_SERIF_B, 64), anchor="mm", fill=dark)
-    q = P(-0.22, -0.30)
+    q = P(0.22, -0.32)
+    d.ellipse([q[0] - 52, q[1] - 52, q[0] + 52, q[1] + 52], outline=dark, width=7)
+    d.text(q, "7", font=font(F_SERIF_B, 76), anchor="mm", fill=dark)
+    q = P(-0.22, -0.32)
     d.polygon([(q[0] + 6, q[1] - 50), (q[0] - 22, q[1] + 6), (q[0] - 2, q[1] + 6), (q[0] - 10, q[1] + 50),
                (q[0] + 22, q[1] - 8), (q[0] + 2, q[1] - 8)], fill=(181, 82, 59, 255))
     # wear
