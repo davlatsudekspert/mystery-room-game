@@ -49,6 +49,16 @@ var _root: Control
 var _black: ColorRect
 var _skip := false
 var _breath_t := 0.0
+## QA hook: which beat of the pit scene is on ("" outside it).
+var beat := ""
+var _fog: Array = []
+var _pit_mat: StandardMaterial3D
+var _dark_mat: StandardMaterial3D
+var _pit_light: OmniLight3D
+var _pit_k := 1.0
+var _pit_echo: Node3D
+var _pit_dark: Node3D
+var _glow_disc: MeshInstance3D
 
 
 func _init(r: Node3D) -> void:
@@ -169,8 +179,21 @@ func _recorder() -> void:
 		await _fade_out(line, 0.4)
 		line.queue_free()
 	await _fade_out(who, 0.4)
+	await _fade_out(wave, 0.3)
+	wave.queue_free()
+	# the pit: a slow fade from black to the bottom of the lift shaft, where Leyla's echo stands under one lamp
+	_skip = false
+	beat = "pit_fade"
+	var parent := col.get_parent() as Control
+	parent.offset_top = _canvas().y * 0.66 # the captions sit below the shaft's bottom
+	_build_pit()
+	await _fade_black(0.0, 3.2 if not _skip else 0.4)
+	_skip = false
+	beat = "pit_figure"
+	await _wait(2.4, true)
 	# the second voice: Strand, kept in the light, noticing someone beside her
 	_skip = false
+	beat = "pit_second"
 	AudioManager.sfx("tape_garble", -18.0, 0.62)
 	AudioManager.sfx("reveal", -6.0, 0.5)
 	var cap := _text(tr("tease2.second_cap"), 28, UITheme.MUTED, false)
@@ -180,21 +203,142 @@ func _recorder() -> void:
 	var voice := _text(tr("tease2.second_voice"), 50, Color("cfeef7"), false)
 	voice.add_theme_font_override("font", UITheme.display_font(false))
 	lines.add_child(voice)
-	wave.color = Color("9fe3f2")
-	wave.level = 0.55
 	AudioManager.haptic(60)
+	_second_figure(2.6) # barely there at the edge of the light, gone again
 	await _fade_in(voice, 0.9)
 	# both lines are read by now: the bracketed caption has had 2.5 s on its own
 	await _wait(UITheme.read_seconds(cap.text + " " + voice.text, 1.6 + 0.9 + 3.4) - 1.6 - 0.9, true)
-	wave.level = 0.0
-	AudioManager.sfx("deck_eject", -6.0, 0.7) # the tape runs out
-	AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.25)
+	# the lamp flickers and dies; Leyla goes with it
+	beat = "pit_out"
 	var tw := room.create_tween().set_parallel(true)
 	tw.tween_property(cap, "modulate:a", 0.0, 0.8)
 	tw.tween_property(voice, "modulate:a", 0.0, 0.8)
-	tw.tween_property(wave, "modulate:a", 0.0, 0.8)
-	await tw.finished
+	_pit_lamp_out()
+	await _wait(1.5 if not _skip else 0.3, true)
+	await _fade_black(1.0, 0.25)
+	AudioManager.sfx("deck_eject", -6.0, 0.7) # the tape runs out
+	AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.25)
 	col.get_parent().queue_free()
+	_free_shaft()
+	_cam().go("vault_inside", true)
+	_room_lights(true)
+	var env: Environment = room.get("env")
+	if env and not _fog.is_empty():
+		env.fog_density = _fog[0]
+		env.fog_light_color = _fog[1]
+	beat = ""
+	await _wait(0.7, false)
+
+
+# ====================================================================== the pit
+## Looking straight down the shaft with only one caged lamp lit at the bottom. Leyla's echo stands under it looking
+## up. A second, dark figure is hinted next to her for a moment (see `_second_figure`).
+func _build_pit() -> void:
+	_build_shaft()
+	var env: Environment = room.get("env")
+	_fog = [env.fog_density, env.fog_light_color] if env else []
+	if env:
+		env.fog_density = 0.035
+		env.fog_light_color = Color("050a0d")
+	_room_lights(false)
+	_cam().go("shaft", true)
+	AudioManager.ambience("amb_power_hum", true, -9.0, 3.0)
+	_cage.visible = false
+	_glow_disc.visible = false # its black disc would sit under Leyla
+	for c in _cables:
+		c.visible = false
+	var h := SHAFT_HALF
+	var base := Vector3(SHAFT_X, SHAFT_BOTTOM, SHAFT_Z)
+	var steel := _mat("M_Steel_Dark")
+	# the lamp: a backplate, a wire cage and a bulb on the south wall near the floor
+	var at := base + Vector3(0.1, 1.75, h - 0.12)
+	_box(_shaft, "pit_plate", Vector3(0.16, 0.22, 0.05), at + Vector3(0, 0, 0.06), steel)
+	_cyl(_shaft, "pit_shade", 0.03, 0.09, 0.07, at + Vector3(0, 0.1, 0), steel)
+	var bulb := MeshInstance3D.new()
+	var sp := SphereMesh.new()
+	sp.radius = 0.05
+	sp.height = 0.1
+	sp.radial_segments = 10
+	sp.rings = 6
+	bulb.mesh = sp
+	_pit_mat = StandardMaterial3D.new()
+	_pit_mat.albedo_color = Color(0.35, 0.3, 0.25)
+	_pit_mat.emission_enabled = true
+	_pit_mat.emission = WARM
+	_pit_mat.emission_energy_multiplier = 1.4
+	bulb.material_override = _pit_mat
+	bulb.position = at
+	bulb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_shaft.add_child(bulb)
+	_pit_light = OmniLight3D.new()
+	_pit_light.light_color = WARM
+	_pit_light.light_energy = 1.1
+	_pit_light.omni_range = 4.2
+	_pit_light.omni_attenuation = 1.5
+	_pit_light.position = at + Vector3(0, -0.1, -0.3)
+	_shaft.add_child(_pit_light)
+	# Leyla's echo, leaning back a little as she looks up at the camera
+	var leyla := ModelUtil.spawn("echo_leyla_standing", _shaft, Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-22.0)), base + Vector3(-0.05, 0.0, 0.15)), "none")
+	if leyla:
+		_pit_echo = leyla
+		var mat := ShaderMaterial.new()
+		mat.shader = load("res://src/fx/echo.gdshader")
+		mat.set_shader_parameter("intensity", 0.0)
+		for mi in ModelUtil.find_meshes(leyla):
+			mi.material_override = mat
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var tw := room.create_tween()
+		tw.tween_interval(1.6)
+		tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("intensity", v), 0.0, 0.8, 2.4)
+	# the other one: tall, dark, just inside the edge of the lamp's reach
+	var dark := ModelUtil.spawn("echo_operator", _shaft, Transform3D(Basis.from_scale(Vector3(1.0, 1.18, 1.0)), base + Vector3(0.62, 0.0, 0.25)), "none")
+	if dark:
+		_pit_dark = dark
+		_dark_mat = StandardMaterial3D.new()
+		_dark_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.0)
+		_dark_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_dark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		for mi in ModelUtil.find_meshes(dark):
+			mi.material_override = _dark_mat
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# the camera creeps down the shaft a little (not with reduce motion)
+	if not bool(Settings.get_value("reduce_motion")):
+		var cam := _cam()
+		var tc := room.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tc.tween_method(func(k: float) -> void:
+			if cam.views.has("shaft"):
+				cam.views["shaft"]["pos"] = VIEW_POS + Vector3(0.0, -0.9 * k, 0.0), 0.0, 1.0, 14.0)
+
+
+## The second figure: a black shape fading in and out again within `seconds`, never more than half there.
+func _second_figure(seconds: float) -> void:
+	if _dark_mat == null:
+		return
+	var tw := room.create_tween()
+	tw.tween_property(_dark_mat, "albedo_color:a", 0.6, seconds * 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_dark_mat, "albedo_color:a", 0.0, seconds * 0.6).set_trans(Tween.TRANS_SINE)
+
+
+func _pit_lamp_out() -> void:
+	if _pit_light == null:
+		return
+	var tw := room.create_tween()
+	if bool(Settings.get_value("reduce_motion")):
+		tw.tween_method(_pit_energy, 1.0, 0.0, 1.2) # no flashing: one smooth dimming
+	else:
+		for k in [[0.25, 0.08], [1.0, 0.1], [0.1, 0.07], [0.7, 0.12], [0.0, 0.2]]:
+			tw.tween_method(_pit_energy, _pit_k, float(k[0]), float(k[1]))
+	tw.tween_method(func(v: float) -> void:
+		if _pit_echo:
+			for mi in ModelUtil.find_meshes(_pit_echo):
+				((mi as MeshInstance3D).material_override as ShaderMaterial).set_shader_parameter("intensity", v), 0.8, 0.0, 0.25)
+
+
+func _pit_energy(k: float) -> void:
+	_pit_k = k
+	if _pit_light:
+		_pit_light.light_energy = 1.1 * k
+		_pit_mat.emission_energy_multiplier = 1.4 * k
 
 
 ## A tape-head trace under the captions: it moves while a voice speaks and lies almost flat in the hiss.
@@ -615,6 +759,7 @@ func _build_shaft() -> void:
 	disc.position = Vector3(SHAFT_X, SHAFT_BOTTOM + 0.02, SHAFT_Z)
 	disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_shaft.add_child(disc)
+	_glow_disc = disc
 	_glow_light = OmniLight3D.new()
 	_glow_light.light_color = DEEP
 	_glow_light.light_energy = 0.0
@@ -652,6 +797,10 @@ func _free_shaft() -> void:
 	_cables.clear()
 	_cage = null
 	_glow_light = null
+	_pit_light = null
+	_pit_echo = null
+	_pit_dark = null
+	_dark_mat = null
 	set_process(false)
 	AudioManager.ambience("amb_power_hum", false, 0.0, 2.0)
 	AudioManager.ambience("amb_archive", true, -4.0, 2.0)

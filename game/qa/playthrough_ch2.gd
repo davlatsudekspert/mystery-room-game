@@ -615,6 +615,7 @@ func run() -> void:
 	# the cliffhanger (ArchiveTeaser): the lift shaft, the recorder on black, the Chapter 3 card
 	var teaser: ArchiveTeaser = room.get("teaser")
 	var saw_shaft := false
+	var last_beat := ""
 	w = 0
 	while w < 240 and not (teaser.card_open() and teaser.running and _card_ready(teaser)):
 		w += 1
@@ -625,6 +626,20 @@ func run() -> void:
 			await shot("cliffhanger_shaft")
 		if w == 110:
 			await shot("cliffhanger_recorder")
+		if teaser.beat != last_beat:
+			last_beat = teaser.beat
+			if last_beat == "pit_fade":
+				await _settle(1.4)
+				await shot("cliffhanger_pit_fade")
+			elif last_beat == "pit_figure":
+				await _settle(1.6)
+				await shot("cliffhanger_pit_figure")
+			elif last_beat == "pit_second":
+				await _settle(2.7)
+				await shot("cliffhanger_pit_second")
+			elif last_beat == "pit_out":
+				await _settle(0.35)
+				await shot("cliffhanger_pit_out")
 	await _settle(2.4)
 	await shot("cliffhanger_ch3_card")
 	step("Cliffhanger: lift shaft, recorder, Chapter 3 card (%s)" % ArchiveTeaser.card_state(), saw_shaft and teaser.card_open())
