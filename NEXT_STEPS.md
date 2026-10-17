@@ -82,6 +82,12 @@ How the work is organised (from 2026-10-09): the main session is the game direct
 - To prepare: a 30–60 s trailer per language (gameplay captured with Godot's movie writer, so picture and sound are the game's own; on-screen text and captions in that language), 3–5 short vertical clips (Reels / Shorts) of the strongest moments (UV page, the beam lock, the tape voices, the Array waking), a cover image, and the post texts in EN/RU/UZ.
 - Only original or CC0 material (music and sound from the game itself).
 
+## App Store guideline update (Apple notice, 2026-10)
+Before the first App Store submission (not needed for TestFlight):
+- **2.5.19 hidden / dormant / undocumented features:** the store build must carry no beta_unlock or store_sandbox feature (ios.yml inputs false); Chapter 4 and the disabled purchase path must not be hidden switches: either ship the purchase enabled (REAL_PAYMENTS_ENABLED after the owner's decision) with Chapters 3–4 behind it, or show locked chapters plainly as "coming soon", and describe both in the App Review notes.
+- **2.3.14 creative assets:** store screenshots and previews are real in-game renders; every asset is original or CC0 (docs/ASSET_LICENSES.md); answer the AI-content question truthfully (procedural models, code-synthesised audio, no generative-AI art) and settle the logo's origin first.
+- 1.2, 3.1.1(a), 5: not applicable (no user content, no external purchase links).
+
 ## Game
 00. **Player-behaviour QA before the next release (owner, 2026-10-11: "no errors, a real puzzle, not too easy"):** the solver only walks the right path. Add a chaos pass per chapter: every tap target in every view in random order, with a random item in hand, wrong codes, back and forth, a hint at every step; it must never block, soft-lock or log an error. Then a fresh-eyes player review per chapter (texts, where one gets lost, difficulty: no answer given away without a hint). The hint dialog should name where the next step is (a short place name per goal, EN/RU/UZ).
 0. **Small parts, read without a pinch (owner, 2026-10-11):** Panel 7's switches (~3.5 mm), I–V numerals (1.6 mm) and traces (0.3 mm) on a 20:9 phone. A pinch now magnifies every close-up up to 2.5×; next, make the plate itself readable: larger switch plates, lamps and numerals and thicker traces (tools/blender panel7 + tools/textures/make_decals.py panel, tap areas in lab7_room.gd), then the same audit for every close-up with small parts (`tap_map --tap-size`, Ch4's small parts).
