@@ -161,7 +161,7 @@ func _build_models() -> void:
 	_tap_pads()
 	_enclosure_taps()
 	_chalk_look()
-	_calm_metal(["cage", "glass_tower"])
+	_calm_metal(["cage", "glass_tower", "catwalk"])
 	for extra in ArrayHallData.ECHO_MODELS:
 		if not ResourceLoader.exists("res://assets/models/%s.glb" % extra):
 			missing_models.append(extra)
@@ -216,7 +216,22 @@ func _calm_metal(ids: Array[String]) -> void:
 				if mat == null or not mat.resource_name in ["M_Steel_Dark", "M_Brass_Aged"]:
 					continue
 				if not calm.has(mat):
-					var c := mat.duplicate() as BaseMaterial3D
+					var c: BaseMaterial3D
+					if mat.resource_name == "M_Steel_Dark" and mat is ORMMaterial3D:
+						# the steel's ORM map has a metallic channel that jumps between 0 and 1 from texel to texel (std 56 of
+						# 255): metal texels reflect the dark hall, the others show the albedo, so any dark surface seen from
+						# 1 m glitters black and grey (the speckled cage plates and pillars). A flat metallic value instead.
+						var st := StandardMaterial3D.new()
+						st.resource_name = mat.resource_name
+						st.albedo_color = mat.albedo_color
+						st.albedo_texture = mat.albedo_texture
+						st.metallic = 0.75
+						st.roughness = 0.6
+						st.normal_enabled = mat.normal_enabled
+						st.normal_texture = mat.normal_texture
+						c = st
+					else:
+						c = mat.duplicate() as BaseMaterial3D
 					c.normal_scale = 0.3
 					c.uv1_scale = mat.uv1_scale * 0.5
 					calm[mat] = c
@@ -266,7 +281,8 @@ func _tap_pads() -> void:
 			var n := part(id, pn)
 			if n:
 				var pad: Array = pads[pn]
-				add_tap_area(n, pad[0], str(n.get_meta("hotspot", "")), pn, pad[1])
+				var own: Dictionary = ArrayHallData.PART_HOTSPOT.get(id, {})
+				add_tap_area(n, pad[0], str(own.get(pn, n.get_meta("hotspot", ""))), pn, pad[1]) # the part's own hotspot first (a gate)
 
 
 ## The booth's and the watch room's glass takes no tap (the box and the lockers behind it must be reachable); a few opaque
