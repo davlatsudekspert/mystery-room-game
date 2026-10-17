@@ -218,7 +218,7 @@ const TAP_PADS := {
 	"strand_box4": {"IA_knob_1": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)], "IA_knob_2": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)],
 		"IA_knob_3": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)], "IA_knob_4": [Vector3(0.078, 0.078, 0.07), Vector3(0, 0, 0.02)]},
 	# the lens ring seen from the core view is 2.5 x 1 mm on a phone: a pad round it (in front of the crystal)
-	"cradle": {"IA_cradle": [Vector3(0.5, 0.5, 0.3), Vector3(0, 0, 0.0)]},
+	"cradle": {"IA_cradle": [Vector3(0.8, 0.6, 0.5), Vector3(0, 0, 0.0)]},
 	# the watch room's lattice gate seen from the hall: bars and holes, 1 mm of solid; a pad over the lattice (origin = the hinge post)
 	"watch_room": {"IA_watch_gate": [Vector3(1.1, 2.0, 0.12), Vector3(0.54, 1.17, 0.0)]},
 	# the booth's lattice gate lies edge-on to the hall: 1 x 1 mm of bar on a phone (origin = the north post, the leaf runs +Z)

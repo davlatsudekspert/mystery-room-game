@@ -1039,7 +1039,8 @@ func _continue_check(label: String = "", reversal: bool = false) -> void:
 		_log("✗ continue: the save could not be written or read back")
 		GameState.logic = logic
 	logic = GameState.logic
-	GameState.events.connect(_on_game_events)
+	if not GameState.events.is_connected(_on_game_events):
+		GameState.events.connect(_on_game_events)
 	_build_room()
 	await get_tree().process_frame
 	await get_tree().process_frame
