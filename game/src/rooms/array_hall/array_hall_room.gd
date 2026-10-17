@@ -1115,7 +1115,7 @@ func _feedback(e: String) -> void:
 			visuals.canister_send(false)
 			AudioManager.sfx("tube_whoosh", -2.0, 0.9)
 		"night_undone":
-			_say("msg.c4_night_undone")
+			_say("msg.c4_night_undone_keeper" if s["trust_strand"] else "msg.c4_night_undone")
 		"echo_released":
 			AudioManager.sfx("reveal", 0.0, 1.2)
 			hud.call("caption", tr("echo4." + arg), 4.5)

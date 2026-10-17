@@ -1080,6 +1080,8 @@ func collectibles() -> Array:
 func epilogue_keys() -> Array[String]:
 	var ending := ending_id()
 	var out: Array[String] = ["epi4." + ending]
+	if ending == "true" and state["trust_strand"]:
+		out[0] = "epi4.true_keeper" # forty rise (Strand stays), then the forty-second
 	if ending == "true":
 		if state["trust_strand"]:
 			out.append("epi4.strand_stays")

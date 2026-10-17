@@ -516,7 +516,7 @@ func test_full_solution_every_profile_and_ending() -> void:
 					eq(l.ending_id(), want, "ending")
 					endings[want] = true
 					var epi := l.epilogue_keys()
-					check(epi[0] == "epi4." + want and epi[-1] == "epi4.end", "epilogue %s" % str(epi))
+					check(epi[0] == ("epi4.true_keeper" if secret and trust == "strand" else "epi4." + want) and epi[-1] == "epi4.end", "epilogue %s" % str(epi))
 					eq(epi.has("epi4.strand_stays"), secret and trust == "strand", "Strand's extra line only on the true Strand path")
 					eq(str(l.profile_choices()["ch4_lens"]), choice)
 					eq(bool(l.state["lens_by_leyla"]), not lens, "Leyla seats the lens on the leave path")
@@ -568,7 +568,7 @@ func test_every_hint_and_runtime_key_is_translated() -> void:
 			keys[row[0]] = row
 	var must: Array[String] = ["ui.lens4_take", "ui.lens4_leave", "ui.choice_lens4_prompt", "ui.choice_lens4_prompt_keeper",
 		"ui.choice_lens4_prompt_true", "ui.choice_lens4_prompt_true_keeper", "cap4.rise_keeper", "cap4.rise_42", "ui.echoes", "cap4.lift",
-		"intro4.strand_key", "intro4.leyla_key", "intro4.2", "epi4.dawn", "epi4.keeper", "epi4.true", "epi4.strand_stays",
+		"intro4.strand_key", "intro4.leyla_key", "intro4.2", "epi4.dawn", "epi4.keeper", "epi4.true", "epi4.true_keeper", "msg.c4_night_undone_keeper", "epi4.strand_stays",
 		"epi4.parcel", "epi4.lens_taken", "epi4.lens_left", "epi4.echoes", "epi4.all_light", "epi4.end",
 		"item.strand_key.desc4", "item.leyla_key.desc4", "item.crystal_lens.desc_recorded", "achv.collect_ch4"]
 	for g in ArrayHallLogic.GOALS:
