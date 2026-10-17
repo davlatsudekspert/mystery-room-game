@@ -33,6 +33,7 @@ const DEEP := Color("8fe6ff")
 ## The shaft view (archive_room.gd adds it): from near the middle of the shaft, nearly straight down, so all four
 ## walls fall away alike (from the south wall's edge the near wall read as a floor). The ropes hang east of it.
 const VIEW_POS := Vector3(1.32, -0.45, -4.32)
+const PIT_POS := Vector3(SHAFT_X, -20.6, SHAFT_Z)
 const VIEW_TARGET := Vector3(1.4, -31.0, -4.78)
 
 var room: Node3D
@@ -57,6 +58,7 @@ var _dark_mat: StandardMaterial3D
 var _pit_light: OmniLight3D
 var _pit_k := 1.0
 var _pit_echo: Node3D
+var _pit_glow: OmniLight3D
 var _pit_dark: Node3D
 var _glow_disc: MeshInstance3D
 
@@ -238,13 +240,21 @@ func _build_pit() -> void:
 	var env: Environment = room.get("env")
 	_fog = [env.fog_density, env.fog_light_color] if env else []
 	if env:
-		env.fog_density = 0.035
+		env.fog_density = 0.02
 		env.fog_light_color = Color("050a0d")
 	_room_lights(false)
-	_cam().go("shaft", true)
 	AudioManager.ambience("amb_power_hum", true, -9.0, 3.0)
 	_cage.visible = false
 	_glow_disc.visible = false # its black disc would sit under Leyla
+	for ch in _shaft.get_children():
+		if ch is MeshInstance3D and (ch as MeshInstance3D).mesh != null and (ch as MeshInstance3D).mesh.get_aabb().size.y > 20.0:
+			(ch as Node3D).visible = false # the guide rails read as black bars across the frame
+	# a squared, nearer view: straight down, the shaft's walls parallel to the frame, Leyla ~100 px tall
+	var cam0 := _cam()
+	cam0.views["shaft"]["pos"] = PIT_POS
+	cam0.views["shaft"]["target"] = Vector3(SHAFT_X, SHAFT_BOTTOM, SHAFT_Z - 0.5)
+	cam0.views["shaft"]["fov"] = 36.0
+	_cam().go("shaft", true)
 	for c in _cables:
 		c.visible = false
 	var h := SHAFT_HALF
@@ -272,15 +282,21 @@ func _build_pit() -> void:
 	_shaft.add_child(bulb)
 	_pit_light = OmniLight3D.new()
 	_pit_light.light_color = WARM
-	_pit_light.light_energy = 1.1
-	_pit_light.omni_range = 4.2
-	_pit_light.omni_attenuation = 1.5
+	_pit_light.light_energy = 1.5
+	_pit_light.omni_range = 3.8
+	_pit_light.omni_attenuation = 1.1
 	_pit_light.position = at + Vector3(0, -0.1, -0.3)
 	_shaft.add_child(_pit_light)
 	# Leyla's echo, leaning back a little as she looks up at the camera
-	var leyla := ModelUtil.spawn("echo_leyla_standing", _shaft, Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-22.0)), base + Vector3(-0.05, 0.0, 0.15)), "none")
+	var leyla := ModelUtil.spawn("echo_leyla_standing", _shaft, Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-40.0)), base + Vector3(-0.05, 0.0, 0.15)), "none")
 	if leyla:
 		_pit_echo = leyla
+		_pit_glow = OmniLight3D.new()
+		_pit_glow.light_color = Color("8fe6ff")
+		_pit_glow.light_energy = 0.0
+		_pit_glow.omni_range = 2.4
+		_pit_glow.position = base + Vector3(0, 1.0, 0.1)
+		_shaft.add_child(_pit_glow)
 		var mat := ShaderMaterial.new()
 		mat.shader = load("res://src/fx/echo.gdshader")
 		mat.set_shader_parameter("intensity", 0.0)
@@ -289,15 +305,21 @@ func _build_pit() -> void:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var tw := room.create_tween()
 		tw.tween_interval(1.6)
-		tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("intensity", v), 0.0, 0.8, 2.4)
+		tw.tween_method(func(v: float) -> void:
+			mat.set_shader_parameter("intensity", v)
+			if _pit_glow:
+				_pit_glow.light_energy = 0.9 * v / 0.8, 0.0, 0.8, 2.4)
 	# the other one: tall, dark, just inside the edge of the lamp's reach
-	var dark := ModelUtil.spawn("echo_operator", _shaft, Transform3D(Basis.from_scale(Vector3(1.0, 1.18, 1.0)), base + Vector3(0.62, 0.0, 0.25)), "none")
+	var dark := ModelUtil.spawn("echo_strand_standing", _shaft, Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-12.0)) * Basis.from_scale(Vector3(1.1, 1.32, 1.1)), base + Vector3(0.82, 0.0, -0.2)), "none")
 	if dark:
 		_pit_dark = dark
 		_dark_mat = StandardMaterial3D.new()
 		_dark_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.0)
 		_dark_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		_dark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_dark_mat.roughness = 1.0
+		_dark_mat.rim_enabled = true # the lamp's warm light catches its shoulders and head
+		_dark_mat.rim = 0.7
+		_dark_mat.rim_tint = 1.0
 		for mi in ModelUtil.find_meshes(dark):
 			mi.material_override = _dark_mat
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -307,7 +329,7 @@ func _build_pit() -> void:
 		var tc := room.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tc.tween_method(func(k: float) -> void:
 			if cam.views.has("shaft"):
-				cam.views["shaft"]["pos"] = VIEW_POS + Vector3(0.0, -0.9 * k, 0.0), 0.0, 1.0, 14.0)
+				cam.views["shaft"]["pos"] = PIT_POS + Vector3(0.0, -1.0 * k, 0.0), 0.0, 1.0, 14.0)
 
 
 ## The second figure: a black shape fading in and out again within `seconds`, never more than half there.
@@ -315,8 +337,9 @@ func _second_figure(seconds: float) -> void:
 	if _dark_mat == null:
 		return
 	var tw := room.create_tween()
-	tw.tween_property(_dark_mat, "albedo_color:a", 0.6, seconds * 0.4).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(_dark_mat, "albedo_color:a", 0.0, seconds * 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_dark_mat, "albedo_color:a", 0.88, 0.5).set_trans(Tween.TRANS_SINE)
+	tw.tween_interval(0.6)
+	tw.tween_property(_dark_mat, "albedo_color:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
 
 
 func _pit_lamp_out() -> void:
@@ -331,13 +354,15 @@ func _pit_lamp_out() -> void:
 	tw.tween_method(func(v: float) -> void:
 		if _pit_echo:
 			for mi in ModelUtil.find_meshes(_pit_echo):
-				((mi as MeshInstance3D).material_override as ShaderMaterial).set_shader_parameter("intensity", v), 0.8, 0.0, 0.25)
+				((mi as MeshInstance3D).material_override as ShaderMaterial).set_shader_parameter("intensity", v)
+			if _pit_glow:
+				_pit_glow.light_energy = 0.9 * v / 0.8, 0.8, 0.0, 0.25)
 
 
 func _pit_energy(k: float) -> void:
 	_pit_k = k
 	if _pit_light:
-		_pit_light.light_energy = 1.1 * k
+		_pit_light.light_energy = 1.5 * k
 		_pit_mat.emission_energy_multiplier = 1.4 * k
 
 
@@ -799,6 +824,7 @@ func _free_shaft() -> void:
 	_glow_light = null
 	_pit_light = null
 	_pit_echo = null
+	_pit_glow = null
 	_pit_dark = null
 	_dark_mat = null
 	set_process(false)

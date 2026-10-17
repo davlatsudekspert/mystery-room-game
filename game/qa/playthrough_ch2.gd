@@ -635,8 +635,13 @@ func run() -> void:
 				await _settle(1.6)
 				await shot("cliffhanger_pit_figure")
 			elif last_beat == "pit_second":
-				await _settle(2.7)
+				var dm: Variant = teaser.get("_dark_mat")
+				var guard := 0
+				while guard < 600 and dm is StandardMaterial3D and (dm as StandardMaterial3D).albedo_color.a < 0.85:
+					guard += 1
+					await get_tree().process_frame
 				await shot("cliffhanger_pit_second")
+				await _perf("pit")
 			elif last_beat == "pit_out":
 				await _settle(0.35)
 				await shot("cliffhanger_pit_out")
