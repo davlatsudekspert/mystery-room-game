@@ -29,6 +29,7 @@ var _knob_acc := 0.0
 var _lantern_t := 0.0
 var _dress := true # the set dressing (models, its lights); QA renders "before" shots with --no-dress
 var _recording := 0 # playback generation of Leyla's recorder (a rewind restarts it)
+const RECORDER_VIEWS: Array[String] = ["camp", "recorder", "shutter"] # where the tape keeps playing
 var _outcome_running := false # the Array answers the finale choice; the chapter card waits for it
 ## The brass rim of a crystal port framing the port views: in a port view the camera sits at the lens, so the
 ## port's own ring is behind it; tapping this rim (IA_port_ring) switches between now and the kept memory.
@@ -1551,22 +1552,40 @@ func _play_recording() -> void:
 	var gen := _recording
 	visuals.recorder(true)
 	hud.call("caption", tr("cap3.recorder"), 2.0)
-	AudioManager.sfx_loop("tape_hiss", true, -10.0) # a rewind restarts the recording: the hiss just keeps going
-	await get_tree().create_timer(UITheme.read_seconds(tr("cap3.recorder"), 2.0)).timeout
+	AudioManager.sfx_loop("tape_hiss", true, -18.0) # under the voice, not over it; a rewind restarts the recording
+	if not await _recording_wait(gen, UITheme.read_seconds(tr("cap3.recorder"), 2.0)):
+		return
 	var lines := tr("doc3.recorder").split(". ", false)
 	for line in lines:
-		if gen != _recording:
-			return
 		var said := line.strip_edges() + ("" if line.ends_with(".") else ".")
 		hud.call("caption", said, 3.0)
-		await get_tree().create_timer(UITheme.read_seconds(said, 3.0)).timeout # the next line waits for the reader
-	for size: Variant in l3().melody():
-		if gen != _recording:
+		if not await _recording_wait(gen, UITheme.read_seconds(said, 3.0)): # the next line waits for the reader
 			return
+	for size: Variant in l3().melody():
 		tones.crystal(int(size), -6.0)
 		visuals.crystal_ring(int(size), false)
-		await get_tree().create_timer(0.9).timeout
-	await get_tree().create_timer(0.8).timeout
-	if gen == _recording:
-		visuals.recorder(false)
-		AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.6)
+		if not await _recording_wait(gen, 0.9):
+			return
+	if await _recording_wait(gen, 0.8):
+		_stop_recording()
+
+
+## Waits `seconds` while this playback (`gen`) is still the one running and the player is still at the camp. Walking
+## away stops the tape: the owner heard the recorder go on and on after leaving it (2026-10-17). -> false when stopped.
+func _recording_wait(gen: int, seconds: float) -> bool:
+	var t := 0.0
+	while t < seconds:
+		if gen != _recording:
+			return false
+		if not cam.current() in RECORDER_VIEWS:
+			_stop_recording()
+			return false
+		await get_tree().process_frame
+		t += get_process_delta_time()
+	return gen == _recording
+
+
+func _stop_recording() -> void:
+	_recording += 1
+	visuals.recorder(false)
+	AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.6)
