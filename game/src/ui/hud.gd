@@ -1054,6 +1054,16 @@ func _above_bar_size() -> Vector2:
 ## The current rung is "Hint N of 3" over its text; the earlier rungs stay above it, smaller and muted, so nothing
 ## said before is lost. The button names the next step: "Stronger hint (2/3)", then "Show the answer (3/3)"; it
 ## goes away at the answer. Asked again about the same goal, the dialog opens at the highest level reached.
+## "Next step: <place>" for the current hint goal (tr() of the goal's place name), "" when the goal has none.
+func hint_place_text() -> String:
+	if GameState.logic == null:
+		return ""
+	var key := HintPlaces.place_key(GameState.logic.hint_goal())
+	if key == "":
+		return ""
+	return tr("ui.hint_next_step") % tr(key)
+
+
 func show_hint() -> void:
 	_hint_btn.badge = ""
 	var o := _open_overlay(0.55)
@@ -1062,6 +1072,9 @@ func show_hint() -> void:
 	# hints follow the room's order, not the close-up on screen: the owner read the box's three-knob answer at the
 	# four-digit safe and thought it was the safe's (2026-10-11)
 	var next := UITheme.label("ui.hint_for_next", 22, UITheme.MUTED)
+	var place := hint_place_text()
+	if place != "":
+		next.text = place
 	next.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(next)
 	var ladder := VBoxContainer.new()
