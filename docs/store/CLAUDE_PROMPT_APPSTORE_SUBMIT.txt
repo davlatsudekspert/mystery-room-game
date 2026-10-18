@@ -1,0 +1,100 @@
+You are helping me prepare version 1.0 of my iOS game for App Store review in App Store Connect, in this Chrome browser. I am already logged in. Talk to me in Uzbek. The App Store Connect interface is in Russian.
+
+SAFETY RULES — follow them strictly:
+- Work ONLY on the app "Mystery Room: Lost Institute" (bundle ID com.mysteryroom.forgotteninstitute, Apple ID 6820786933). Do NOT open or change any other app in this account.
+- Do NOT change the app name. Do NOT create or edit in-app purchases, prices of in-app purchases, subscriptions, agreements, banking or tax, users and access, or keys.
+- The app is FREE (price tier: Free). It has NO in-app purchase in this version: do NOT attach the in-app purchase "full_game" to this version.
+- Never type or store passwords or 2-step codes. If a login or verification is needed, stop and ask me.
+- Contact data (name, phone, e-mail) and the copyright name are MY data: ask me, type them only into the form, do not repeat them in the chat.
+- Before "Добавить на проверку" / "Отправить на проверку" (Add for Review / Submit for Review), before "Опубликовать" (Publish) of App Privacy, and before any step that cannot be undone, stop and ask me "Davom etaymi?".
+- If the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- At the end, give me a short report in Uzbek.
+
+STEP 0 — Look first, change nothing: open the app → App Store tab → version 1.0. Tell me which fields are empty or show errors, and which builds are listed under TestFlight (version 1.0, the newest build number).
+
+STEP 1 — App Information (Информация о приложении):
+  - Subtitle (EN): A 3D escape-room mystery
+  - Category: primary Games → Puzzle; secondary Games → Adventure
+  - Privacy Policy URL: https://sites.google.com/view/mysteryroom-privacy
+  - Add the Russian localization (Добавить язык → Русский) and fill its name/subtitle with the RU texts below.
+  - Age rating: answer as in the table below. Expected result: 9+.
+  - Save.
+
+STEP 2 — Pricing and Availability: price Free; availability: all countries (ask me if I want to exclude any). Save.
+
+STEP 3 — App Privacy: "Do you or your third-party partners collect data from this app?" → No. Save, then ask me before Publish.
+
+STEP 4 — Version 1.0 page (EN and RU):
+  - Promotional text, Description, Keywords: the texts below, exactly.
+  - Support URL: ask me (it must lead to a page with real contact info).
+  - Copyright: "2026 " + the name I give you.
+  - Screenshots: I will give you the folder (docs/store/app_store/screenshots/...). Upload iPhone 6.9" and iPad 13" sets, EN to English and RU to Russian, in their number order. If I do not have them yet, do everything else and leave this step to last.
+  - Build: choose the NEWEST build of version 1.0 that my developer names (it is the store build: Chapters 1–2, no test unlock). If unsure which one, ask me.
+  - If asked about encryption / export compliance: "None of the algorithms mentioned above".
+  - If asked whether the app contains or uses AI-generated content: Yes — the app logo and app icon were generated with an AI image tool; all other content is original.
+  - App Review Information: Sign-in required: NO. Contact: ask me. Notes: the text below.
+  - Version release: "Manually release this version" (Выпустить эту версию вручную) — so it does not go live by itself.
+  - Save.
+
+STEP 5 — Show me the summary of everything filled and any warnings. Ask me "Davom etaymi?". Only after my "ha": Add for Review → Submit for Review.
+
+STEP 6 — Report in Uzbek: done / waiting for Apple / what I must do. Tell me: review usually takes about 1–2 days; because release is manual, after approval I press "Release" myself.
+
+================================================================
+TEXTS
+[en-US]
+Name: Mystery Room: Lost Institute   (do not change)
+Subtitle: A 3D escape-room mystery
+Promotional text: Every clock in the Meridian Institute stopped at 03:17. Step into Laboratory 7, bring back the power and find out what the light remembers.
+Keywords: escape,puzzle,adventure,riddle,detective,quest,clues,logic,laboratory,secret,offline,story,brain
+Description:
+If this reaches you, the Institute has kept its silence long enough.
+Every clock in the building stopped at 03:17, and forty-one of us never came home.
+I hid what I could: in drawers, in ink that only one lamp can show, in plain sight.
+Search slowly. Nothing in that room is there by chance.
+The light remembers. Ask it gently.
+Laboratory 7. Please finish what I could not. — L.
+
+◆ ——— ◆
+
+Chapters 1 and 2 are free to play in full. The story continues in coming updates.
+
+• Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
+• One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
+• Most puzzle answers change with every new game, so no walkthrough can solve it for you
+• Fully playable in English, Russian and Uzbek
+• No ads and no data collected. Works offline
+
+[ru]
+Name: Mystery Room: Забытый институт
+Subtitle: Головоломка-побег в 3D
+Promotional text: Все часы в институте «Меридиан» остановились в 03:17. Войдите в Лабораторию 7, верните питание и узнайте, что запомнил свет.
+Keywords: побег,квест,загадки,детектив,логика,тайна,ключи
+Description:
+Если это дошло до тебя, институт молчал достаточно долго.
+Все часы в здании остановились в 03:17, и сорок один из нас так и не вернулся домой.
+Я спрятала всё, что смогла: в ящиках, в чернилах, которые видны лишь под одной лампой, на самом виду.
+Ищи не спеша. В той комнате ничего не лежит случайно.
+Свет помнит. Спроси его бережно.
+Лаборатория 7. Пожалуйста, закончи то, что не смогла я. — Л.
+
+◆ ——— ◆
+
+Главы 1 и 2 бесплатны целиком. История продолжится в будущих обновлениях.
+
+• Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
+• Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
+• Большинство ответов меняется в каждой новой игре: прохождение из интернета за вас её не решит
+• Полностью на английском, русском и узбекском
+• Без рекламы и без сбора данных. Работает без интернета
+
+================================================================
+REVIEW NOTES
+No sign-in is needed and the game works fully offline. Chapters 1 and 2 are free and fully playable. Chapters 3 and 4 are shown in the chapter list as "Coming soon"; they are not purchasable and not accessible in this version — they will come in a future update. The app contains no purchases, ads, accounts or network features. The game is landscape only. The hint button (light bulb, top right) gives three levels of hints for the current step; level 3 gives the answer. Chapter 1 takes about 30–60 minutes.
+
+================================================================
+AGE RATING ANSWERS
+Parental controls: No. Age assurance: No. Unrestricted web access: No. User-generated content: No. Social media: No. Messaging/chat: No. Advertising: No.
+Profanity/crude humor: None. Horror/fear themes: Infrequent (dark rooms, translucent "echo" figures, no gore, no jump scares). Alcohol/tobacco/drugs: None. Medical/wellness: None.
+Mature/suggestive themes: None. Sexual content/nudity: None. All violence items: None. Guns/weapons: None.
+Gambling: No. Simulated gambling: None. Contests: None. Loot boxes: No. Kids category: Not applicable.
