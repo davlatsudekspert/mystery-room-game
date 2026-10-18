@@ -29,6 +29,7 @@ var _knob_acc := 0.0
 var _lantern_t := 0.0
 var _dress := true # the set dressing (models, its lights); QA renders "before" shots with --no-dress
 var _recording := 0 # playback generation of Leyla's recorder (a rewind restarts it)
+var _rec_playing := false # Leyla's tape is running (Play again stops it)
 const RECORDER_VIEWS: Array[String] = ["camp", "recorder", "shutter"] # where the tape keeps playing
 var _outcome_running := false # the Array answers the finale choice; the chapter card waits for it
 ## The brass rim of a crystal port framing the port views: in a port view the camera sits at the lens, so the
@@ -1037,7 +1038,12 @@ func _interact_recorder(p: String) -> void:
 		cam.go("recorder")
 		return
 	if p == "IA_rec_play":
-		l.play_recorder()
+		if _rec_playing:
+			_stop_recording() # Play again stops the tape (owner, 2026-10-18: it kept hissing)
+			AudioManager.sfx("deck_eject", -6.0, 1.2)
+			hud.call("caption", "", 0.1)
+		else:
+			l.play_recorder()
 	elif p == "IA_rec_rewind":
 		if l.state["camp_open"]:
 			visuals.pull("field_recorder", "IA_rec_rewind", UndergroundVisuals.REC_KEY_DEG, Vector3.RIGHT, 0.2)
@@ -1550,6 +1556,7 @@ func _secret() -> void:
 func _play_recording() -> void:
 	_recording += 1
 	var gen := _recording
+	_rec_playing = true
 	visuals.recorder(true)
 	hud.call("caption", tr("cap3.recorder"), 2.0)
 	AudioManager.sfx_loop("tape_hiss", true, -18.0) # under the voice, not over it; a rewind restarts the recording
@@ -1559,6 +1566,7 @@ func _play_recording() -> void:
 	for line in lines:
 		var said := line.strip_edges() + ("" if line.ends_with(".") else ".")
 		hud.call("caption", said, 3.0)
+		AudioManager.sfx("tape_voice", -6.0, randf_range(0.97, 1.02)) # her voice on the tape, under the caption
 		if not await _recording_wait(gen, UITheme.read_seconds(said, 3.0)): # the next line waits for the reader
 			return
 	for size: Variant in l3().melody():
@@ -1587,5 +1595,6 @@ func _recording_wait(gen: int, seconds: float) -> bool:
 
 func _stop_recording() -> void:
 	_recording += 1
+	_rec_playing = false
 	visuals.recorder(false)
 	AudioManager.sfx_loop("tape_hiss", false, 0.0, 1.0, 0.6)

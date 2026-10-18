@@ -28,3 +28,29 @@ func test_walking_away_stops_the_tape() -> void:
 	await tree.process_frame
 	SaveSystem.delete_game()
 	SaveSystem.save_path = SaveSystem.SAVE_PATH
+
+
+## Play again stops the tape (owner, 2026-10-18: pressing Play again kept it hissing).
+func test_play_again_stops_the_tape() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	SaveSystem.save_path = "user://test_ch3_recorder.json"
+	GameState.start_new("ch3")
+	var room := (load("res://src/rooms/underground/underground.tscn") as PackedScene).instantiate()
+	tree.root.add_child.call_deferred(room)
+	for i in 4:
+		await tree.process_frame
+	(room.get("cam") as RoomCamera).go("recorder", true)
+	room.call("_play_recording")
+	await tree.create_timer(0.3).timeout
+	check(bool(room.get("_rec_playing")), "the tape runs")
+	room.call("_interact_recorder", "IA_rec_play")
+	await tree.create_timer(0.3).timeout
+	check(not bool(room.get("_rec_playing")), "Play again stops it")
+	check(not AudioManager.sfx_loop_playing("tape_hiss"), "and the hiss")
+	AudioManager.stop_all_ambience(0.0)
+	AudioManager.stop_music(0.0)
+	AudioManager.stop_sfx_loops(0.0)
+	room.queue_free()
+	await tree.process_frame
+	SaveSystem.delete_game()
+	SaveSystem.save_path = SaveSystem.SAVE_PATH
