@@ -940,6 +940,8 @@ func _process(delta: float) -> void:
 
 ## Shows a tutorial line once per session. -> true when it was shown now.
 func _tip_once(id: String, key: String) -> bool:
+	if GameState.qa_no_tips:
+		return false
 	if _tips_shown.has(id):
 		return false
 	_tips_shown[id] = true

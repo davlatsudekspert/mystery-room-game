@@ -38,14 +38,15 @@ LOCALES = {"en": {"play": "en-US", "apple": "en-US"}, "ru": {"play": "ru-RU", "a
 
 # Store order: Chapter 1 first (free and playable in every build), then Chapter 2 (locked in store builds while
 # payments are off; see README). (output name, chapter, QA shot name). Play allows 8 per device type.
-SHOTS: list[tuple[str, str, str]] = [ # 01 is the hero frame (HERO below)
-    ("02_laboratory", "ch1", "lab_powered"),
-    ("03_projector_beam", "ch1", "projector_beam_on"),
-    ("04_radio", "ch1", "radio_tuned_41m"),
-    ("05_uv_ink", "ch1", "uv_desk_mark"),
-    ("06_shadow_sculpture", "ch1", "shadow_misaligned"), # unsolved: the aligned emblem is lore, the same in every game
-    ("07_archive_hall", "ch2", "hall_start"),
-    ("08_film_projection", "ch2", "film_frame"),
+SHOTS: list[tuple[str, str, str]] = [ # runs with --store (no tip captions); Chapters 1-2 only in the first release
+    ("01_desk_lamp", "ch1", "desk_view"),
+    ("02_uv_page", "ch1", "notebook_uv_page"),
+    ("03_panel_7", "ch1", "panel_power_restored"),
+    ("04_darkroom", "ch1", "darkroom"),
+    ("05_mirror_beam", "ch1", "beam_first_mirror"),
+    ("06_archive_hall", "ch2", "hall_start"),
+    ("07_tape_deck", "ch2", "deck_tape_1996"),
+    ("08_cliffhanger_pit", "ch2", "cliffhanger_pit_second"),
 ]
 
 # Shot 01 is a hero frame: one object in the dark opening scene, with a caption band in the gold-rule style
@@ -69,7 +70,7 @@ JPEG = {"quality": 85, "optimize": True, "subsampling": "4:2:0"}
 def find_render(renders: str, chapter: str, shape: str, lang: str, shot: str, strict: bool = False) -> str:
     """The newest QA shot named `shot` in <renders>/<chapter>_<shape>_<lang>/ (EN as a fallback unless strict)."""
     for lg in (lang,) if strict else (lang, "en"):
-        hits = sorted(glob.glob(os.path.join(renders, "%s_%s_%s" % (chapter, shape, lg), "*_%s.png" % shot)))
+        hits = sorted(glob.glob(os.path.join(renders, "%s_%s_%s" % (chapter, shape, lg), "[0-9][0-9]_%s.png" % shot)))
         if hits:
             return hits[-1]
     raise FileNotFoundError("no render for %s %s %s %s in %s" % (chapter, shape, lang, shot, renders))

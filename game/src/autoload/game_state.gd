@@ -13,6 +13,8 @@ const COLLECT_ACHIEVEMENT := {"ch1": "light_remembers", "ch2": "echoes_of_the_ar
 ## Per-game puzzle answers (docs/VARIANTS.md): -1 = a new random seed for every new game (players);
 ## 0 = the canonical answers (QA scripts and tests); N > 0 = a fixed variant.
 var variant_seed := -1
+## QA store renders (--store): no first-use tip captions ("Pinch to zoom" etc.) in the frame.
+var qa_no_tips := false
 var chapter_id := ""
 var logic: RoomLogic
 var profile: Dictionary = {}

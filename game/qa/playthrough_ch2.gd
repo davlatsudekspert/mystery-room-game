@@ -32,6 +32,8 @@ func _ready() -> void:
 			lens_path = a.substr(7)
 		if a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7)) # this game's own answers (docs/VARIANTS.md)
+		if a == "--store":
+			GameState.qa_no_tips = true # store screenshots: no tip captions
 		if a == "--no-continue":
 			_continue = false
 	DirAccess.make_dir_recursive_absolute(out_dir)
