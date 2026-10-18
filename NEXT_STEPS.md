@@ -91,6 +91,9 @@ Before the first App Store submission (not needed for TestFlight):
 ## After launch: cloud saves without accounts (owner, 2026-10-17)
 No own sign-in (Google/Apple login) for now: the game stays offline with no account and no data collected. After the store release add Game Center + iCloud saves (iOS) and Google Play Games saved games (Android): automatic sign-in, achievements, saves across devices, no own server. Update Data safety / App Privacy when doing it.
 
+## Later: real voices for the tapes (owner, 2026-10-18)
+The first release keeps the language-neutral tape murmur (tape_voice) under localized captions. Later, in an update: record Leyla's lines (and the second voice) by real people in UZ/RU/EN on a phone, process them into old-tape sound, and play the language's own recording.
+
 ## Game
 00. **Player-behaviour QA before the next release (owner, 2026-10-11: "no errors, a real puzzle, not too easy"):** the solver only walks the right path. Add a chaos pass per chapter: every tap target in every view in random order, with a random item in hand, wrong codes, back and forth, a hint at every step; it must never block, soft-lock or log an error. Then a fresh-eyes player review per chapter (texts, where one gets lost, difficulty: no answer given away without a hint). The hint dialog should name where the next step is (a short place name per goal, EN/RU/UZ).
 0. **Small parts, read without a pinch (owner, 2026-10-11):** Panel 7's switches (~3.5 mm), I–V numerals (1.6 mm) and traces (0.3 mm) on a 20:9 phone. A pinch now magnifies every close-up up to 2.5×; next, make the plate itself readable: larger switch plates, lamps and numerals and thicker traces (tools/blender panel7 + tools/textures/make_decals.py panel, tap areas in lab7_room.gd), then the same audit for every close-up with small parts (`tap_map --tap-size`, Ch4's small parts).
