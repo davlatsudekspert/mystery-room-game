@@ -132,6 +132,8 @@ S = [
 # ---------------------------------------------------------------- documents
 ("doc3.diagnosis", "1977.\nTwo years, perhaps three. The Array does not forget, Leyla. Neither will I.\n— S.", "1977.\nДва года, может быть, три. Решётка не забывает, Лейла. Я тоже не забуду.\n— С.", "1977.\nIkki yil, balki uch. Panjara unutmaydi, Leyla. Men ham unutmayman.\n— S."),
 ("doc3.note", "My heart keeps the count.", "Моё сердце ведёт счёт.", "Yuragim sanoqni saqlaydi."),
+("cap3.rec_tail_cap", "[Before the tape runs out, very quietly:]", "[Перед концом плёнки, совсем тихо:]", "[Lenta tugashidan oldin, juda past ovozda:]"),
+("cap3.rec_tail", "«…they are listening. Now they know your voice too.»", "«…они слушают. Теперь они знают и твой голос.»", "«…ular tinglayapti. Endi ular sening ovozingni ham biladi.»"),
 ("doc3.recorder", "If you hear this, the lift still works. The Choir and the Nursery must sing together, or the Array stays deaf. I am going down to them. Listen to my crystals — they remember the tune.", "Если ты это слышишь, лифт ещё работает. Хор и Питомник должны петь вместе, иначе Решётка останется глухой. Я спускаюсь к ним. Слушай мои кристаллы — они помнят мелодию.", "Agar buni eshitayotgan boʻlsang, lift hali ishlaydi. Xor va Koʻchatxona birga kuylashi kerak, aks holda Panjara kar boʻlib qoladi. Men ularning oldiga tushyapman. Billurlarimni tingla — ular kuyni eslaydi."),
 ("doc3.growth_log", "Last seed, cross-section. Sketched a third of a turn off.", "Последняя затравка, срез. Зарисована с поворотом на треть оборота.", "Oxirgi urugʻ, kesimi. Uchdan bir aylanma burilgan holda chizilgan."),
 # ---------------------------------------------------------------- kept echoes

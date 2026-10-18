@@ -1574,7 +1574,12 @@ func _play_recording() -> void:
 		visuals.crystal_ring(int(size), false)
 		if not await _recording_wait(gen, 0.9):
 			return
-	if await _recording_wait(gen, 0.8):
+	if not await _recording_wait(gen, 0.8):
+		return
+	# the tail of the tape: a last whisper under the hiss, the hook into the Array (director's call, 2026-10-18)
+	AudioManager.sfx("tape_garble", -12.0, 0.7)
+	hud.call("caption", tr("cap3.rec_tail_cap") + "\n" + tr("cap3.rec_tail"), 4.0)
+	if await _recording_wait(gen, UITheme.read_seconds(tr("cap3.rec_tail_cap") + " " + tr("cap3.rec_tail"), 4.0)):
 		_stop_recording()
 
 
