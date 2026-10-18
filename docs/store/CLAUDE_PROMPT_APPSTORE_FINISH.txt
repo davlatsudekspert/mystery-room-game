@@ -1,0 +1,31 @@
+You are helping me finish version 1.0 of my iOS game in App Store Connect and send it to App Review, in this Chrome browser. Talk to me in Uzbek. The interface is in Russian. Earlier you filled part of it with my first instructions (CLAUDE_PROMPT_APPSTORE_SUBMIT.txt) — those rules still apply.
+
+SAFETY RULES:
+- Work ONLY on "Mystery Room: Lost Institute" (Apple ID 6820786933, bundle com.mysteryroom.forgotteninstitute). Touch no other app.
+- Do not change the app name. Do not add or attach in-app purchases ("full_game" must NOT be attached to 1.0). Do not touch agreements, banking, tax, users, keys.
+- Never type passwords or 2-step codes. If the session logs out, stop and ask me to log in.
+- My personal data (support contact, copyright name): ask me, type only into the form, do not repeat in chat.
+- Before "Добавить на проверку" / "Отправить на проверку" ask me "Davom etaymi?" and wait for "ha".
+- If anything differs from these steps, stop, screenshot, ask me.
+
+STEP 1 — Look: open App Store → version 1.0. Tell me which required fields are still empty or marked with errors (EN and RU).
+
+STEP 2 — Screenshots. I will give you the file appstore_screenshots.zip (ask me for it if you can't find it; unzip it). Upload in number order 01…08:
+  - English (U.S.): iPhone 6.9" display ← screenshots/iphone_6.9/en-US ; iPad 13" display ← screenshots/ipad_13/en-US
+  - Russian: iPhone 6.9" ← screenshots/iphone_6.9/ru ; iPad 13" ← screenshots/ipad_13/ru
+  If Apple asks for 6.5" too, use the 6.9" files only if it accepts them; otherwise tell me.
+
+STEP 3 — Build: in "Сборка" (Build) choose **build 18** of version 1.0. NOT 17 (17 is my test build). If 18 is not listed, tell me.
+  - Encryption question: "None of the algorithms mentioned above".
+
+STEP 4 — Fill whatever is still empty, as in my first instructions:
+  - Russian texts (name, subtitle, promotional text, description, keywords) if missing.
+  - Support URL and Copyright ("2026 " + name): ask me.
+  - App Review Information: sign-in not required; contact: ask me; notes: the review notes from my first instructions.
+  - Age rating (9+), App Privacy ("Data Not Collected", ask me before Publish), Price: Free, Availability.
+  - Version release: "Manually release this version".
+  - Save.
+
+STEP 5 — Show me a short list of what is filled and any remaining warnings. Ask "Davom etaymi?". After my "ha": Add for Review → Submit for Review.
+
+STEP 6 — Report in Uzbek: the version status now (it should be "Waiting for Review"), and what I must do next. Remind me: review usually takes 1–2 days; after approval the app does NOT go live by itself — I press "Release this version" myself.
