@@ -33,6 +33,7 @@ const DEEP := Color("8fe6ff")
 ## The shaft view (archive_room.gd adds it): from near the middle of the shaft, nearly straight down, so all four
 ## walls fall away alike (from the south wall's edge the near wall read as a floor). The ropes hang east of it.
 const VIEW_POS := Vector3(1.32, -0.45, -4.32)
+const PIT_ENERGY := 3.2
 const PIT_POS := Vector3(SHAFT_X, -20.6, SHAFT_Z)
 const VIEW_TARGET := Vector3(1.4, -31.0, -4.78)
 
@@ -55,7 +56,7 @@ var beat := ""
 var _fog: Array = []
 var _pit_mat: StandardMaterial3D
 var _dark_mat: StandardMaterial3D
-var _pit_light: OmniLight3D
+var _pit_light: SpotLight3D
 var _pit_k := 1.0
 var _pit_echo: Node3D
 var _pit_glow: OmniLight3D
@@ -181,13 +182,14 @@ func _recorder() -> void:
 		await _fade_out(line, 0.4)
 		line.queue_free()
 	await _fade_out(who, 0.4)
+	who.queue_free()
 	await _fade_out(wave, 0.3)
 	wave.queue_free()
 	# the pit: a slow fade from black to the bottom of the lift shaft, where Leyla's echo stands under one lamp
 	_skip = false
 	beat = "pit_fade"
 	var parent := col.get_parent() as Control
-	parent.offset_top = _canvas().y * 0.66 # the captions sit below the shaft's bottom
+	parent.offset_top = _canvas().y * 0.74 # the captions sit below the pit's floor, inside the safe bottom margin
 	_build_pit()
 	await _fade_black(0.0, 3.2 if not _skip else 0.4)
 	_skip = false
@@ -206,7 +208,7 @@ func _recorder() -> void:
 	voice.add_theme_font_override("font", UITheme.display_font(false))
 	lines.add_child(voice)
 	AudioManager.haptic(60)
-	_second_figure(2.6) # barely there at the edge of the light, gone again
+	_second_figure() # cut in at the edge of the pool, gone on a flicker
 	await _fade_in(voice, 0.9)
 	# both lines are read by now: the bracketed caption has had 2.5 s on its own
 	await _wait(UITheme.read_seconds(cap.text + " " + voice.text, 1.6 + 0.9 + 3.4) - 1.6 - 0.9, true)
@@ -280,12 +282,16 @@ func _build_pit() -> void:
 	bulb.position = at
 	bulb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_shaft.add_child(bulb)
-	_pit_light = OmniLight3D.new()
+	# a tight cone from the lamp straight onto the floor: a soft pool, the walls and corners stay black
+	_pit_light = SpotLight3D.new()
 	_pit_light.light_color = WARM
-	_pit_light.light_energy = 1.5
-	_pit_light.omni_range = 3.8
-	_pit_light.omni_attenuation = 1.1
-	_pit_light.position = at + Vector3(0, -0.1, -0.3)
+	_pit_light.light_energy = PIT_ENERGY
+	_pit_light.spot_range = 5.0
+	_pit_light.spot_angle = 24.0
+	_pit_light.spot_angle_attenuation = 2.2
+	_pit_light.spot_attenuation = 0.8
+	var lp := at + Vector3(0.0, 0.0, -0.3)
+	_pit_light.transform = Transform3D(Basis.looking_at(base + Vector3(-0.05, 0.0, 0.0) - lp, Vector3.UP), lp)
 	_shaft.add_child(_pit_light)
 	# Leyla's echo, leaning back a little as she looks up at the camera
 	var leyla := ModelUtil.spawn("echo_leyla_standing", _shaft, Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-40.0)), base + Vector3(-0.05, 0.0, 0.15)), "none")
@@ -308,18 +314,15 @@ func _build_pit() -> void:
 		tw.tween_method(func(v: float) -> void:
 			mat.set_shader_parameter("intensity", v)
 			if _pit_glow:
-				_pit_glow.light_energy = 0.9 * v / 0.8, 0.0, 0.8, 2.4)
+				_pit_glow.light_energy = 0.3 * v / 0.8, 0.0, 1.3, 2.4)
 	# the other one: tall, dark, just inside the edge of the lamp's reach
-	var dark := ModelUtil.spawn("echo_strand_standing", _shaft, Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-12.0)) * Basis.from_scale(Vector3(1.1, 1.32, 1.1)), base + Vector3(0.82, 0.0, -0.2)), "none")
+	var dark := ModelUtil.spawn("echo_leyla_standing", _shaft, Transform3D(Basis.from_scale(Vector3(1.1, 1.32, 1.1)), base + Vector3(0.62, 0.0, -0.12)), "none")
 	if dark:
 		_pit_dark = dark
 		_dark_mat = StandardMaterial3D.new()
 		_dark_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.0)
 		_dark_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		_dark_mat.roughness = 1.0
-		_dark_mat.rim_enabled = true # the lamp's warm light catches its shoulders and head
-		_dark_mat.rim = 0.7
-		_dark_mat.rim_tint = 1.0
+		_dark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED # pure black: seen by what it blocks
 		for mi in ModelUtil.find_meshes(dark):
 			mi.material_override = _dark_mat
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -332,14 +335,20 @@ func _build_pit() -> void:
 				cam.views["shaft"]["pos"] = PIT_POS + Vector3(0.0, -1.0 * k, 0.0), 0.0, 1.0, 14.0)
 
 
-## The second figure: a black shape fading in and out again within `seconds`, never more than half there.
-func _second_figure(seconds: float) -> void:
+## The second figure: pure black, cut in on the word, held about a second, gone on one flicker of the lamp.
+func _second_figure() -> void:
 	if _dark_mat == null:
 		return
+	_dark_mat.albedo_color.a = 0.9
+	AudioManager.sfx("reveal", -17.0, 0.4)
 	var tw := room.create_tween()
-	tw.tween_property(_dark_mat, "albedo_color:a", 0.88, 0.5).set_trans(Tween.TRANS_SINE)
-	tw.tween_interval(0.6)
-	tw.tween_property(_dark_mat, "albedo_color:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_interval(1.0)
+	tw.tween_callback(func() -> void:
+		if _dark_mat:
+			_dark_mat.albedo_color.a = 0.0)
+	if not bool(Settings.get_value("reduce_motion")):
+		tw.tween_method(_pit_energy, 1.0, 0.1, 0.05)
+		tw.tween_method(_pit_energy, 0.1, 1.0, 0.09)
 
 
 func _pit_lamp_out() -> void:
@@ -356,13 +365,13 @@ func _pit_lamp_out() -> void:
 			for mi in ModelUtil.find_meshes(_pit_echo):
 				((mi as MeshInstance3D).material_override as ShaderMaterial).set_shader_parameter("intensity", v)
 			if _pit_glow:
-				_pit_glow.light_energy = 0.9 * v / 0.8, 0.8, 0.0, 0.25)
+				_pit_glow.light_energy = 0.3 * v / 1.3, 1.3, 0.0, 0.25)
 
 
 func _pit_energy(k: float) -> void:
 	_pit_k = k
 	if _pit_light:
-		_pit_light.light_energy = 1.5 * k
+		_pit_light.light_energy = PIT_ENERGY * k
 		_pit_mat.emission_energy_multiplier = 1.4 * k
 
 
