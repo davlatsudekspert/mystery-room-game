@@ -1,0 +1,49 @@
+Hello App Review team,
+
+Thank you for the review. We believe Mystery Room: Lost Institute meets guidelines 4.3(a), 4.3(b) and 4.2.6, so we are replying instead of resubmitting. Our answers to the nine questions follow.
+
+1. What the app does and the problem it solves
+Mystery Room: Lost Institute is a single-player, story-driven 3D puzzle adventure. The player explores hand-built rooms of a fictional 1979 research institute, examines objects in close-up, combines items and solves mechanical and logic puzzles to follow the trail of a missing scientist, Leyla. Version 1.0 contains Chapter 1 (Laboratory 7) and Chapter 2 (the Archive), both complete and free. Each chapter has its own room, puzzles, story beats and music.
+Unlike most escape-room apps, most puzzle answers are generated per new game from a seed (drawer codes, dial positions, symbol orders) and stay consistent across all clues. A memorised walkthrough cannot solve the game; the player has to read the room. The hint system gives three levels for the current step and names where in the room that step is, so players are not stuck and are not handed spoilers.
+The problem it solves: players who enjoy careful, tactile puzzle games want a premium, offline experience on a phone or iPad, with no ads, no data collection, no energy timers and no pay-to-skip mechanics, and fully in their own language.
+
+2. Intended users
+Adults and teenagers (9+) who like escape-room, point-and-click and mystery games and who play in short sessions of 10–40 minutes. Chapter 1 takes about 30–60 minutes. The game is fully playable in English, Russian and Uzbek. Our primary home audience is players in Uzbekistan and Central Asia, who today have almost no premium puzzle games in their own language, plus Russian-speaking and English-speaking puzzle fans worldwide. Controls use one finger (tap, drag, pinch to magnify), so the game also suits casual players and older players.
+
+3. The gap it addresses
+- Language: we know of no premium 3D escape-room game fully localised into Uzbek (all text, puzzles, hints, tapes and the interface). The puzzle solutions are language-neutral, so the game plays the same in all three languages.
+- Replayability: puzzle answers are generated per game but stay logically consistent across every clue, so walkthroughs and answer lists do not work.
+- Respect for the player: no ads, no accounts, no data collected, works fully offline, no timers or energy. The hints show where the next step is instead of only giving the answer.
+- Original setting and story: a 1979 scientific institute where every clock stopped at 03:17, told through Leyla's notes, audio tapes and recorded "echoes", across chapters that continue the story.
+
+4. Beta testing and feedback applied
+We tested through TestFlight (builds 10–18) and the Google Play internal test (versions 13–20), on phones and tablets in Uzbek, Russian and English, over ten days. In parallel we ran automated full playthroughs of every chapter on random puzzle seeds, a "chaotic player" stress test that taps randomly with items in hand, and layout checks on iPhone, iPad and Android screens. Examples of tester feedback that changed the production build:
+- "The text disappears before I can read it." Every timed message now stays until it can be read, based on its length in each language, and the opening story cards advance on a tap.
+- "The settings panel does not fit, and the text is too big." We reduced the default text size, kept the old size as the "Large" option, and reflowed the settings for 20:9 phones.
+- "The control panel in Chapter 1 is too small for my eyes." Every close-up can now be magnified up to 2.5× with a pinch, and the panel's switches, numerals and lamps were enlarged.
+- "I tapped the drawer but nothing happened." A selected inventory item was blocking taps. Now an item that has no use at a target says so and goes back to the bag, and the tap works normally.
+- "The hint shows a 3-digit code, but the safe needs 4 digits." The hint was for a different puzzle. The hint dialog now names the place of the next step.
+- "The tape recorder keeps hissing and will not stop." The recorder now stops when tapped again or when the player walks away, and its hiss sits under the voice.
+
+5. Standalone or part of a suite
+It is a standalone product. [OWNER: choose one]
+[A] It is the only app on our developer account.
+[B] Our account also has <app name>, a <what it does> app. It is unrelated to games and shares no code, content or functionality with this game.
+Future chapters (3 and 4) will be added to this same app as updates, not released as separate apps.
+
+6. Could it be an in-app purchase or addition in another app on the account?
+No. [A] There is no other app on our account. / [B] Our other app, <app name>, is a <category> app, so a 3D puzzle game cannot be delivered inside it. New chapters of this game will ship as updates of this same app.
+
+7. Shared code or assets with other apps on our account
+No. [A] There are no other apps. / [B] This game shares no code, frameworks or assets with <app name>.
+
+8. Shared codebase, SDK or content library with third-party apps
+No game template, kit or app generation service was used. The game runs on the open-source Godot Engine (MIT licence), a general-purpose engine comparable to Unity. Everything on top of the engine was written for this game: about 29,000 lines of game code, 72 source files. That includes the puzzle logic, the rooms, the camera and touch input, the inventory, the hint system and the per-game puzzle generation. The 187 3D models are built by our own Blender scripts. The 100 sound effects and music tracks are synthesised by our own scripts, and the 990+ text entries were written and translated for this game. Third-party material is limited to CC0 photo textures (ambientCG, Poly Haven), a few CC0 props, and open-licence (OFL) fonts. All of them are listed in our licence records.
+
+9. Client, partner or third party
+No. The game's concept, story, characters, puzzles and branding belong to the account holder, who designed and directed the game and is the provider of its content. The account holder built it, using AI-assisted coding tools under their own direction. The app icon and logo were created by the account holder with an AI image tool, and we disclosed this. It was not built for or on behalf of any client, and no template or app generation service was used.
+
+We would be happy to provide a gameplay video, design documents or a TestFlight walkthrough if that would help the review.
+
+Kind regards,
+The Mystery Room team

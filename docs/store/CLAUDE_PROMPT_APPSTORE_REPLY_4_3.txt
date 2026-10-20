@@ -1,0 +1,21 @@
+You are helping me answer an App Review rejection in App Store Connect, in this Chrome browser. Talk to me in Uzbek. The interface is in Russian.
+
+SAFETY RULES:
+- Work ONLY on "Mystery Room: Lost Institute" (Apple ID 6820786933). Do not open or change any other app.
+- Do NOT resubmit the build and do NOT press "Отправить на проверку" (Submit for Review). We only REPLY to the message.
+- Never type passwords or 2-step codes. If logged out, stop and ask me to log in.
+- Change nothing else (no metadata, no build, no prices, no in-app purchases).
+- Before pressing "Отправить" (Send) on the reply, show me the final text and ask "Davom etaymi?". Wait for "ha".
+
+STEP 1 — Open "Приложения" (Apps), the list only. Tell me how many apps are on the account and their names. Do not open them.
+  - If "Mystery Room: Lost Institute" is the only app, use variant [A] in answers 5, 6 and 7.
+  - If there are other apps, tell me their names and ask me what each one does. Then fill variant [B] with my words.
+  - In both cases, delete the other variant, the "[OWNER: choose one]" line and the [A]/[B] marks.
+
+STEP 2 — Open Mystery Room: Lost Institute → App Review (or "Центр решений" / the rejection message for version 1.0, Guidelines 4.3 and 4.2.6). Click "Ответить" (Reply).
+
+STEP 3 — Paste the reply text from the file REVIEW_REPLY_4_3.txt, with variant A or B filled as in Step 1. Plain text, keep the paragraphs.
+
+STEP 4 — Show me the final text, then ask "Davom etaymi?". After "ha", send it.
+
+STEP 5 — Report in Uzbek: the message was sent, and the app's status now. Do not press Submit for Review; Apple will answer in the same thread (usually within 1–3 days).
