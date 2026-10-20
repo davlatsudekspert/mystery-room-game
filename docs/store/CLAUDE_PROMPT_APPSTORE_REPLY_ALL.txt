@@ -1,0 +1,23 @@
+You are helping me answer App Review rejections (Guidelines 4.3 Spam and 4.2.6 App Generation Services) for ALL apps on my App Store Connect account, in this Chrome browser. Talk to me in Uzbek. The interface is in Russian.
+
+SAFETY RULES:
+- Do NOT resubmit any build and do NOT press "Отправить на проверку" (Submit for Review) in any app. We only REPLY to the review message in the Resolution Center.
+- Change nothing else: no metadata, builds, prices, in-app purchases, agreements, users, keys.
+- Never type passwords or 2-step codes. If logged out, stop and ask me to log in.
+- One app at a time. Before pressing "Отправить" (Send) on a reply, show me the final text and ask "Davom etaymi?". Wait for "ha".
+- Never invent facts. Use only: what I tell you, what the app's own App Store Connect page shows (name, description, screenshots, what is in the build notes), and the ready text below. If a fact is missing, ask me.
+- Every reply must be written for that app only. Do NOT copy one app's text into another: Apple compares replies from the same account.
+- Do NOT claim "no other apps" or "no shared code" unless I confirmed it for that specific pair of apps.
+
+STEP 1 — Open "Приложения" (the list only). List every app on the account with its status. Tell me which ones have a rejection for 4.3 / 4.2.6 in the Resolution Center. Skip any app where a reply was already sent (the NFCSTORE app: I already answered it; check its thread, and if my reply is there, leave it alone).
+
+STEP 2 — For "Mystery Room: Lost Institute": ask me for the names of my other apps and what each does in one sentence, and whether it shares any code, framework or content with the game. Then open the 4.3 message, click "Ответить", and paste the text from the file REVIEW_REPLY_4_3.txt (the one I gave you) with these changes: keep variant [B] in answers 5, 6 and 7, fill it with my words (each other app: its name and its category), delete variant [A], the "[OWNER: choose one]" line and the [A]/[B] marks. Show me, ask "Davom etaymi?", send after "ha".
+
+STEP 3 — For each of my OTHER rejected apps, one by one:
+  a) Open its page and the rejection. Read the app's description and screenshots.
+  b) Ask me these questions in Uzbek and wait for my answers: what exactly the app does and for whom; what makes it different from similar apps; what testing I did and what feedback changed the build; whether it shares code or content with my other apps; whether any template, kit or app generation service, or any client's content, was used.
+  c) Write the reply in English, answering Apple's nine questions in order (what the app does; intended user; the market gap; beta testing with real examples of changes; standalone or suite; could it be an in-app purchase in another app; shared code with my other apps; shared code with third-party apps; client or third-party content). Use only my answers. Be specific and concrete; no marketing slogans.
+  d) Show me the text, ask "Davom etaymi?", send after "ha".
+  If I say an answer is "unknown" or I have no beta testing example, write that honestly; do not make it up. Tell me instead that the reply is weak and ask whether to wait and improve the app first.
+
+STEP 4 — Report in Uzbek: for each app, replied / skipped / waiting for my answer. Remind me: Apple answers in the same thread, usually within 1–3 days. Do not submit anything for review.
