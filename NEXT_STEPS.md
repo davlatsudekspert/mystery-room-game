@@ -128,3 +128,12 @@ The owner enables these on the claude.ai account; they load in a new session. Us
 - **frontend-design (Anthropic):** store pages, artifacts and press kit pages.
 - **Task Observer:** turns the owner's corrections into rules in `CLAUDE.md`. The isolation rules there (never touch NFCSTORE; no secrets in code) stay first and must never be weakened.
 - **AI Skills (`find-skills`):** look up a fitting skill before starting an unfamiliar kind of task.
+
+## Polish from the fresh-player QA (2026-10-24, `docs/QA_FRESH_PLAYER_2026-10-24.md`) — for the next update
+No blockers. Checked and NOT bugs: Ch2 `33_echo_stacks` (two different crystals: Strand's mark and Leyla's sign) and the Ch2 end card "To be continued" (correct in a store build; tester builds with beta_unlock show Play).
+To fix with the next content update (needs a new build and a gate run, so not before Apple answers on build 18):
+1. With an item in hand, the "Nothing happens." / "Tap where to use" banners cover the play area on 20:9 (Ch2 splicer and station; Ch1 panel lamps).
+2. Ch2 receiver grille: three stacked bottom banners (item card, long description, prompt); RU/UZ wrap to two lines.
+3. "Pinch to zoom." tip shows on views that need no zoom and overlaps the title strip; the first-item tip shares the strip with scene captions (Ch1 locked drawer).
+4. Notebook overlay leaves the caption under it half visible.
+5. Cosmetic: faint corridor caption (Ch1 finale), "Lumen shard 5/5" toast, black blobs in Ch1 vials / Ch2 key choice, Ch2 end-card stat labels wrap in RU/UZ.
