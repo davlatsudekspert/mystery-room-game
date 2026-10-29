@@ -1,0 +1,91 @@
+You are helping me release my Android game to Google Play PRODUCTION in Google Play Console, in this Chrome browser. I am already logged in. Talk to me in Uzbek. The Play Console interface is in Russian. Google already granted production access to this app.
+
+SAFETY RULES — follow them strictly:
+- Work ONLY on the app "Mystery Room: Lost Institute" (package com.mysteryroom.forgotteninstitute). Do NOT open, edit, publish, pause or delete any other app in this developer account. The other apps are a separate live business and must stay untouched.
+- Never type, read aloud or store passwords, 2-step codes, keystore files or keystore passwords. If a login or verification is needed, stop and ask me.
+- Do NOT create in-app products, subscriptions or prices. The app is FREE and has NO purchases in this release. Do NOT change the payments profile, account details, users and permissions, API access or any other account-level setting.
+- Legal or terms checkboxes: show them to me and let ME tick them.
+- Before pressing the final "Отправить на проверку" / "Опубликовать" (Send for review / Publish) for the production release, and before any step that cannot be undone, show me a short summary and ask "Davom etaymi?". Wait for my "ha".
+- If the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- Never claim something is done unless you saw it on the screen.
+
+WHAT I WILL GIVE YOU: the release file. It is the "mystery-room-android-release" artifact of the GitHub Actions run #21 of the repository davlatsudekspert/mystery-room-game (a zip with one .aab inside; it is deleted on 2026-11-04). If you cannot download it, ask me to download and unzip it, and tell you the path of the .aab.
+
+STEP 0 — Look first, change nothing: open the app and tell me the state of:
+  - Панель управления: which setup tasks are incomplete (content rating, data safety, ads declaration, target audience, app access, privacy policy, store settings, store listing).
+  - Тестирование и выпуск → Рабочая версия (Production): is there already a release or draft?
+  - Тестирование → Закрытое тестирование: which version is on it (only look).
+  Report in Uzbek and stop if something required is missing (then ask me).
+
+STEP 1 — Store listing check (Основная страница, default language en-US). Compare with the texts below and fix only what differs:
+  - Icon 512x512 must be the NEW icon (dark navy, brass-and-light emblem). If it is an older look, ask me for icon_512.png (file docs/store/google_play/icon_512.png in the repository, or I send it) and replace it.
+  - Feature graphic 1024x500, phone screenshots (8): files from docs/store/google_play/screenshots/en-US (01_desk_lamp.jpg … 08_cliffhanger_pit.jpg) and ru-RU for the Russian translation. If the current ones already show the new look, leave them.
+  - Texts: use the TEXTS section below. Chapters 1 and 2 are free; the description must NOT mention a price or purchase.
+  - Category Game → Puzzle. Contact email: the support email (ask me). Privacy policy URL: https://sites.google.com/view/mysteryroom-privacy
+  - Save.
+
+STEP 2 — Countries: Рабочая версия → Страны/регионы → add ALL countries and regions available (ask me if I want to exclude any). Save.
+
+STEP 3 — Create the production release (Рабочая версия → Создать релиз):
+  - If asked, keep Play App Signing (the default).
+  - Upload the .aab. Check that Play shows version name 1.0 and version code 21, and no errors. If the version code is not 21 or Play reports an error, stop and tell me.
+  - Release name: 1.0
+  - Release notes (use these exact texts):
+    <en-US>
+    Mystery Room: Lost Institute, version 1.0. Chapters 1 and 2 are free to play in full. Every new game has its own puzzle answers. Fully playable in English, Russian and Uzbek, offline, no ads.
+    </en-US>
+    <ru-RU>
+    Mystery Room: Забытый институт, версия 1.0. Главы 1 и 2 бесплатны целиком. В каждой новой игре свои ответы на головоломки. Полностью на английском, русском и узбекском, без интернета и рекламы.
+    </ru-RU>
+  - Save, then "Далее" / "Проверить релиз". Do NOT send yet.
+
+STEP 4 — Show me the summary: version, countries, listing languages, any warnings or errors that Play shows on the release review page (Панель управления → Опубликовать). Ask "Davom etaymi?".
+
+STEP 5 — Only after my "ha": send the release for review / publish it (if "Управляемая публикация" is on, tell me and send it for review, do not publish by yourself). Then report in Uzbek: the status (usually "В обработке" / review), and that Google's review can take from a few hours to several days. Remind me: the app goes live by itself after approval unless "managed publishing" is on.
+
+STEP 6 — Report in Uzbek: done / waiting / what I must do. Do not start any other release (no testing tracks, no other apps).
+
+================================================================
+TEXTS (use exactly)
+
+[en-US]
+App name: Mystery Room: Lost Institute
+Short description: A 3D mystery escape room. Light remembers. Find out what it kept.
+Full description:
+If this reaches you, the Institute has kept its silence long enough.
+Every clock in the building stopped at 03:17, and forty-one of us never came home.
+I hid what I could: in drawers, in ink that only one lamp can show, in plain sight.
+Search slowly. Nothing in that room is there by chance.
+The light remembers. Ask it gently.
+Laboratory 7. Please finish what I could not. — L.
+
+◆ ——— ◆
+
+Chapters 1 and 2 are free to play in full. The story continues in coming updates.
+
+• Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
+• One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
+• Most puzzle answers change with every new game, so no walkthrough can solve it for you
+• Fully playable in English, Russian and Uzbek
+• No ads and no data collected. Works offline
+
+[ru-RU]
+App name: Mystery Room: Забытый институт
+Short description: 3D-головоломка-побег. Свет помнит. Узнайте, что он сохранил.
+Full description:
+Если это дошло до тебя, институт молчал достаточно долго.
+Все часы в здании остановились в 03:17, и сорок один из нас так и не вернулся домой.
+Я спрятала всё, что смогла: в ящиках, в чернилах, которые видны лишь под одной лампой, на самом виду.
+Ищи не спеша. В той комнате ничего не лежит случайно.
+Свет помнит. Спроси его бережно.
+Лаборатория 7. Пожалуйста, закончи то, что не смогла я. — Л.
+
+◆ ——— ◆
+
+Главы 1 и 2 бесплатны целиком. История продолжится в будущих обновлениях.
+
+• Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
+• Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
+• Большинство ответов меняется в каждой новой игре: прохождение из интернета за вас её не решит
+• Полностью на английском, русском и узбекском
+• Без рекламы и без сбора данных. Работает без интернета
