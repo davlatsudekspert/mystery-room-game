@@ -1,0 +1,15 @@
+T1|Laboratory Seven has been silent for a very long time.
+T2|But something inside is still waiting.
+T3|Can you find what the Institute forgot?
+S1|A locked drawer. Four silent wheels.
+S2|Ink that only ultraviolet light can read.
+S3|A panel that needs its power back.
+S4|Can you solve it? Two chapters, free to play.
+R1|The Institute was lost. Its secrets were not.
+R2|Search Leyla's laboratory. Every object has a story.
+R3|Read what only ultraviolet light can show.
+R4|Restore the power. Open the hidden darkroom.
+R5|Follow the light, and bend the beam.
+R6|Beneath the archive, a vault is waiting.
+R7|And something below is... listening.
+R8|Mystery Room. Lost Institute. Two chapters, free to play.

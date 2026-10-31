@@ -1,0 +1,12 @@
+1
+00:00:00,600 --> 00:00:04,194
+7-laboratoriya uzoq vaqtdan beri jimjit.
+
+2
+00:00:06,400 --> 00:00:09,378
+Ammo ichkarida nimadir hamon kutmoqda.
+
+3
+00:00:11,200 --> 00:00:13,807
+Institut nimani unutganini topa olasanmi?
+

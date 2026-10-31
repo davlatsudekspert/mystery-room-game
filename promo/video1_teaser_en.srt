@@ -1,0 +1,12 @@
+1
+00:00:00,600 --> 00:00:04,194
+Laboratory Seven has been silent for a very long time.
+
+2
+00:00:06,400 --> 00:00:09,378
+But something inside is still waiting.
+
+3
+00:00:11,200 --> 00:00:13,807
+Can you find what the Institute forgot?
+
