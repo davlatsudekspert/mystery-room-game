@@ -14,12 +14,12 @@ extends RefCounted
 ## hidden (the board, its junction boxes and its lamps stay). The N7 book-lift cage is shown closed; its puzzle is wired
 ## with the rest of Stage B (see docs/CHAPTER2_EXPANSION_STATUS.md).
 
-const VIEWS: Array[String] = ["pump", "manifold", "boiler", "lift_door", "pipes", "bench"]
+const VIEWS: Array[String] = ["pump", "manifold", "boiler", "lift_door", "pipes", "bench", "cell_door"]
 const HOTSPOT_VIEW := {"pump_manifold": "manifold", "pump_boiler": "boiler", "pump_pipes": "pipes", "pump_lift": "lift_door",
-	"pump_bench": "bench", "pump_door": "pump", "pump_stair": "pump"}
+	"pump_bench": "bench", "pump_door": "cell_door", "pump_stair": "pump"}
 const DEEPER := {}
 const CAPTION := {"pump": "room2x.pump", "manifold": "obj2x.manifold", "boiler": "obj2x.boiler", "lift_door": "obj2x.lift",
-	"pipes": "obj2x.pipe", "bench": "room2x.pump"}
+	"pipes": "obj2x.pipe", "bench": "room2x.pump", "cell_door": "obj2x.cell_door"}
 
 ## model -> [position, yaw degrees] in zone coordinates (docs/models/ch2_exp.md "suggested placement").
 const PLACE := {
@@ -83,6 +83,7 @@ func build() -> void:
 	for mi in ModelUtil.find_meshes(shell):
 		if str(mi.name).begins_with("wall_") or str(mi.name) in ["ceiling", "beams"]:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_wet_puddles(shell)
 	_build_exits(shell)
 	_build_lights(shell)
 	_build_pipe_board()
@@ -104,6 +105,24 @@ func _build_views() -> void:
 	cam.add_view("lift_door", o + Vector3(-1.4, 1.45, -1.7), o + Vector3(-4.3, 1.15, -1.9), 58.0)
 	cam.add_view("pipes", o + Vector3(-1.2, 0.98, 1.05), o + Vector3(-3.5, 0.95, 1.05), 54.0)
 	cam.add_view("bench", o + Vector3(1.55, 1.5, 1.45), o + Vector3(1.6, 0.9, 2.6), 46.0)
+	cam.add_view("cell_door", o + Vector3(1.3, 1.5, 0.4), o + Vector3(3.45, 1.1, -1.1), 54.0)
+
+
+## The floor's puddles are black lacquer in the model; with no reflections in the room that reads as black holes. They get a
+## dull wet grey with a soft sheen instead.
+func _wet_puddles(shell: Node3D) -> void:
+	var mi := ModelUtil.find(shell, "puddles") as MeshInstance3D
+	if mi == null:
+		return
+	var wet := StandardMaterial3D.new()
+	wet.albedo_color = Color(0.2, 0.19, 0.18)
+	wet.roughness = 0.12
+	wet.metallic = 0.0
+	wet.metallic_specular = 0.9
+	for i in mi.mesh.get_surface_count():
+		mi.set_surface_override_material(i, wet)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ArchiveKit.drop_colliders(mi)
 
 
 func _build_exits(shell: Node3D) -> void:
@@ -569,6 +588,12 @@ func on_enter() -> void:
 	apply_state(false)
 
 
+## A camera view of this room came up: the first look at the Cell door is moment M2 (the logic says whether it is due).
+func on_view(view: String) -> void:
+	if view == "cell_door":
+		logic.try_moment("m2")
+
+
 # ====================================================================== taps
 ## -> true when the tap was handled here.
 func interact(hs: String, part: String) -> bool:
@@ -623,7 +648,9 @@ func interact(hs: String, part: String) -> bool:
 				_say("room2x.pump")
 			return true
 		"pump_door":
-			if logic.room_open("cell"):
+			if cur != "cell_door":
+				cam.go("cell_door")
+			elif logic.room_open("cell"):
 				logic.enter_room("cell")
 			return true
 		"pump_stair":
@@ -691,3 +718,23 @@ func moment_m1(seconds: float, _sting: bool) -> void:
 	_lamp_tween.tween_property(_work_light, "light_energy", base * 1.5, 0.12)
 	_lamp_tween.parallel().tween_callback(func() -> void: _lamp(bulb, true, Color("ffb46b")))
 	_lamp_tween.tween_property(_work_light, "light_energy", base, seconds * 0.25).set_trans(Tween.TRANS_SINE)
+
+
+## M2 "knock behind the door": three soft knocks from inside the Cell as the player faces its door (the cue knocks.ogg has them
+## at 0.35 s, 1.0 s and 1.75 s, then a kettle ticking). The door leaf shivers in its frame on each knock; nothing steps out.
+func moment_m2(_seconds: float, _sting: bool) -> void:
+	var leaf := ModelUtil.find(models["room_pump"], "IA_door_cell")
+	if leaf == null:
+		return
+	if not leaf.has_meta("rest"):
+		leaf.set_meta("rest", leaf.transform)
+	var base: Transform3D = leaf.get_meta("rest")
+	var tw := room.create_tween()
+	var at := 0.0
+	for t: float in [0.35, 1.0, 1.75]:
+		tw.tween_interval(t - at)
+		at = t
+		tw.tween_callback(func() -> void: leaf.transform = Transform3D(base.basis * Basis(Vector3.UP, deg_to_rad(1.1)), base.origin))
+		tw.tween_interval(0.07)
+		tw.tween_callback(func() -> void: leaf.transform = base)
+		at += 0.07
