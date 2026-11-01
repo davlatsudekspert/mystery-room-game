@@ -27,6 +27,9 @@ def pre():
     K.decal_alpha("M_Decal_FrostPatch", "frost_patch.png")
     K.qa_frost_material(wipe_band=-1)
     K.preview_glow()
+    for n in list(K.M.PREVIEW):          # create every preview slot now so the imported GLB slots map onto textured materials
+        K.M.material(n)
+    K.fix_pbr()
 
 
 MODELS = [("room_cold", (0, 0, 0), 0)]

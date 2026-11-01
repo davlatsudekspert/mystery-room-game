@@ -1,0 +1,7 @@
+# Chapter 2 expansion (Stage A), R4 Cold Store and its props. Shared helpers: lib_cold.py (on lib_ch2x.py). Decals: tools/textures/make_decals_cold.py
+# film_can.py writes film_can_1..4.glb, carriage.py writes carriage_1..5.glb
+film_can.py
+cold_chest.py
+frost_window.py
+carriage.py
+room_cold.py

@@ -163,10 +163,10 @@ def frost_patch():
     yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
     r = np.hypot(xx - n / 2, yy - n / 2) / (n / 2)
     warp = fbm(n, n, 60, 31, 3) - 0.5
-    core = D2.smooth(1.0, 0.25, r + warp * 0.55)
-    crystals = D2.pnoise(n, n, 6, 32, stretch=(1.0, 2.4)) * 0.5 + D2.pnoise(n, n, 18, 33) * 0.5
-    a = np.clip(core * (0.55 + 0.9 * crystals), 0, 1) ** 0.9
-    a = np.clip(a * 1.15, 0, 0.92)
+    core = D2.smooth(1.0, 0.45, r + warp * 0.45)
+    crystals = D2.pnoise(n, n, 5, 32, stretch=(1.0, 2.6)) * 0.45 + D2.pnoise(n, n, 16, 33) * 0.35 + D2.pnoise(n, n, 40, 34) * 0.2
+    val = core * (0.35 + 1.25 * crystals)
+    a = D2.smooth(0.30, 0.60, val) * 0.58
     rgb = np.zeros((n, n, 3), np.float32) + np.array([236, 246, 252], np.float32)
     rgb -= (1 - core)[..., None] * 14.0
     save(to_img(rgb - 0.5, a), "frost_patch.png")

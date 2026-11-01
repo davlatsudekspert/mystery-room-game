@@ -94,6 +94,7 @@ def retex() -> None:
             base = m.name.split(".")[0]
             if base.startswith("M_"):
                 o.data.materials[i] = M.material(base)
+    fix_pbr()
 
 
 def qa_frost_material(wipe_band: int = -1, uv_tiles: float = 2.2) -> None:
@@ -163,3 +164,16 @@ def preview_glow() -> None:
             b = m.node_tree.nodes.get("Principled BSDF")
             b.inputs["Emission Color"].default_value = M.hex_rgba("D8EEFF")
             b.inputs["Emission Strength"].default_value = st
+
+
+def fix_pbr() -> None:
+    """QA only: make sure every preview material whose texture folder exists shows its albedo/normal/ORM maps (an untextured half-metal
+    renders black in a dark studio; Godot uses the .tres files anyway)."""
+    for mat in bpy.data.materials:
+        if not mat.use_nodes or not mat.name.startswith("M_") or mat.name.startswith("M_Decal_"):
+            continue
+        if any(n.type == "TEX_IMAGE" for n in mat.node_tree.nodes):
+            continue
+        tex_dir = os.path.join(M.ROOT, "game", "assets", "textures", mat.name.split(".")[0][2:].lower())
+        if os.path.isdir(tex_dir):
+            M._attach_pbr(mat.node_tree, mat.node_tree.nodes.get("Principled BSDF"), tex_dir)
