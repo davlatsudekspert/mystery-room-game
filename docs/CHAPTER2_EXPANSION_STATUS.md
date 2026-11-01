@@ -109,3 +109,13 @@ Owner: the Godot scene engineer. Spec: `docs/CHAPTER2_EXPANSION.md`. Logic: `gam
 - Native RU / UZ review of the new strings (all 16 hint goals, moments, Trial texts).
 - Human playtests (5): they decide the length claim ("about an hour" until then).
 - Cold Store cloth hold-to-wipe, kettle tick, chest lid tap, lift hall door (see "Left to do" above; those lines are historic).
+
+### QA numbers, update 1.1 tree (2026-11-01, software Vulkan under Xvfb)
+- `tools/run_tests.sh`: 307 tests, 42065 checks, 0 failures.
+- `playthrough_ch2 --expansion=2` (default): EN seed 9137 177 taps, RU seed 2468 193 taps, UZ seed 8921 190 taps: exit 0, 0 logic fallbacks, 4 continue checks each, 0 failed, 0 taps under a HUD control (RU also 0 on the first try; EN and UZ showed a one-off "plate door back" fallback before the harness aimed at the door twice).
+- `playthrough_ch2 --legacy` seed 3333: exit 0, 89 taps, 0 fallbacks, 3 continue checks.
+- Chapter 1 playthrough seed 4242: exit 0, 100 taps, 0 fallbacks, 3 continue checks. Chapter 3 (`--key=strand --seed=2024`, reads the ch2 choices): exit 0, 111 taps, 0 fallbacks.
+- `tools/chaos_run.sh --chapter=ch2 --seed=11 --steps=400`: 400 steps, 314 taps, 176 item-in-hand taps, 0 violations, 0 script errors.
+- `tap_map --chapter=ch2 --views=all --hud-check`: phone20 181 controls in 79 views, 0 failures, 34 banner warnings; tablet10 178 controls in 79 views, 0 failures, 30 banner warnings. (The six light-table knobs are bare tap boxes, not measured by this tool; their boxes are 6.9 cm = about 7 mm raw on phone20 and clear 9 mm with the tap assist like the other small controls; IA_switch and the sheet tab were measured: 11.5 mm / 11.0 mm with assist.)
+- `tap_map --perf --screen=phone20` (HUD on): max 131 draw calls (hall root), Cell 85, Echo stacks 90; all Chapter 2 views <= 150.
+- `ui_screens` android20 EN/RU/UZ: 100 shots, 0 layout issues. iphone EN/RU/UZ: see the log line in the final report.
