@@ -40,7 +40,9 @@ from sounds import load_all as _load_core  # noqa: E402
 # Chapter 3 (Underground Facility): the four zone ambiences and the two music cues.
 # Chapter 4 (Array Hall): the three zone ambiences and the two music cues.
 EXTRA_MODULES = ("archive", "music_archive", "menu_box", "intro_ch1", "underground", "music_underground",
-                 "array_hall", "music_array_hall")
+                 "array_hall", "music_array_hall", "c2x_amb", "c2x_sfx", "c2x_moments", "c2x_hands")
+# Chapter 2 expansion ("The Whole Building"): six room ambiences (c2x_amb), puzzle/door/object sounds (c2x_sfx),
+# the six reaction-moment cues in Full and Soft (c2x_moments) and hand-held item foley (c2x_hands).
 
 
 def load_all() -> dict:

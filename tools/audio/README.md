@@ -149,6 +149,63 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/box_open.ogg` | 0.83 s | no | peak -1.0 dBFS | 10 KB | synth | Small lid springs open: latch click, coil-spring twang, lid knock |
 | `sfx/breaker_on.ogg` | 2.53 s | no | peak -1.1 dBFS | 11 KB | synth | Main breaker lever thrown: big clunk, then transformer hum swells in |
 | `sfx/breaker_trip.ogg` | 0.90 s | no | peak -0.8 dBFS | 13 KB | synth | Breaker trips: spark crackle, hum dies, lever snaps back with a clunk |
+| `sfx/c2x_aisle_found.ogg` | 3.14 s | no | peak -1.2 dBFS | 13 KB | synth | The right aisle opens: the shelves part and a long breath of still, cold air with a faint low chime |
+| `sfx/c2x_board_ok.ogg` | 2.15 s | no | peak -1.0 dBFS | 22 KB | synth | The tags hang in the right order: a soft rattle of all six, a wood clack and a tiny key dropping into the tray |
+| `sfx/c2x_board_wrong.ogg` | 0.79 s | no | peak -1.0 dBFS | 9 KB | synth | The tags do not agree with the slips: a dull wooden rattle, nothing happens |
+| `sfx/c2x_cab_open.ogg` | 1.92 s | no | peak -1.1 dBFS | 17 KB | synth | Strand's cabinet opens: the last wheel seats, a latch drops, a wooden drawer slides out and a lamp glass rolls and clinks |
+| `sfx/c2x_cab_wheel.ogg` | 0.34 s | no | peak -1.2 dBFS | 7 KB | synth | Cabinet digit wheel advances one number: a crisp brass tick with a tiny barrel click |
+| `sfx/c2x_carriage_clunk.ogg` | 1.51 s | no | peak -0.9 dBFS | 14 KB | synth | The carriage will not move (no gap beside it): a dull steel clunk and a short rattle of the rails |
+| `sfx/c2x_carriage_roll.ogg` | 3.95 s | no | peak -1.1 dBFS | 16 KB | synth | A heavy shelf carriage rolls one slot along its rails: a low rumble with rail-joint beats, a stop |
+| `sfx/c2x_chest_sealed.ogg` | 0.54 s | no | peak -1.0 dBFS | 8 KB | synth | The chest is still sealed: the lid is tried, a short rattle against the lock |
+| `sfx/c2x_chest_unlock.ogg` | 3.08 s | no | peak -1.0 dBFS | 29 KB | synth | The rings line up: three tumbler clicks, a deep latch release, the lid creaks open with a faint glass rustle |
+| `sfx/c2x_cold_frozen.ogg` | 0.75 s | no | peak -1.1 dBFS | 8 KB | synth | Frozen door: the wheel will not turn, an ice crunch and a dull thud against the seal |
+| `sfx/c2x_counter_heavy.ogg` | 2.18 s | no | peak -0.9 dBFS | 16 KB | synth | The counterweight is too heavy: the cable groans taut and the weights knock the frame |
+| `sfx/c2x_counter_light.ogg` | 1.53 s | no | peak -0.7 dBFS | 16 KB | synth | The counterweight is too light: a slack cable clink and a small hollow tap |
+| `sfx/c2x_crank.ogg` | 2.50 s | no | peak -1.0 dBFS | 29 KB | synth | Compactus crank: a handle turned with a ratchet clicking faster, a gear grind (1.4 s) |
+| `sfx/c2x_door_cold.ogg` | 3.00 s | no | peak -0.9 dBFS | 16 KB | synth | Cold Store door opens: the rubber seal peels (soft sigh), the latch lets go, cold air moves out |
+| `sfx/c2x_door_iron.ogg` | 3.21 s | no | peak -1.0 dBFS | 26 KB | synth | Pump Room door found behind the panel: bolt clank, a long iron hinge groan, a heavy stop |
+| `sfx/c2x_door_pass.ogg` | 2.38 s | no | peak -0.9 dBFS | 22 KB | synth | Pass door in the gallery: the pass key slides in, turns, the bolt draws back and the door unlatches |
+| `sfx/c2x_door_service.ogg` | 2.21 s | no | peak -1.1 dBFS | 19 KB | synth | Service door (stairwell, lift hall): a light steel latch and a short hinge squeak, soft close |
+| `sfx/c2x_enlarger_fan.ogg` | 4.00 s | yes | peak -1.2 dBFS | 14 KB | synth | Enlarger lamp-house fan (seamless 4 s loop for sfx_loop): a small fan with a 20 Hz blade beat over a soft 100 Hz hum |
+| `sfx/c2x_enlarger_focus.ogg` | 0.83 s | no | peak -1.1 dBFS | 11 KB | synth | Enlarger focus ring: a smooth knurled ring turning, fine ticks, a soft end stop |
+| `sfx/c2x_enlarger_knob.ogg` | 0.40 s | no | peak -1.1 dBFS | 7 KB | synth | Enlarger zoom or head knob turned a step: a small geared detent click and a brief ring |
+| `sfx/c2x_enlarger_lamp.ogg` | 1.60 s | no | peak -0.9 dBFS | 10 KB | synth | Enlarger lamp: a switch click, a thump of the transformer and a warm lamp glow that holds a moment, then a click off |
+| `sfx/c2x_frost_done.ogg` | 2.18 s | no | peak -1.0 dBFS | 24 KB | synth | The last band is clear: loose ice flakes fall and tinkle on the sill |
+| `sfx/c2x_frost_wipe_1.ogg` | 0.84 s | no | peak -1.1 dBFS | 11 KB | synth | Frost window, wipe variant 1: a cloth drags across fine ice crystals (crisp, medium) |
+| `sfx/c2x_frost_wipe_2.ogg` | 1.05 s | no | peak -1.1 dBFS | 13 KB | synth | Frost window, wipe variant 2: a longer, softer stroke with a glass squeak at the turn |
+| `sfx/c2x_frost_wipe_3.ogg` | 0.65 s | no | peak -0.9 dBFS | 10 KB | synth | Frost window, wipe variant 3: a short quick wipe, grittier |
+| `sfx/c2x_frost_wipe_4.ogg` | 1.18 s | no | peak -1.0 dBFS | 14 KB | synth | Frost window, wipe variant 4: a slow low-pitched stroke, damp and heavy, with a squeak |
+| `sfx/c2x_lamp_fail.ogg` | 1.00 s | no | peak -1.0 dBFS | 10 KB | synth | The booth projector lamp is dead: a dull filament tink, a weak electrical sigh dropping in pitch |
+| `sfx/c2x_lamp_fit.ogg` | 2.14 s | no | peak -0.8 dBFS | 14 KB | synth | The new projector lamp is fitted: a glass bulb turned into the socket, a clink, the filament warming up in pitch and a soft tick |
+| `sfx/c2x_lift_balanced.ogg` | 2.38 s | no | peak -1.1 dBFS | 18 KB | synth | Load and counterweight are equal: the weights swing level, the cable settles with a low relief creak |
+| `sfx/c2x_lift_bell.ogg` | 2.07 s | no | peak -1.0 dBFS | 14 KB | synth | Lift bell: a small brass arrival bell, one clear ding with a short ring |
+| `sfx/c2x_lift_move.ogg` | 4.91 s | no | peak -1.1 dBFS | 31 KB | synth | The book lift travels one floor: a motor hum rising, cable and weight clanks passing, a settling clunk (3.6 s) |
+| `sfx/c2x_lift_stuck.ogg` | 2.14 s | no | peak -0.9 dBFS | 15 KB | synth | The book lift is not balanced: the cage jolts against its stops with a short motor strain |
+| `sfx/c2x_light_digits.ogg` | 3.08 s | no | peak -0.9 dBFS | 20 KB | synth | The two digits light up on the table: a soft, warm two-note glass chime over a gentle glow swell |
+| `sfx/c2x_lightbox_on.ogg` | 1.86 s | no | peak -0.9 dBFS | 12 KB | synth | Light table: a tube starter flickers three times and the box settles to a warm glow with a faint 100 Hz hum |
+| `sfx/c2x_mallet_cracked.ogg` | 1.19 s | no | peak -0.9 dBFS | 18 KB | synth | Mallet on a cracked pipe next to the hazard: a rattling buzz that decays unevenly |
+| `sfx/c2x_mallet_dead.ogg` | 0.50 s | no | peak -1.1 dBFS | 7 KB | synth | Mallet on a dead pipe: a short, high, empty tink (about 620 Hz) |
+| `sfx/c2x_mallet_full.ogg` | 1.25 s | no | peak -0.9 dBFS | 8 KB | synth | Mallet on a pipe that carries pressure: a full, low, long tone (about 130 Hz) |
+| `sfx/c2x_panel_cold.ogg` | 0.71 s | no | peak -1.0 dBFS | 7 KB | synth | Warm Wall: a cold panel is rapped, a dull flat knock with no answer |
+| `sfx/c2x_panel_open.ogg` | 1.48 s | no | peak -1.0 dBFS | 14 KB | synth | Warm Wall: a painted panel on the east wall swings open (latch tick, dry hinge, soft thud) |
+| `sfx/c2x_pipe_flow.ogg` | 2.17 s | no | peak -1.0 dBFS | 11 KB | synth | Pressure reaches the coil: a low thrum, rushing water in the pipe, gurgles, tapering off (1.9 s) |
+| `sfx/c2x_pipe_hazard.ogg` | 2.23 s | no | peak -0.8 dBFS | 19 KB | synth | Wrong route: the vent to the hall hisses, the pipe rattles and a warning ping rings (calm, nothing is lost) |
+| `sfx/c2x_plan_unfold.ogg` | 0.98 s | no | peak -1.0 dBFS | 13 KB | synth | The floor plan is unfolded: crisp paper creases and a soft rustle |
+| `sfx/c2x_print_ready.ogg` | 2.03 s | no | peak -1.2 dBFS | 14 KB | synth | The print develops in the tray: paper slips into the liquid, a gentle slosh, a few drops (1.8 s) |
+| `sfx/c2x_refused.ogg` | 0.72 s | no | peak -1.0 dBFS | 7 KB | synth | A closed room or lift floor is tried: two dull wooden taps, calm, no alarm |
+| `sfx/c2x_ring_click.ogg` | 0.38 s | no | peak -1.1 dBFS | 7 KB | synth | Chest ring turned one symbol: a firm brass detent click with a small ring (the next ring follows) |
+| `sfx/c2x_sheet_flip.ogg` | 0.70 s | no | peak -1.1 dBFS | 9 KB | synth | A sheet is flipped over by its tab: a soft flap of acetate, then two taps on the glass |
+| `sfx/c2x_sheet_slide.ogg` | 0.79 s | no | peak -1.1 dBFS | 10 KB | synth | An acetate sheet slides across the glass of the light table: smooth plastic friction and a tiny flex |
+| `sfx/c2x_sheet_turn.ogg` | 0.58 s | no | peak -1.1 dBFS | 9 KB | synth | A sheet is turned a quarter: a short slide and a soft plastic tick as it seats |
+| `sfx/c2x_stair_steps.ogg` | 4.08 s | no | peak -1.1 dBFS | 32 KB | synth | Climbing the iron spiral stair: six slow footsteps on steel treads, each with a soft ring |
+| `sfx/c2x_strip_load.ogg` | 0.72 s | no | peak -0.8 dBFS | 10 KB | synth | A negative strip is slid into the carrier: a smooth film slide and a small click as the carrier closes |
+| `sfx/c2x_tag_hook.ogg` | 0.59 s | no | peak -1.0 dBFS | 8 KB | synth | A staff tag is hung on a board hook: a brass hook tick and the tag swinging against wood |
+| `sfx/c2x_tag_lift.ogg` | 0.36 s | no | peak -1.2 dBFS | 7 KB | synth | A staff tag is lifted off its hook: a light tick and a small slide |
+| `sfx/c2x_thaw.ogg` | 3.39 s | no | peak -1.1 dBFS | 33 KB | synth | The Cold Store door thaws: ice ticks and cracks, running drips, a long settling creak |
+| `sfx/c2x_valve_wheel.ogg` | 1.29 s | no | peak -1.6 dBFS | 14 KB | synth | Manifold valve wheel turned: a big iron wheel squeaks over a notch, a breath of pressure, a click |
+| `sfx/c2x_wedge_pull.ogg` | 2.60 s | no | peak -1.1 dBFS | 26 KB | synth | The wedge pin is pulled from the blocked spiral stair: wood squeals out of a tight fit, a knock, a clatter down the steps |
+| `sfx/c2x_weight_hang.ogg` | 1.56 s | no | peak -1.0 dBFS | 14 KB | synth | A cast-iron counterweight is hung on the hook: a metal clank and the hook swinging |
+| `sfx/c2x_weight_off.ogg` | 1.33 s | no | peak -1.2 dBFS | 14 KB | synth | A counterweight is lifted off the hook: a quick scrape and a light clink |
 | `sfx/canister_thump.ogg` | 0.91 s | no | peak -1.1 dBFS | 10 KB | synth | Leather-banded brass canister drops into the receive tray: padded thump and rattle |
 | `sfx/card_flick.ogg` | 0.54 s | no | peak -1.0 dBFS | 9 KB | synth | Thumb flicks through a few index cards (quick papery riffle) |
 | `sfx/collar_click.ogg` | 0.53 s | no | peak -1.1 dBFS | 8 KB | synth | Brass collar or selector turned one detent: firm click with a small ring |
@@ -164,11 +221,28 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/drawer_card_slide.ogg` | 1.56 s | no | peak -1.1 dBFS | 16 KB | synth | Long oak catalogue drawer slides out on its runners, cards whisper inside, the stop catches |
 | `sfx/drawer_locked.ogg` | 0.79 s | no | peak -1.0 dBFS | 10 KB | synth | Locked desk drawer tugged: wooden rattle against the bolt |
 | `sfx/drawer_open.ogg` | 1.38 s | no | peak -1.0 dBFS | 15 KB | synth | Wooden drawer slides open on dry runners and stops with a soft knock |
+| `sfx/echo_chime.ogg` | 5.57 s | no | peak -6.0 dBFS | 25 KB | synth | M6 echo at the rail end (5 s): three soft swelled glass notes (E, B, F sharp) answering in a long dark hall |
+| `sfx/echo_chime_soft.ogg` | 4.88 s | no | peak -14.0 dBFS | 21 KB | synth | M6 echo at the rail end, Soft: two notes, rounder |
 | `sfx/film_projector_loop.ogg` | 22.25 s | no | peak -1.1 dBFS | 284 KB | synth | Film projector running at 24 fps under the film: claw clatter, motor, fan and shutter flutter (~22 s bed) |
 | `sfx/film_projector_start.ogg` | 2.50 s | no | peak -1.5 dBFS | 34 KB | synth | 16 mm projector run lever: clack, motor and fan spin up, the claw clatter speeds up to 24 frames a second |
 | `sfx/film_projector_stop.ogg` | 2.00 s | no | peak -1.0 dBFS | 23 KB | synth | Projector switched off: lever clack, the clatter slows and stops, motor and fan wind down |
+| `sfx/frost_steps.ogg` | 4.74 s | no | peak -5.9 dBFS | 20 KB | synth | M3 shadow on the frost (4 s): a soft muffled whoosh as something passes behind the pane, two far footsteps, a faint squeak |
+| `sfx/frost_steps_soft.ogg` | 4.74 s | no | peak -14.1 dBFS | 18 KB | synth | M3 shadow on the frost, Soft: only the soft whoosh, lower |
 | `sfx/gear_turn.ogg` | 0.68 s | no | peak -1.2 dBFS | 10 KB | synth | Strand's gear box knob: ratchet clicks and a gear settling into place |
 | `sfx/grille_creak.ogg` | 1.65 s | no | peak -1.2 dBFS | 18 KB | synth | Vent grille swings open on a rusty hinge: frame unsticks, creak, light metal rattle |
+| `sfx/hand_equip_cloth.ogg` | 0.34 s | no | peak -6.2 dBFS | 6 KB | synth | Hand: the cloth is shaken out and gripped, a short airy flick and a cloth pat |
+| `sfx/hand_equip_keys.ogg` | 0.26 s | no | peak -5.9 dBFS | 6 KB | synth | Hand: a key is taken from the ring and held, a short two-key clink and a clasp tick |
+| `sfx/hand_equip_mallet.ogg` | 0.26 s | no | peak -6.1 dBFS | 5 KB | synth | Hand: the mallet is set in the grip, a glove squeeze and a small hollow wooden tock |
+| `sfx/hand_equip_uvlamp.ogg` | 0.56 s | no | peak -6.2 dBFS | 5 KB | synth | Hand: the UV lamp is switched on, a switch click and a faint rising electronic hum |
+| `sfx/hand_leather_creak.ogg` | 0.28 s | no | peak -6.1 dBFS | 6 KB | synth | Hand: a generic glove-on-leather creak to layer under any other held item (e.g. lift a book or a lens) |
+| `sfx/hand_pickup_cloth.ogg` | 0.43 s | no | peak -6.0 dBFS | 6 KB | synth | Hand: the wipe cloth is picked up, a soft cloth rustle and a light glove grip |
+| `sfx/hand_pickup_keys.ogg` | 0.38 s | no | peak -5.8 dBFS | 7 KB | synth | Hand: the key ring is lifted, a bright short jingle of several keys |
+| `sfx/hand_pickup_mallet.ogg` | 0.29 s | no | peak -5.9 dBFS | 6 KB | synth | Hand: the mallet is lifted, a wooden handle on a leather palm, a soft knock of the head |
+| `sfx/hand_pickup_uvlamp.ogg` | 0.27 s | no | peak -6.1 dBFS | 6 KB | synth | Hand: the UV lamp is picked up, a small clink of the casing against the glove and a rubber grip |
+| `sfx/hand_putaway_cloth.ogg` | 0.60 s | no | peak -6.1 dBFS | 6 KB | synth | Hand: the cloth is folded away, a longer soft rustle and a muffled pat of the pocket |
+| `sfx/hand_putaway_keys.ogg` | 0.44 s | no | peak -5.8 dBFS | 6 KB | synth | Hand: the keys slide into a pocket, a muffled jingle and a cloth pat |
+| `sfx/hand_putaway_mallet.ogg` | 0.30 s | no | peak -6.2 dBFS | 5 KB | synth | Hand: the mallet goes away, a dull wood-on-leather thud and a short slide |
+| `sfx/hand_putaway_uvlamp.ogg` | 0.52 s | no | peak -6.0 dBFS | 5 KB | synth | Hand: the UV lamp is switched off and put away, a falling hum, a click and a soft case thud |
 | `sfx/hatch_open.ogg` | 2.33 s | no | peak -0.8 dBFS | 20 KB | synth | Floor hatch: iron ring clinks, the heavy lid lifts with a creak and a breath of air, falls back with a thud |
 | `sfx/intro_key.ogg` | 3.07 s | no | peak -0.9 dBFS | 29 KB | synth | Chapter 1 opening: a heavy brass key slides into a heavy old lock, grinds round and the bolt drops |
 | `sfx/intro_thunder.ogg` | 4.75 s | no | peak -0.9 dBFS | 26 KB | synth | Chapter 1 opening: a long, distant roll of thunder behind the rain |
@@ -177,6 +251,10 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/key_lift.ogg` | 1.22 s | no | peak -0.8 dBFS | 13 KB | synth | A heavy key lifted out of its cradle: catch releases, metal slides free, a faint ring |
 | `sfx/key_turn.ogg` | 1.16 s | no | peak -1.1 dBFS | 14 KB | synth | Brass key slides into the lock past the pins and turns with a clack |
 | `sfx/keypad_press.ogg` | 0.34 s | no | peak -0.9 dBFS | 7 KB | synth | Electromechanical safe key: bakelite plunger click and contact |
+| `sfx/knocks.ogg` | 3.81 s | no | peak -6.0 dBFS | 15 KB | synth | M2 knocks behind the door (4 s): three soft muffled wooden knocks from inside the Cell, then a kettle ticking as it cools |
+| `sfx/knocks_soft.ogg` | 3.81 s | no | peak -14.0 dBFS | 14 KB | synth | M2 knocks, Soft: the same, quieter and more muffled, kettle ticks fainter |
+| `sfx/lamp_dip.ogg` | 3.98 s | no | peak -5.9 dBFS | 12 KB | synth | M1 lamp that dies (3.5 s): the work lamp's transformer hum sinks in pitch and level to an ember, then flares back with a small bulb tick |
+| `sfx/lamp_dip_soft.ogg` | 3.99 s | no | peak -14.0 dBFS | 12 KB | synth | M1 lamp that dies, Soft: the same hum dip, shallower and rounder, no tick |
 | `sfx/ledger_thump.ogg` | 1.24 s | no | peak -1.0 dBFS | 14 KB | synth | Heavy hollow ledger pulled out and opened: book thump, cover flap, hollow box with something inside |
 | `sfx/lens_insert.ogg` | 0.58 s | no | peak -0.9 dBFS | 8 KB | synth | Crystal lens seats into its brass mount: soft scrape, click, glass ring |
 | `sfx/locker_open.ogg` | 1.52 s | no | peak -1.0 dBFS | 17 KB | synth | Locker 9 unlocked: key clack, latch lifts, the thin steel door swings open and taps the next one |
@@ -200,6 +278,8 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/relay_click.ogg` | 0.66 s | no | peak -1.1 dBFS | 9 KB | synth | Old emergency relays pulling in: two quick clicks and a faint contactor buzz |
 | `sfx/reveal.ogg` | 1.64 s | no | peak -1.0 dBFS | 20 KB | synth | Soft glassy shimmer as UV light reveals hidden ink |
 | `sfx/ring_turn.ogg` | 0.46 s | no | peak -1.1 dBFS | 7 KB | synth | Projector's brass colour ring turns one stop (click with a slight ring) |
+| `sfx/roll_call.ogg` | 9.21 s | no | peak -6.0 dBFS | 75 KB | synth | M4 roll call (9 s): an old PA horn sounds two spoken-rhythm tone phrases (a count: two notes, then three) with crackle, then stops; a long soft hiss and a click. No voice, tones only |
+| `sfx/roll_call_soft.ogg` | 8.94 s | no | peak -13.9 dBFS | 41 KB | synth | M4 roll call, Soft: the same count in a rounder horn, no crackle, a shorter fainter hiss, no click |
 | `sfx/rosette_press.ogg` | 0.50 s | no | peak -0.9 dBFS | 7 KB | synth | Carved wooden rosette pressed in: hollow wood click and a hidden latch |
 | `sfx/safe_denied.ogg` | 0.95 s | no | peak -0.9 dBFS | 10 KB | synth | Wrong code: two low electric buzzes from the safe |
 | `sfx/safe_open.ogg` | 2.32 s | no | peak -1.0 dBFS | 22 KB | synth | Heavy safe bolts retract with a clunk, then the steel door creaks open |
@@ -208,6 +288,8 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/slide_clunk.ogg` | 0.40 s | no | peak -0.8 dBFS | 7 KB | synth | Glass slide pushed into (or out of) the slide projector gate: plastic-and-metal clunk with a spring |
 | `sfx/slide_fan_loop.ogg` | 5.00 s | yes | peak -0.8 dBFS | 38 KB | synth | Slide projector running: cooling fan, blade hum and lamp transformer (seamless loop) |
 | `sfx/splicer_click.ogg` | 0.26 s | no | peak -1.1 dBFS | 6 KB | synth | Film splicer: blade snaps down through the film and the clamp clicks |
+| `sfx/steps_above.ogg` | 5.77 s | no | peak -5.9 dBFS | 42 KB | synth | M5 steps above (5 s): four slow footfalls cross the ceiling, each with a plank creak and a little dust |
+| `sfx/steps_above_soft.ogg` | 5.77 s | no | peak -13.9 dBFS | 21 KB | synth | M5 steps above, Soft: lower, rounder footfalls, no dust |
 | `sfx/switch_toggle.ogg` | 0.51 s | no | peak -1.1 dBFS | 7 KB | synth | Heavy bakelite toggle switch snapping over (clack) |
 | `sfx/tape_clicks.ogg` | 0.48 s | no | peak -1.1 dBFS | 7 KB | synth | One click recorded at the end of a reel (a sharp tap with a little mic thump), through the deck speaker |
 | `sfx/tape_garble.ogg` | 2.60 s | no | peak -0.8 dBFS | 25 KB | synth | Tape at the wrong speed: chipmunk-fast, warbling, slurring murmur with hiss |
@@ -224,6 +306,12 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `ambience/amb_array_core.ogg` | 1:00.0 | yes | -24.0 LUFS | 288 KB | synth | The Core: its own note A held with octave and fifth, a narrow shimmer, slow glass answers (no noise bed) |
 | `ambience/amb_array_hall.ogg` | 1:00.0 | yes | -24.0 LUFS | 313 KB | synth | Array Hall: a deep mains hum on A, faint breathing air over the rings, rare glass-tower answers, a far contactor and a ring settling (no noise bed) |
 | `ambience/amb_array_rooms.ogg` | 1:00.0 | yes | -24.0 LUFS | 372 KB | synth | Booth and watch room: a lamp transformer's hum, the floor's A beneath it, a wall clock, a pencil, a pipe (no noise bed) |
+| `ambience/amb_c2x_cell.ogg` | 48.00 s | yes | -24.0 LUFS | 463 KB | synth | Night Cell: a quiet warm room, kettle simmer (soft bubbles, 0.5-3 kHz), a small clock ticking twice a second, a faint low pipe hum |
+| `ambience/amb_c2x_cold.ogg` | 48.00 s | yes | -24.0 LUFS | 286 KB | synth | Cold Store: refrigeration compressor hum (50 Hz series), a slow fan band, glassy ice creaks, a far carriage rumble |
+| `ambience/amb_c2x_gallery.ogg` | 48.00 s | yes | -24.0 LUFS | 220 KB | synth | Reading Gallery: a big quiet space, very low air, distant ventilation with two narrow drifting tones, far wood creaks and a few dust ticks, long reverb |
+| `ambience/amb_c2x_office.ogg` | 48.00 s | yes | -24.0 LUFS | 428 KB | synth | Director's Office: a deep mantel clock (tock every 0.6 s), wind gusting at the window glass, a green desk-lamp hum and a floorboard |
+| `ambience/amb_c2x_plate.ogg` | 48.00 s | yes | -24.0 LUFS | 560 KB | synth | Plate Room (darkroom): a 100 Hz safelight buzz, water dripping into a tray, an enlarger timer ticking 2.5 times a second, a faint tap trickle |
+| `ambience/amb_c2x_pump.ogg` | 48.00 s | yes | -24.1 LUFS | 299 KB | synth | Pump Room: boiler roar (40-380 Hz, flame flutter), 50 Hz mains hum, iron pipe expansion ticks, drips, a far pipe knock (no noise above 3.5 kHz) |
 | `ambience/amb_choir.ogg` | 1:00.0 | yes | -24.0 LUFS | 298 KB | synth | Choir Hall: a low transformer hum on E, faint crystal-tube resonances singing in sympathy, two far contactors (no noise bed) |
 | `ambience/amb_gallery.ogg` | 1:00.0 | yes | -24.0 LUFS | 366 KB | synth | Resonance Gallery: air singing across the glass floor in narrow bands, faint crystal answers from the memorial wall, a distant drip into the deep hall (no noise bed) |
 | `ambience/amb_lab_dark.ogg` | 1:00.0 | yes | -24.2 LUFS | 867 KB | synth | Lab 7 in the dark: rain on the window, distant wind, low room tone, rare drips and creaks |
