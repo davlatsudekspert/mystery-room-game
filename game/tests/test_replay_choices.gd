@@ -100,3 +100,26 @@ func test_trial_blocks_hints_and_earns_its_achievement() -> void:
 		check((GameState.profile["achievements"] as Array).has("no_hints_ch2"), "and the no-hints one")
 		eq(GameState.profile["choices"]["ch2_trial"], true, "Chapters 3-4 may read the flag")
 	)
+
+
+func test_expansion_settings_defaults_and_validation() -> void:
+	eq(Settings.DEFAULTS["hands"], true, "hands On by default")
+	eq(Settings.DEFAULTS["moments"], "soft", "moments Soft by default")
+	var old: Variant = Settings.values["moments"]
+	Settings.set_value("moments", "nonsense")
+	eq(Settings.values["moments"], old, "a bad mode is refused")
+	Settings.set_value("moments", "off")
+	eq(Settings.get_value("moments"), "off", "a good mode is kept")
+	Settings.set_value("moments", old)
+
+
+func test_start_new_can_begin_the_trial() -> void:
+	_with_temp_profile(func() -> void:
+		GameState.profile = {"choices": {}, "completed": [], "achievements": [], "hints_used": 0}
+		GameState.start_new("ch2", {"trial": true})
+		var l := GameState.logic as ArchiveLogic
+		# EXPANSION_STAGE 0 builds the 1.0 chapter, which has no Trial; with the expansion on, the option sets it
+		eq(l.trial_active(), l.exp_active(), "the Trial starts exactly when the chapter is an expansion game")
+		GameState.start_new("ch1", {"trial": true})
+		check(GameState.logic is Lab7Logic, "other chapters ignore the option")
+	)

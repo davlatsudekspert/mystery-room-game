@@ -55,6 +55,20 @@
 | Focus 5 | The sharp mark on the ring | Ring mark (geometry) and the shader's blur centre | 5 |
 | Vault lock | The right rotation and zoom | The engraving is drawn by the overlay shader from parameters | 4 × 3 |
 
+### Chapter 2 expansion (logic done 2026-11-01; scenes pending)
+Each puzzle draws from its own seed stream (`seed xor ArchiveExpData.SALT_*`), so no 1.0 answer of any seed moves (`tests/fixtures/ch2_legacy_variants.json` holds the 1.0 values of seeds 0-60, written by the 1.0 code). The state keys are in `ArchiveLogic.default_state()`.
+| Puzzle | Varies | Evidence → how it is shown | Pool |
+|---|---|---|---|
+| N1 Warm Wall | Which painted panel hides the door plate (`v_panel`) | Receiver strength per panel view (5 / 3 / 2) | 3 |
+| N2 Pipes | Which of 6 verified graphs the manifold draws (`v_pipes`) | Pipe geometry toggles; mallet tone full / dead / cracked | 6 |
+| N3 Light table | Two digits from {1,2,3,4,5,7}, the three printed sheets (11 x 11), the start orientations | The sheets as cell grids (`v_sheets`); every set checked over 8^3 orientations | digits 36 x noise |
+| N4 Carriages | Which carriage hides the chest (`v_bay` 1-4) and the start arrangement (route >= 3 cranks) | Plan tag on the end panel, carriage positions | 8 |
+| N5/N6 Frost, chest | The 3 signs (of 6) and the start of the rings (4-9 presses from the target) | Signs under the frost; ring symbols | 120 x ~20 |
+| N7 Lift | Load 5-14 without single weights (`v_load`) | "LOAD n" plate | 9 |
+| N8 Board | Which tag hangs where and 4-6 slips with exactly one solution | Slips from the Records counter | generated |
+| N9/N10 Enlarger, cabinet | Strip symbols, the right strip, zoom, focus and the 4 cabinet digits | Cabinet label, print, digits pencilled on the print | generated |
+Story anchors are unchanged: the dial of N1 is always 0417.
+
 ## Chapter 3 (built in from the start)
 - **Choir staircase:** the 7 heights.
 - **Startup:** the lever order.

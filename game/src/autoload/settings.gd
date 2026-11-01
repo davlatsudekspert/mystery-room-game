@@ -20,7 +20,11 @@ const DEFAULTS := {
 	"safe_graphics": false, # the player's choice: the safest graphics (CrashGuard.MAX_LEVEL)
 	"safe_level": 0, # 0–3, raised by CrashGuard after a crash while a scene loads (not shown in the UI)
 	"safe_epoch": 0, # CrashGuard.EPOCH the level belongs to
+	# Chapter 2 expansion (docs/CHAPTER2_EXPANSION.md sections 11 and 12; owner 2026-11-01: hands On, moments Soft)
+	"hands": true, # the held tool is drawn in a gloved hand in close-ups; Off = today's behaviour exactly
+	"moments": "soft", # reaction moments: "full" | "soft" (no sound sting) | "off"
 }
+const MOMENT_MODES: Array[String] = ["full", "soft", "off"]
 ## Settings → Text size: Normal / Large / Extra large (ui.text_normal / ui.text_large / ui.text_xl).
 const TEXT_SCALES: Array[float] = [1.0, 1.25, 1.5]
 
@@ -54,6 +58,9 @@ func set_value(key: String, v: Variant) -> void:
 		v = clampf(float(v), 0.5, 1.0)
 	elif key == "brightness":
 		v = clampf(float(v), 0.7, 1.6)
+	elif key == "moments" and not MOMENT_MODES.has(str(v)):
+		push_warning("Bad value for setting moments")
+		return
 	values[key] = v
 	save_settings()
 	changed.emit(key)
@@ -68,6 +75,8 @@ func load_settings() -> void:
 		var v: Variant = cfg.get_value("settings", key, DEFAULTS[key])
 		if typeof(v) == typeof(DEFAULTS[key]) or (typeof(DEFAULTS[key]) == TYPE_FLOAT and typeof(v) == TYPE_INT):
 			values[key] = v
+	if not MOMENT_MODES.has(str(values["moments"])):
+		values["moments"] = DEFAULTS["moments"]
 	values["text_scale"] = nearest_text_scale(float(values["text_scale"])) # older saves used 0.9 / 1.15 / 1.3 steps
 
 

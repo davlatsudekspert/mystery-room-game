@@ -749,6 +749,20 @@ func test_level_three_speaks_this_games_answer() -> void:
 					eq(n, l.hint_args(g, lvl).size(), "%s (%d): placeholders match the args" % [k, lang])
 
 
+func test_hint_offers_a_trip_to_the_room() -> void:
+	var l := _new(5)
+	eq(l.hint_room("c2x_pipes"), "", "not before the room was entered")
+	_to_pump(l)
+	l.enter_room("pump")
+	l.enter_room("hall")
+	eq(l.hint_room("c2x_pipes"), "pump", "a visited room can be offered")
+	eq(l.hint_room("c2x_cabinet"), "", "a locked room is never offered")
+	eq(l.hint_room("c2_booth"), "", "old goals have no room")
+	for g in ArchiveHints.GOALS:
+		if g.begins_with("c2x_"):
+			check(ArchiveExpData.GOAL_ROOM.has(g), "room for " + g)
+
+
 func test_hint_answers_actually_solve() -> void:
 	# follow the level-3 answer literally for the numeric puzzles
 	var l := _new(777)

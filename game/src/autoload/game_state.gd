@@ -49,7 +49,8 @@ func _notification(what: int) -> void:
 
 
 # ------------------------------------------------------------------ lifecycle
-func start_new(id: String) -> bool:
+## options: {"trial": true} starts Chapter 2 in the Archivist's Trial (no hints; chosen on the chapter card).
+func start_new(id: String, options: Dictionary = {}) -> bool:
 	var l := Chapters.new_logic(id)
 	if l == null:
 		return false
@@ -59,6 +60,8 @@ func start_new(id: String) -> bool:
 		started.append(id) # in memory; saved with the next profile save
 		profile["started"] = started
 	l.apply_seed(variant_seed if variant_seed >= 0 else randi_range(1, 2147483646))
+	if bool(options.get("trial", false)) and l is ArchiveLogic:
+		(l as ArchiveLogic).set_mode("trial")
 	_attach(id, l)
 	play_time = 0.0
 	hints_used = 0

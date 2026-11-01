@@ -1256,6 +1256,12 @@ func travel_to(id: String) -> Array[String]:
 	return _end()
 
 
+## The room to offer as "Go to <room>" next to a hint for `goal` ("" when none, or it cannot be reached by plan).
+func hint_room(goal: String) -> String:
+	var r: String = ArchiveExpData.GOAL_ROOM.get(goal, "")
+	return r if r != "" and can_travel(r) else ""
+
+
 func can_travel(id: String) -> bool:
 	return room_seen(id) and room_open(id) and state["room"] != id
 

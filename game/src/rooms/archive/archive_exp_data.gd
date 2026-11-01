@@ -37,6 +37,14 @@ const ROOMS: Array[Dictionary] = [
 ]
 const FLOORS: Array[int] = [-1, 0, 1]
 
+## The room each new hint goal's next step is in: the hint dialog offers a one-line "Go to <room>" when it can travel there.
+const GOAL_ROOM := {
+	"c2x_warm": "hall", "c2x_pipes": "pump", "c2x_light": "cell", "c2x_cold_door": "cell", "c2x_take_cloth": "cell",
+	"c2x_aisle": "cold", "c2x_frost": "cold", "c2x_chest": "cold", "c2x_take_crystal": "cold", "c2x_lift": "pump",
+	"c2x_board": "gallery", "c2x_take_key": "gallery", "c2x_print": "plate", "c2x_cabinet": "office",
+	"c2x_take_lamp": "office", "c2x_install_lamp": "hall",
+}
+
 ## Open-thread pictograms (a thread is something seen that cannot be finished yet). id -> room it is seen in.
 const THREADS: Array[Dictionary] = [
 	{"id": "warm_panel", "room": "hall", "name": "thread2x.warm_panel"},

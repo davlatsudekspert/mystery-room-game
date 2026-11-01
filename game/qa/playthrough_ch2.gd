@@ -5,9 +5,17 @@ extends Node
 ## Run: xvfb-run -a godot --path game res://qa/playthrough_ch2.tscn -- --out=<dir> [--lens=take|leave] [--lang=ru]
 ##        [--seed=N] [--no-continue] (skip the quit-and-Continue checks before P5, P8 and P12)
 ## A quick logic-flow run without screenshots: godot --headless --path game res://qa/playthrough_ch2.tscn -- …
+##        [--legacy] play the 1.0 chapter exactly as an old save does (the default while EXPANSION_SCENE_READY is false)
+##        [--expansion[=1|2]] play a NEW expansion game (docs/CHAPTER2_EXPANSION.md): the lower and upper floors are played
+##        at LOGIC level (ArchiveSolver) until the scene has their hotspots; see the TODO(scene) marks below
 ## Exit code 0 = chapter completed with no failed step and no fallback.
 
+## TODO(scene): set to true when the scene has the expansion's rooms and hotspots; the default run then plays a new
+## expansion game, and the logic-level steps below are replaced by taps one by one.
+const EXPANSION_SCENE_READY := false
+
 var out_dir := "/tmp/ch2_playthrough"
+var exp_stage := 0 # 0 = the 1.0 chapter, 1/2 = a new expansion game of that stage
 var room: Node3D
 var logic: ArchiveLogic
 var report: Array[String] = []
@@ -36,16 +44,33 @@ func _ready() -> void:
 			GameState.qa_no_tips = true # store screenshots: no tip captions
 		if a == "--no-continue":
 			_continue = false
+		if a == "--legacy":
+			exp_stage = -1 # forced
+		if a == "--expansion":
+			exp_stage = 2
+		if a.begins_with("--expansion="):
+			exp_stage = clampi(int(a.substr(12)), 1, 2)
+	if exp_stage == 0 and EXPANSION_SCENE_READY:
+		exp_stage = maxi(ArchiveLogic.EXPANSION_STAGE, 1)
+	if exp_stage < 0:
+		exp_stage = 0
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_ch2_save.json"
 	SaveSystem.profile_path = "user://qa_ch2_profile.json"
 	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens_path == "take" else "leave_lens", "ch1_shards": 5}}
 	GameState.start_new("ch2")
 	logic = GameState.logic
+	var al := logic as ArchiveLogic
+	if exp_stage == 0:
+		al.make_legacy() # the old flow, whatever EXPANSION_STAGE says: the crystals are in the booth case, the lamp works
+	else:
+		al.begin_expansion(exp_stage)
+		al.setup_from_profile(GameState.profile.get("choices", {}))
+		al.apply_seed(int(al.state["seed"]))
 	var t0 := Time.get_ticks_msec()
 	await _load_room()
 	_log("scene load+build: %d ms (software renderer; phones differ)" % (Time.get_ticks_msec() - t0))
-	_log("path: Ch1 lens %s, shards 5" % lens_path)
+	_log("path: Ch1 lens %s, shards 5; chapter flow: %s" % [lens_path, "1.0 (legacy)" if exp_stage == 0 else "expansion stage %d (new floors at logic level)" % exp_stage])
 	await _settle(1.2)
 	await _perf("hall")
 	await run()
@@ -452,6 +477,17 @@ func run() -> void:
 		await shot("deck_" + tape)
 		await _settle(9.0)
 	step("P7 three reels at 4.75 → clicks %s" % ", ".join((s["v_clicks"] as Array).map(func(c: Variant) -> String: return str(int(c)))), (s["clicks_heard"] as Array).size() == 3)
+	# N1-N6 lower floor. TODO(scene): tap the east-wall panel and dial, the manifold, the light table, the cold door,
+	# the carriages, the frost window and the chest rings once their hotspots exist; until then the solver plays them.
+	if logic.exp_active():
+		var guard := 0
+		while not logic.state["chest_open"] and guard < 400:
+			ArchiveSolver.lower_floor(logic)
+			guard += 1
+		step("N1-N6 lower floor (logic level) → chest open, crystals available", logic.state["chest_open"] and logic.state["crystals_available"])
+		await _continue_check("lower")
+		L = logic
+		s = L.state
 	# P8 booth dial 2-8-5
 	await _continue_check("p8")
 	L = logic
@@ -483,6 +519,13 @@ func run() -> void:
 	await shot("splicer_done")
 	await act("film_splicer", "Item_splicer_reel", func() -> bool: return L.has_item("film_reel"), func() -> void: L.take("splicer_reel"), "take film reel")
 	step("P9 splice %s → reel" % " ".join(L.splice_order().map(func(f: Variant) -> String: return "f%d" % int(f))), L.has_item("film_reel"))
+	# N7-N10 upper floor and the projector lamp (G2). TODO(scene): lift, board, Plate Room, Director's Office taps.
+	if logic.exp_stage() >= 2:
+		var guard2 := 0
+		while not logic.state["lamp_ok"] and guard2 < 400:
+			ArchiveSolver.upper_floor(logic)
+			guard2 += 1
+		step("N7-N10 upper floor (logic level) → projector lamp fitted", logic.state["lamp_ok"] and logic.state["print_ok"])
 	# P10 project, focus
 	await view("projector")
 	await use("film_reel")
@@ -507,8 +550,13 @@ func run() -> void:
 	await act("lens_case", "IA_case_lid", func() -> bool: return bool(room.get("visuals").get("case_open")), func() -> void: room.get("visuals").set("case_open", true), "open lens case")
 	await _settle(0.8)
 	await shot("lens_case_open")
-	await act("lens_case", "Item_case_crystal_1", func() -> bool: return L.has_item("crystal_blank_1"), func() -> void: L.take("case_crystal_1"), "crystal 1")
-	await act("lens_case", "Item_case_crystal_2", func() -> bool: return L.has_item("crystal_blank_2"), func() -> void: L.take("case_crystal_2"), "crystal 2")
+	if L.exp_active():
+		# the new game's crystals are in the Cold Store chest, not in the case. TODO(scene): tap them in the chest.
+		L.take("case_crystal_1")
+		L.take("case_crystal_2")
+	else:
+		await act("lens_case", "Item_case_crystal_1", func() -> bool: return L.has_item("crystal_blank_1"), func() -> void: L.take("case_crystal_1"), "crystal 1")
+		await act("lens_case", "Item_case_crystal_2", func() -> bool: return L.has_item("crystal_blank_2"), func() -> void: L.take("case_crystal_2"), "crystal 2")
 	# P11 record the sign at the screen socket
 	await view("hall")
 	await view("west")

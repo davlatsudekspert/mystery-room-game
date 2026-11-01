@@ -2,6 +2,11 @@
 
 How the work is organised (from 2026-10-09): the main session is the game director. Helper agents run in parallel; their results are reviewed and committed to `main`. If a session stops, the next one continues from this file, `DEVELOPMENT_STATUS.md`, `docs/GAMEPLAY_QA.md` and `docs/QUALITY_REPORT.md`.
 
+**State on 2026-11-01 (Chapter 2 expansion, logic done):**
+- The owner decided to ship the whole expansion in update 1.1 (`docs/CHAPTER2_EXPANSION.md` section 17). The logic is merged and tested; the scene work is next: rooms and hotspots for N1-N10, the plan overlay (`ArchiveLogic.plan_data()`), moments (`ArchiveLogic.try_moment`, events `moment:<id>`), hands, audio. API list in the logic agent's report and in the doc.
+- **Switch-on step:** set `ArchiveLogic.EXPANSION_STAGE := 2` once the scene has the new rooms and hotspots, set `EXPANSION_SCENE_READY := true` in `qa/playthrough_ch2.gd`, replace its logic-level N-steps (marked `TODO(scene)`) by taps, then run the Ch2 playthrough on seeds 777, 6143, 8216 in EN/RU/UZ, both lens paths, and the chaos run.
+- Human playtests (5) decide the length claim; the store text says "about an hour" until then.
+
 **State on 2026-10-11 (afternoon):**
 - Test builds out: Android 0.1.0 (13) on Play internal testing and TestFlight build 10 (main 7fbc21f), after the full release gate. They fix the owner's three reports of the day: the Chapter 2/3 tape hiss that kept playing over everything (a looping file played as a one-shot), Normal text 20% smaller with the settings panel fitting a 20:9 phone, and "Crystal lens doesn't fit here." for an item with no use at a target (docs/TESTING_ON_DEVICE.md).
 

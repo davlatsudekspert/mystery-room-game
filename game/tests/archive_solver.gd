@@ -87,7 +87,7 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 		l.play_tape()
 		return
 	# N1-N6 the lower floor (expansion games only)
-	if l.exp_active() and _lower_floor(l):
+	if l.exp_active() and lower_floor(l):
 		return
 	# P8 booth
 	if not s["booth_open"]:
@@ -108,7 +108,7 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 		l.take("splicer_reel")
 		return
 	# N7-N10 the upper floor and the projector lamp (Stage 2 games only)
-	if l.exp_stage() >= 2 and not s["lamp_ok"] and _upper_floor(l):
+	if l.exp_stage() >= 2 and not s["lamp_ok"] and upper_floor(l):
 		return
 	# P10 projector
 	if not s["film_seen"]:
@@ -191,7 +191,7 @@ static func step(l: ArchiveLogic, choice: String) -> void:
 
 
 ## One step of N1-N6 (and the rooms they open). -> true if it did something.
-static func _lower_floor(l: ArchiveLogic) -> bool:
+static func lower_floor(l: ArchiveLogic) -> bool:
 	var s := l.state
 	var taken: Dictionary = s["taken"]
 	if not s["pump_open"]:
@@ -259,7 +259,7 @@ static func _lower_floor(l: ArchiveLogic) -> bool:
 
 
 ## One step of N7-N10 plus taking and fitting the projector lamp. -> true if it did something.
-static func _upper_floor(l: ArchiveLogic) -> bool:
+static func upper_floor(l: ArchiveLogic) -> bool:
 	var s := l.state
 	var taken: Dictionary = s["taken"]
 	if not s["lift_ok"]:
