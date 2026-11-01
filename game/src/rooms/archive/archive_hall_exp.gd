@@ -5,8 +5,9 @@ extends RefCounted
 ##   at the one that hides the door (the logic draws it per game, `v_panel`); behind it a brass plate with a ten-key dial
 ##   (Leyla's number); after it the service door opens on the stair down to the Pump Room;
 ## - the stair stump (the blocked spiral stair, Stage B only) and the building plan on the south wall.
-## PLACEHOLDER ART (TODO(models)): everything here is built from primitives, marked in the node names (`placeholder_*`),
-## until the Night Cell artist pushes `service_door`, `stair_stump` and `floor_plan_frame`; then only `_build_*` change.
+## Models: `service_door` (with its cover hatch and rotary dial), `stair_stump` and `floor_plan_frame` (docs/models/ch2_exp.md);
+## the two decoy hatches are still primitives (`placeholder_hatch_*`). The door has one site, so `v_panel` picks the LETTER on
+## its hatch (and the receiver table); the decoys carry the other two letters.
 ## Nothing is built or shown unless the game is an expansion game (ArchiveLogic.exp_active()), so stage 0 is the old hall.
 ## No puzzle logic here: every tap calls the logic and the state is drawn from `logic.state`.
 
@@ -16,25 +17,32 @@ const DEEPER := {"east_south": ["east_panel_a", "east_panel_b", "east_panel_c", 
 const CAPTION := {"east_south": "obj2x.east_wall", "east_panel_a": "obj2x.panel", "east_panel_b": "obj2x.panel",
 	"east_panel_c": "obj2x.panel", "east_dial": "obj2x.door_plate", "stair": "obj2x.stair", "plan": "obj2x.plan"}
 const WALL_X := 5.0
-## The east wall is flat for z 1.4-1.95 and 2.35-3.45; a pilaster (z 1.95-2.35, 0.12 deep) stands between the first two panels.
-const PANEL_Z: Array[float] = [1.68, 2.62, 3.18]
-const PANEL_W := 0.5
-const PANEL_SIZE := Vector3(0.03, 1.3, PANEL_W)
-const PANEL_Y := 1.15
-const STUMP_POS := Vector3(-4.2, 0.0, -2.75)
-const PLAN_POS := Vector3(3.3, 1.6, 3.46)
+const DOOR_POS := Vector3(4.93, 0.0, 2.95) # docs/models/ch2_exp.md: east wall, spans z 2.5..3.4 (the contract's only site)
+const STUMP_POS := Vector3(-3.3, 0.0, -2.0)
+const PLAN_POS := Vector3(1.9, 0.0, 3.47)
+## Decoy hatches (painted like the one over the door): site -> [position, yaw degrees (front +Z = into the hall), view position]
+## The door has ONE site (the model's contract), so the game's variant `v_panel` picks which LETTER the door's hatch carries
+## (and the receiver table moves with it); the other two letters hang on the decoys.
+const DECOYS: Array = [
+	[Vector3(5.0, 0.0, 1.675), -90.0],
+	[Vector3(4.6, 0.0, 3.5), 180.0],
+]
+const HATCH_W := 0.5
+const HATCH_H := 1.3
 
 var room: Node3D
 var zones: ArchiveZones
 var logic: ArchiveLogic
 var root: Node3D
-var _panels: Array[Node3D] = []
-var _plate: Node3D
-var _door: Node3D
-var _opening: MeshInstance3D
+var _door_model: Node3D
+var _cover: Node3D
+var _leaf: Node3D
+var _frame: Node3D
+var _lamp: MeshInstance3D
+var _decoys: Array[Node3D] = []
 var _stump: Node3D
 var _plan: Node3D
-var _tweens: Dictionary = {}
+var _letters: Array[String] = [] # letter index -> "door" | "decoy0" | "decoy1"
 
 
 func _init(r: Node3D, z: ArchiveZones) -> void:
@@ -48,18 +56,54 @@ func build() -> void:
 	root = Node3D.new()
 	root.name = "HallExp"
 	room.add_child(root)
-	_build_east_wall()
+	var v := int(logic.state["v_panel"])
+	# which letter hangs where: the door's hatch carries letter v, the decoys the other two in order
+	var others: Array[int] = []
+	for i in 3:
+		if i != v:
+			others.append(i)
+	_letters = ["", "", ""]
+	_letters[v] = "door"
+	_letters[others[0]] = "decoy0"
+	_letters[others[1]] = "decoy1"
+	_build_door(v)
+	for k in 2:
+		_build_decoy(k, others[k])
 	_build_stump()
 	_build_plan()
+	# the framed rules notice hangs where the door's hatch is (docs/models/ch2_exp.md): it moves up the wall, above the hatch
+	var notice := ModelUtil.find((room.get("models") as Dictionary).get("room_archive"), "rules_notice")
+	if notice != null:
+		notice.position.y += 1.15
+	room.call("add_tap_area", root, Vector3(0.03, 2.1, 2.1), "east_wall", "East_wall", Vector3(4.985, 1.1, 2.45))
 	var cam: RoomCamera = room.get("cam")
-	var v := int(logic.state["v_panel"])
 	cam.add_view("east_south", Vector3(3.3, 1.5, 1.2), Vector3(5.0, 1.2, 2.5), 64.0)
 	for i in 3:
-		cam.add_view("east_panel_" + "abc"[i], Vector3(3.5, 1.45, PANEL_Z[i]), Vector3(5.0, 1.35, PANEL_Z[i]), 44.0)
-	cam.add_view("east_dial", Vector3(4.0, 1.27, PANEL_Z[v]), Vector3(5.0, 1.27, PANEL_Z[v]), 36.0)
-	cam.add_view("stair", Vector3(-2.2, 1.55, -0.9), Vector3(-4.2, 0.9, -2.75), 58.0)
-	cam.add_view("plan", Vector3(3.3, 1.6, 2.0), Vector3(3.3, 1.6, 3.46), 40.0)
+		cam.add_view("east_panel_" + "abc"[i], _panel_view_pos(i), _panel_view_target(i), 46.0)
+	cam.add_view("east_dial", Vector3(4.55, 1.42, 3.12), Vector3(5.0, 1.42, 3.15), 34.0)
+	cam.add_view("stair", Vector3(-1.4, 1.55, -0.2), STUMP_POS + Vector3(0, 0.9, 0), 58.0)
+	cam.add_view("plan", Vector3(PLAN_POS.x, 1.55, 1.9), Vector3(PLAN_POS.x, 1.55, 3.4), 40.0)
 	zones.register("hall", VIEWS, HOTSPOT_VIEW, DEEPER, CAPTION)
+
+
+func _panel_site(i: int) -> Array:
+	match _letters[i]:
+		"door":
+			return [DOOR_POS, -90.0]
+		"decoy0":
+			return DECOYS[0]
+	return DECOYS[1]
+
+
+func _panel_view_pos(i: int) -> Vector3:
+	var site := _panel_site(i)
+	var p: Vector3 = site[0]
+	return p + Basis(Vector3.UP, deg_to_rad(float(site[1]))) * Vector3(0, 1.4, 1.25)
+
+
+func _panel_view_target(i: int) -> Vector3:
+	var site := _panel_site(i)
+	return (site[0] as Vector3) + Vector3(0, 1.3, 0)
 
 
 func _mat(color: Color, rough: float = 0.8, metal: float = 0.0) -> StandardMaterial3D:
@@ -100,114 +144,141 @@ func _label(parent: Node3D, text: String, pos: Vector3, size_m: float, color: Co
 	return l
 
 
-# ---------------------------------------------------------------------- N1: east wall
-func _build_east_wall() -> void:
-	var paints := [Color("5c6b5a"), Color("5a6670"), Color("6d6454")]
-	# one tap area over the whole strip of wall: a tap from the hall walks the camera there
-	var strip := Node3D.new()
-	strip.name = "placeholder_east_strip"
-	root.add_child(strip)
-	room.call("add_tap_area", strip, Vector3(0.03, 1.9, 2.3), "east_wall", "East_wall", Vector3(4.985, 1.2, 2.42))
-	for i in 3:
-		var p := Node3D.new()
-		p.name = "placeholder_panel_" + "abc"[i]
-		p.position = Vector3(WALL_X - 0.06, PANEL_Y, PANEL_Z[i] - PANEL_W / 2.0) # hinge on the panel's north edge
-		root.add_child(p)
-		_box(p, PANEL_SIZE, Vector3(0, 0, PANEL_W / 2.0), _mat(paints[i], 0.9), "face")
-		_box(p, Vector3(0.034, 1.34, PANEL_W + 0.04), Vector3(0.0, 0, PANEL_W / 2.0), _mat(Color("2a2a26"), 0.9), "frame").position.x = 0.008
-		_label(p, "ABC"[i], Vector3(-0.02, 0.0, PANEL_W / 2.0), 0.3, Color("e8e2cf"), -90.0)
-		room.call("add_tap_area", p, Vector3(0.08, 1.3, PANEL_W), "east_wall", "IA_panel_%d" % i, Vector3(-0.02, 0, PANEL_W / 2.0))
-		_panels.append(p)
-	var v := int(logic.state["v_panel"])
-	# the plate behind the right panel: a brass slab with ten keys (digits are language-neutral)
-	_plate = Node3D.new()
-	_plate.name = "placeholder_plate"
-	_plate.position = Vector3(WALL_X - 0.03, PANEL_Y, PANEL_Z[v])
-	root.add_child(_plate)
-	var brass := _mat(Color("b08a3c"), 0.45, 0.9)
-	_box(_plate, Vector3(0.02, 0.52, PANEL_W), Vector3.ZERO, brass, "slab")
-	for d in 10:
-		var col := d % 5
-		var row := d / 5
-		var pos := Vector3(-0.02, 0.1 - 0.17 * row, -0.19 + 0.095 * col)
-		_box(_plate, Vector3(0.025, 0.1, 0.085), pos, _mat(Color("2a2118"), 0.5, 0.2), "key_%d" % d)
-		_label(_plate, str(d), pos + Vector3(-0.016, 0, 0), 0.06, Color("e9d9a8"), -90.0)
-		room.call("add_tap_area", _plate, Vector3(0.05, 0.12, 0.092), "east_wall", "Dial_%d" % d, pos)
-	# the service door: the plate's slab swings open on its north edge once the number was right
-	_opening = _box(root, Vector3(0.02, 1.3, PANEL_W), Vector3(WALL_X - 0.03, PANEL_Y, PANEL_Z[v]), _mat(Color("050403"), 1.0), "placeholder_opening")
-	_opening.visible = false
-	_door = Node3D.new()
-	_door.name = "placeholder_service_door"
-	_door.position = Vector3(WALL_X - 0.06, PANEL_Y, PANEL_Z[v] - PANEL_W / 2.0)
-	root.add_child(_door)
-	_box(_door, Vector3(0.04, 1.3, PANEL_W), Vector3(0, 0, PANEL_W / 2.0), brass, "leaf")
-	_label(_door, "TODO door", Vector3(-0.03, 0.0, PANEL_W / 2.0), 0.07, Color("1a1208"), -90.0)
-	room.call("add_tap_area", _door, Vector3(0.1, 1.3, PANEL_W), "east_wall", "IA_svc_door", Vector3(-0.02, 0, PANEL_W / 2.0))
+# ---------------------------------------------------------------------- N1: the door and its hatches
+func _build_door(v: int) -> void:
+	_door_model = ModelUtil.spawn("service_door", room, Transform3D(Basis(Vector3.UP, deg_to_rad(-90.0)), DOOR_POS), "parts")
+	if _door_model == null:
+		return
+	_door_model.name = "service_door"
+	(room.get("models") as Dictionary)["service_door"] = _door_model
+	(room.get("_roots") as Dictionary)[_door_model] = "service_door"
+	_door_model.set_meta("hotspot", "east_wall")
+	room.call("tune_shadows", _door_model)
+	_cover = ModelUtil.find(_door_model, "IA_cover_panel")
+	_leaf = ModelUtil.find(_door_model, "IA_service_door")
+	_frame = ModelUtil.find(_door_model, "service_door_frame")
+	_lamp = ModelUtil.find(_door_model, "service_lamp") as MeshInstance3D
+	for n in range(10): # the hole liners are tap volumes only
+		var hole := ModelUtil.find(_door_model, "IA_dial_hole_%d" % n) as MeshInstance3D
+		if hole != null:
+			hole.visible = false
+	if _cover != null:
+		_letter_label(_cover, "ABC"[v], Vector3(0, -1.05, 0.02))
+	_frame_set(false)
 
 
-# ---------------------------------------------------------------------- stair stump, plan
+func _letter_label(parent: Node3D, text: String, pos: Vector3) -> void:
+	_label(parent, text, pos, 0.3, Color("e8e2cf"), 0.0)
+
+
+func _build_decoy(k: int, letter: int) -> void:
+	var site: Array = DECOYS[k]
+	var n := Node3D.new()
+	n.name = "placeholder_hatch_%s" % "abc"[letter]
+	n.position = site[0] + Basis(Vector3.UP, deg_to_rad(float(site[1]))) * Vector3(0, HATCH_H / 2.0 + 0.1, 0.03)
+	n.rotation_degrees.y = float(site[1])
+	root.add_child(n)
+	_box(n, Vector3(HATCH_W, HATCH_H, 0.03), Vector3.ZERO, _mat(Color("4f6a56"), 0.9), "face")
+	_box(n, Vector3(HATCH_W + 0.05, HATCH_H + 0.05, 0.02), Vector3(0, 0, -0.01), _mat(Color("2a2a26"), 0.9), "frame")
+	_label(n, "ABC"[letter], Vector3(0, 0, 0.02), 0.3, Color("e8e2cf"), 0.0)
+	room.call("add_tap_area", n, Vector3(HATCH_W, HATCH_H, 0.08), "east_wall", "IA_panel_%d" % letter, Vector3(0, 0, 0.02))
+	_decoys.append(n)
+
+
+func _frame_set(open: bool) -> void:
+	if _frame != null:
+		room.call("set_present", _frame, open)
+	if _leaf != null:
+		room.call("set_present", _leaf, open)
+
+
 func _build_stump() -> void:
-	_stump = Node3D.new()
-	_stump.name = "placeholder_stair_stump"
-	_stump.position = STUMP_POS
-	root.add_child(_stump)
-	var iron := _mat(Color("3a3630"), 0.6, 0.6)
-	var core := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.12
-	cyl.bottom_radius = 0.12
-	cyl.height = 2.8
-	core.mesh = cyl
-	core.position = Vector3(0, 1.4, 0)
-	core.material_override = iron
-	_stump.add_child(core)
-	for k in 5:
-		var step := _box(_stump, Vector3(0.7, 0.05, 0.28), Vector3.ZERO, iron, "step_%d" % k)
-		step.position = Vector3(0, 0.25 + 0.2 * k, 0)
-		step.rotation_degrees.y = 38.0 * k
-		step.translate_object_local(Vector3(0.34, 0, 0))
-	room.call("add_tap_area", _stump, Vector3(1.5, 2.8, 1.5), "stair_stump", "Stump", Vector3(0, 1.4, 0))
+	_stump = ModelUtil.spawn("stair_stump", room, Transform3D(Basis.IDENTITY, STUMP_POS), "parts")
+	if _stump == null:
+		return
+	_stump.name = "stair_stump"
+	(room.get("models") as Dictionary)["stair_stump"] = _stump
+	(room.get("_roots") as Dictionary)[_stump] = "stair_stump"
+	_stump.set_meta("hotspot", "stair_stump")
+	room.call("tune_shadows", _stump)
 
 
 func _build_plan() -> void:
-	_plan = Node3D.new()
-	_plan.name = "placeholder_floor_plan_frame"
-	_plan.position = PLAN_POS
-	root.add_child(_plan)
-	_box(_plan, Vector3(0.9, 0.6, 0.04), Vector3.ZERO, _mat(Color("4a3a24"), 0.7), "frame")
-	_box(_plan, Vector3(0.82, 0.52, 0.01), Vector3(0, 0, -0.022), _mat(Color("d8cfb0"), 0.9), "paper")
-	for k in 3: # three strips, the three floors of the plan
-		_box(_plan, Vector3(0.7, 0.1, 0.004), Vector3(0, 0.16 - 0.16 * k, -0.03), _mat(Color("6a5c3c"), 0.9), "strip_%d" % k)
-	_plan.rotation_degrees.y = 180.0
-	room.call("add_tap_area", _plan, Vector3(1.0, 0.7, 0.2), "plan_wall", "Plan", Vector3.ZERO)
+	_plan = ModelUtil.spawn("floor_plan_frame", room, Transform3D(Basis(Vector3.UP, deg_to_rad(180.0)), PLAN_POS), "parts")
+	if _plan == null:
+		return
+	_plan.name = "floor_plan_frame"
+	(room.get("models") as Dictionary)["floor_plan_frame"] = _plan
+	(room.get("_roots") as Dictionary)[_plan] = "floor_plan_frame"
+	_plan.set_meta("hotspot", "plan_wall")
 
 
 # ---------------------------------------------------------------------- state
 func apply_state(animated: bool) -> void:
 	var s := logic.state
-	var v := int(s["v_panel"])
-	for i in 3:
-		var open: bool = (i == v and s["panel_found"]) or (i == v and s["pump_open"])
-		_swing(_panels[i], -100.0 if open else 0.0, animated)
-	room.call("set_present", _plate, bool(s["panel_found"]) and not bool(s["pump_open"]))
-	_opening.visible = bool(s["pump_open"])
-	room.call("set_present", _door, bool(s["pump_open"]))
-	_swing(_door, -100.0 if s["pump_open"] else 0.0, animated)
-	room.call("set_present", _stump, logic.exp_stage() >= 2)
+	if _door_model == null:
+		return
+	var found: bool = s["panel_found"] or s["pump_open"]
+	_rot(_cover, Vector3.RIGHT, -75.0 if found else 0.0, animated)
+	_frame_set(found)
+	_rot(_leaf, Vector3.UP, -100.0 if s["pump_open"] else 0.0, animated)
+	if _lamp != null:
+		ModelUtil.set_emission(_lamp, not s["pump_open"], Color("ff3b2f"), 2.0)
+	if _stump != null:
+		room.call("set_present", _stump, logic.exp_stage() >= 2)
+	var ladder := ModelUtil.find(_stump, "IA_wedge_ladder")
+	if ladder != null:
+		room.call("set_present", ladder, not s["wedge_out"])
 
 
-func _swing(n: Node3D, deg: float, animated: bool) -> void:
+var _tweens: Dictionary = {}
+
+
+func _rot(n: Node3D, axis: Vector3, deg: float, animated: bool) -> void:
 	if n == null:
 		return
+	if not n.has_meta("rest"):
+		n.set_meta("rest", n.transform)
+	var base: Transform3D = n.get_meta("rest")
+	var target := Transform3D(base.basis * Basis(axis, deg_to_rad(deg)), base.origin)
 	var k := n.get_instance_id()
 	if _tweens.has(k) and (_tweens[k] as Tween).is_valid():
 		(_tweens[k] as Tween).kill()
-	if not animated or n.rotation_degrees.is_equal_approx(Vector3(0, deg, 0)):
-		n.rotation_degrees = Vector3(0, deg, 0)
+	if not animated or n.transform.is_equal_approx(target):
+		n.transform = target
 		return
+	var from := n.transform
+	var fq := from.basis.get_rotation_quaternion()
+	var tq := target.basis.get_rotation_quaternion()
 	var tw := room.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(n, "rotation_degrees:y", deg, 0.55)
+	tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(n):
+			n.transform = Transform3D(Basis(fq.slerp(tq, t)), from.origin), 0.0, 1.0, 0.6)
 	_tweens[k] = tw
+
+
+## The finger wheel turns to the digit and runs back (the booth door's convention).
+func _dial_spin(d: int) -> void:
+	var w := ModelUtil.find(_door_model, "IA_rotary_dial")
+	if w == null:
+		return
+	var n := 10 if d == 0 else d
+	var theta := 50.0 + (n - 1) * 30.0
+	_rot_quick(w, -(theta + 10.0), 0.25 + 0.02 * n)
+	room.get_tree().create_timer(0.3 + 0.02 * n).timeout.connect(func() -> void: _rot_quick(w, 0.0, 0.35 + 0.035 * n))
+
+
+func _rot_quick(n: Node3D, deg: float, dur: float) -> void:
+	if not n.has_meta("rest"):
+		n.set_meta("rest", n.transform)
+	var base: Transform3D = n.get_meta("rest")
+	var target := Transform3D(base.basis * Basis(Vector3.BACK, deg_to_rad(deg)), base.origin)
+	var tw := room.create_tween()
+	var from := n.transform.basis.get_rotation_quaternion()
+	var tq := target.basis.get_rotation_quaternion()
+	tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(n):
+			n.transform = Transform3D(Basis(from.slerp(tq, t)), base.origin), 0.0, 1.0, dur)
 
 
 # ---------------------------------------------------------------------- taps
@@ -215,26 +286,30 @@ func _swing(n: Node3D, deg: float, animated: bool) -> void:
 func interact(hs: String, part: String) -> bool:
 	var cam: RoomCamera = room.get("cam")
 	var cur := cam.current()
+	var v := int(logic.state["v_panel"])
 	match hs:
 		"east_wall":
-			if part.begins_with("IA_panel_"):
-				var i := int(part.substr(9))
+			if part == "IA_cover_panel" or part.begins_with("IA_panel_"):
+				var i := v if part == "IA_cover_panel" else int(part.substr(9))
 				var view := "east_panel_" + "abc"[i]
-				if cur != view and not logic.state["panel_found"]:
-					cam.go(view)
-				elif logic.state["panel_found"]:
+				if logic.state["panel_found"]:
 					cam.go("east_dial")
+				elif cur != view:
+					cam.go(view)
 				else:
 					logic.n1_open_panel(i)
-			elif part.begins_with("Dial_"):
+			elif part.begins_with("IA_dial_hole_") or part == "IA_rotary_dial":
 				if cur != "east_dial":
 					cam.go("east_dial")
-				else:
-					ArchiveZones.cue("dial_click", -2.0, 0.9 + 0.02 * int(part.substr(5)))
-					logic.n1_dial(int(part.substr(5)))
-			elif part == "IA_svc_door":
+				elif part.begins_with("IA_dial_hole_"):
+					var d := int(part.substr(13))
+					_dial_spin(d)
+					logic.n1_dial(d)
+			elif part == "IA_service_door" or part.begins_with("service_door"):
 				if logic.state["pump_open"]:
 					logic.enter_room("pump")
+				elif cur != "east_dial" and logic.state["panel_found"]:
+					cam.go("east_dial")
 			elif cur != "east_south" and cur not in DEEPER["east_south"]:
 				cam.go("east_south")
 			else:
@@ -244,12 +319,13 @@ func interact(hs: String, part: String) -> bool:
 			if cur != "stair":
 				cam.go("stair")
 			else:
-				_say("obj2x.stair")
+				_say("obj2x.wedge" if not logic.state["wedge_out"] else "obj2x.stair")
 			return true
 		"plan_wall":
 			if cur != "plan":
 				cam.go("plan")
 			else:
+				ArchiveZones.cue("plan_unfold")
 				(room.get("hud") as Node).call("show_plan")
 			return true
 	return false
@@ -267,8 +343,11 @@ func feedback(e: String) -> bool:
 		"panel_opened":
 			ArchiveZones.cue("panel_swing")
 			return true
-		"panel_cold", "n1_dial_wrong":
-			AudioManager.ui("ui_error")
+		"panel_cold":
+			ArchiveZones.cue("panel_cold")
+			return true
+		"n1_dial_wrong":
+			AudioManager.sfx("dial_return")
 			return true
 		"pump_opened":
 			ArchiveZones.cue("svc_door_open")

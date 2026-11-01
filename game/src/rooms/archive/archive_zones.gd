@@ -39,22 +39,23 @@ const MOOD := {
 ## The zone classes (pure scene builders). A room without one gets the placeholder.
 const BUILDERS := {"pump": "res://src/rooms/archive/archive_pump.gd"}
 
-## Audio cue id -> existing sounds to use until the sound designer pushes the real id (the first that exists wins).
-## TODO(audio): real ids to be pushed: lamp_dip, pipe_knock_full, pipe_knock_dead, pipe_knock_cracked, valve_wheel,
-## boiler_roar_loop, steam_hiss, dial_click, panel_swing, svc_door_open, room_fade_step, knocks, frost_steps, roll_call,
-## steps_above, echo_chime, hand_leather, hand_thud, hand_cloth, mallet_tock.
+## Audio cue id -> sound ids (docs/AUDIO_CH2X.md): the first that exists is played, the rest are fallbacks.
 const CUES := {
-	"lamp_dip": ["lamp_dip", "power_on"], "valve_wheel": ["valve_wheel", "valve_squeak", "ring_turn"],
-	"pipe_knock_full": ["pipe_knock_full", "canister_thump"], "pipe_knock_dead": ["pipe_knock_dead", "box_open"],
-	"pipe_knock_cracked": ["pipe_knock_cracked", "locker_rattle"], "steam_hiss": ["steam_hiss", "tube_whoosh"],
-	"dial_click": ["dial_click", "keypad_press"], "panel_swing": ["panel_swing", "secret_panel"],
-	"svc_door_open": ["svc_door_open", "door_open"], "fire_door": ["fire_door", "drawer_open"],
-	"mallet_tock": ["mallet_tock", "canister_thump"], "hand_leather": ["hand_leather", "item_pickup"],
-	"hand_thud": ["hand_thud", "card_flick"], "hand_cloth": ["hand_cloth", "card_flick"],
-	"room_step": ["room_step", "door_open"],
+	"valve_wheel": ["c2x_valve_wheel"], "pipe_knock_full": ["c2x_mallet_full"], "pipe_knock_dead": ["c2x_mallet_dead"],
+	"pipe_knock_cracked": ["c2x_mallet_cracked"], "steam_hiss": ["c2x_pipe_hazard"], "dial_click": ["dial_wind", "keypad_press"],
+	"panel_swing": ["c2x_panel_open"], "panel_cold": ["c2x_panel_cold"], "svc_door_open": ["c2x_door_iron"],
+	"fire_door": ["drawer_open"], "refused": ["c2x_refused"], "room_step": ["c2x_door_service"], "pipe_flow": ["c2x_pipe_flow"],
+	"thaw": ["c2x_thaw"], "plan_unfold": ["c2x_plan_unfold"], "lamp_dead": ["c2x_lamp_fail"], "lamp_fit": ["c2x_lamp_fit"],
+	"stair_steps": ["c2x_stair_steps"],
 }
 const MOMENT_SOUND := {"m1": "lamp_dip", "m2": "knocks", "m3": "frost_steps", "m4": "roll_call", "m5": "steps_above",
 	"m6": "echo_chime"}
+## Ambience bed per room (the hall keeps amb_archive).
+const AMBIENCE := {"hall": "amb_archive", "pump": "amb_c2x_pump", "cell": "amb_c2x_cell", "cold": "amb_c2x_cold",
+	"gallery": "amb_c2x_gallery", "plate": "amb_c2x_plate", "office": "amb_c2x_office"}
+## Events that only say "no" (docs/AUDIO_CH2X.md).
+const REFUSED := ["valves_locked_n2", "need_mallet", "sheets_locked", "cranks_locked", "need_aisle", "need_cloth", "no_pressure",
+	"weights_locked", "room_locked", "travel_refused"]
 
 var room: Node3D
 var logic: ArchiveLogic
@@ -217,6 +218,9 @@ func apply_state(animated: bool) -> void:
 
 ## Sound and per-event reactions of the expansion's rooms.
 func feedback(e: String) -> void:
+	if REFUSED.has(e.get_slice(":", 0)):
+		_cue("refused")
+		return
 	if hall_exp != null and hall_exp.feedback(e):
 		return
 	for id: String in zones:
@@ -243,6 +247,7 @@ func transition(room_id: String) -> void:
 	cam.go(str(ROOT_VIEW.get(room_id, "hall")), true)
 	if from != room_id:
 		_cue("room_step")
+		_set_ambience(room_id)
 	await _fade_to(0.0, 0.0 if calm else 0.2)
 	hud.call("set_busy", false)
 	moving = false
@@ -292,6 +297,7 @@ func jump(room_id: String) -> void:
 	ensure(room_id)
 	activate(room_id)
 	(room.get("cam") as RoomCamera).go(str(ROOT_VIEW.get(room_id, "hall")), true)
+	_set_ambience(room_id)
 
 
 # ====================================================================== reaction moments
@@ -315,14 +321,20 @@ func play_moment(id: String) -> void:
 	var seconds := float((ArchiveExpData.MOMENTS[id] as Dictionary).get("seconds", 3.0))
 	if b != null and b.has_method("moment_" + id):
 		b.call("moment_" + id, seconds, mode == "full")
-	if mode == "full":
-		_cue(str(MOMENT_SOUND.get(id, "")), -6.0)
+	var cue_id := str(MOMENT_SOUND.get(id, ""))
+	if cue_id != "": # Full plays the plain cue, Soft its _soft variant (Off returned above)
+		AudioManager.sfx(cue_id if mode == "full" else cue_id + "_soft")
 	var cap := logic.caption_key("moment:" + id)
 	if cap != "":
 		hud.call("caption", tr(cap), maxf(seconds, 3.5))
 
 
 # ====================================================================== audio
+func _set_ambience(room_id: String) -> void:
+	for id: String in AMBIENCE:
+		AudioManager.ambience(str(AMBIENCE[id]), id == room_id, -4.0 if id == "hall" else -6.0, 1.5)
+
+
 ## Plays the first existing sound of the cue's list (the real id once the sound designer pushed it).
 func _cue(id: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 	cue(id, volume_db, pitch)

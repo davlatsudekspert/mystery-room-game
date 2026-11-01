@@ -645,16 +645,14 @@ func feedback(e: String) -> bool:
 			ArchiveZones.cue("steam_hiss", -4.0)
 			return true
 		"thawed":
-			AudioManager.sfx("puzzle_solved", -5.0)
+			ArchiveZones.cue("pipe_flow")
+			room.get_tree().create_timer(1.0).timeout.connect(func() -> void: ArchiveZones.cue("thaw"))
 			return true
 		"tap":
 			var parts := e.split(":")
 			if parts.size() >= 3:
-				ArchiveZones.cue("pipe_knock_" + parts[2], -2.0)
+				ArchiveZones.cue("pipe_knock_" + parts[2], 0.0, randf_range(0.94, 1.06))
 				_flash_pipe(int(parts[1]), parts[2])
-			return true
-		"need_mallet", "valves_locked_n2":
-			AudioManager.ui("ui_error")
 			return true
 	return false
 
@@ -687,7 +685,6 @@ func moment_m1(seconds: float, _sting: bool) -> void:
 	_lamp_tween.tween_property(_work_light, "light_energy", base * 0.04, seconds * 0.4).set_trans(Tween.TRANS_QUAD)
 	_lamp_tween.tween_callback(func() -> void: _lamp(bulb, false, Color("ffb46b")))
 	_lamp_tween.tween_interval(seconds * 0.25)
-	_lamp_tween.tween_callback(func() -> void: ArchiveZones.cue("lamp_dip", -8.0, 1.6))
 	_lamp_tween.tween_property(_work_light, "light_energy", base * 1.5, 0.12)
 	_lamp_tween.parallel().tween_callback(func() -> void: _lamp(bulb, true, Color("ffb46b")))
 	_lamp_tween.tween_property(_work_light, "light_energy", base, seconds * 0.25).set_trans(Tween.TRANS_SINE)
