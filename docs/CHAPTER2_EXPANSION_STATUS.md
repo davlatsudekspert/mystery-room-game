@@ -118,4 +118,4 @@ Owner: the Godot scene engineer. Spec: `docs/CHAPTER2_EXPANSION.md`. Logic: `gam
 - `tools/chaos_run.sh --chapter=ch2 --seed=11 --steps=400`: 400 steps, 314 taps, 176 item-in-hand taps, 0 violations, 0 script errors.
 - `tap_map --chapter=ch2 --views=all --hud-check`: phone20 181 controls in 79 views, 0 failures, 34 banner warnings; tablet10 178 controls in 79 views, 0 failures, 30 banner warnings. (The six light-table knobs are bare tap boxes, not measured by this tool; their boxes are 6.9 cm = about 7 mm raw on phone20 and clear 9 mm with the tap assist like the other small controls; IA_switch and the sheet tab were measured: 11.5 mm / 11.0 mm with assist.)
 - `tap_map --perf --screen=phone20` (HUD on): max 131 draw calls (hall root), Cell 85, Echo stacks 90; all Chapter 2 views <= 150.
-- `ui_screens` android20 EN/RU/UZ: 100 shots, 0 layout issues. iphone EN/RU/UZ: see the log line in the final report.
+- `ui_screens` android20 EN/RU/UZ: 100 shots, 0 layout issues. iphone EN/RU/UZ: 100 shots, 0 layout issues (the first iphone run stalled three times in the Xvfb watchdog, an environment hang; the rerun passed).
