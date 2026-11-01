@@ -56,6 +56,13 @@ def main():
             res = (int(w), int(h))
     sel = C.args_shots(ARGS)
     X.begin()
+    # create the textured preview materials BEFORE the import: a GLB material of the same name would otherwise win and stay untextured
+    for glb, _, _ in MODELS + SHEETS:
+        pth = C.model_glb(glb)
+        if os.path.exists(pth):
+            for mt in C.glb_json(pth).get("materials", []):
+                if mt.get("name", "").startswith("M_"):
+                    M.material(mt["name"])
     for glb, pos, yaw in MODELS:
         C.qa_import(C.model_glb(glb), pos, yaw)
     for glb, pos, yaw in SHEETS:

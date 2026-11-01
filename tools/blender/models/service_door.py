@@ -3,7 +3,7 @@
 Chapter 2 expansion (docs/CHAPTER2_EXPANSION.md §3, §8 N1). Behind the warm east wall hides the door to the Pump Room: a hatch-like cover panel painted like the hall wall
 (green dado, walnut rail, plaster above) hides a heavy riveted steel door in a casing, with a telephone-dial combination lock (the same convention as `booth_door`,
 code 0417) and a lock lamp; behind it a short stair goes down into the dark. Light by design (the hall is at its draw-call limit): two merged static objects,
-at most 4 materials on the leaf, the hole liners are tap-disc volumes only (hide their meshes). While the cover is closed only `IA_cover_panel` (2 surfaces) needs
+at most 4 materials on the leaf, the hole liners are tap-disc volumes only (hide their meshes). While the cover is closed only `IA_cover_panel` (3 surfaces) needs
 to be visible; show `service_door_frame`, `IA_service_door`, `service_lamp` when the cover opens.
 
 Model space (Godot): origin at the centre of the 0.90 x 2.10 opening, at floor level, on the HALL-side wall plane (local z = 0); the wall occupies local z in
@@ -118,7 +118,7 @@ def wheel(z0):
         n = k if k else 10
         th = math.radians(50 + (n - 1) * 30)
         x, y = DX + math.cos(th) * RING_R, DY + math.sin(th) * RING_R
-        lin = glathe(f"IA_dial_hole_{k}", [(0.0088, 0.0), (0.0098, 0.0), (0.0098, 0.012), (0.0088, 0.012)], (x, y, zc), axis="z", segments=8, mat="M_Chrome")
+        lin = glathe(f"IA_dial_hole_{k}", [(0.0088, 0.0), (0.0098, 0.0), (0.0098, 0.012), (0.0088, 0.012)], (x, y, zc), axis="z", segments=8, mat="M_Enamel_Cream")
         liners.append(part(f"IA_dial_hole_{k}", [lin], (x, y, zc + 0.006), presmooth=False))
     wh = part("IA_rotary_dial", [ring], (DX, DY, zc))
     return wh, liners
@@ -129,6 +129,7 @@ def cover():
     x0, x1, y0, y1, z0, z1 = -0.52, 0.52, 0.0, 2.20, 0.030, 0.065
     o.append(gbox("cv_lo", (x0, y0, z0), (x1, 1.37, z1), "M_Paint_Green", bevel=0.004))
     o.append(gbox("cv_hi", (x0, 1.44, z0), (x1, y1, z1), "M_Plaster_Wall", bevel=0.004))
+    o.append(gbox("cv_rail", (x0 - 0.002, 1.37, z0 - 0.002), (x1 + 0.002, 1.44, z1 + 0.004), "M_Wood_Walnut", bevel=0.003))     # the hall's dado rail continues over the hatch
     for x in (-0.46, 0.46):                              # four tiny dark screws read as an access hatch
         for y in (0.20, 2.0):
             o.append(gcyl(f"cs{x}{y}", 0.008, 0.004, (x, y, z1), axis="z", verts=6, mat="M_Paint_Green" if y < 1.4 else "M_Plaster_Wall", bevel=0.0))
@@ -159,4 +160,7 @@ if __name__ == "__main__":
     errs = X.finish(NAME, req, ["IA_service_door", "IA_rotary_dial", "service_lamp"], BUDGET,
                     {"IA_service_door": (HX, 0.0, HZ), "IA_rotary_dial": (DX, DY, DZ), "IA_cover_panel": (0.0, 2.20, 0.0475)}, show=req[:6])
     if X.want_render(ARGS):
+        X.qa_props(NAME, [("_closed", (1.4, 1.5, 2.4), (0.0, 1.1, 0.0), 48)], floor=True, world=0.25)
+        import bpy
+        bpy.data.objects.remove(bpy.data.objects["IA_cover_panel"], do_unlink=True)             # QA only: the opened hatch
         X.qa_props(NAME, [("", (1.4, 1.5, 2.4), (0.0, 1.1, 0.0), 48), ("_dial", (0.20, 1.45, 0.55), (0.20, 1.40, 0.0), 24)], floor=True, world=0.25)

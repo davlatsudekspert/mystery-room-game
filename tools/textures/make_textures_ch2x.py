@@ -132,8 +132,8 @@ def iron_rust():
 def wallpaper_cell():
     ys, xs = np.meshgrid(np.arange(N) / N, np.arange(N) / N, indexing="ij")
     base = hexf("#c4a56c")
-    line = hexf("#a98446")
-    spr = hexf("#8a6a32")
+    line = hexf("#8a5f26")
+    spr = hexf("#6f4a1c")
     # diamond lattice, 4 per repeat
     u = (xs * 4) % 1.0
     v = (ys * 4) % 1.0
@@ -143,12 +143,12 @@ def wallpaper_cell():
     dot = 1 - smooth(0.030, 0.05, np.hypot(u - 0.5, v - 0.5) * 1.0 + 0.0)
     ring = 1 - smooth(0.0, 0.02, np.abs(np.hypot(u - 0.5, v - 0.5) - 0.085))
     col = np.ones((N, N, 3)) * base
-    col = col * (1 - lat[..., None] * 0.7) + line * lat[..., None] * 0.7
-    col = col * (1 - ring[..., None] * 0.6) + spr * ring[..., None] * 0.6
-    col = col * (1 - dot[..., None] * 0.6) + spr * dot[..., None] * 0.6
+    col = col * (1 - lat[..., None] * 0.9) + line * lat[..., None] * 0.9
+    col = col * (1 - ring[..., None] * 0.8) + spr * ring[..., None] * 0.8
+    col = col * (1 - dot[..., None] * 0.8) + spr * dot[..., None] * 0.8
     stain = fbm(N, 4, 5)
     fade = fbm(N, 10, 9, 3)
-    col *= (0.80 + 0.35 * stain)[..., None]
+    col *= (0.88 + 0.20 * stain)[..., None]
     col *= (0.93 + 0.1 * fade)[..., None]
     h = lat * 0.2 + dot * 0.1 + fade * 0.1
     save("wallpaper_cell", col, h, np.full((N, N), 0.85), np.zeros((N, N)), np.ones((N, N)), 0.8)

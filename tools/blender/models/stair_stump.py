@@ -7,13 +7,13 @@ column, with two fallen balusters. Opens from above later (the wedge pin on the 
 Light by design (the hall is near its draw-call limit): three static materials merged into one object, the ladder is one object.
 
 Model space (Godot): origin on the floor at the centre of the column; footprint radius 0.95; front +Z (the first tread starts at +Z and the stair turns
-counter-clockwise seen from above, so the open side of the entrance faces the hall). Height 1.62 (treads) + 0.9 ladder. Suggested placement: against a free wall /
+counter-clockwise seen from above, so the open side of the entrance faces the hall). Height 1.62 (treads) + the ladder up to about 3.35. Suggested placement: against a free wall /
 pilaster, see docs/models/ch2_exp.md.
 
 Parts:
   stair_stump_body   column, 8 treads, brackets, balustrade, handrail, broken landing, fallen balusters (M_Steel_Dark, M_Chequer, M_Iron_Rust)
-  IA_wedge_ladder    the wedged ladder (M_Wood_Walnut + a few M_Steel_Dark straps), origin = its lower end on the landing (0.62, 1.64, -0.22), identity;
-                     slide it +0.9 along its own axis / or hide it when the route opens from above
+  IA_wedge_ladder    the wedged ladder (M_Wood_Walnut + a few M_Steel_Dark straps), origin = its lower end on the landing (-0.55, 1.64, -0.05), identity;
+                     jammed against the hall ceiling, slide it or hide it when the route opens from above
   light_stair_top    empty (0.0, 2.3, 0.0), optional dust/light shaft above the stump
 
     blender -b --factory-startup -P tools/blender/models/stair_stump.py [-- --no-render]
@@ -113,9 +113,9 @@ def landing():
 
 def ladder():
     o = []
-    base = Vector((0.62, 1.64, -0.22))
-    d = Vector((-0.55, 0.62, 0.35)).normalized()         # leaning across the gap toward the column and up
-    ln, w = 2.0, 0.22
+    base = Vector((-0.55, 1.64, -0.05))
+    d = Vector((0.30, 0.90, 0.10)).normalized()          # leaning steeply toward the hall ceiling (it is jammed between the landing and the ceiling)
+    ln, w = 1.95, 0.24
     side = Vector((0.0, 0.0, 1.0)).cross(d).normalized() * (w / 2)
     side = Vector((d.z, 0.0, -d.x)).normalized() * (w / 2)
     for sgn in (-1, 1):
@@ -127,10 +127,11 @@ def ladder():
         a = c0 - side
         b = c0 + side
         o.append(_rail(f"rung{k}", a, b, 0.020, 0.020))
+    o.append(gbox("wedge_blk", (base.x - 0.16, base.y, base.z - 0.14), (base.x + 0.04, base.y + 0.10, base.z + 0.14), WOOD, bevel=0.004))   # the wedge under its foot
     for k, t in enumerate((0.55, 1.35)):                  # iron straps where it jams
         c = base + d * t
         o.append(gbox(f"strap{k}", tuple(c - Vector((0.13, 0.03, 0.03))), tuple(c + Vector((0.13, 0.03, 0.03))), DARK, bevel=0.002))
-    return part("IA_wedge_ladder", o, (0.62, 1.64, -0.22))
+    return part("IA_wedge_ladder", o, (-0.55, 1.64, -0.05))
 
 
 def _rail(name, a, b, w, t):
@@ -158,6 +159,6 @@ def main():
 if __name__ == "__main__":
     main()
     req = ["stair_stump_body", "IA_wedge_ladder", "light_stair_top"]
-    errs = X.finish(NAME, req, ["IA_wedge_ladder"], BUDGET, {"IA_wedge_ladder": (0.62, 1.64, -0.22)}, show=req)
+    errs = X.finish(NAME, req, ["IA_wedge_ladder"], BUDGET, {"IA_wedge_ladder": (-0.55, 1.64, -0.05)}, show=req)
     if X.want_render(ARGS):
-        X.qa_props(NAME, [("", (1.8, 1.7, 2.4), (0.0, 0.85, 0.0), 50), ("_top", (-1.6, 2.3, 1.6), (0.2, 1.4, 0.0), 46)], floor=True, world=0.15)
+        X.qa_props(NAME, [("", (2.6, 2.2, 3.4), (0.0, 1.5, 0.0), 52), ("_top", (-1.6, 2.3, 1.6), (-0.3, 2.0, 0.0), 46)], floor=True, world=0.15)
