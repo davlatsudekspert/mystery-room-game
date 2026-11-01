@@ -1,0 +1,15 @@
+# Chapter 2 expansion (Stage B, upper floor): R5 Reading Gallery, R6 Plate Room, R7 Director's Office and their props.
+# Shared helpers: lib_ch2x_upper.py (on lib_ch2x.py). Decals: tools/textures/make_decals_ch2x_upper.py, materials: tools/materials/make_ch2x_upper_materials.py
+stair_wedge.py
+pa_horn.py
+balcony_rail.py
+roll_call_board.py
+room_gallery.py
+negative_strip.py
+enlarger.py
+room_plate.py
+tea_set.py
+pass_key.py
+projector_lamp.py
+strand_cabinet.py
+room_office.py
