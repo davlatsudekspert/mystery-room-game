@@ -30,10 +30,9 @@ start a game it cannot finish). Every expansion node in the scene is built only 
 
 - `tools/run_tests.sh`: 307 tests, 42065 checks, 0 failures (includes `tests/test_archive_upper_art.gd`).
 - `qa/playthrough_ch2.tscn --legacy` (1.0 chapter as an old save): exit 0, 86 taps, 0 fallbacks, 3 continue checks.
-- `qa/playthrough_ch2.tscn --expansion=2`: exit 0, 151 taps through the 3D scene, 0 logic fallbacks, 0 taps under a HUD control, 4 continue
-  checks. N1, N2, N7, N8, N9, N10 and G2 are played by taps (book lift ride, wedge, counter, board, enlarger, cabinet, dead and fitted lamp,
-  the spiral stair down); N3-N6 still run at logic level in that file (`ArchiveSolver.lower_floor`): the Night Cell and Cold Store builders are
-  in the scene, their taps are not in the playthrough yet.
+- `qa/playthrough_ch2.tscn --expansion=2` on the merged tree (Night Cell and Cold Store taps included): exit 0, 192 taps through the 3D
+  scene, 0 logic fallbacks, 0 taps under a HUD control, 4 continue checks. N7-N10 and G2 alone (before the merge): 151 taps. Played by taps:
+  the book lift ride, wedge, counter, board, enlarger, cabinet, the dead and the fitted lamp, the spiral stair down.
 - `tap_map --hud-check` (`--expansion=2`, views of the new zones): 0 failures at phone20 and tablet10 for the Gallery (12 controls in
   8 views), Plate Room (3 in 3), Office (9 in 3, 2 banner warnings) and the Pump Room lift views (5 in 4).
 - Draw calls with the HUD (`tap_map --perf --screen=phone20`): Gallery 23-60, Plate Room 18-39, Office 27-38, Pump Room views 34-67 (the
