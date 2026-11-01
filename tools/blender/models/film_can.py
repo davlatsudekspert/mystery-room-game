@@ -104,7 +104,7 @@ def main():
         X.C.qa_begin(samples=24)
         fl = X.studio_floor()
         for tag, cam, tgt, vf in (("", (0.0, 0.55, 0.85), (0.0, 0.03, 0.0), 32),):
-            X.C.shoot(f"cold_film_cans{tag}", cam, tgt, vfov=vf, res=(900, 520), samples=24, world=0.5, lights=X.STUDIO)
+            X.C.shoot(f"cold_film_cans{tag}", cam, tgt, vfov=vf, res=(900, 520), samples=24, world=0.12, lights=[(p, e * 0.28, c, sz) for (p, e, c, sz) in X.STUDIO])
 
 
 def _decal_img(name):

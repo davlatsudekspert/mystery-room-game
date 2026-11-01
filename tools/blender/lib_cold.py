@@ -177,3 +177,8 @@ def fix_pbr() -> None:
         tex_dir = os.path.join(M.ROOT, "game", "assets", "textures", mat.name.split(".")[0][2:].lower())
         if os.path.isdir(tex_dir):
             M._attach_pbr(mat.node_tree, mat.node_tree.nodes.get("Principled BSDF"), tex_dir)
+
+
+def glights(spec):
+    """QA studio lights given with GODOT positions [(pos, energy, colour, size)] -> the Blender-space tuples mrlib.render_preview expects."""
+    return [(tuple(G(*p)), e, c, s) for (p, e, c, s) in spec]

@@ -36,6 +36,7 @@ PW, PH = 0.80, 1.20
 GALV, DARK, PAINT = "M_Steel_Galv", "M_Steel_Dark", "M_Enamel_Ice"
 ZW = 0.045          # inner wall plane (casing front face)
 ZB = -0.22          # back of the reveal
+ZC = ZW + 0.004     # the casing stands 4 mm proud of the wall plane (no coplanar faces with the wall panel)
 
 
 def frame():
@@ -56,16 +57,16 @@ def frame():
     # casing: 0.10 steel surround on the wall plane, lap seams and rivets
     cx0, cy0 = hx + fw + 0.0, hy + fw
     cw = 0.10
-    for nm, mn, mx in (("cs_l", (-cx0 - cw, -cy0 - cw, ZW - 0.018), (-cx0, cy0 + cw, ZW)), ("cs_r", (cx0, -cy0 - cw, ZW - 0.018), (cx0 + cw, cy0 + cw, ZW)),
-                       ("cs_t", (-cx0, cy0, ZW - 0.018), (cx0, cy0 + cw, ZW)), ("cs_b", (-cx0, -cy0 - cw, ZW - 0.018), (cx0, -cy0, ZW))):
-        o.append(gbox(nm, mn, mx, "M_Enamel_Ice", bevel=0.004))
+    for nm, mn, mx in (("cs_l", (-cx0 - cw, -cy0 - cw, ZC - 0.022), (-cx0, cy0 + cw, ZC)), ("cs_r", (cx0, -cy0 - cw, ZC - 0.022), (cx0 + cw, cy0 + cw, ZC)),
+                       ("cs_t", (-cx0, cy0, ZC - 0.022), (cx0, cy0 + cw, ZC)), ("cs_b", (-cx0, -cy0 - cw, ZC - 0.022), (cx0, -cy0, ZC))):
+        o.append(gbox(nm, mn, mx, "M_Enamel_Ice", bevel=0.0))
     rv = []
     for x in (-cx0 - cw / 2, cx0 + cw / 2):
         for y in (-1.15 * 0.5, -0.30, 0.0, 0.30, 0.55):
-            rv.append((x, y, ZW))
+            rv.append((x, y, ZC))
     for y in (cy0 + cw / 2, -cy0 - cw / 2):
         for x in (-0.55 * 0.5, 0.0, 0.27, -0.27):
-            rv.append((x, y, ZW))
+            rv.append((x, y, ZC))
     o.append(X.rivets("rv", rv, 0.0075, "z", mat=DARK, segs=6))
     # reveal lining: four slabs back to z = -0.22 (inside faces visible through the opening)
     for nm, mn, mx in (("rv_l", (-cx0, -cy0, ZB), (-cx0 + 0.012, cy0, -0.02)), ("rv_r", (cx0 - 0.012, -cy0, ZB), (cx0, cy0, -0.02)),
@@ -87,7 +88,7 @@ def frame():
     o.append(gbox("rime_sash", (-hx + 0.012, -hy + 0.012, 0.024), (hx - 0.012, -hy + 0.045, 0.030), "M_Porcelain", bevel=0.0))
     for k, x in enumerate((-0.30, -0.12, 0.10, 0.32)):
         ln = (0.05, 0.08, 0.04, 0.065)[k]
-        o.append(gcyl(f"ice{k}", 0.010, ln, (x, cy0 - ln + 0.0, ZW + 0.004), axis="y", verts=5, mat="M_Glass_Frosted", bevel=0.0, r_top=0.002))
+        o.append(gcyl(f"ice{k}", 0.010, ln, (x, cy0 - ln + 0.0, ZW + 0.004), axis="y", verts=5, mat="M_Frost", bevel=0.0, r_top=0.002))
     return o
 
 
@@ -123,9 +124,9 @@ if __name__ == "__main__":
         # cold daylight card behind the glass
         card = K.quad_decal("qa_card", (0, 0, -0.60), (1, 0, 0), (0, 1, 0), 3.0, 3.0, "M_Emissive_Cold")
         bm = bpy.data.materials["M_Emissive_Cold"].node_tree.nodes["Principled BSDF"]
-        bm.inputs["Emission Strength"].default_value = 2.2
+        bm.inputs["Emission Strength"].default_value = 1.2
         COLD = [((0.8, 0.9, 2.0), 160, "D8EAFF", 0.5), ((-1.2, 0.4, 1.4), 70, "FFE9CC", 0.6)]
-        X.qa_props(NAME, [("_frosted", (0.0, 0.1, 2.15), (0.0, 0.0, 0.0), 46)], floor=False, world=0.5, lights=COLD)
+        X.qa_props(NAME, [("_frosted", (0.0, 0.1, 2.15), (0.0, 0.0, 0.0), 46)], floor=False, world=0.5, lights=K.glights(COLD))
         K.qa_frost_material(wipe_band=1)
-        X.qa_props(NAME, [("_wiped", (0.5, 0.1, 1.9), (0.0, 0.0, 0.0), 46)], floor=False, world=0.5, lights=COLD)
+        X.qa_props(NAME, [("_wiped", (0.5, 0.1, 1.9), (0.0, 0.0, 0.0), 46)], floor=False, world=0.5, lights=K.glights(COLD))
 

@@ -196,7 +196,7 @@ def steel_galv():
     c = c * (1 - wear[..., None] * 0.25) + hexf("#6e6a60") * wear[..., None] * 0.25
     h = cid * 0.08 + sc * 0.05
     rough = np.clip(0.42 + wear * 0.3 + (1 - spangle) * 0.2, 0, 1)
-    save("steel_galv", c, h, rough, np.full((N, N), 0.55) - wear * 0.2, np.ones((N, N)), 0.6)   # half-metal: lit by the room, not black in a closed room
+    save("steel_galv", c, h, rough, np.full((N, N), 0.28) - wear * 0.1, np.ones((N, N)), 0.27)   # mostly diffuse zinc: lit by the room lights, not black in a closed room
     _ = edge
 
 

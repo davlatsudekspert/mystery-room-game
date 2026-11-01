@@ -197,13 +197,13 @@ def evaporator():
     e.append(gcyl("valve", 0.05, 0.12, (ex0 - 0.95, 2.62, ez0 + 0.12 - 0.06), axis="z", verts=10, mat="M_Brass_Aged", bevel=0.0))
     e.append(gbox("valve_box", (ex0 - 1.15, 2.57, ez0 + 0.06), (ex0 - 0.85, 2.76, ez0 + 0.12 + 0.07), DARK, bevel=0.0))
     for k, (ix, il) in enumerate(((-2.45, 0.22), (-2.1, 0.12), (-1.8, 0.28), (-1.4, 0.16), (-1.0, 0.24), (-0.8, 0.10))):
-        e.append(gcyl(f"ice{k}", 0.014, il, (ix, ey0 - 0.05 - il, ez1 + 0.02), axis="y", verts=5, mat="M_Glass_Frosted", bevel=0.0, r_top=0.003))
+        e.append(gcyl(f"ice{k}", 0.014, il, (ix, ey0 - 0.05 - il, ez1 + 0.02), axis="y", verts=5, mat="M_Frost", bevel=0.0, r_top=0.003))
     # frost bloom on the front of the coil casing (flat lumps) and an ice mound on the floor below (drip)
     e.append(K.frost_crust("ev_frost", [((-1.65, 3.02, ez1 + 0.005), 0.55, 0.012, "z"), ((-2.45, 2.75, ez1 + 0.005), 0.12, 0.010, "z"), ((-0.85, 2.7, ez1 + 0.005), 0.10, 0.010, "z")],
                            seed=11, sides=6))
     add("evaporator", *e)
     # stalagmites of dripped ice under the unit (tapered 6-sided cones, frosted glass)
-    ice = [gcyl(f"stal{k}", r, h, (x, 0.0, z), axis="y", verts=6, mat="M_Glass_Frosted", bevel=0.0, r_top=0.012)
+    ice = [gcyl(f"stal{k}", r, h, (x, 0.0, z), axis="y", verts=6, mat="M_Frost", bevel=0.0, r_top=0.012)
            for k, (x, z, r, h) in enumerate(((-1.65, -2.98, 0.075, 0.30), (-1.50, -2.90, 0.050, 0.17), (-1.82, -3.05, 0.045, 0.14), (-1.40, -3.08, 0.040, 0.11)))]
     add("frost_patches", *ice)
     mount("evaporator_mount", (-1.65, 2.8, -2.7))
@@ -225,7 +225,7 @@ def door_and_window():
     s = [gbox("curtain_bar", (X0 + 0.28, 2.15, 1.72), (X0 + 0.32, 2.19, 2.68), DARK, bevel=0.0)]
     for k in range(9):
         z = 1.77 + k * 0.1
-        s.append(gbox(f"strip{k}", (X0 + 0.295, 0.05, z), (X0 + 0.305, 2.15, z + 0.098), "M_Frost", bevel=0.0))
+        s.append(gbox(f"strip{k}", (X0 + 0.295 + 0.004 * (k % 2), 0.05, z + 0.006), (X0 + 0.301 + 0.004 * (k % 2), 2.15, z + 0.096), "M_Frost", bevel=0.0))
     add("strip_curtain", *s)
     # light well behind the window: shaft box and the glow plane
     w = [gbox("well_top", (X1 + TE, 2.31, 1.72), (X1 + TE + 1.0, 2.40, 2.68), CONC, bevel=0.0), gbox("well_bot", (X1 + TE, 0.85, 1.72), (X1 + TE + 1.0, 0.95, 2.68), CONC, bevel=0.0),

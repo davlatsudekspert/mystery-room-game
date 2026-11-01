@@ -158,7 +158,7 @@ or hide it when the stair opens from above); empty `light_stair_top` (0, 2.3, 0)
 Status: **built, exported, render-checked** (`room_cold`, `carriage_1..5`, `frost_window`, `cold_chest`, `film_can_1..4`). Helpers: `tools/blender/lib_cold.py`
 (on `lib_ch2x.py`). Decals/images (PIL, original, language neutral): `tools/textures/make_decals_cold.py` into `game/assets/textures/decals/ch2x/`.
 Materials: `tools/materials/make_ch2x_materials.py` (R4 block). QA: `blender -b --factory-startup -P tools/blender/ch2x_room_preview.py -- room=cold [--shots=cold,overview,aisle,frost,rail_end,chest,evap,door]`
-(entry in `tools/blender/ch2x_rooms_cold.py`), previews `docs/previews/ch2_expansion/cold_*.jpg` and `prev_cold_*.jpg`.
+(entry in `tools/blender/ch2x_rooms_cold.py`). Previews: `docs/previews/ch2_expansion/cold_room_{cold,overview,aisle,rail_end,frost,chest,evap,door}.jpg` (the room set placed with `carriage_slot`s 0 1 3 4 6 occupied), `cold_carriage_{front,aisle}.jpg`, `cold_chest_{closed,open}.jpg` (lid -105 deg, rings turned to symbols 2 and 5), `cold_frost_window_{frosted,wiped}.jpg` (middle band wiped), `cold_film_cans.jpg`, and the wipe-mask layout `cold_frost_uv.png`.
 
 Identity (vs the other lower rooms): pale blue-grey galvanised zinc and white "ice" enamel, a vaulted ceiling with steel ribs, 7 tube lights (cold white
 `M_Emissive_Cold`), frost and ice everywhere, one red accent (the carriage hand wheels, the door release, the rail stops) and one warm human object (a wool
@@ -171,7 +171,7 @@ one pale cyan glow at the window (`light_window_fill`), NO warm lights; fog `sha
 | `room_cold.glb` | 6.1k | 16k | origin 0, yaw 0 |
 | `carriage_1..5.glb` | 3.55 / 3.65 / 3.73 / 3.79 / 3.85k (18.6k all five) | 4.8k | origin = slot centre `carriage_slot_i`, yaw 0 |
 | `cold_chest.glb` | 5.9k | 6.0k | `chest_mount_i`, yaw 0 |
-| `frost_window.glb` | 1.4k | 3.2k | `window_mount` (3.845, 1.63, 2.20), **yaw -90** |
+| `frost_window.glb` | 1.3k | 3.2k | `window_mount` (3.845, 1.63, 2.20), **yaw -90** |
 | `film_can_1..4.glb` | 1.03 / 1.23 / 1.26 / 1.29k | 1.8k | held items (origin at the centre, lid axis +Y) |
 Room set total (room + 5 carriages + window + chest, no cans) about 32k tris, well under the 60k target; the carriage is the biggest block, cut candidates are the box/can contents. Materials per model: 2-11 slots (the carriage has 7, joined meshes, one object).
 
@@ -212,6 +212,11 @@ over every ring (the symbol under it is the selected one).
 ### film_can_1..4 (held items)
 Single objects, origin at the centre of mass, lid axis +Y, label slots `M_Decal_CanLabel_1..4` (numeral-only labels 35 / 16 / 8 / 9). 1 = big 35 mm can with canvas strap, 2 = 16 mm can with tape,
 3 = small dented can, 4 = tall can with wire handle and paper tag. Diameters 0.30 / 0.20 / 0.13 / 0.20 m.
+
+### Notes for the scene
+- Do not bevel thin slabs (< 3 cm) in future edits of these scripts: custom normals turned thin bevelled casing boxes black. The window casing is bevel-free for that reason.
+- The preview images were rendered with software Cycles; the room previews before the last `steel_galv` retune (door, evap, chest views) show the zinc slightly more metallic than the final `.tres` textures.
+- Frost patches (`frost_decals`) are alpha quads 1.8 cm off the panel strips: give them no colliders and no shadows.
 
 ### Materials added for R4
 `M_Enamel_Ice`, `M_Emissive_Cold`, `M_Decal_ChestRings`, `M_Decal_ChestPlate`, `M_Decal_SafeStencil` (alpha), `M_Decal_CarriageTags`, `M_Decal_PlanPlate`, `M_Decal_CanLabel_1..4`,

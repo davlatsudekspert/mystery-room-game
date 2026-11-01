@@ -191,9 +191,9 @@ def main():
         M.box("qa_floor", (9, 9, 0.02), loc=(0, 0, -0.01), mat="M_Concrete", bevel=0.0)
         K.retex()
         K.fix_pbr()
-        COLD = [((0.5, 3.0, 4.0), 700, "D8EAFF", 0.6), ((0.0, 2.8, -0.5), 500, "BFD8FF", 0.6), ((-2.0, 1.6, 3.2), 200, "FFE9CC", 0.8)]
-        X.qa_props("cold_carriage", [("_front", (0.0, 1.45, 4.6), (0.0, 1.15, 1.2), 44), ("_aisle", (1.5, 1.5, 2.6), (0.0, 1.1, -0.3), 52)],
-                   floor=False, world=0.6, lights=COLD, res=(900, 640))
+        COLD = [((0.0, 2.2, 4.2), 700, "D8EAFF", 0.5), ((0.0, 3.2, 0.0), 600, "BFD8FF", 0.6), ((-2.5, 1.6, 3.2), 250, "FFE9CC", 0.8)]
+        X.qa_props("cold_carriage", [("_front", (0.0, 1.45, 4.6), (0.0, 1.15, 1.2), 44), ("_aisle", (0.0, 1.5, 2.4), (0.0, 1.2, -0.8), 58)],
+                   floor=False, world=0.7, lights=K.glights(COLD), res=(900, 640))
 
 
 main()

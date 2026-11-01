@@ -170,8 +170,8 @@ if __name__ == "__main__":
     if X.want_render(ARGS):
         K.fix_pbr()
         COLD = [((1.0, 1.6, 1.4), 520, "D8EAFF", 0.4), ((-1.4, 0.9, 1.2), 260, "FFE9CC", 0.6), ((0.0, 1.8, -0.8), 300, "BFD8FF", 0.5)]
-        X.qa_props(NAME, [("_closed", (0.55, 1.05, 1.55), (0.0, 0.32, 0.0), 38)], floor=True, world=0.4, lights=COLD)
+        X.qa_props(NAME, [("_closed", (0.55, 1.05, 1.55), (0.0, 0.32, 0.0), 38)], floor=True, world=0.4, lights=K.glights(COLD))
         pose(lid_o, "x", -105.0)
         pose(rings[0], "z", 60.0 * 2)
         pose(rings[1], "z", 60.0 * 5)
-        X.qa_props(NAME, [("_open", (0.35, 1.25, 1.35), (0.0, 0.34, 0.0), 40)], floor=True, world=0.4, lights=COLD)
+        X.qa_props(NAME, [("_open", (0.35, 1.25, 1.35), (0.0, 0.34, 0.0), 40)], floor=True, world=0.4, lights=K.glights(COLD))
