@@ -24,6 +24,7 @@ var lights: Dictionary = {}
 var env: Environment
 var capture_mode := false # set by QA capture scripts: no intro, no input
 var assisted_taps := 0 # taps that TapAssist moved onto a nearby small part (QA reports it)
+var drag_pos := Vector2.ZERO # the finger's position (viewport px) of the drag being captured: drag_part() only gets the movement
 var _ending := false
 
 
@@ -211,8 +212,9 @@ func _on_drag_started(pos: Vector2) -> void:
 		_drag_captured = drag_part_started(resolve(hit)["part"])
 
 
-func _on_drag(rel: Vector2, _pos: Vector2) -> void:
+func _on_drag(rel: Vector2, pos: Vector2) -> void:
 	if _drag_captured:
+		drag_pos = pos
 		drag_part(rel)
 		return
 	cam.free_look(rel)

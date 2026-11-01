@@ -37,7 +37,11 @@ const MOOD := {
 	"office": ["0a0c0d", "56625e", 0.6, "1a2220", 0.01],
 }
 ## The zone classes (pure scene builders). A room without one gets the placeholder.
-const BUILDERS := {"pump": "res://src/rooms/archive/archive_pump.gd"}
+const BUILDERS := {
+	"pump": "res://src/rooms/archive/archive_pump.gd",
+	"cell": "res://src/rooms/archive/archive_cell.gd",
+	"cold": "res://src/rooms/archive/archive_cold.gd",
+}
 
 ## Audio cue id -> sound ids (docs/AUDIO_CH2X.md): the first that exists is played, the rest are fallbacks.
 const CUES := {
@@ -124,7 +128,12 @@ func register(room_id: String, views: Array, hotspot_views: Dictionary, deeper: 
 
 ## The views each zone registers (static, so a QA tool can jump to a view of a room that is not built yet).
 static func zone_views() -> Dictionary:
-	return {"hall": ArchiveHallExp.VIEWS, "pump": ArchivePump.VIEWS}
+	return {
+		"hall": ArchiveHallExp.VIEWS,
+		"pump": ArchivePump.VIEWS,
+		"cell": ArchiveCell.VIEWS,
+		"cold": ArchiveCold.VIEWS,
+	}
 
 
 ## Makes the zone of `view` exist and current (QA tools and saves jump to a view without a transition).
@@ -137,6 +146,22 @@ func prepare_view(view: String) -> void:
 	ensure(rid)
 	if rid != current:
 		activate(rid)
+	var b := builder(rid)
+	if b != null and b.has_method("on_view"):
+		b.call("on_view", view) # a zone reacts to its camera views (the first look at the Cell door, the cranks' framing)
+
+
+## A drag that starts on a part of the current zone (the frost window's finger wipe, the light table's sheets).
+## -> true when the zone captures it; drag_moved() then gets every movement (relative px, finger position px).
+func drag_started(part: String) -> bool:
+	var b := builder(current)
+	return b != null and b.has_method("drag_started") and bool(b.call("drag_started", part))
+
+
+func drag_moved(rel: Vector2, pos: Vector2) -> void:
+	var b := builder(current)
+	if b != null and b.has_method("drag_moved"):
+		b.call("drag_moved", rel, pos)
 
 
 func builder(room_id: String) -> Object:

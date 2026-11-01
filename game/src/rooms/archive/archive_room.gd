@@ -596,6 +596,8 @@ func drag_part_started(p: String) -> bool:
 		_drag_kind = "focus"
 	elif p in ["IA_collar_left", "IA_collar_right", "IA_zoom_right"] and cam.current() == "vault_ports":
 		_drag_kind = p
+	elif zones != null and zones.drag_started(p):
+		_drag_kind = "zone" # a zone's own drag (the frost window's finger wipe, the light table's sheets)
 	return _drag_kind != ""
 
 
@@ -603,6 +605,9 @@ const DRAG_PX_PER_STEP := 26.0
 
 
 func drag_part(rel: Vector2) -> void:
+	if _drag_kind == "zone":
+		zones.drag_moved(rel, drag_pos)
+		return
 	_knob_acc += (rel.x - rel.y) / (DRAG_PX_PER_STEP * maxf(1.0, DisplayServer.screen_get_scale()))
 	var steps := int(_knob_acc)
 	if steps == 0:
