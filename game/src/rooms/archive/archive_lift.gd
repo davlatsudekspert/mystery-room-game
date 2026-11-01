@@ -103,11 +103,18 @@ func _load_plate() -> void:
 	plate.set_meta("hotspot", "lift_" + suffix())
 
 
-## The counterweight stand: two posts and a crossbar at 1.5 m with four pegs, standing against the north wall beside the niche
-## (its bar runs along +X, the pegs point toward +Z, into the room); the loose weights stand in a row on the floor in front.
+## The counterweight rack against the north wall beside the niche: two angle-iron uprights on foot plates, a top rail at 1.6 m with four
+## hooks (a horizontal arm and an upturned lip each) for the hung weights, and a plank shelf at knee height, with a cream label strip
+## in front that numbers its four places 1 2 4 8, where the loose weights stand. The hooks point toward +Z, into the room.
+const SHELF_TOP := 0.54
+const HOOK_Y := 1.56
+
+
 func _build_stand(at: Vector3) -> void:
-	var iron := ModelUtil.load_material("M_Iron_Rust")
-	var dark := ModelUtil.load_material("M_Steel_Dark")
+	var iron := ModelUtil.load_material("M_Steel_Dark")
+	var paint := ModelUtil.load_material("M_Paint_Black")
+	var wood := ModelUtil.load_material("M_Wood_Walnut")
+	var cream := ModelUtil.load_material("M_Enamel_Cream")
 	var holder := Node3D.new()
 	holder.name = "counterweight_stand"
 	holder.position = at
@@ -115,44 +122,41 @@ func _build_stand(at: Vector3) -> void:
 	var x0 := -0.27
 	var x1 := 1.27
 	for x in [x0, x1]:
-		var post := MeshInstance3D.new()
-		var pm := CylinderMesh.new()
-		pm.top_radius = 0.035
-		pm.bottom_radius = 0.04
-		pm.height = 1.56
-		post.mesh = pm
-		post.position = Vector3(x, 0.78, 0)
-		post.material_override = iron
-		post.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		holder.add_child(post)
-	var bar := MeshInstance3D.new()
-	var bm := CylinderMesh.new()
-	bm.top_radius = 0.025
-	bm.bottom_radius = 0.025
-	bm.height = x1 - x0 + 0.16
-	bar.mesh = bm
-	bar.rotation_degrees.z = 90.0
-	bar.position = Vector3((x0 + x1) * 0.5, 1.56, 0)
-	bar.material_override = dark
-	bar.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	holder.add_child(bar)
+		_box(holder, Vector3(0.055, 1.64, 0.055), Vector3(x, 0.82, 0), iron) # upright
+		_box(holder, Vector3(0.04, 1.58, 0.02), Vector3(x, 0.82, 0.035), iron) # its flange (an angle iron)
+		_box(holder, Vector3(0.14, 0.035, 0.40), Vector3(x, 0.0175, 0.14), paint) # foot plate
+		_box(holder, Vector3(0.035, 0.035, 0.34), Vector3(x, SHELF_TOP - 0.06, 0.17), iron) # shelf bracket
+		_box(holder, Vector3(0.025, 0.30, 0.025), Vector3(x, 0.30, 0.30), iron)
+	_box(holder, Vector3(x1 - x0 + 0.18, 0.06, 0.06), Vector3((x0 + x1) * 0.5, 1.62, 0.0), iron) # top rail
+	_box(holder, Vector3(x1 - x0 + 0.18, 0.04, 0.05), Vector3((x0 + x1) * 0.5, 1.1, 0.0), iron) # middle rail
+	_box(holder, Vector3(x1 - x0 + 0.20, 0.04, 0.34), Vector3((x0 + x1) * 0.5, SHELF_TOP - 0.02, 0.17), wood) # the shelf
+	_box(holder, Vector3(x1 - x0 + 0.20, 0.07, 0.02), Vector3((x0 + x1) * 0.5, SHELF_TOP + 0.03, 0.34), iron) # its front lip
+	var strip := _box(holder, Vector3(1.50, 0.10, 0.008), Vector3((x0 + x1) * 0.5, SHELF_TOP - 0.085, 0.352), cream) # the label strip
+	strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ArchiveKit.omni(holder, Vector3(0.5, 1.15, 0.95), Color("ffd7a0"), 0.9, 2.6, 1.0) # a work lamp over the rack: the numbers must read
 	_pegs.clear()
 	rest_pos.clear()
 	var xs := [0.0, 0.34, 0.74, 1.14]
 	for i in 4:
-		var peg := MeshInstance3D.new()
-		var gm := CylinderMesh.new()
-		gm.top_radius = 0.016
-		gm.bottom_radius = 0.016
-		gm.height = 0.12
-		peg.mesh = gm
-		peg.rotation_degrees.x = 90.0
-		peg.position = Vector3(float(xs[i]), 1.56, 0.06)
-		peg.material_override = dark
-		peg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		holder.add_child(peg)
-		_pegs.append(at + Vector3(float(xs[i]), 1.56, 0.06))
-		rest_pos.append(at + Vector3(float(xs[i]), 0, 0.72))
+		var px := float(xs[i])
+		var arm := _box(holder, Vector3(0.026, 0.026, 0.14), Vector3(px, HOOK_Y, 0.10), iron)
+		arm.name = "hook_arm_%d" % i
+		_box(holder, Vector3(0.026, 0.07, 0.026), Vector3(px, HOOK_Y + 0.03, 0.17), iron) # the lip that keeps a ring on
+		_pegs.append(at + Vector3(px, HOOK_Y, 0.10))
+		rest_pos.append(at + Vector3(px, SHELF_TOP, 0.20))
+		rig.numeral(holder, str(ArchiveExpData.WEIGHTS[i]), Vector3(px, SHELF_TOP - 0.085, 0.357), 0.075, Color("1c1812"))
+
+
+func _box(parent: Node3D, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = size
+	mi.mesh = bm
+	mi.position = pos
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	return mi
 
 
 func _build_weights() -> void:
@@ -170,7 +174,7 @@ func _build_weights() -> void:
 		var r := maxf(aabb.size.y, aabb.size.x) * 0.5
 		for side in [1.0, -1.0]:
 			rig.numeral(w, str(ArchiveExpData.WEIGHTS[i]), Vector3(0, (aabb.position.y + aabb.end.y) * 0.5 - r * 0.05, (aabb.end.z + 0.002) if side > 0.0 else (aabb.position.z - 0.002)),
-				r * 1.15, Color("f2ead2"), Vector3(0, 0 if side > 0.0 else 180.0, 0))
+				r * 1.4, Color("f6eed6"), Vector3(0, 0 if side > 0.0 else 180.0, 0))
 		var body := StaticBody3D.new()
 		var cs := CollisionShape3D.new()
 		var box := BoxShape3D.new()

@@ -159,7 +159,7 @@ func _build_views() -> void:
 	var o := root.position
 	cam.add_view("cell", o + Vector3(-1.95, 1.62, 1.45), o + Vector3(0.35, 0.92, -0.85), 72.0, true)
 	cam.add_view("cell_desk", o + Vector3(1.12, 1.34, -0.82), o + Vector3(1.12, 0.78, -1.55), 52.0)
-	cam.add_view("light_table", o + Vector3(1.3, 1.36, -1.18), o + Vector3(1.3, 0.8, -1.56), 38.0)
+	cam.add_view("light_table", o + Vector3(1.3, 1.36, -1.08), o + Vector3(1.3, 0.8, -1.47), 38.0)
 	cam.add_view("cot", o + Vector3(-0.15, 1.5, -0.05), o + Vector3(-0.85, 0.5, -1.6), 58.0)
 	cam.add_view("shelf", o + Vector3(-0.45, 1.45, 0.25), o + Vector3(-0.55, 0.95, 1.85), 54.0)
 	cam.add_view("cold_door", o + Vector3(-0.3, 1.45, 0.1), o + Vector3(2.2, 1.1, 0.05), 58.0)
@@ -222,11 +222,12 @@ func _build_table() -> void:
 	for sgn in [-1.0, 1.0]:
 		var strip := ArchiveKit.quad(table, Vector2(0.27, 0.075), Vector3(0, 0.0725, 0.02 + sgn * (half_win + 0.0375)), bezel, "bezel")
 		strip.rotation_degrees.x = -90.0
-	# the six round buttons in front of the box: a turn button and a flip button per sheet, in the sheet's tape colour
+	# the six controls in front of the box: a turn knob (bakelite) and a flip knob (brass) per sheet, each on a brass escutcheon with
+	# a small stripe in the sheet's tape colour. They stand between the table's two front feet (|x| < 0.2 m), fully in view.
 	for i in 3:
-		var cx := (i - 1) * 0.18
-		_build_button(table, i, "IA_turn_%d" % i, Vector3(cx - 0.046, 0.012, 0.232), true)
-		_build_button(table, i, "IA_flipbtn_%d" % i, Vector3(cx + 0.046, 0.012, 0.232), false)
+		var cx := (i - 1) * 0.125
+		_build_button(table, i, "IA_turn_%d" % i, Vector3(cx - 0.032, 0.012, 0.238), true)
+		_build_button(table, i, "IA_flipbtn_%d" % i, Vector3(cx + 0.032, 0.012, 0.238), false)
 
 
 func _build_button(table: Node3D, i: int, part: String, pos: Vector3, turn: bool) -> void:
@@ -234,24 +235,56 @@ func _build_button(table: Node3D, i: int, part: String, pos: Vector3, turn: bool
 	holder.name = part
 	holder.position = pos
 	table.add_child(holder)
-	var mi := MeshInstance3D.new()
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = Color("a98a4c")
+	brass.roughness = 0.55
+	brass.metallic = 0.35
+	var bakelite := StandardMaterial3D.new()
+	bakelite.albedo_color = Color("2a1a12")
+	bakelite.roughness = 0.4
+	bakelite.metallic = 0.05
+	var tape := StandardMaterial3D.new()
+	tape.albedo_color = SHEET_BUTTON[i]
+	tape.roughness = 0.8
+	tape.emission_enabled = true
+	tape.emission = SHEET_BUTTON[i]
+	tape.emission_energy_multiplier = 0.5
+	# brass escutcheon, the tape stripe on its front edge
+	_part(holder, _cyl(0.029, 0.031, 0.005, 24), brass, Vector3(0, 0.0025, 0))
+	var stripe := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.034, 0.003, 0.007)
+	stripe.mesh = bm
+	stripe.material_override = tape
+	stripe.position = Vector3(0, 0.0065, 0.0262)
+	stripe.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	holder.add_child(stripe)
+	# the knob: bakelite (turn) or polished brass (flip), a knurled skirt and a flat top that carries the engraved arrows
+	var knob_mat := bakelite if turn else brass
+	_part(holder, _cyl(0.023, 0.025, 0.006, 24), knob_mat, Vector3(0, 0.008, 0))
+	_part(holder, _cyl(0.019, 0.021, 0.014, 24), knob_mat, Vector3(0, 0.017, 0))
+	var ink := Color("e6d6a8") if turn else Color("2a1a12")
+	var icon := ArchiveKit.quad(holder, Vector2(0.032, 0.032), Vector3(0, 0.0243, 0), ArchiveKit.decal_material(_button_icon(turn, ink), true), "icon")
+	icon.rotation_degrees.x = -90.0
+	room.call("add_tap_area", holder, Vector3(0.062, 0.05, 0.062), "cell_table", part, Vector3(0, 0.02, 0))
+
+
+func _cyl(top: float, bottom: float, height: float, segs: int) -> CylinderMesh:
 	var cm := CylinderMesh.new()
-	cm.top_radius = 0.03
-	cm.bottom_radius = 0.034
-	cm.height = 0.016
-	cm.radial_segments = 20
-	mi.mesh = cm
-	var m := StandardMaterial3D.new()
-	m.albedo_color = SHEET_BUTTON[i]
-	m.roughness = 0.45
-	m.metallic = 0.2
-	mi.material_override = m
-	mi.position = Vector3(0, 0.008, 0)
+	cm.top_radius = top
+	cm.bottom_radius = bottom
+	cm.height = height
+	cm.radial_segments = segs
+	return cm
+
+
+func _part(holder: Node3D, mesh: Mesh, mat: Material, pos: Vector3) -> void:
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.position = pos
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	holder.add_child(mi)
-	var icon := ArchiveKit.quad(holder, Vector2(0.048, 0.048), Vector3(0, 0.0165, 0), ArchiveKit.decal_material(_button_icon(turn), true), "icon")
-	icon.rotation_degrees.x = -90.0
-	room.call("add_tap_area", holder, Vector3(0.08, 0.05, 0.08), "cell_table", part, Vector3(0, 0.02, 0))
 
 
 ## Cold air and white tube light beyond the door: a vertical gradient from pale at the top to blue-grey at the floor, with mist streaks.
@@ -272,11 +305,10 @@ func _bezel_texture() -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
-## The icon on a button: a turning arrow (turn) or two facing arrows (flip), white on the button's colour.
-func _button_icon(turn: bool) -> ImageTexture:
+## The icon engraved on a knob: a turning arrow (turn) or two facing arrows (flip), in `ink`.
+func _button_icon(turn: bool, ink: Color) -> ImageTexture:
 	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	var ink := Color(1, 1, 1, 0.95)
 	if turn:
 		ArchiveKit.ring(img, Vector2(32, 32), 19.0, 5.0, ink, 0.4, TAU - 1.1)
 		ArchiveKit.arrow_head(img, Vector2(32 + 19.0 * cos(TAU - 1.1), 32 + 19.0 * sin(TAU - 1.1)), Vector2(sin(TAU - 1.1), -cos(TAU - 1.1)) * -1.0, 15.0, ink)
@@ -284,7 +316,7 @@ func _button_icon(turn: bool) -> ImageTexture:
 		ArchiveKit.line(img, Vector2(10, 32), Vector2(54, 32), 5.0, ink)
 		ArchiveKit.arrow_head(img, Vector2(8, 32), Vector2(-1, 0), 14.0, ink)
 		ArchiveKit.arrow_head(img, Vector2(56, 32), Vector2(1, 0), 14.0, ink)
-		ArchiveKit.line(img, Vector2(32, 14), Vector2(32, 50), 3.0, Color(1, 1, 1, 0.55))
+		ArchiveKit.line(img, Vector2(32, 14), Vector2(32, 50), 3.0, Color(ink.r, ink.g, ink.b, 0.6))
 	return ImageTexture.create_from_image(img)
 
 

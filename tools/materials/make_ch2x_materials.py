@@ -38,7 +38,7 @@ def std(name, props):
     write(name, lines)
 
 
-orm("M_Iron_Rust", "iron_rust", 1.0, metallic=1)          # ORM blue channel carries the metal/rust mix
+orm("M_Iron_Rust", "iron_rust", 1.0, metallic=0.7)        # painted wall: ORM blue channel carries a low metal value
 orm("M_Wallpaper_Cell", "wallpaper_cell", 0.5)
 orm("M_Wool_Knit", "wool_knit", 0.5)
 orm("M_Steel_Galv", "steel_galv", 0.5, metallic=1)

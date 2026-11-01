@@ -15,6 +15,7 @@ const DEFAULTS := {
 	"invert_look": false,
 	"look_sensitivity": 1.0,
 	"brightness": 1.0, # scene exposure multiplier (dark rooms on dim phone screens)
+	"zoom_tip_seen": false, # the "Pinch to zoom." tip has been shown once (it never repeats, also not in a new game)
 	"inventory_open": false, # the bag's tray at room views, as the player last left it (close-ups start collapsed)
 	"render_scale": 1.0, # 3D resolution chosen by PerfGuard on phones (not shown in the UI)
 	"safe_graphics": false, # the player's choice: the safest graphics (CrashGuard.MAX_LEVEL)

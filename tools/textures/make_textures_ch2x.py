@@ -109,24 +109,28 @@ def lin(c):
 
 
 def iron_rust():
-    n1, n2, n3 = fbm(N, 3, 11), fbm(N, 8, 23), fbm(N, 24, 37, 3)
-    rust = smooth(0.40, 0.58, n1 * 0.55 + n2 * 0.45)
-    base = np.array([0.20, 0.17, 0.155])
-    bloom = np.array([0.50, 0.24, 0.09])
-    deep = np.array([0.32, 0.14, 0.06])
-    mix = rust[..., None]
-    col = base * (1 - mix) + (bloom * smooth(0.5, 0.8, n2)[..., None] + deep * (1 - smooth(0.5, 0.8, n2))[..., None]) * mix
-    col *= (0.82 + 0.3 * n3)[..., None]
-    # pitting + faint horizontal plate seams every 0.5 m
+    """A painted iron wall that has rusted a little: dull institutional green-grey paint over plate, small rust blooms and
+    runs (20 % of the area), low contrast. Smaller features than the first version (which read as lava / camouflage)."""
+    n1, n2, n3 = fbm(N, 6, 11), fbm(N, 16, 23), fbm(N, 48, 37, 3)
+    rng = np.random.default_rng(5)
+    run = np.convolve(np.tile(rng.random(64), 17)[:N + 32], np.ones(33) / 33, "valid")[:N]  # 1-D noise: the paint runs
+    run = smooth(0.3, 0.7, run)[None, :] * (0.5 + 0.5 * fbm(N, 4, 51, 2))
+    field = n1 * 0.4 + n2 * 0.45 + run * 0.2
+    rust = smooth(0.60, 0.74, field)  # the rust only where paint has failed
+    paint = np.array([0.30, 0.335, 0.285])
+    rustc = np.array([0.40, 0.235, 0.135])
+    mix = (rust * 0.75)[..., None]
+    col = paint * (1 - mix) + rustc * mix
+    col *= (0.93 + 0.14 * n3 + 0.05 * (n2 - 0.5))[..., None]  # a little mottling of the paint
     seam = np.zeros((N, N))
     for k in (0, N // 2):
         seam[k:k + 3, :] = 1.0
         seam[:, k:k + 3] = 1.0
-    h = n2 * 0.5 + n3 * 0.25 + rust * 0.35 - seam * 0.5
-    col *= (1 - seam * 0.35)[..., None]
-    rough = np.clip(0.55 + rust * 0.35 + (n3 - 0.5) * 0.2, 0, 1)
-    metal = np.clip(0.75 - rust * 0.6, 0, 1)
-    save("iron_rust", col, h, rough, metal, np.clip(1 - seam * 0.5 - rust * 0.15, 0, 1), 3.0)
+    h = n3 * 0.25 + n2 * 0.15 + rust * 0.2 - seam * 0.5
+    col *= (1 - seam * 0.3)[..., None]
+    rough = np.clip(0.62 + rust * 0.25 + (n3 - 0.5) * 0.1, 0, 1)
+    metal = np.clip(0.28 + rust * 0.1, 0, 1)
+    save("iron_rust", col, h, rough, metal, np.clip(1 - seam * 0.4 - rust * 0.1, 0, 1), 2.0)
 
 
 def wallpaper_cell():
