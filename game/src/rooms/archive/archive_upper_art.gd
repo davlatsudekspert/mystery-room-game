@@ -285,9 +285,12 @@ static func enlarger_image(who: int, blur: int, scale: float, digits: Array) -> 
 			var s := ""
 			for d in digits:
 				s += str(int(d))
-			var sc := 3
+			# the four digits pencilled large on a pale strip across the foot of the print (readable on a phone, and in the zoom view)
+			var sc := 5
+			var strip := Rect2i(40, 77, 80, 29)
+			img.fill_rect(strip, Color("e6e0cc"))
 			for i in s.length():
-				ArchivePump._digit(img, Vector2(26 + i * 4 * sc + 6, 99), int(s[i]), sc, Color("4a4a50"))
+				ArchivePump._digit(img, Vector2(strip.position.x + 14 + i * 4 * sc + sc, strip.position.y + 14), int(s[i]), sc, Color("2c2c34"))
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
