@@ -262,6 +262,14 @@ func apply_state(animated: bool) -> void:
 		cage.visible = here
 
 
+## The pipe board's close-up looks along the room toward the shaft: the cage's frame would clip into its right edge, so it is
+## hidden while that view is up (`cull` true) and shown again, where it belongs, when the view is left.
+func cull_cage(cull: bool) -> void:
+	if cage == null:
+		return
+	cage.visible = (not cull) and int(logic.state["lift_floor"]) == floor_no
+
+
 ## The scissor gate folds up against the cage's left post when the cage is here (a part that folds is scaled, not slid out).
 func _gate(gate: Node3D, open: bool, animated: bool) -> void:
 	if gate == null:

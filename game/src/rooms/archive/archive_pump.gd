@@ -118,7 +118,7 @@ func _build_views() -> void:
 	cam.add_view("lift_door", o + Vector3(-1.4, 1.45, -1.7), o + Vector3(-4.3, 1.15, -1.9), 58.0)
 	cam.add_view("lift_weights", o + Vector3(-1.5, 1.55, -0.55), o + Vector3(-2.75, 0.8, -2.5), 58.0)
 	cam.add_view("lift_panel", o + Vector3(-2.2, 1.45, -1.55), o + Vector3(-4.7, 1.3, -1.7), 50.0)
-	cam.add_view("pipes", o + Vector3(-1.2, 0.98, 1.05), o + Vector3(-3.5, 0.95, 1.05), 54.0)
+	cam.add_view("pipes", o + Vector3(-1.2, 0.98, 1.05), o + Vector3(-3.5, 0.95, 1.05), 51.0)
 	cam.add_view("bench", o + Vector3(1.55, 1.5, 1.45), o + Vector3(1.6, 0.9, 2.6), 46.0)
 	cam.add_view("cell_door", o + Vector3(1.3, 1.5, 0.4), o + Vector3(3.45, 1.1, -1.1), 54.0)
 
@@ -607,6 +607,8 @@ func on_enter() -> void:
 
 ## A camera view of this room came up: the first look at the Cell door is moment M2 (the logic says whether it is due).
 func on_view(view: String) -> void:
+	if lift != null:
+		lift.cull_cage(view == "pipes")
 	if view == "cell_door":
 		logic.try_moment("m2")
 
