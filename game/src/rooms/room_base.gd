@@ -24,6 +24,7 @@ var lights: Dictionary = {}
 var env: Environment
 var capture_mode := false # set by QA capture scripts: no intro, no input
 var assisted_taps := 0 # taps that TapAssist moved onto a nearby small part (QA reports it)
+var tap_pos := Vector2.ZERO # where the last tap landed (viewport px): interact() only gets the part, a tapped band of frost needs the spot
 var drag_pos := Vector2.ZERO # the finger's position (viewport px) of the drag being captured: drag_part() only gets the movement
 var _ending := false
 
@@ -319,6 +320,7 @@ func resolve(hit: Dictionary) -> Dictionary:
 func _on_tap(screen: Vector2) -> void:
 	if cam.transitioning or _ending:
 		return
+	tap_pos = screen
 	var hit := pick(screen)
 	if hit.is_empty():
 		return

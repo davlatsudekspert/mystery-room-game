@@ -98,14 +98,14 @@ func _run() -> void:
 	await _settle(1.5)
 	var cam: RoomCamera = room.get("cam")
 	var zones: ArchiveZones = room.get("zones")
-	for o in cams:
+	if to_room != "":
+		zones.jump(to_room)
+		await _settle(1.0)
+	for o in cams: # after the room is built, so a zone's own add_view of the same name does not replace it
 		var f := o.split(":")
 		var p := f[1].split(",")
 		var t := f[2].split(",")
 		cam.add_view(f[0], Vector3(float(p[0]), float(p[1]), float(p[2])), Vector3(float(t[0]), float(t[1]), float(t[2])), float(f[3]))
-	if to_room != "":
-		zones.jump(to_room)
-		await _settle(1.0)
 	for v in views:
 		room.call("prepare_view", v)
 		cam.go(v, true)
