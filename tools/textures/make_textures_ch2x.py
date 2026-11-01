@@ -182,8 +182,8 @@ def wool_knit():
 
 
 def steel_galv():
-    dist, cid = voronoi(N, 16, 5)
-    spangle = 0.72 + 0.28 * cid
+    dist, cid = voronoi(N, 32, 5)
+    spangle = 0.90 + 0.10 * cid        # zinc spangle: small, low-contrast crystals
     edge = smooth(0.0, 0.05, dist * 0.0 + 1.0)  # no edge darkening: soft crystals
     base = hexf("#b7c6cf")          # pale cold zinc; the Cold Store reads blue-white
     c = np.ones((N, N, 3)) * base * spangle[..., None]
@@ -194,7 +194,7 @@ def steel_galv():
     c *= (0.96 + 0.08 * vnoise(N, 256, 8)[:, :])[..., None]
     wear = smooth(0.62, 0.8, fbm(N, 5, 99))
     c = c * (1 - wear[..., None] * 0.25) + hexf("#6e6a60") * wear[..., None] * 0.25
-    h = cid * 0.25 + sc * 0.05
+    h = cid * 0.08 + sc * 0.05
     rough = np.clip(0.42 + wear * 0.3 + (1 - spangle) * 0.2, 0, 1)
     save("steel_galv", c, h, rough, np.full((N, N), 0.55) - wear * 0.2, np.ones((N, N)), 0.6)   # half-metal: lit by the room, not black in a closed room
     _ = edge
