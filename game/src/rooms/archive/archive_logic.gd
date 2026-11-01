@@ -47,7 +47,7 @@ const ECHOES: Array[String] = ["catalogue", "stacks", "booth"]
 ## The expansion (docs/CHAPTER2_EXPANSION.md): the stage a NEW game is built with. 0 = the 1.0 chapter, 1 = Stage A (lower
 ## floor, gate G1), 2 = Stage A + B (7 rooms, N1-N10, G1 + G2; owner decision 2026-11-01: update 1.1 ships both). Set it to
 ## 2 when the scene has the new rooms. Saves keep their own `exp_ver` / `stage`, so old saves always play the old flow.
-const EXPANSION_STAGE := 0
+const EXPANSION_STAGE := 2
 const EXP_VER_LEGACY := 1
 const EXP_VER_CURRENT := 2
 const CRYSTALS: Array[String] = ["crystal_lens", "crystal_blank_1", "crystal_blank_2", "crystal_sign", "crystal_mark"]

@@ -5,14 +5,14 @@ extends Node
 ## Run: xvfb-run -a godot --path game res://qa/playthrough_ch2.tscn -- --out=<dir> [--lens=take|leave] [--lang=ru]
 ##        [--seed=N] [--no-continue] (skip the quit-and-Continue checks before P5, P8 and P12)
 ## A quick logic-flow run without screenshots: godot --headless --path game res://qa/playthrough_ch2.tscn -- …
-##        [--legacy] play the 1.0 chapter exactly as an old save does (the default while EXPANSION_SCENE_READY is false)
+##        [--legacy] play the 1.0 chapter exactly as an old save does (an old save)
 ##        [--expansion[=1|2]] play a NEW expansion game (docs/CHAPTER2_EXPANSION.md): the lower and upper floors are played
 ##        at LOGIC level (ArchiveSolver) until the scene has their hotspots; see the TODO(scene) marks below
 ## Exit code 0 = chapter completed with no failed step and no fallback.
 
 ## TODO(scene): set to true when the scene has the expansion's rooms and hotspots; the default run then plays a new
 ## expansion game, and the logic-level steps below are replaced by taps one by one.
-const EXPANSION_SCENE_READY := false
+const EXPANSION_SCENE_READY := true
 
 var out_dir := "/tmp/ch2_playthrough"
 var exp_stage := 0 # 0 = the 1.0 chapter, 1/2 = a new expansion game of that stage

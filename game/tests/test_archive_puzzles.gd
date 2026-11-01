@@ -3,7 +3,7 @@ extends TestBase
 
 
 func _new(lens: bool = false, shards: int = 0) -> ArchiveLogic:
-	var l := ArchiveLogic.new()
+	var l := ArchiveLogic.new_legacy()
 	l.setup_from_profile({"ch1_lens": "take_lens" if lens else "leave_lens", "ch1_shards": shards})
 	return l
 
@@ -15,7 +15,7 @@ func test_start_inventory_follows_chapter_1() -> void:
 	var take := _new(true)
 	check(take.has_item("crystal_lens"), "lens on the take path")
 	eq(take.crystal_image("crystal_lens"), "mark", "the Ch1 lens carries Strand's mark")
-	var fresh := ArchiveLogic.new() # no Chapter 1 save
+	var fresh := ArchiveLogic.new_legacy() # no Chapter 1 save
 	check(fresh.has_item("leyla_badge") and not fresh.has_item("crystal_lens"), "fresh game = leave path")
 
 
@@ -312,7 +312,7 @@ func _reach(l: ArchiveLogic, milestone: String) -> ArchiveLogic:
 func test_variants_are_solvable_and_saved() -> void:
 	var seen_codes := {}
 	for seed in range(1, 61):
-		var l := ArchiveLogic.new()
+		var l := ArchiveLogic.new_legacy()
 		l.apply_seed(seed)
 		check(l.valve_solution().size() == 3, "seed %d: the gauge marks have a valve solution" % seed)
 		check(l.booth_code().length() == 3 and not l.booth_code().contains("0"), "seed %d: three clicks of 1–9" % seed)
@@ -322,10 +322,10 @@ func test_variants_are_solvable_and_saved() -> void:
 		check(shadows == [1, 2, 3, 4], "seed %d: each frame has its own shadow length" % seed)
 		seen_codes[l.booth_code()] = true
 		# the same seed gives the same game, and a save keeps it
-		var again := ArchiveLogic.new()
+		var again := ArchiveLogic.new_legacy()
 		again.apply_seed(seed)
 		check(again.booth_code() == l.booth_code() and again.splice_order() == l.splice_order(), "seed %d is reproducible" % seed)
-		var loaded := ArchiveLogic.new()
+		var loaded := ArchiveLogic.new_legacy()
 		loaded.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
 		check(loaded.booth_code() == l.booth_code() and loaded.focus_sharp() == l.focus_sharp()
 			and loaded.valve_solution() == l.valve_solution(), "seed %d survives save and load" % seed)
@@ -341,7 +341,7 @@ func test_valve_target_pool_unique() -> void:
 
 func test_vault_variant_reachable() -> void:
 	for seed in range(1, 41):
-		var l := ArchiveLogic.new()
+		var l := ArchiveLogic.new_legacy()
 		l.apply_seed(seed)
 		check(l.vault_rot_target() != ArchiveLogic.ROT_RIGHT_START and l.vault_rot_target() != 0,
 			"seed %d: the right image starts off its target" % seed)
@@ -350,7 +350,7 @@ func test_vault_variant_reachable() -> void:
 
 func test_punch_variant_matches_card_art() -> void:
 	for seed in range(1, 41):
-		var l := ArchiveLogic.new()
+		var l := ArchiveLogic.new_legacy()
 		l.apply_seed(seed)
 		var k := int(l.state["v_punch"])
 		check(k >= 1 and k < ArchiveLogic.PUNCH_PATTERNS.size(), "seed %d: a non-canonical notch pattern" % seed)

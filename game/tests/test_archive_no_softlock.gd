@@ -139,7 +139,7 @@ func test_random_play_never_softlocks() -> void:
 	var completed := 0
 	for seed in runs:
 		rng.seed = 7000 + seed
-		var l := ArchiveLogic.new()
+		var l := ArchiveLogic.new_legacy()
 		l.setup_from_profile({"ch1_lens": "take_lens" if seed % 2 == 0 else "leave_lens", "ch1_shards": seed % 6})
 		var steps := rng.randi_range(50, 1500)
 		var bad := ""
@@ -149,7 +149,7 @@ func test_random_play_never_softlocks() -> void:
 			if bad != "":
 				break
 		check(bad == "", "seed %d invariant: %s" % [seed, bad])
-		var copy := ArchiveLogic.new()
+		var copy := ArchiveLogic.new_legacy()
 		copy.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
 		eq(JSON.stringify(copy.to_dict()), JSON.stringify(l.to_dict()), "seed %d save round trip" % seed)
 		if ArchiveSolver.solve(copy, "strand_key" if seed % 3 == 0 else "leyla_key"):
@@ -179,7 +179,7 @@ func test_random_play_never_softlocks_the_expansion() -> void:
 			if bad != "":
 				break
 		check(bad == "", "expansion seed %d invariant: %s" % [seed, bad])
-		var copy := ArchiveLogic.new()
+		var copy := ArchiveLogic.new_legacy()
 		copy.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
 		eq(JSON.stringify(copy.to_dict()), JSON.stringify(l.to_dict()), "expansion seed %d save round trip" % seed)
 		if ArchiveSolver.solve(copy, "strand_key" if seed % 3 == 0 else "leyla_key", 1200):
@@ -191,7 +191,7 @@ func test_random_play_never_softlocks_the_expansion() -> void:
 
 func test_hint_goals_follow_the_solution() -> void:
 	for lens in [false, true]:
-		var l := ArchiveLogic.new()
+		var l := ArchiveLogic.new_legacy()
 		l.setup_from_profile({"ch1_lens": "take_lens" if lens else "leave_lens"})
 		var seen: Array[String] = []
 		for _i in 600:

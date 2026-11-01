@@ -28,9 +28,10 @@ func test_every_game_draws_its_slips_strips_and_label() -> void:
 
 
 func test_a_wrong_focus_blurs_and_the_right_print_carries_digits() -> void:
-	var sharp := ArchiveUpperArt.enlarger_image(2, 0, 1.0, [1, 2, 3, 4]).get_image()
-	var soft := ArchiveUpperArt.enlarger_image(2, 8, 1.0, [1, 2, 3, 4]).get_image()
+	var sharp := ArchiveUpperArt.enlarger_image(2, 0, 1.0, []).get_image() # the picture alone: the digit strip is never blurred
+	var soft := ArchiveUpperArt.enlarger_image(2, 8, 1.0, []).get_image()
 	var blank := ArchiveUpperArt.enlarger_image(2, 0, 1.0, []).get_image()
+	var with_digits := ArchiveUpperArt.enlarger_image(2, 0, 1.0, [1, 2, 3, 4]).get_image()
 	var dsharp := 0.0
 	var dsoft := 0.0
 	for y in range(20, 100):
@@ -38,4 +39,4 @@ func test_a_wrong_focus_blurs_and_the_right_print_carries_digits() -> void:
 			dsharp += pow(sharp.get_pixel(x, y).get_luminance() - sharp.get_pixel(x + 1, y).get_luminance(), 2.0)
 			dsoft += pow(soft.get_pixel(x, y).get_luminance() - soft.get_pixel(x + 1, y).get_luminance(), 2.0)
 	check(dsharp > dsoft * 2.0, "a sharp print has steeper edges than a blurred one")
-	check(sharp.get_pixel(40, 99) != blank.get_pixel(40, 99) or sharp.get_pixel(44, 99) != blank.get_pixel(44, 99) or sharp.get_pixel(46, 99) != blank.get_pixel(46, 99), "the digits are pencilled only on the right print")
+	check(with_digits.get_pixel(60, 90) != blank.get_pixel(60, 90) or with_digits.get_pixel(64, 92) != blank.get_pixel(64, 92) or with_digits.get_pixel(46, 99) != blank.get_pixel(46, 99), "the digits are pencilled only on the right print")
