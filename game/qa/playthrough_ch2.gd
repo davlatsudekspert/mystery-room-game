@@ -1035,7 +1035,7 @@ func _n3_n6_taps() -> void:
 	await shot("cell_arrival")
 	await _perf("cell")
 	# the diary and the slip on the desk, read and closed again
-	await view("desk")
+	await view("cell_desk")
 	await shot("cell_desk")
 	await tap("cell_cell_diary", "IA_cell_diary")
 	await _settle(0.5)
@@ -1114,7 +1114,7 @@ func _n3_n6_taps() -> void:
 	await shot("cold_arrival")
 	await _perf("cold")
 	# N4: the plan, then the cranks until the aisle opens
-	await view("plan")
+	await view("cold_plate")
 	await shot("cold_plan")
 	await _tap_at("cold", Vector3(3.74, 1.55, 0.915), "plan plate")
 	await _settle(0.6)

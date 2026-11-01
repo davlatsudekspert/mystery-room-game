@@ -15,10 +15,10 @@ extends RefCounted
 ## - moments M3 (a shape passes behind the frost), M5 (steps above: dust) and M6 (the archivist's echo at the aisle end).
 ## The frost decals and the strip curtain carry no colliders and cast no shadows.
 
-const VIEWS: Array[String] = ["cold", "cranks", "plan", "frost", "chest"]
-const HOTSPOT_VIEW := {"cold_cranks": "cranks", "cold_plan": "plan", "cold_window": "frost", "cold_chest": "chest"}
+const VIEWS: Array[String] = ["cold", "cranks", "cold_plate", "frost", "chest"]
+const HOTSPOT_VIEW := {"cold_cranks": "cranks", "cold_plan": "cold_plate", "cold_window": "frost", "cold_chest": "chest"}
 const DEEPER := {}
-const CAPTION := {"cold": "room2x.cold", "cranks": "obj2x.rail", "plan": "obj2x.rail_end", "frost": "obj2x.frost",
+const CAPTION := {"cold": "room2x.cold", "cranks": "obj2x.rail", "cold_plate": "obj2x.rail_end", "frost": "obj2x.frost",
 	"chest": "obj2x.chest"}
 
 const WINDOW_POS := Vector3(3.845, 1.63, 2.20)
@@ -168,7 +168,7 @@ func _define_views() -> void:
 	var cx := (lo + hi) * 0.5
 	cam.add_view("cranks", o + Vector3(cx, 1.4, CAM_Z_MAX), o + Vector3(cx, 1.2, END_Z), fov)
 	var pf := cam.fit_rect(o + Vector3(3.7875, 1.55, 1.0 + PLAN_SHIFT), Vector3(-1, 0, 0), 0.25, 0.172, 42.0, free, 0.12)
-	cam.add_view("plan", pf["pos"], pf["target"], 42.0)
+	cam.add_view("cold_plate", pf["pos"], pf["target"], 42.0)
 	var ff := cam.fit_rect(o + WINDOW_POS, Vector3(-1, 0, 0), PANE.x * 0.5, PANE.y * 0.5, 50.0, free, 0.07)
 	cam.add_view("frost", ff["pos"], ff["target"], 50.0)
 	var chx := _slot_x(_chest_slot if _chest_slot >= 0 else 2)
@@ -660,8 +660,8 @@ func interact(hs: String, part: String) -> bool:
 				_say("obj2x.rail")
 			return true
 		"cold_plan":
-			if cur != "plan":
-				cam.go("plan")
+			if cur != "cold_plate":
+				cam.go("cold_plate")
 			else:
 				(room.get("hud") as Node).call("_show_zoom", _plan_tex, room.tr("obj2x.rail_end"))
 			return true

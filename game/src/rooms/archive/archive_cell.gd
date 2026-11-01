@@ -12,10 +12,10 @@ extends RefCounted
 ## - the kettle beat (knobs, lifting the kettle), the diary, the pencil slip on the lamp, the cloth (`take("cell_cloth")`).
 ## Moment M2 (the knocks) is played from the Pump Room (ArchivePump.moment_m2): it fires before the first entry.
 
-const VIEWS: Array[String] = ["cell", "desk", "light_table", "cot", "shelf", "cold_door", "cold_wheels"]
-const HOTSPOT_VIEW := {"cell_table": "light_table", "cell_desk": "desk", "cell_cot": "cot", "cell_shelf": "shelf", "cell_cold_door": "cold_door"}
+const VIEWS: Array[String] = ["cell", "cell_desk", "light_table", "cot", "shelf", "cold_door", "cold_wheels"]
+const HOTSPOT_VIEW := {"cell_table": "light_table", "cell_desk": "cell_desk", "cell_cot": "cot", "cell_shelf": "shelf", "cell_cold_door": "cold_door"}
 const DEEPER := {"cold_door": ["cold_wheels"]}
-const CAPTION := {"cell": "room2x.cell", "desk": "obj2x.diary", "light_table": "obj2x.light_table", "cot": "obj2x.cot", "shelf": "obj2x.shelf",
+const CAPTION := {"cell": "room2x.cell", "cell_desk": "obj2x.diary", "light_table": "obj2x.light_table", "cot": "obj2x.cot", "shelf": "obj2x.shelf",
 	"cold_door": "obj2x.cold_door", "cold_wheels": "obj2x.cold_door"}
 
 ## model -> [position, yaw degrees] in zone coordinates (docs/models/ch2_exp.md "Placements").
@@ -158,7 +158,7 @@ func _build_views() -> void:
 	var cam: RoomCamera = room.get("cam")
 	var o := root.position
 	cam.add_view("cell", o + Vector3(-1.95, 1.62, 1.45), o + Vector3(0.35, 0.92, -0.85), 72.0, true)
-	cam.add_view("desk", o + Vector3(1.12, 1.34, -0.82), o + Vector3(1.12, 0.78, -1.55), 52.0)
+	cam.add_view("cell_desk", o + Vector3(1.12, 1.34, -0.82), o + Vector3(1.12, 0.78, -1.55), 52.0)
 	cam.add_view("light_table", o + Vector3(1.3, 1.36, -1.18), o + Vector3(1.3, 0.8, -1.56), 38.0)
 	cam.add_view("cot", o + Vector3(-0.15, 1.5, -0.05), o + Vector3(-0.85, 0.5, -1.6), 58.0)
 	cam.add_view("shelf", o + Vector3(-0.45, 1.45, 0.25), o + Vector3(-0.55, 0.95, 1.85), 54.0)
@@ -542,8 +542,8 @@ func interact(hs: String, part: String) -> bool:
 				_say("obj2x.light_table")
 			return true
 		"cell_desk":
-			if cur != "desk":
-				cam.go("desk")
+			if cur != "cell_desk":
+				cam.go("cell_desk")
 			elif part == "IA_cell_diary":
 				_read("doc2x.diary", "obj2x.diary")
 			elif part == "IA_note_light":
