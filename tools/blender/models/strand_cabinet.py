@@ -11,7 +11,7 @@ Parts (origin at the pivot, identity rotation at rest):
   cabinet_body     case, drawers, plinth, cornice, lock plate, label holder, velvet shelf (static)
   IA_door_l        left door, hinge on the left edge: origin (-0.485, 1.16, 0.243); opens with a NEGATIVE angle about +Y (-100 deg, toward the viewer)
   IA_door_r        right door, hinge on the right edge: origin (0.485, 1.16, 0.243); opens with a POSITIVE angle about +Y (+100 deg)
-  IA_wheel_0..3    digit wheels, x = -0.105, -0.035, +0.035, +0.105 at (x, 1.64, 0.244): axle along X, digit k faces the viewer after
+  IA_digit_0..3    digit wheels, x = -0.105, -0.035, +0.035, +0.105 at (x, 1.64, 0.244): axle along X, digit k faces the viewer after
                    a rotation of +36 k degrees about +X; at rest digit 0 shows. Slot M_Decal_DrawerDigits
   cabinet_label    quad (0.115 x 0.082) centre (-0.33, 1.64, 0.2742), slot M_Decal_CabinetLabel (swap the image: the variant symbol)
   empties          lamp_mount (0, 1.0, 0.0) (where the projector lamp rests, base down), light_origin_cabinet (0, 1.0, 0.30)
@@ -134,20 +134,20 @@ def build():
     # wheels: AX along X, centred at (x, WY, WZ). combo_wheel is built in Blender coords: axle X, digit 0 faces local -Y = Godot +Z
     wheels = []
     for k, x in enumerate(WX):
-        w = A.combo_wheel(f"IA_wheel_{k}", WR, 0.058, segments=30, rim_mat="M_Decal_DrawerDigits")
+        w = A.combo_wheel(f"IA_digit_{k}", WR, 0.058, segments=30, rim_mat="M_Decal_DrawerDigits")
         w.location = (x, -WZ, WY)
         w = A.place(w, Matrix.Identity(4))
-        w = part(f"IA_wheel_{k}", [w], (x, WY, WZ), presmooth=False)
+        w = part(f"IA_digit_{k}", [w], (x, WY, WZ), presmooth=False)
         wheels.append(w)
     return body, dl, dr, wheels
 
 
 if __name__ == "__main__":
     build()
-    req = ["cabinet_body", "IA_door_l", "IA_door_r", "cabinet_label", "lamp_mount", "light_origin_cabinet"] + [f"IA_wheel_{k}" for k in range(4)]
+    req = ["cabinet_body", "IA_door_l", "IA_door_r", "cabinet_label", "lamp_mount", "light_origin_cabinet"] + [f"IA_digit_{k}" for k in range(4)]
     exp = {"IA_door_l": (-0.485, 1.16, 0.243), "IA_door_r": (0.485, 1.16, 0.243)}
-    exp.update({f"IA_wheel_{k}": (WX[k], WY, WZ) for k in range(4)})
-    errs = X.finish(NAME, req, ["IA_door_l", "IA_door_r", "cabinet_label"] + [f"IA_wheel_{k}" for k in range(4)], BUDGET, exp,
-                    show=["cabinet_body", "IA_door_l", "IA_wheel_0"])
+    exp.update({f"IA_digit_{k}": (WX[k], WY, WZ) for k in range(4)})
+    errs = X.finish(NAME, req, ["IA_door_l", "IA_door_r", "cabinet_label"] + [f"IA_digit_{k}" for k in range(4)], BUDGET, exp,
+                    show=["cabinet_body", "IA_door_l", "IA_digit_0"])
     if X.want_render(ARGS):
         X.qa_props(NAME, [("", (1.3, 1.5, 2.6), (0.0, 1.0, 0.0), 44), ("_lock", (0.0, 1.72, 0.85), (0.0, 1.64, 0.25), 30)], floor=True, world=0.2)

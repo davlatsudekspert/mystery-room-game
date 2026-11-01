@@ -137,7 +137,7 @@ and a black wedge at the top edge): `IA_sheet` (root, origin (0, 0, 0); tap = ro
 
 **cold_door** (origin = centre of the 0.90 x 2.10 opening at floor level on the room-side wall plane; the wall occupies z -0.25..0; front +Z): `cold_door_frame` (liner, architrave, stop with gasket, hinge knuckles, thermal plate x -0.90..-0.60 with the
 serpentine copper coil, feed pipe up to y 2.70, return into the floor); `IA_cold_door` (leaf 0.836 x 2.06 x 0.11, origin = hinge axis (-0.44, 0, 0), opens with a NEGATIVE angle about +Y, -100 deg, toward the cell); children of the leaf:
-`IA_cold_handle` (cam lever, pivot (0.335, 0.86, 0.040), rest up = locked, release = -90 deg about +Z), `IA_wheel_a` (pivot (0.245, 1.28, 0.012)), `IA_wheel_b` (pivot (0.325, 1.28, 0.012)): digit drums with the numerals 0-9,
+`IA_cold_handle` (cam lever, pivot (0.335, 0.86, 0.040), rest up = locked, release = -90 deg about +Z), `IA_digit_a` (pivot (0.245, 1.28, 0.012)), `IA_digit_b` (pivot (0.325, 1.28, 0.012)): digit drums with the numerals 0-9,
 digit k in front = rotate +36 deg x k about +X (k + 1 sits above k); `lock_lamp` (jewel, M_Emissive_Red, origin (0.285, 1.375, 0.056)); static extras: `coil_glow` (emissive bands on the coil, origin (-0.70, 1.10, 0.030); show while hot), `door_ice`
 (frost lumps and icicles, M_Frost, origin (0, 1.05, 0.02); hide when thawed), empties `coil_mount` (-0.84, 2.70, 0.03) and `light_cold_door` (0, 2.0, 0.35).
 
@@ -287,7 +287,7 @@ Portraits: quad `photo<k>` on each tag, slot `M_Decal_RollTags` (3 x 2 atlas, ce
 `IA_door_gallery` (west wall, pivot (-2.855, 0, -0.70), +95 deg opens OUT to -X; the same tag-shaped keyhole on its inner face), `IA_desk_drawer` (centre drawer, pivot (0.4, 0.59, -0.83), slide +0.30 along +Z).
 Empties `cabinet_mount` (2.67, 0, 0.30), `tea_mount` (-0.55, 0.606, 0.95), `light_desk_lamp` (0.05, 1.12, -1.25), `light_window_n`, `light_fire` (-0.5, 0.5, 2.1). The desk lamp is built into `desk` (green glass shade).
 **strand_cabinet** (1.04 w x 0.46 d x 1.92 h, origin on the floor at the footprint centre): `cabinet_body`, `IA_door_l` (pivot (-0.485, 1.16, 0.243), -100 deg about +Y), `IA_door_r` (pivot (0.485, 1.16, 0.243), +100 deg),
-`IA_wheel_0..3` (pivots (-0.105 / -0.035 / 0.035 / 0.105, 1.64, 0.244), about +X, +36 deg per digit, slot `M_Decal_DrawerDigits`), quad `cabinet_label` (centre (-0.33, 1.64, 0.2742), 0.115 x 0.082, slot
+`IA_digit_0..3` (pivots (-0.105 / -0.035 / 0.035 / 0.105, 1.64, 0.244), about +X, +36 deg per digit, slot `M_Decal_DrawerDigits`), quad `cabinet_label` (centre (-0.33, 1.64, 0.2742), 0.115 x 0.082, slot
 `M_Decal_CabinetLabel`), empties `lamp_mount` (0, 0.952, 0), `light_origin_cabinet` (0, 1.0, 0.30). The lock plate and label sit on a fixed transom above the doors, so the doors open freely.
 **tea_set**: `tea_body`, `IA_cup_a` (pivot (-0.12, 0.02, 0.07)), `IA_cup_b` (pivot (0.12, 0.02, 0.07)), optional lift +0.06 along +Y. **pass_key**: `pass_key_body` (bow = the roll-call tag shape).
 **projector_lamp**: `projector_lamp_body` (upright, base down).

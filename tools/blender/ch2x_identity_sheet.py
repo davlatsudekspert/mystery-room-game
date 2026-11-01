@@ -14,8 +14,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DIR = os.path.join(ROOT, "docs", "previews", "ch2_expansion")
-ROOMS = [("R2 Pump Room", ["prev_pump_pump", "prev_pump"]), ("R3 Night Cell", ["prev_cell_cell", "prev_cell"]),
-         ("R4 Cold Store", ["prev_cold_cold", "prev_cold"]), ("R5 Reading Gallery", ["prev_gallery_gallery", "gallery_room"]),
+ROOMS = [("R2 Pump Room", ["prev_pump_pump", "prev_pump"]), ("R3 Night Cell", ["cell_room_overview", "prev_cell_cell"]),
+         ("R4 Cold Store", ["cold_room_overview", "cold_room", "prev_cold_cold"]), ("R5 Reading Gallery", ["prev_gallery_gallery", "gallery_room"]),
          ("R6 Plate Room", ["prev_plate_plate", "plate_room"]), ("R7 Director's Office", ["prev_office_office", "office_room"])]
 CW, CH = 600, 400
 
