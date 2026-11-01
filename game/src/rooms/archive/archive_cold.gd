@@ -629,6 +629,7 @@ func on_enter() -> void:
 	apply_state(false)
 	_breath.emitting = true
 	_south_wall(false)
+	(room.get("hud") as Node).call("caption", "") # the Cell's arrival line does not follow the player through the door
 
 
 ## The south wall is a solid box: for the cranks' wide view the camera stands behind it, so the wall steps aside.

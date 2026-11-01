@@ -44,12 +44,36 @@ start a game it cannot finish). Every expansion node in the scene is built only 
 - **Plate Room strips** lie on a pale paper sleeve beside the enlarger (not at the contract's `strip_mount_*`, which are on the drying
   table 3 m away): film is dark, the bench is black, and the strips must be in the enlarger's view. Scaled 1.5 on the bench, 1.0 in the carrier.
 - **Enlarger knob and ring** are siblings of `IA_head` in the glb, not children; they are moved with the head by the code.
-- **View id `desk`** belongs to the hall: the Office's desk view is `office_desk`.
+- **View id `desk`** belongs to the hall: the Office's desk view is `office_desk`, the Night Cell's is `cell_desk`. The hall also owns
+  `plan`: the Cold Store's plan plate view is `cold_plate`. A zone must never `add_view` an id the hall (or another zone) uses: the camera
+  keeps ONE table of views, the last `add_view` wins.
+- **Night Cell light table.** The sheets lie stacked on the glass, so a tap reaches the top sheet only: the top sheet turns / flips by a
+  tap on it or on its tab and by drags, and every sheet has a round turn button and a round flip button (tape colour) on the desk in front
+  of the box (six `IA_turn_i` / `IA_flipbtn_i`, original geometry, an icon drawn in code). The lower two sheets' own colliders are removed.
+  The two outer rows of each sheet (outside the 7-row window) are dimmed by a bezel quad. The model's `M_Acetate` is cut to 7 % alpha in
+  the scene (three milky layers washed the prints out). Blocked cells are drawn near black (alpha .94) so the lit digits read.
+- **Night Cell diary and slip** are on their own view `cell_desk` (the table view is too tight to hold them); the pencilled slip is a
+  small paper quad (`doc2x.light_note`).
+- **Cold door wheels** take taps (+1) and drags (+-1); a tap near the lock on the closed leaf steps in to `cold_wheels` (the wheels sit
+  in a recess the leaf's mesh covers). Their `M_Brass_Polished` is swapped for a matte brass (no reflections in the room = black).
+- **Wallpaper.** `M_Wallpaper_Cell` is copied at runtime with its texture's contrast / saturation / brightness reduced (`adjust_bcs`).
+- **Cold Store frost window.** The model's `window_glass` lies flat (a white line across the pane) and is hidden; `window_glow` (the
+  light well's card) is dimmed to a pale cyan so the pale signs read through the wiped pane; the three sign quads use a small shader that
+  shows a sign only where the wipe mask is clear (thin patches in the frost never give a sign away).
+- **Cold Store plan plate** is moved 8.5 cm along the wall (z 0.915): a pilaster in the wall model covers the right edge of the contract's
+  position. Its picture is drawn in code from the logic's `v_bay` with the carriage tag atlas (`ArchiveCold.plan_image`).
+- **Cranks view.** The camera backs through the south wall for the wide shot of all five cranks (the wall is hidden and its colliders are
+  switched off while the `cranks` view is up); it is re-fitted to where the carriages stand whenever they have come to rest.
+- **Chest interior.** The open chest's floor lies near its rim: the crystals and the note are lifted 0.23 / 0.16 m above the model's
+  `crystal_mount_*` / `note_mount`.
+- **Frost sketch** has a model for the bag icon (`frost_sketch.glb`, original) and a reader page drawn by `ArchiveCold.sketch_texture`.
 
 ## Left to do
 
-- N3-N6 rooms: Night Cell (models in repo: room_cell, cot, light_table, ..., cold_door), Cold Store (room_cold, carriages,
-  frost_window, cold_chest), their zones (`BUILDERS` in `archive_zones.gd`), interactions, moments M2, M3, M5, M6.
+- Night Cell and Cold Store (N3-N6, M2, M3, M5, M6) are in the scene and played by taps in `qa/playthrough_ch2.gd`
+  (`_n3_n6_taps`). Not done there: the glove / cloth stroke in hand (hands phase 2), a hold-to-wipe cloth that follows the finger
+  (the pane is wiped by a finger drag or a band tap; the cloth in hand only floats), the kettle has no tick sound of its own (it
+  is in the cell's ambience), the lore cans are dressing (no tap), the lid of the chest is not tappable (rings open it).
 - Stage B scene is in (book lift, wedge/stair, Gallery, Plate Room, Office, G2, M4). Not done: a real item icon/model for
   `roll_slips` and `staff_print` (the bag shows the name; `ItemIcons` logs a missing-model warning), the hung weights are only visible
   from the `lift_weights` view, the lift's hall stop has no hall-side door (button 0 fades to the hall's root view).

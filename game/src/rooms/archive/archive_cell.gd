@@ -254,6 +254,18 @@ func _build_button(table: Node3D, i: int, part: String, pos: Vector3, turn: bool
 	room.call("add_tap_area", holder, Vector3(0.08, 0.05, 0.08), "cell_table", part, Vector3(0, 0.02, 0))
 
 
+## Cold air and white tube light beyond the door: a vertical gradient from pale at the top to blue-grey at the floor, with mist streaks.
+func _beyond_texture() -> ImageTexture:
+	var img := Image.create(32, 96, false, Image.FORMAT_RGBA8)
+	for y in 96:
+		var t := float(y) / 95.0
+		var base := Color(0.86, 0.94, 1.0).lerp(Color(0.5, 0.66, 0.8), t * t)
+		for x in 32:
+			var streak := 0.05 * sin(float(x) * 1.7 + t * 5.0)
+			img.set_pixel(x, y, Color(base.r + streak, base.g + streak, base.b + streak * 0.5, 1.0))
+	return ImageTexture.create_from_image(img)
+
+
 func _bezel_texture() -> ImageTexture:
 	var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0.03, 0.02, 0.015, 0.78))
@@ -374,6 +386,9 @@ func _build_door() -> void:
 	doorway.name = "DoorwayTap"
 	d.add_child(doorway)
 	room.call("add_tap_area", doorway, Vector3(0.9, 2.0, 0.5), "cell_cold_door", "Doorway", Vector3(0, 1.05, 0.15))
+	# the Cold Store is another zone, far away: through the open door the Cell sees a pale cold glow, not the void
+	var beyond := ArchiveKit.quad(d, Vector2(1.0, 2.2), Vector3(0, 1.05, -0.45), ArchiveKit.decal_material(_beyond_texture(), false), "cold_beyond")
+	beyond.visible = false
 	# the digit drums are polished brass: with no reflections in the room that reads black, so they get a matte brass
 	var brass := StandardMaterial3D.new()
 	brass.albedo_color = Color("c9a45a")
@@ -479,6 +494,9 @@ func _update_door(animated: bool) -> void:
 		ModelUtil.set_emission(lamp, true, Color("52d36a") if open else Color("ff3b2f"), 2.2)
 	var doorway := ModelUtil.find(d, "DoorwayTap")
 	room.call("set_present", doorway, open)
+	var beyond := ModelUtil.find(d, "cold_beyond")
+	if beyond != null:
+		beyond.visible = open
 
 
 func _update_kettle(animated: bool) -> void:
