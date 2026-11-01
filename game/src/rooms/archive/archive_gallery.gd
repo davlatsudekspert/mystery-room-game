@@ -87,6 +87,9 @@ func build() -> void:
 	for i in 3:
 		ArchiveRig.hot(ModelUtil.find(shell, "IA_counter_drawer_%d" % i), "gal_counter")
 	ArchiveRig.hot(ModelUtil.find(shell, "counter"), "gal_counter")
+	# the tube terminal's hatch (the Records receiver of the pneumatic station) is scenery here: no tap volume of its own
+	for body in ModelUtil.find(shell, "IA_tube_hatch").find_children("*", "StaticBody3D", true, false):
+		body.queue_free()
 	_build_lights(shell)
 	_build_board()
 	_build_counter(shell)

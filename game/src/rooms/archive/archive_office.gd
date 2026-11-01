@@ -71,7 +71,7 @@ func _build_views() -> void:
 	var o := root.position
 	cam.add_view("office", o + Vector3(-2.3, 1.6, 1.8), o + Vector3(1.2, 1.0, -0.6), 68.0, true)
 	cam.add_view("cabinet", o + Vector3(1.05, 1.55, 0.3), o + Vector3(2.67, 1.4, 0.3), 46.0)
-	cam.add_view("office_desk", o + Vector3(-1.5, 1.7, 1.6), o + Vector3(-0.4, 0.7, -0.2), 52.0)
+	cam.add_view("office_desk", o + Vector3(-1.5, 1.65, 1.8), o + Vector3(-0.4, 0.65, 0.3), 54.0)
 
 
 func _build_lights(shell: Node3D) -> void:

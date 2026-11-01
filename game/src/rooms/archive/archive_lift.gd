@@ -202,6 +202,10 @@ func _build_call_plate(xf: Transform3D) -> void:
 	back.position = Vector3(0, 0, 0.0125)
 	back.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	plate.add_child(back)
+	# the load notice above the buttons: the cage's own plate is a hand-span wide, this one is read from across the room
+	var notice := ArchiveRig.picture(plate, ArchiveUpperArt.lift_plate(logic.lift_load()), Vector2(0.40, 0.20), Vector3(0, 0.2, 0.017), Color(0.92, 0.88, 0.8), false)
+	notice.name = "load_notice"
+	room.call("add_tap_area", notice, Vector3(0.42, 0.22, 0.05), "lift_" + suffix(), "load_plate", Vector3.ZERO)
 	for i in 3:
 		var x := -0.125 + 0.125 * i
 		var btn := Node3D.new()

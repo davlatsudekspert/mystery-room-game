@@ -26,6 +26,22 @@ start a game it cannot finish). Every expansion node in the scene is built only 
 | Items | `tools/blender/models/floor_plan.py`, `frost_sketch.py`, `ItemDB`, `hud.gd` | the plan item has a model (no bag warning), the frost sketch has a model and a reader page with this game's three signs |
 | QA | `qa/exp_shots.gd`, `qa/playthrough_ch2.gd`, `qa/ui_screens.gd`, `tests/test_archive_upper_art.gd` | see below |
 
+## QA run for the Stage B scene (software Vulkan under Xvfb, 2026-11-01)
+
+- `tools/run_tests.sh`: 307 tests, 42065 checks, 0 failures (includes `tests/test_archive_upper_art.gd`).
+- `qa/playthrough_ch2.tscn --legacy` (1.0 chapter as an old save): exit 0, 86 taps, 0 fallbacks, 3 continue checks.
+- `qa/playthrough_ch2.tscn --expansion=2`: exit 0, 151 taps through the 3D scene, 0 logic fallbacks, 0 taps under a HUD control, 4 continue
+  checks. N1, N2, N7, N8, N9, N10 and G2 are played by taps (book lift ride, wedge, counter, board, enlarger, cabinet, dead and fitted lamp,
+  the spiral stair down); N3-N6 still run at logic level in that file (`ArchiveSolver.lower_floor`): the Night Cell and Cold Store builders are
+  in the scene, their taps are not in the playthrough yet.
+- `tap_map --hud-check` (`--expansion=2`, views of the new zones): 0 failures at phone20 and tablet10 for the Gallery (12 controls in
+  8 views), Plate Room (3 in 3), Office (9 in 3, 2 banner warnings) and the Pump Room lift views (5 in 4).
+- Draw calls with the HUD (`tap_map --perf --screen=phone20`): Gallery 23-60, Plate Room 18-39, Office 27-38, Pump Room views 34-67 (the
+  lift views 34-58). The most expensive new view is the Gallery root view (60).
+- Screenshots of every new view: `docs/previews/ch2_expansion/scene_*.jpg`.
+- Run QA tools that save games (`playthrough_ch2`, `player_review*`) with a private `XDG_DATA_HOME` when another run may be going: they share
+  `user://qa_ch2_save.json`, and a continue check then loads the other run's game.
+
 ## Deviations from the model contract
 
 - `service_door` has one site (z 2.95), but the logic draws `v_panel` in A/B/C. The variant changes the LETTER on the door's
