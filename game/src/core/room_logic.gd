@@ -99,6 +99,16 @@ func apply_seed(_seed: int) -> void:
 	pass
 
 
+## Override: false while the chapter plays without hints (Chapter 2's Archivist's Trial): no hint, no "next step".
+func hints_allowed() -> bool:
+	return true
+
+
+## Override: achievement ids earned by finishing this chapter now (besides the standard ones).
+func achievements() -> Array[String]:
+	return []
+
+
 ## Override: finale options as [[option_id, label_key], ...]; choose_ending(option_id) applies one.
 func choice_options() -> Array:
 	return []

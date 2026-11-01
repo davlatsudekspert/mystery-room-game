@@ -77,3 +77,26 @@ func test_started_list_survives_the_profile_file() -> void:
 		check((back["started"] as Array).has("ch3"), "started kept on disk")
 		check(not (SaveSystem.load_profile()["completed"] as Array).has("ch3"), "not completed")
 	)
+
+
+func test_trial_blocks_hints_and_earns_its_achievement() -> void:
+	_with_temp_profile(func() -> void:
+		GameState.profile = {"choices": {}, "completed": [], "achievements": [], "hints_used": 0}
+		GameState.start_new("ch2")
+		var l := GameState.logic as ArchiveLogic
+		l.begin_expansion(2)
+		check(not GameState.next_hint().is_empty(), "a normal game gives hints")
+		GameState.start_new("ch2")
+		l = GameState.logic as ArchiveLogic
+		l.begin_expansion(2)
+		check(l.set_mode("trial"), "Trial chosen at New Game")
+		check(GameState.next_hint().is_empty(), "the Trial gives no hint")
+		eq(GameState.hints_used, 0, "and counts none")
+		l.state["choice"] = "leyla_key"
+		l.state["complete"] = true
+		GameState.hints_used = 0
+		GameState._on_chapter_complete()
+		check((GameState.profile["achievements"] as Array).has("archivist_trial"), "the Trial stamp achievement")
+		check((GameState.profile["achievements"] as Array).has("no_hints_ch2"), "and the no-hints one")
+		eq(GameState.profile["choices"]["ch2_trial"], true, "Chapters 3-4 may read the flag")
+	)

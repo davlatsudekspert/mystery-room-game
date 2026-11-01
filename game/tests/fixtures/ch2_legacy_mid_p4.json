@@ -1,0 +1,116 @@
+{
+	"chapter": "ch2",
+	"logic": {
+		"inventory": [
+			"leyla_badge",
+			"crystal_lens",
+			"index_card"
+		],
+		"selected": "",
+		"state": {
+			"booth_open": false,
+			"canister": "request_card",
+			"card_in_punch": false,
+			"card_shown": true,
+			"cat_drawer": 4,
+			"cat_group": 1,
+			"ch1_shards": 5,
+			"choice": "",
+			"clicks_heard": [],
+			"complete": false,
+			"deck_speed": 3,
+			"deck_tape": "",
+			"dest": 0,
+			"dial_input": "",
+			"echo_guided": false,
+			"echoes": [],
+			"file_delivered": false,
+			"film_seen": false,
+			"focus": 1,
+			"frame": 0,
+			"grille_open": false,
+			"has_lens": true,
+			"hatch_open": false,
+			"last_punch": [
+				1,
+				0,
+				1,
+				1,
+				0,
+				0,
+				1,
+				0
+			],
+			"ledger_open": false,
+			"locker_open": false,
+			"mark_recorded": false,
+			"port_left": "",
+			"port_right": "",
+			"pressure_ok": true,
+			"projector_on": false,
+			"punch_keys": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"reel_on_projector": false,
+			"reel_repaired": false,
+			"request_ok": true,
+			"rot_left": 2,
+			"rot_right": 5,
+			"seed": 0,
+			"sign_recorded": false,
+			"slide_drawer": -1,
+			"slide_drawer_mark": false,
+			"slide_in": false,
+			"slide_on": false,
+			"slide_rot": 1,
+			"socket": "",
+			"splice": [
+				-1,
+				-1,
+				-1,
+				-1
+			],
+			"taken": {
+				"index_card": true
+			},
+			"v_clicks": [
+				2,
+				8,
+				5
+			],
+			"v_focus": 5,
+			"v_punch": 0,
+			"v_shadows": [
+				3,
+				1,
+				4,
+				2
+			],
+			"v_targets": [
+				5,
+				4
+			],
+			"v_vault": [
+				2,
+				3
+			],
+			"valves": [
+				1,
+				2,
+				2
+			],
+			"vault_open": false,
+			"vault_unlocked": false,
+			"wheel": 0,
+			"zoom_right": 0
+		},
+		"version": 1
+	}
+}

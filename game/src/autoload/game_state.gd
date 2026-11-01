@@ -134,6 +134,8 @@ func _on_chapter_complete() -> void:
 		unlock_achievement(COLLECT_ACHIEVEMENT.get(chapter_id, "collect_" + chapter_id))
 	if hints_used == 0:
 		unlock_achievement("no_hints_" + chapter_id)
+	for a in logic.achievements():
+		unlock_achievement(a)
 	profile["hints_used"] = int(profile.get("hints_used", 0)) + hints_used
 	SaveSystem.save_profile(profile)
 
@@ -164,7 +166,7 @@ func is_chapter_completed(id: String) -> bool:
 # ------------------------------------------------------------------ hints
 ## Returns {"goal", "level" (1..3), "key"}; repeated requests for the same goal escalate the level.
 func next_hint() -> Dictionary:
-	if logic == null:
+	if logic == null or not logic.hints_allowed():
 		return {}
 	var goal := logic.hint_goal()
 	if goal == "":

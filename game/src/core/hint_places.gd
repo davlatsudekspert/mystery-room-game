@@ -22,6 +22,13 @@ const PLACES: Dictionary = {
 	"c2_project": "obj2.projector", "c2_take_crystal": "obj2.booth", "c2_focus": "obj2.projector",
 	"c2_record_sign": "obj2.screen", "c2_mark": "obj2.slides", "c2_ports": "obj2.vault_open",
 	"c2_align": "obj2.vault_open", "c2_wheel": "obj2.vault_open", "c2_finale": "obj2.vault_open",
+	# Chapter 2 expansion (docs/CHAPTER2_EXPANSION.md section 9)
+	"c2x_warm": "obj2x.east_wall", "c2x_pipes": "obj2x.manifold", "c2x_light": "obj2x.light_table",
+	"c2x_cold_door": "obj2x.cold_door", "c2x_aisle": "obj2x.rail", "c2x_take_cloth": "obj2x.shelf",
+	"c2x_frost": "obj2x.frost", "c2x_chest": "obj2x.chest", "c2x_take_crystal": "obj2x.chest",
+	"c2x_lift": "obj2x.lift", "c2x_board": "obj2x.board", "c2x_take_key": "obj2x.board",
+	"c2x_print": "obj2x.enlarger", "c2x_cabinet": "obj2x.cabinet", "c2x_take_lamp": "obj2x.cabinet",
+	"c2x_install_lamp": "obj2.projector",
 	# Chapter 3
 	"c3_interlock": "obj3.switch_room", "c3_heart": "obj3.office", "c3_choir": "obj3.choir",
 	"c3_restore": "obj3.switch_room", "c3_startup": "obj3.desk", "c3_seed": "obj3.library",

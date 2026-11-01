@@ -1,6 +1,6 @@
 # Chapter 2 expansion — "The Whole Building" (design proposal)
 
-**Status:** design only, not implemented, nothing here is tested. Written 2026-11-01 for the owner's decision.
+**Status:** owner decisions recorded 2026-11-01 (section 17). The **logic** is implemented and tested (`game/src/rooms/archive/archive_exp_data.gd`, `archive_logic.gd`, `tests/test_archive_exp_*.gd`); scenes, models, audio and hands are not yet. Written 2026-11-01.
 **Scope:** Chapter 2 (`docs/CHAPTER2_DESIGN.md`, `game/src/rooms/archive/`) grows from one hall with a booth and a vault into a small multi-floor building. No code, models or strings are changed by this document.
 **Hard rules kept:** calm, fair, logical, tactile; one-finger tap/drag; room-view navigation (no free walking); no enemies, no chase, no gore, no jump-scare spam; EN/RU/UZ through `tr()`; language-neutral solutions; per-game variants (`docs/VARIANTS.md`); offline; rating 7+/9+. Nothing from any other game is reused (no dice/board theme, no hooded host, no shop upgrades).
 
@@ -383,3 +383,26 @@ Rough totals (agent-days): Stage A about 35-50, Stage B about 35-55. Honest note
 5. **Foreshadowing the 42nd** with the roll-call horn that stops at 41: keep? *Recommend keep (subtle, no number 42), but it is the owner's story call.*
 6. **Hands and eerie moments on by default?** *Recommend hands On (Off in Settings), moments Soft by default for 7+ safety, Full selectable.*
 7. **Length promise:** do not publish "70-90 minutes" until the playtests; state "about an hour" at most.
+
+### Decided by the owner on 2026-11-01
+1. **Release split:** update 1.1 ships EVERYTHING in this document (Stage A and Stage B together: 7 rooms, N1-N10, G1 + G2, floor plan, all 6 moments, hands, Trial mode). `ArchiveLogic.EXPANSION_STAGE` is the stage a new game is built with: 2 at release. It stays 0 on `main` until the scene has the new rooms (the scene agent flips it), so a build from `main` never starts a game it cannot finish.
+2. **Gating:** new floors are mandatory for new games; old saves bypass them through the migration in section 10.
+3. **New puzzle types:** N5 and N8 yes, N7 yes. N7 is the first to cut only if it fails the playtests.
+4. **Replay overwriting `ch2_key`:** protect Chapter 3's entry wing once Chapter 3 is completed: yes. Implemented wider: a replay keeps `ch2_*` as soon as Chapter 3 was started or completed (`GameState.is_chapter_locked_in`, profile key `started`), regression tests in `tests/test_replay_choices.gd`.
+5. **Roll-call horn stops at 41:** keep.
+6. **Defaults:** hands On, eerie moments Soft.
+7. **Length promise:** the store text says "about an hour" until the playtests.
+
+### Design changes made while implementing the logic (each with the reason)
+- **N4 minimum route is 3 cranks, not 5.** *Changed because* the state graph of 5 carriages in 7 slots has only 21 arrangements and the longest shortest route to any aisle is 4 cranks (checked by BFS, `test_aisle_state_graph_is_connected_and_every_start_is_fair`); 5 is impossible. The start pool holds every (bay, start) at distance >= 3 (8 combinations, all four bays).
+- **N4 goal is stated as a rule the plan can show:** the aisle *in front of* carriage k (a gap between carriage k-1 and k) opens; `v_bay` is k in 1..4 (carriage 0 has no neighbour in front). A crank slides a carriage into a free neighbouring slot; with no direction given it turns the way it last turned and reverses after a clunk, so a one-finger tap can reach every arrangement.
+- **N3 sheets are 11 x 11, the window shows the middle 7 rows.** *Changed because* a 7 x 11 sheet cannot be rotated by 90 degrees into the same window. Aligned sheets light exactly the two digits; the generator rejects any set where another of the 8^3 orientations lights a legible two-digit pattern (all 100 pairs 00-99 count as legible), and the start is never solved. Solved sheets lock so the digits stay on the table.
+- **N2 valves lock when the coil is warm** (like P2); the mallet probe needs the `mallet` item (taken from the Pump Room) and never changes state.
+- **N9 has 4 strips (A-D).** *Changed because* the doc said both "4 strips" and "A-E". The same zoom and focus target applies to every strip; only the strip whose symbol matches the cabinet label prints the digits, a wrong strip prints a sharp photo of someone else (`print_other`).
+- **N8 slips:** five clue kinds (end left, end right, left of, next to, not at an end), 4-6 slips, at least one end slip, exactly one of the 720 boards fits. The key drops into the tray and is taken (`board_key`), then the office opens.
+- **Cold Store door:** two wheels; right digits with an unthawed coil report `cold_frozen`; the door opens as soon as both are true, in either order. Guessing the digits without the light table is allowed.
+- **Crystals (G1):** the spots keep their ids `case_crystal_1/2` (hints, invariants and the fuzz stay valid); in a new game they become available when the chest opens (`crystals_available`), in an old save they stay in the booth case. The hint goal for taking them is `c2x_take_crystal` in a new game and sits after `c2_project`, like `c2_take_crystal`.
+- **Hint goals:** 16 new goals (`c2x_warm`, `pipes`, `light`, `cold_door`, `aisle`, `take_cloth`, `frost`, `chest`, `lift`, `board`, `take_key`, `print`, `cabinet`, `take_lamp`, `install_lamp`, `take_crystal`). The lamp chain leads before `c2_project` while the lamp is dead.
+- **Open threads** are the 7 long ones (warm panel, blocked stair, frozen door, case card, dead lamp, locked pass door, cabinet symbol). A thread joins the list when first seen but never as a 4th open one: it waits for a free slot, so the "at most 3" rule holds by construction.
+- **Bonus echoes** (0-2, `ch2_bonus_echoes`): `aisle` (moment M6) and `office` (cabinet opened). The second one is an assumption: the doc fixes the range but not the source.
+- **Trial mode:** `hints_allowed()` is false while the Trial is on (the hint button and the "Next step" line read it); `trial_off()` leaves the Trial (no stamp, no achievement); the 25-minute offer is `ArchiveLogic.trial_offer_due(idle_seconds)`, the caller measures the idle time. Achievements are returned by a new `RoomLogic.achievements()` hook that `GameState` unlocks on chapter completion.

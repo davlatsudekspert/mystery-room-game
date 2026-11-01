@@ -1,0 +1,134 @@
+{
+	"chapter": "ch2",
+	"logic": {
+		"inventory": [
+			"leyla_badge",
+			"index_card",
+			"personnel_file",
+			"pocket_receiver",
+			"tape_1996",
+			"tape_1997",
+			"strand_key"
+		],
+		"selected": "",
+		"state": {
+			"booth_open": true,
+			"canister": "",
+			"card_in_punch": false,
+			"card_shown": true,
+			"cat_drawer": 4,
+			"cat_group": 1,
+			"ch1_shards": 5,
+			"choice": "strand_key",
+			"clicks_heard": [
+				"tape_1996",
+				"tape_1997",
+				"tape_1998"
+			],
+			"complete": true,
+			"deck_speed": 1,
+			"deck_tape": "tape_1998",
+			"dest": 1,
+			"dial_input": "",
+			"echo_guided": true,
+			"echoes": [],
+			"file_delivered": true,
+			"film_seen": true,
+			"focus": 6,
+			"frame": 5,
+			"grille_open": true,
+			"has_lens": false,
+			"hatch_open": true,
+			"last_punch": [
+				0,
+				1,
+				1,
+				0,
+				0,
+				1,
+				0,
+				1
+			],
+			"ledger_open": true,
+			"locker_open": true,
+			"mark_recorded": true,
+			"port_left": "crystal_mark",
+			"port_right": "crystal_sign",
+			"pressure_ok": true,
+			"projector_on": false,
+			"punch_keys": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"reel_on_projector": true,
+			"reel_repaired": true,
+			"request_ok": true,
+			"rot_left": 4,
+			"rot_right": 2,
+			"seed": 8216,
+			"sign_recorded": true,
+			"slide_drawer": 2,
+			"slide_drawer_mark": true,
+			"slide_in": true,
+			"slide_on": true,
+			"slide_rot": 2,
+			"socket": "",
+			"splice": [
+				0,
+				2,
+				1,
+				3
+			],
+			"taken": {
+				"canister_file": true,
+				"canister_key": true,
+				"case_crystal_1": true,
+				"case_crystal_2": true,
+				"grille_reel": true,
+				"hatch_reel": true,
+				"index_card": true,
+				"ledger_reel": true,
+				"locker_receiver": true,
+				"slide_mark": true,
+				"splicer_reel": true
+			},
+			"v_clicks": [
+				1,
+				5,
+				7
+			],
+			"v_focus": 6,
+			"v_punch": 7,
+			"v_shadows": [
+				4,
+				2,
+				3,
+				1
+			],
+			"v_targets": [
+				7,
+				8
+			],
+			"v_vault": [
+				2,
+				4
+			],
+			"valves": [
+				3,
+				2,
+				2
+			],
+			"vault_open": true,
+			"vault_unlocked": true,
+			"wheel": 3,
+			"zoom_right": 4
+		},
+		"version": 1
+	}
+}

@@ -44,6 +44,12 @@ const ZOOM_STEPS := 5
 const ZOOM_TARGET := 3
 const WHEEL_TURNS := 3
 const ECHOES: Array[String] = ["catalogue", "stacks", "booth"]
+## The expansion (docs/CHAPTER2_EXPANSION.md): the stage a NEW game is built with. 0 = the 1.0 chapter, 1 = Stage A (lower
+## floor, gate G1), 2 = Stage A + B (7 rooms, N1-N10, G1 + G2; owner decision 2026-11-01: update 1.1 ships both). Set it to
+## 2 when the scene has the new rooms. Saves keep their own `exp_ver` / `stage`, so old saves always play the old flow.
+const EXPANSION_STAGE := 0
+const EXP_VER_LEGACY := 1
+const EXP_VER_CURRENT := 2
 const CRYSTALS: Array[String] = ["crystal_lens", "crystal_blank_1", "crystal_blank_2", "crystal_sign", "crystal_mark"]
 
 ## Receiver strength (0..5) per camera view for each hidden reel (docs P6 table).
@@ -67,6 +73,12 @@ const SPOTS := {
 	"case_crystal_1": {"item": "crystal_blank_1", "needs": "booth_open"},
 	"case_crystal_2": {"item": "crystal_blank_2", "needs": "booth_open"},
 	"slide_mark": {"item": "emblem_slide", "needs": "slide_drawer_mark"},
+	# the expansion
+	"pump_mallet": {"item": "mallet", "needs": "pump_open"},
+	"cell_cloth": {"item": "wipe_cloth", "needs": "pump_open"},
+	"counter_slips": {"item": "roll_slips", "needs": "gallery_open"},
+	"board_key": {"item": "pass_key", "needs": "board_ok"},
+	"cabinet_lamp": {"item": "projector_lamp", "needs": "cab_open"},
 }
 
 const PUZZLE_IDS: Array[String] = ["catalogue", "compressor", "punch", "dispatch", "locker", "hunt",
@@ -74,6 +86,7 @@ const PUZZLE_IDS: Array[String] = ["catalogue", "compressor", "punch", "dispatch
 
 
 func default_state() -> Dictionary:
+	var on := EXPANSION_STAGE >= 1
 	return {
 		"taken": {},
 		"has_lens": false, # Chapter 1 "take the lens": the crystal lens carries Strand's mark
@@ -134,6 +147,67 @@ func default_state() -> Dictionary:
 		"echoes": [],
 		"choice": "",
 		"complete": false,
+		# --- the expansion (docs/CHAPTER2_EXPANSION.md section 10). Defaults are NEW-game values; ArchiveLogic.from_dict
+		# turns a save without exp_ver into the old chapter.
+		"exp_ver": EXP_VER_CURRENT if on else EXP_VER_LEGACY,
+		"stage": EXPANSION_STAGE,
+		"room": "hall",
+		"rooms_seen": [], # rooms entered besides the hall
+		"threads_seen": [],
+		"moments_seen": [],
+		"bonus_echoes": [],
+		"mode": "normal", # "normal" | "trial"
+		"trial_dropped": false,
+		"crystal_home": "cold" if on else "case", # G1: where the blank crystals are
+		"crystals_available": not on,
+		"lamp_ok": EXPANSION_STAGE != 2, # G2: the projector lamp works (Stage A alone ships with it pre-satisfied)
+		"lamp_seen": false,
+		"panel_found": false, # N1
+		"n1_dial": "",
+		"pump_open": false,
+		"pipes": [0, 0, 0, 0, 0, 0], # N2
+		"thawed": false,
+		"sheets": [0, 0, 0, 0, 0, 0], # N3: rotation, flip of each of the 3 sheets
+		"cell_digits_ok": false,
+		"cold_wheels": [0, 0],
+		"cold_open": false,
+		"aisle_pos": [0, 1, 2, 3, 4], # N4
+		"crank_dir": [1, 1, 1, 1, 1],
+		"aisle": false,
+		"wiped": [0, 0, 0], # N5
+		"frost_seen": false,
+		"rings": [0, 0, 0], # N6
+		"chest_open": false,
+		"weights": [0, 0, 0, 0], # N7
+		"lift_ok": false,
+		"lift_floor": -1,
+		"wedge_out": false,
+		"board": [-1, -1, -1, -1, -1, -1], # N8: tag on each hook
+		"board_ok": false,
+		"pass_key": false,
+		"en_strip": -1, # N9
+		"en_zoom": 0,
+		"en_focus": 0,
+		"print_ok": false,
+		"cab_wheels": [0, 0, 0, 0], # N10
+		"cab_open": false,
+		# this game's own expansion answers (separate seed streams, ArchiveExpData.SALT_*)
+		"v_panel": 0,
+		"v_pipes": 0,
+		"v_glyph": [1, 2],
+		"v_sheets": [], # 3 strings of 121 cells (11 x 11), the sheets as printed
+		"v_sheet_target": [], # per sheet: rotation, flip that light the digits
+		"v_bay": 1,
+		"v_symbols": [0, 1, 2],
+		"v_chest_start": [0, 0, 0],
+		"v_load": 5,
+		"v_board": [0, 1, 2, 3, 4, 5],
+		"v_slips": [], # flat [type, a, b] triples
+		"v_strips": [0, 1, 2, 3],
+		"v_strip": 0,
+		"v_zoom": 1,
+		"v_pfocus": 4,
+		"v_digits": [0, 0, 0, 0],
 	}
 
 
@@ -147,6 +221,8 @@ func setup_from_profile(choices: Dictionary) -> void:
 	inventory = ["leyla_badge"]
 	if state["has_lens"]:
 		inventory.append("crystal_lens")
+	if exp_active():
+		inventory.append("floor_plan") # the plan of the building, in the bag from the start
 
 
 func reset() -> void:
@@ -162,8 +238,7 @@ func can_take(spot: String) -> bool:
 		return _no_card_anywhere()
 	if state["taken"].get(spot, false):
 		return false
-	var need: String = SPOTS[spot]["needs"]
-	return need == "" or bool(state[need])
+	return _need_ok(spot, SPOTS[spot]["needs"])
 
 
 func take(spot: String) -> Array[String]:
@@ -172,6 +247,7 @@ func take(spot: String) -> Array[String]:
 		if spot != "tray_card": # the tray holds an endless stack of blank request cards
 			state["taken"][spot] = true
 		_add_item(SPOTS[spot]["item"])
+		_on_taken(spot)
 		if spot == "index_card":
 			_emit("solved:catalogue")
 	else:
@@ -190,6 +266,8 @@ const TAPE_ORDER: Array[String] = ["tape_1996", "tape_1997", "tape_1998"]
 
 func apply_seed(seed: int) -> void:
 	state["seed"] = seed
+	if exp_active():
+		_apply_exp_seed(seed) # its own streams: no 1.0 answer of any seed moves
 	if seed == 0:
 		return # the canonical answers from default_state()
 	var rng := RandomNumberGenerator.new()
@@ -297,7 +375,7 @@ func hint_args(goal: String, level: int) -> Array:
 			return [", ".join(keys), " ".join(punch_code().map(func(b: Variant) -> String: return str(int(b))))]
 		"c2_align":
 			return [vault_rot_target(), vault_zoom_target()]
-	return []
+	return _exp_hint_args(goal)
 
 
 # ================================================================== P1 card catalogue
@@ -452,6 +530,8 @@ func receiver_strength(view: String) -> int:
 		if _tape_found(tape):
 			continue
 		best = maxi(best, int((RECEIVER_TABLE[tape] as Dictionary).get(view, 0)))
+	if exp_active():
+		best = maxi(best, _cell_door_strength(view)) # N1: the warm east wall, after the last reel
 	return best
 
 
@@ -575,6 +655,10 @@ func toggle_projector() -> Array[String]:
 	_begin()
 	if not state["booth_open"]:
 		_emit("nothing_happens")
+		return _end()
+	if not state["lamp_ok"]: # G2: the projector's lamp is dead until the spare from the Director's cabinet is in
+		state["lamp_seen"] = true
+		_emit("lamp_dead")
 		return _end()
 	state["projector_on"] = not state["projector_on"]
 	_emit("projector_on" if state["projector_on"] else "projector_off")
@@ -829,6 +913,11 @@ func use_item_on(item: String, target: String) -> Array[String]:
 			_remove_item("request_card")
 			state["request_ok"] = false
 			_emit("card_returned")
+		["projector_lamp", "projector"]:
+			_remove_item("projector_lamp")
+			state["lamp_ok"] = true
+			_emit("lamp_installed")
+			_emit("solved:lamp")
 		["emblem_slide", "slide_projector"]:
 			_remove_item("emblem_slide")
 			state["slide_in"] = true
@@ -911,7 +1000,15 @@ func choose_ending(option: String) -> Array[String]:
 
 # ================================================================== chapter hooks
 func puzzle_ids() -> Array[String]:
-	return PUZZLE_IDS
+	var out: Array[String] = []
+	out.assign(PUZZLE_IDS)
+	if exp_stage() >= 1:
+		for id in ["warm", "pipes", "light", "aisle", "frost", "chest"]:
+			out.append(id)
+	if exp_stage() >= 2:
+		for id in ["lift", "board", "print", "cabinet"]:
+			out.append(id)
+	return out
 
 
 func solved_count() -> int:
@@ -922,6 +1019,11 @@ func solved_count() -> int:
 		(state["clicks_heard"] as Array).size() == TAPES.size(), state["booth_open"], state["reel_repaired"],
 		state["film_seen"], state["sign_recorded"], state["vault_unlocked"],
 	]
+	if exp_stage() >= 1:
+		flags.append_array([state["pump_open"], state["thawed"], state["cell_digits_ok"] or state["cold_open"],
+			state["aisle"], state["frost_seen"], state["chest_open"]])
+	if exp_stage() >= 2:
+		flags.append_array([state["lift_ok"], state["board_ok"], state["print_ok"], state["cab_open"]])
 	var n := 0
 	for f: bool in flags:
 		if f:
@@ -930,6 +1032,8 @@ func solved_count() -> int:
 
 
 func hint_goal() -> String:
+	if not hints_allowed():
+		return "" # Archivist's Trial: no hints
 	return ArchiveHints.current_goal(self)
 
 
@@ -941,12 +1045,18 @@ func epilogue_keys() -> Array[String]:
 	var out: Array[String] = ["epi2.42nd", "epi2.strand_key" if state["choice"] == "strand_key" else "epi2.leyla_key"]
 	if (state["echoes"] as Array).size() == ECHOES.size():
 		out.append("epi2.echoes")
+	if trial_stamp() and state["complete"]:
+		out.append("epi2.trial")
 	out.append("epi2.recorder")
 	return out
 
 
 func profile_choices() -> Dictionary:
-	return {"ch2_key": state["choice"], "ch2_echoes": (state["echoes"] as Array).size()}
+	var out := {"ch2_key": state["choice"], "ch2_echoes": (state["echoes"] as Array).size()}
+	if exp_active(): # Chapters 3-4 read these only through choices.get(..., default)
+		out["ch2_trial"] = trial_stamp()
+		out["ch2_bonus_echoes"] = (state["bonus_echoes"] as Array).size()
+	return out
 
 
 func item_desc_key(id: String) -> String:
@@ -966,6 +1076,966 @@ func intro_keys() -> Array[String]:
 ## The first goal, said once when the intro hands over (the badge in the inventory carries her number).
 func intro_caption_key() -> String:
 	return "cap2.goal"
+
+
+# ================================================================== expansion: lifecycle, migration, stage
+## docs/CHAPTER2_EXPANSION.md. EXPANSION_STAGE is the stage a NEW game is built with: 0 = the 1.0 chapter (no new
+## floors, no new gates), 1 = Stage A (lower floor, G1), 2 = Stage A + B (update 1.1 ships both). The scene agent sets
+## it to 2 when the new rooms exist in the scene. A saved game keeps its own `exp_ver` / `stage`.
+func exp_active() -> bool:
+	return int(state["exp_ver"]) >= EXP_VER_CURRENT
+
+
+## 0 for a legacy game, else the stage this game was started with.
+func exp_stage() -> int:
+	return int(state["stage"]) if exp_active() else 0
+
+
+## Turn this (fresh) game into an expansion game of `stage` (1 or 2). Used by new games and the tests.
+func begin_expansion(stage: int = 2) -> void:
+	state["exp_ver"] = EXP_VER_CURRENT
+	state["stage"] = clampi(stage, 1, 2)
+	state["crystal_home"] = "cold"
+	state["crystals_available"] = false
+	state["lamp_ok"] = int(state["stage"]) < 2 # Stage A alone ships with G2 pre-satisfied
+	if exp_active() and not inventory.has("floor_plan"):
+		inventory.append("floor_plan")
+
+
+## Turn this game into the 1.0 chapter: what an old save becomes when it is loaded. No new gate, no new floor.
+func make_legacy() -> void:
+	state["exp_ver"] = EXP_VER_LEGACY
+	state["stage"] = 0
+	state["crystal_home"] = "case"
+	state["crystals_available"] = true
+	state["lamp_ok"] = true
+	inventory.erase("floor_plan")
+
+
+## A new expansion game as the app creates it: profile choices, then this game's seed.
+static func new_expanded(game_seed: int = 0, stage: int = 2, choices: Dictionary = {}) -> ArchiveLogic:
+	var l := ArchiveLogic.new()
+	l.begin_expansion(stage)
+	l.setup_from_profile(choices)
+	l.apply_seed(game_seed)
+	return l
+
+
+## A game exactly as 1.0 played it (the same flow an old save keeps).
+static func new_legacy(choices: Dictionary = {}) -> ArchiveLogic:
+	var l := ArchiveLogic.new()
+	l.make_legacy()
+	l.setup_from_profile(choices)
+	return l
+
+
+func from_dict(d: Dictionary) -> bool:
+	var ok := super(d)
+	# A save without exp_ver comes from before the expansion: the missing keys took NEW-game defaults, which would
+	# drop it into gates it never met. Make it the old chapter (docs/CHAPTER2_EXPANSION.md section 10).
+	if ok and not (d["state"] as Dictionary).has("exp_ver"):
+		make_legacy()
+	return ok
+
+
+func _end() -> Array[String]:
+	if exp_active():
+		_refresh_threads()
+	return super()
+
+
+func _need_ok(spot: String, need: String) -> bool:
+	if need == "":
+		return true
+	if spot == "case_crystal_1" or spot == "case_crystal_2":
+		# G1: the blank crystals are in the Cold Store chest (new games) or in the booth's case (old saves)
+		return bool(state["crystals_available"]) and (state["crystal_home"] != "case" or bool(state["booth_open"]))
+	if need == "gallery_open":
+		return room_open("gallery")
+	return bool(state[need])
+
+
+func _on_taken(spot: String) -> void:
+	if spot == "board_key":
+		state["pass_key"] = true
+
+
+# ================================================================== expansion: variants (separate seed streams)
+func _apply_exp_seed(game_seed: int) -> void:
+	var D := ArchiveExpData
+	state["v_panel"] = D.stream(game_seed, D.SALT_PANEL).randi_range(0, 2)
+	state["v_pipes"] = D.stream(game_seed, D.SALT_PIPES).randi_range(0, D.PIPE_GRAPHS.size() - 1)
+	var lt := D.gen_light_table(D.stream(game_seed, D.SALT_GLYPH))
+	state["v_glyph"] = lt["digits"]
+	state["v_sheets"] = lt["sheets"]
+	state["v_sheet_target"] = lt["target"]
+	state["sheets"] = lt["start"]
+	var pool := D.aisle_pool()
+	var pick: Array = pool[D.stream(game_seed, D.SALT_BAY).randi_range(0, pool.size() - 1)]
+	state["v_bay"] = int(pick[0])
+	state["aisle_pos"] = (pick[1] as Array).duplicate()
+	var sr := D.stream(game_seed, D.SALT_SYMBOLS)
+	var syms: Array = [0, 1, 2, 3, 4, 5]
+	D._shuffle(syms, sr)
+	state["v_symbols"] = syms.slice(0, 3)
+	var starts := D.chest_starts(state["v_symbols"])
+	state["v_chest_start"] = (starts[D.stream(game_seed, D.SALT_CHEST).randi_range(0, starts.size() - 1)] as Array).duplicate()
+	state["rings"] = (state["v_chest_start"] as Array).duplicate()
+	state["v_load"] = D.LOADS[D.stream(game_seed, D.SALT_LOAD).randi_range(0, D.LOADS.size() - 1)]
+	var bd := D.gen_board(D.stream(game_seed, D.SALT_BOARD))
+	state["v_board"] = bd["board"]
+	var flat: Array = []
+	for s: Array in bd["slips"]:
+		flat.append_array(s)
+	state["v_slips"] = flat
+	var pr := D.stream(game_seed, D.SALT_PRINT)
+	var strips: Array = [0, 1, 2, 3, 4, 5]
+	D._shuffle(strips, pr)
+	state["v_strips"] = strips.slice(0, D.STRIPS)
+	state["v_strip"] = pr.randi_range(0, D.STRIPS - 1)
+	state["v_zoom"] = pr.randi_range(1, D.ENL_ZOOM_STEPS - 2)
+	state["v_pfocus"] = pr.randi_range(2, D.ENL_FOCUS_STEPS - 3)
+	var digits: Array = []
+	for _i in 4:
+		digits.append(pr.randi_range(0, 9))
+	if digits[0] == digits[1] and digits[1] == digits[2] and digits[2] == digits[3]:
+		digits[3] = (int(digits[3]) + 1) % 10
+	state["v_digits"] = digits
+
+
+# ================================================================== expansion: rooms, floor plan, threads
+func room_ids() -> Array[String]:
+	var out: Array[String] = []
+	for r: Dictionary in ArchiveExpData.ROOMS:
+		if int(r["stage"]) <= maxi(exp_stage(), 1):
+			out.append(r["id"])
+	return out
+
+
+func room_open(id: String) -> bool:
+	if id == "hall":
+		return true
+	if not exp_active() or not room_ids().has(id):
+		return false
+	match id:
+		"pump", "cell":
+			return bool(state["pump_open"])
+		"cold":
+			return bool(state["cold_open"])
+		"gallery":
+			return bool(state["lift_ok"]) or bool(state["wedge_out"])
+		"plate":
+			return room_open("gallery")
+		"office":
+			return bool(state["pass_key"])
+	return false
+
+
+func room_seen(id: String) -> bool:
+	return id == "hall" or (state["rooms_seen"] as Array).has(id)
+
+
+## Walk through the door into a room. A locked room refuses; the first visit is always on foot.
+func enter_room(id: String) -> Array[String]:
+	_begin()
+	if not room_open(id):
+		_emit("room_locked:" + id)
+		return _end()
+	_enter(id)
+	return _end()
+
+
+## Quick travel from the floor plan: only to rooms already entered, never into a locked room.
+func travel_to(id: String) -> Array[String]:
+	_begin()
+	if not room_seen(id) or not room_open(id):
+		_emit("travel_refused:" + id)
+		return _end()
+	_enter(id)
+	_emit("travel:" + id)
+	return _end()
+
+
+func can_travel(id: String) -> bool:
+	return room_seen(id) and room_open(id) and state["room"] != id
+
+
+func _enter(id: String) -> void:
+	state["room"] = id
+	var first := not room_seen(id)
+	if first:
+		(state["rooms_seen"] as Array).append(id)
+		_emit("room_new:" + id)
+	_emit("room:" + id)
+	match id:
+		"pump":
+			_moment("m1")
+		"gallery":
+			_moment("m4")
+		"cold":
+			if state["aisle"]:
+				_moment("m5")
+
+
+## Reaction moments fire once per save (section 11). The scene plays them when no caption or mechanism is busy.
+func _moment(id: String) -> void:
+	var seen: Array = state["moments_seen"]
+	if not seen.has(id):
+		seen.append(id)
+		_emit("moment:" + id)
+
+
+## For moments the scene triggers from a camera view: m2 = the first look at the Cell door from the Pump Room.
+func try_moment(id: String) -> Array[String]:
+	_begin()
+	if exp_active() and id == "m2" and state["pump_open"] and not room_seen("cell"):
+		_moment("m2")
+	return _end()
+
+
+func moment_seen(id: String) -> bool:
+	return (state["moments_seen"] as Array).has(id)
+
+
+## (room, seen, done) triples: a lock or pick-up in `room` that the player has met and not finished.
+func _pending_items() -> Array:
+	var taken: Dictionary = state["taken"]
+	var s := state
+	var st := exp_stage()
+	var items: Array = [
+		["hall", coda_heard(), s["pump_open"]], # the warm east wall
+		["hall", s["lamp_seen"] and st >= 2, s["lamp_ok"]], # the dead projector lamp
+		["hall", has_item("projector_lamp"), s["lamp_ok"]], # the lamp is in the bag, not yet in the projector
+		["pump", room_seen("pump"), s["thawed"]], # the manifold
+		["pump", room_seen("pump") and st >= 2 and s["thawed"], s["lift_ok"]], # the book lift
+		["pump", room_seen("pump"), taken.get("pump_mallet", false)],
+		["cell", room_seen("cell"), s["cell_digits_ok"] or s["cold_open"]], # the light table
+		["cell", room_seen("cell"), s["cold_open"]], # the frozen door
+		["cell", room_seen("cell"), taken.get("cell_cloth", false)],
+		["cold", room_seen("cold"), s["aisle"]],
+		["cold", room_seen("cold") and s["aisle"], s["frost_seen"]],
+		["cold", room_seen("cold") and s["aisle"], s["chest_open"]],
+		["cold", s["chest_open"], taken.get("case_crystal_1", false) or taken.get("case_crystal_2", false)],
+		["gallery", room_seen("gallery"), s["board_ok"]],
+		["gallery", room_seen("gallery"), taken.get("counter_slips", false)],
+		["gallery", s["board_ok"], taken.get("board_key", false)],
+		["plate", room_seen("plate"), s["print_ok"]],
+		["office", room_seen("office"), s["cab_open"]],
+		["office", s["cab_open"], taken.get("cabinet_lamp", false)],
+	]
+	return items
+
+
+## True when the room holds something the player has seen and not finished. Says THAT, never what: nothing shows
+## before the clue's lock has been met, and the marker is computed from state only.
+func room_pending(id: String) -> bool:
+	if not exp_active():
+		return false
+	for it: Array in _pending_items():
+		if it[0] == id and bool(it[1]) and not bool(it[2]):
+			return true
+	return false
+
+
+## "locked" | "new" (open, never entered) | "visited".
+func room_status(id: String) -> String:
+	if not room_open(id):
+		return "locked"
+	return "visited" if room_seen(id) else "new"
+
+
+## The floor plan the UI draws: floors -1/0/+1, a tile per room.
+func plan_data() -> Dictionary:
+	var rooms: Array[Dictionary] = []
+	for r: Dictionary in ArchiveExpData.ROOMS:
+		var id: String = r["id"]
+		if int(r["stage"]) > maxi(exp_stage(), 1):
+			continue
+		rooms.append({"id": id, "floor": r["floor"], "name": r["name"], "status": room_status(id),
+			"pending": room_pending(id), "here": state["room"] == id, "travel": can_travel(id)})
+	return {"floors": ArchiveExpData.FLOORS, "rooms": rooms, "here": state["room"], "threads": open_threads()}
+
+
+func _thread_seen(id: String) -> bool:
+	match id:
+		"warm_panel":
+			return coda_heard()
+		"blocked_stair":
+			return coda_heard() and exp_stage() >= 2
+		"frozen_door":
+			return room_seen("cell")
+		"case_card":
+			return bool(state["booth_open"])
+		"dead_lamp":
+			return bool(state["lamp_seen"]) and exp_stage() >= 2
+		"pass_door":
+			return room_seen("gallery")
+		"cabinet_symbol":
+			return room_seen("office")
+	return false
+
+
+func _thread_closed(id: String) -> bool:
+	match id:
+		"warm_panel":
+			return bool(state["pump_open"])
+		"blocked_stair":
+			return bool(state["wedge_out"])
+		"frozen_door":
+			return bool(state["cold_open"])
+		"case_card":
+			return bool(state["crystals_available"])
+		"dead_lamp":
+			return bool(state["lamp_ok"])
+		"pass_door":
+			return bool(state["pass_key"])
+		"cabinet_symbol":
+			return bool(state["print_ok"])
+	return true
+
+
+## A thread joins the list when first seen, but never as a 4th open one: it waits until one closes.
+func _refresh_threads() -> void:
+	var seen: Array = state["threads_seen"]
+	var open := 0
+	for t: String in seen:
+		if not _thread_closed(t):
+			open += 1
+	for t: Dictionary in ArchiveExpData.THREADS:
+		var id: String = t["id"]
+		if seen.has(id) or open >= ArchiveExpData.MAX_OPEN_THREADS:
+			continue
+		if _thread_seen(id) and not _thread_closed(id):
+			seen.append(id)
+			open += 1
+		elif _thread_seen(id) and _thread_closed(id):
+			seen.append(id) # met and closed in one go: never listed
+
+
+## The notebook page "Open threads": [{id, room, name}], at most 3, no solution text.
+func open_threads() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for id: String in state["threads_seen"]:
+		if _thread_closed(id):
+			continue
+		for t: Dictionary in ArchiveExpData.THREADS:
+			if t["id"] == id:
+				out.append({"id": id, "room": t["room"], "name": t["name"]})
+	return out
+
+
+# ================================================================== N1 Warm Wall
+func coda_heard() -> bool:
+	return exp_active() and (state["clicks_heard"] as Array).size() == TAPES.size()
+
+
+func panel_letter() -> String:
+	return ArchiveExpData.PANEL_LETTERS[int(state["v_panel"])]
+
+
+## Receiver strength on a wall panel view ("east_panel_a" .. "_c"); 0 when the door is not the target any more.
+func _cell_door_strength(view: String) -> int:
+	if not coda_heard() or state["pump_open"]:
+		return 0
+	if view.begins_with("east_panel_"):
+		var i := ArchiveExpData.PANEL_LETTERS.find(view.substr(11).to_upper())
+		return ArchiveExpData.panel_strength(i, int(state["v_panel"])) if i >= 0 else 0
+	return int(ArchiveExpData.CELL_DOOR_VIEWS.get(view, 0))
+
+
+func n1_open_panel(i: int) -> Array[String]:
+	_begin()
+	if not coda_heard() or state["pump_open"] or state["panel_found"] or i < 0 or i > 2:
+		_emit("nothing_happens")
+	elif i == int(state["v_panel"]):
+		state["panel_found"] = true
+		_emit("panel_opened:%d" % i)
+	else:
+		_emit("panel_cold:%d" % i)
+	return _end()
+
+
+func n1_dial(d: int) -> Array[String]:
+	_begin()
+	if not state["panel_found"] or state["pump_open"] or d < 0 or d > 9:
+		_emit("nothing_happens")
+		return _end()
+	state["n1_dial"] = str(state["n1_dial"]) + str(d)
+	_emit("dial_n1:%d" % d)
+	if str(state["n1_dial"]).length() >= BADGE_NO.length():
+		if state["n1_dial"] == BADGE_NO:
+			state["pump_open"] = true
+			_emit("pump_opened")
+			_emit("solved:warm")
+		else:
+			_emit("n1_dial_wrong")
+		state["n1_dial"] = ""
+	return _end()
+
+
+# ================================================================== N2 Pipe routing
+func pipe_graph() -> Array:
+	return ArchiveExpData.PIPE_GRAPHS[int(state["v_pipes"])]
+
+
+func pipes_mask() -> int:
+	var m := 0
+	for i in 6:
+		m |= int(state["pipes"][i]) << i
+	return m
+
+
+## Nodes the pressure reaches now (0 S, 1 coil, 2 hazard vent, 3-5 junctions).
+func pipes_reach() -> Array[int]:
+	return ArchiveExpData.pipe_reach(pipe_graph(), pipes_mask())
+
+
+func pipe_solution() -> Array[int]:
+	return ArchiveExpData.pipe_solution(int(state["v_pipes"]))
+
+
+func n2_toggle_valve(i: int) -> Array[String]:
+	_begin()
+	if not state["pump_open"] or i < 0 or i > 5:
+		_emit("nothing_happens")
+		return _end()
+	if state["thawed"]:
+		_emit("valves_locked_n2")
+		return _end()
+	state["pipes"][i] = 1 - int(state["pipes"][i])
+	_emit("pipe:%d:%d" % [i, int(state["pipes"][i])])
+	var reach := pipes_reach()
+	if reach.has(ArchiveExpData.NODE_H):
+		_emit("pipes_hazard")
+	elif reach.has(ArchiveExpData.NODE_C):
+		state["thawed"] = true
+		_emit("thawed")
+		_emit("solved:pipes")
+		_check_cold()
+	return _end()
+
+
+## The mallet probe: tap a pipe segment and hear whether it is full, dead or cracked.
+func n2_tap_pipe(seg: int) -> Array[String]:
+	_begin()
+	if not state["pump_open"] or seg < 0 or seg > 5:
+		_emit("nothing_happens")
+	elif not has_item("mallet"):
+		_emit("need_mallet")
+	else:
+		_emit("tap:%d:%s" % [seg, ArchiveExpData.pipe_tap(pipe_graph(), pipes_mask(), seg)])
+	return _end()
+
+
+# ================================================================== N3 Light table
+func n3_sheet(i: int) -> PackedByteArray:
+	return ArchiveExpData.string_to_bits(str(state["v_sheets"][i]))
+
+
+## Sheet i as it lies on the box now (11 x 11): mirrored if flipped, then turned.
+func n3_turned(i: int) -> PackedByteArray:
+	return ArchiveExpData.sheet_transform(n3_sheet(i), int(state["sheets"][2 * i]), int(state["sheets"][2 * i + 1]))
+
+
+func n3_glyph() -> PackedByteArray:
+	return ArchiveExpData.glyph_window(int(state["v_glyph"][0]), int(state["v_glyph"][1]))
+
+
+## The 77 window cells that are lit now (row-major, 7 rows x 11 columns).
+func n3_lit() -> PackedByteArray:
+	return ArchiveExpData.light(n3_turned(0), n3_turned(1), n3_turned(2))
+
+
+## [lit cells that belong to the digits, lit cells that do not, cells of the digits]: the live feedback.
+func n3_progress() -> Array[int]:
+	var lit := n3_lit()
+	var g := n3_glyph()
+	var good := 0
+	var stray := 0
+	var total := 0
+	for i in lit.size():
+		total += int(g[i])
+		if lit[i] == 1:
+			if g[i] == 1:
+				good += 1
+			else:
+				stray += 1
+	return [good, stray, total]
+
+
+func n3_turn_sheet(i: int) -> Array[String]:
+	return _n3_change(i, true)
+
+
+func n3_flip_sheet(i: int) -> Array[String]:
+	return _n3_change(i, false)
+
+
+func _n3_change(i: int, turn: bool) -> Array[String]:
+	_begin()
+	if not state["pump_open"] or i < 0 or i > 2:
+		_emit("nothing_happens")
+		return _end()
+	if state["cell_digits_ok"]:
+		_emit("sheets_locked")
+		return _end()
+	var sh: Array = state["sheets"]
+	if turn:
+		sh[2 * i] = (int(sh[2 * i]) + 1) % 4
+	else:
+		sh[2 * i + 1] = 1 - int(sh[2 * i + 1])
+	_emit("sheet:%d:%d:%d" % [i, int(sh[2 * i]), int(sh[2 * i + 1])])
+	var p := n3_progress()
+	_emit("lit:%d:%d" % [p[0], p[1]])
+	if n3_lit() == n3_glyph():
+		state["cell_digits_ok"] = true
+		_emit("light_digits")
+		_emit("solved:light")
+	return _end()
+
+
+## The two digits the light spells (known to the player once the table is solved).
+func light_digits() -> Array:
+	return (state["v_glyph"] as Array).duplicate()
+
+
+## The Cold Store door: two wheels (set to the light table's digits) and the heating coil behind the ice.
+func cold_wheel(i: int, delta: int = 1) -> Array[String]:
+	_begin()
+	if not state["pump_open"] or state["cold_open"] or i < 0 or i > 1:
+		_emit("nothing_happens")
+		return _end()
+	state["cold_wheels"][i] = posmod(int(state["cold_wheels"][i]) + delta, 10)
+	_emit("cold_wheel:%d:%d" % [i, int(state["cold_wheels"][i])])
+	_check_cold()
+	return _end()
+
+
+func _check_cold() -> void:
+	if state["cold_open"] or not _arr_eq(state["cold_wheels"], state["v_glyph"]):
+		return
+	if state["thawed"]:
+		state["cold_open"] = true
+		_emit("cold_opened")
+		_emit("solved:cold_door")
+	else:
+		_emit("cold_frozen") # the digits are right; the ice is not melted yet
+
+
+# ================================================================== N4 Carriage aisle
+func aisle_bay() -> int:
+	return int(state["v_bay"])
+
+
+func aisle_route_from_here() -> Array:
+	return ArchiveExpData.aisle_route(state["aisle_pos"], aisle_bay())
+
+
+## A crank slides its carriage one slot into a free neighbouring slot. dir 0 = the way the crank last turned (it
+## reverses after a clunk), -1 / +1 = an explicit direction.
+func n4_crank(k: int, dir: int = 0) -> Array[String]:
+	_begin()
+	if not state["cold_open"] or k < 0 or k >= ArchiveExpData.CARRIAGES:
+		_emit("nothing_happens")
+		return _end()
+	if state["aisle"]:
+		_emit("cranks_locked")
+		return _end()
+	var pos: Array = state["aisle_pos"]
+	var want := dir if dir != 0 else int(state["crank_dir"][k])
+	var target := int(pos[k]) + want
+	if target < 0 or target >= ArchiveExpData.AISLE_SLOTS or pos.has(target):
+		state["crank_dir"][k] = -want
+		_emit("clunk:%d" % k)
+		return _end()
+	var before: Array = []
+	for b in range(1, ArchiveExpData.CARRIAGES):
+		before.append(ArchiveExpData.aisle_open_at(pos, b))
+	pos[k] = target
+	state["crank_dir"][k] = want
+	_emit("crank:%d:%d" % [k, target])
+	for b in range(1, ArchiveExpData.CARRIAGES):
+		if ArchiveExpData.aisle_open_at(pos, b) and not before[b - 1] and b != aisle_bay():
+			_emit("aisle_lore:%d" % b) # a wrong aisle: other shelves, lore cans
+	if ArchiveExpData.aisle_open_at(pos, aisle_bay()):
+		state["aisle"] = true
+		_emit("aisle_found")
+		_emit("solved:aisle")
+		_moment("m6")
+		_bonus_echo("aisle")
+	return _end()
+
+
+func _bonus_echo(id: String) -> void:
+	var e: Array = state["bonus_echoes"]
+	if not e.has(id) and e.size() < 2:
+		e.append(id)
+		_emit("bonus_echo:" + id)
+
+
+# ================================================================== N5 Frost window
+func frost_symbols() -> Array:
+	return (state["v_symbols"] as Array).duplicate()
+
+
+## Wipe a band with the cloth (a tap works as well as a drag).
+func n5_wipe(band: int) -> Array[String]:
+	_begin()
+	if not state["cold_open"] or band < 0 or band > 2:
+		_emit("nothing_happens")
+		return _end()
+	if not state["aisle"]:
+		_emit("need_aisle")
+		return _end()
+	if not has_item("wipe_cloth"):
+		_emit("need_cloth")
+		return _end()
+	if int(state["wiped"][band]) == 1:
+		_emit("band_clear:%d" % band)
+		return _end()
+	var first := not (state["wiped"] as Array).has(1)
+	state["wiped"][band] = 1
+	_emit("band_wiped:%d:%d" % [band, int(state["v_symbols"][band])])
+	if first:
+		_moment("m3")
+	if not (state["wiped"] as Array).has(0):
+		state["frost_seen"] = true
+		_add_item("frost_sketch")
+		_emit("frost_done")
+		_emit("solved:frost")
+	return _end()
+
+
+# ================================================================== N6 Chest rings
+func chest_target() -> Array:
+	return frost_symbols()
+
+
+func chest_presses() -> Array:
+	return ArchiveExpData.ring_counts(state["rings"], chest_target())
+
+
+func n6_turn_ring(i: int) -> Array[String]:
+	_begin()
+	if i < 0 or i >= ArchiveExpData.RINGS or not state["cold_open"] or state["chest_open"]:
+		_emit("nothing_happens")
+		return _end()
+	if not state["aisle"]:
+		_emit("chest_sealed")
+		return _end()
+	state["rings"] = ArchiveExpData.ring_press(state["rings"], i)
+	_emit("ring:%d:%d" % [i, int(state["rings"][i])])
+	if _arr_eq(state["rings"], chest_target()):
+		state["chest_open"] = true
+		state["crystals_available"] = true
+		_emit("chest_opened")
+		_emit("solved:chest")
+	return _end()
+
+
+# ================================================================== N7 Book-lift counterweight (Stage B)
+func lift_load() -> int:
+	return int(state["v_load"])
+
+
+func counterweight() -> int:
+	return ArchiveExpData.weights_sum(state["weights"])
+
+
+func n7_toggle_weight(i: int) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or i < 0 or i > 3:
+		_emit("nothing_happens")
+		return _end()
+	if not state["thawed"]:
+		_emit("no_pressure")
+		return _end()
+	if state["lift_ok"]:
+		_emit("weights_locked")
+		return _end()
+	state["weights"][i] = 1 - int(state["weights"][i])
+	_emit("weight:%d:%d" % [i, int(state["weights"][i])])
+	var sum := counterweight()
+	if sum == lift_load():
+		state["lift_ok"] = true
+		_emit("lift_balanced")
+		_emit("solved:lift")
+	else:
+		_emit("counter_heavy" if sum > lift_load() else "counter_light")
+	return _end()
+
+
+## The selector: floors -1 / 0 / +1 (flask, book, lamp pictograms). Works once the cage is balanced.
+func n7_call(floor_no: int) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or not ArchiveExpData.LIFT_FLOORS.has(floor_no):
+		_emit("nothing_happens")
+	elif not state["lift_ok"]:
+		_emit("lift_stuck")
+	else:
+		state["lift_floor"] = floor_no
+		_emit("lift_moved:%d" % floor_no)
+	return _end()
+
+
+## The pin of the wedged ladder, pulled from the Gallery side (a beat, not a puzzle): the spiral stair opens.
+func pull_wedge() -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or not room_seen("gallery") or state["wedge_out"]:
+		_emit("nothing_happens")
+	else:
+		state["wedge_out"] = true
+		_emit("wedge_out")
+	return _end()
+
+
+# ================================================================== N8 Roll-call board (Stage B)
+## The slips as [[type, a, b], ...].
+func board_slips() -> Array:
+	var out: Array = []
+	var flat: Array = state["v_slips"]
+	for i in range(0, flat.size() - 2, 3):
+		out.append([int(flat[i]), int(flat[i + 1]), int(flat[i + 2])])
+	return out
+
+
+## Per slip: 1 true, 0 false, -1 not decided yet (a tag it names is not hung).
+func board_slip_status() -> Array:
+	var h := ArchiveExpData.hooks_of(state["board"])
+	var out: Array = []
+	for s: Array in board_slips():
+		var needs: Array[int] = [int(s[1])]
+		if int(s[0]) in [ArchiveExpData.SLIP_LEFT, ArchiveExpData.SLIP_NEXT]:
+			needs.append(int(s[2]))
+		var known := true
+		for t in needs:
+			if int(h[t]) < 0:
+				known = false
+		out.append(-1 if not known else (1 if ArchiveExpData.slip_true(s, h) else 0))
+	return out
+
+
+func n8_hang(tag: int, hook: int) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or not room_seen("gallery") or state["board_ok"] or tag < 0 or tag >= ArchiveExpData.TAGS \
+			or hook < 0 or hook >= ArchiveExpData.HOOKS:
+		_emit("nothing_happens")
+		return _end()
+	var b: Array = state["board"]
+	var from := b.find(tag)
+	if from == hook:
+		_emit("nothing_happens")
+		return _end()
+	var displaced := int(b[hook])
+	if from >= 0:
+		b[from] = displaced # a displaced tag takes the old hook (or goes back to the tray)
+	b[hook] = tag
+	_emit("tag_hung:%d:%d" % [tag, hook])
+	if not b.has(-1):
+		if not board_slip_status().has(0):
+			state["board_ok"] = true
+			_emit("board_ok")
+			_emit("solved:board")
+		else:
+			_emit("board_wrong")
+	return _end()
+
+
+func n8_lift_tag(hook: int) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or state["board_ok"] or hook < 0 or hook >= ArchiveExpData.HOOKS or int(state["board"][hook]) < 0:
+		_emit("nothing_happens")
+		return _end()
+	state["board"][hook] = -1
+	_emit("tag_lifted:%d" % hook)
+	return _end()
+
+
+# ================================================================== N9 Enlarger (Stage B)
+func cabinet_label() -> int:
+	return int(state["v_strips"][int(state["v_strip"])])
+
+
+## What the lens throws on the paper now: {"strip": symbol or -1, "sharp": bool, "sized": bool, "digits": bool}.
+func enlarger_image() -> Dictionary:
+	var sharp := int(state["en_focus"]) == int(state["v_pfocus"])
+	var sized := int(state["en_zoom"]) == int(state["v_zoom"])
+	var strip := int(state["en_strip"])
+	return {"strip": -1 if strip < 0 else int(state["v_strips"][strip]), "sharp": sharp, "sized": sized,
+		"digits": strip == int(state["v_strip"]) and sharp and sized}
+
+
+func n9_load_strip(i: int) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or not room_open("plate") or i < 0 or i >= ArchiveExpData.STRIPS:
+		_emit("nothing_happens")
+		return _end()
+	state["en_strip"] = i
+	_emit("strip_loaded:%d" % i)
+	_check_print()
+	return _end()
+
+
+func n9_zoom(delta: int) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or not room_open("plate"):
+		_emit("nothing_happens")
+		return _end()
+	state["en_zoom"] = clampi(int(state["en_zoom"]) + delta, 0, ArchiveExpData.ENL_ZOOM_STEPS - 1)
+	_emit("enl_zoom:%d" % int(state["en_zoom"]))
+	_check_print()
+	return _end()
+
+
+func n9_focus(delta: int) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or not room_open("plate"):
+		_emit("nothing_happens")
+		return _end()
+	state["en_focus"] = clampi(int(state["en_focus"]) + delta, 0, ArchiveExpData.ENL_FOCUS_STEPS - 1)
+	_emit("enl_focus:%d" % int(state["en_focus"]))
+	_check_print()
+	return _end()
+
+
+func _check_print() -> void:
+	if int(state["en_strip"]) < 0:
+		return
+	var img := enlarger_image()
+	_emit("print_view:%d:%d" % [int(img["sharp"]), int(img["sized"])])
+	if not (img["sharp"] and img["sized"]) or state["print_ok"]:
+		return
+	if img["digits"]:
+		state["print_ok"] = true
+		_add_item("staff_print")
+		_emit("print_ready")
+		_emit("solved:print")
+	else:
+		_emit("print_other:%d" % int(state["en_strip"])) # a sharp, right-sized photo of the wrong person
+
+
+# ================================================================== N10 Strand's cabinet (Stage B)
+func cabinet_digits() -> Array:
+	return (state["v_digits"] as Array).duplicate()
+
+
+func n10_turn_wheel(i: int, delta: int = 1) -> Array[String]:
+	_begin()
+	if exp_stage() < 2 or not room_open("office") or state["cab_open"] or i < 0 or i >= ArchiveExpData.CABINET_WHEELS:
+		_emit("nothing_happens")
+		return _end()
+	state["cab_wheels"][i] = posmod(int(state["cab_wheels"][i]) + delta, 10)
+	_emit("cab_wheel:%d:%d" % [i, int(state["cab_wheels"][i])])
+	if _arr_eq(state["cab_wheels"], state["v_digits"]):
+		state["cab_open"] = true
+		_emit("cab_opened")
+		_emit("solved:cabinet")
+		_bonus_echo("office")
+	return _end()
+
+
+# ================================================================== expansion: hint answers (level 3)
+## Level 3 speaks this game's own answer. Numbers shown to the player are 1-based, as the objects are marked.
+func _exp_hint_args(goal: String) -> Array:
+	match goal:
+		"c2x_warm":
+			return [panel_letter(), " ".join(BADGE_NO.split(""))]
+		"c2x_pipes":
+			return [", ".join(pipe_solution().map(func(v: int) -> String: return str(v + 1)))]
+		"c2x_light":
+			var codes: Array = []
+			var t: Array = state["v_sheet_target"]
+			for i in 3:
+				codes.append("%d%s" % [int(t[2 * i]), "m" if int(t[2 * i + 1]) == 1 else ""])
+			return [codes[0], codes[1], codes[2], int(state["v_glyph"][0]), int(state["v_glyph"][1])]
+		"c2x_cold_door":
+			return [int(state["v_glyph"][0]), int(state["v_glyph"][1])]
+		"c2x_aisle":
+			var moves: Array = []
+			for m: Array in aisle_route_from_here():
+				moves.append("%d%s" % [int(m[0]) + 1, ">" if int(m[1]) > 0 else "<"])
+			return [aisle_bay() + 1, " ".join(moves)]
+		"c2x_frost":
+			return (frost_symbols() as Array).map(func(v: int) -> int: return v + 1)
+		"c2x_chest":
+			return chest_presses()
+		"c2x_lift":
+			var ws: Array = []
+			for i in 4:
+				if ArchiveExpData.weights_for(lift_load())[i] == 1:
+					ws.append(str(ArchiveExpData.WEIGHTS[i]))
+			return [lift_load(), " + ".join(ws)]
+		"c2x_board":
+			return [" ".join((state["v_board"] as Array).map(func(v: int) -> String: return str(v + 1)))]
+		"c2x_print":
+			return ["ABCD"[int(state["v_strip"])], int(state["v_zoom"]), int(state["v_pfocus"])]
+		"c2x_cabinet":
+			return (state["v_digits"] as Array).duplicate()
+	return []
+
+
+# ================================================================== modes: Trial (section 13)
+const TRIAL_RESCUE_SECONDS := 1500.0 # 25 minutes without progress: offer, never force
+
+
+func hints_allowed() -> bool:
+	return not trial_active()
+
+
+func trial_active() -> bool:
+	return state["mode"] == "trial" and not state["trial_dropped"]
+
+
+## Archivist's Trial earns its stamp: chosen at New Game, never switched off. -> true if set.
+func set_mode(mode: String) -> bool:
+	if not exp_active() or not mode in ["normal", "trial"] or not _fresh_game():
+		return false
+	state["mode"] = mode
+	return true
+
+
+func _fresh_game() -> bool:
+	for id in inventory:
+		if not id in ["leyla_badge", "crystal_lens", "floor_plan"]:
+			return false
+	return (state["taken"] as Dictionary).is_empty() and state["cat_drawer"] == -1
+
+
+func trial_stamp() -> bool:
+	return state["mode"] == "trial" and not state["trial_dropped"]
+
+
+## After 25 minutes with no progress the game may OFFER to leave the Trial (never forced).
+static func trial_offer_due(idle_seconds: float) -> bool:
+	return idle_seconds >= TRIAL_RESCUE_SECONDS
+
+
+func trial_off() -> Array[String]:
+	_begin()
+	if state["mode"] == "trial" and not state["trial_dropped"]:
+		state["trial_dropped"] = true
+		_emit("trial_off")
+	else:
+		_emit("nothing_happens")
+	return _end()
+
+
+func achievements() -> Array[String]:
+	var out: Array[String] = []
+	if trial_stamp() and state["complete"]:
+		out.append("archivist_trial")
+	return out
+
+
+## Event -> caption key ("" when the event has no caption): the scene shows tr() of it in the caption strip.
+func caption_key(ev: String) -> String:
+	var parts := ev.split(":")
+	var base := parts[0]
+	if base == "tap" and parts.size() >= 3:
+		return "cap2x.tap_" + parts[2]
+	if base == "moment" and parts.size() >= 2:
+		return str(ArchiveExpData.MOMENTS.get(parts[1], {}).get("caption", ""))
+	return "cap2x." + base if ArchiveExpData.CAPTION_EVENTS.has(base) else ""
 
 
 # ================================================================== helpers

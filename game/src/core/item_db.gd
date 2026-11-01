@@ -33,6 +33,15 @@ const ITEMS := {
 	"emblem_slide": {"model": "glass_slide"},
 	"strand_key": {"model": "key_strand"},
 	"leyla_key": {"model": "key_leyla"},
+	# Chapter 2 expansion (docs/CHAPTER2_EXPANSION.md; models arrive with the new rooms, until then the bag shows the name)
+	"floor_plan": {"model": "floor_plan"},
+	"mallet": {"model": "mallet"},
+	"wipe_cloth": {"model": "wipe_cloth"},
+	"frost_sketch": {"model": "frost_sketch"},
+	"roll_slips": {"model": "roll_slips"},
+	"pass_key": {"model": "pass_key"},
+	"staff_print": {"model": "staff_print"},
+	"projector_lamp": {"model": "projector_lamp"},
 	# Chapter 3 (models are built with the Chapter 3 room; until then the inventory shows the item name)
 	"key_diamond": {"model": "key_diamond"},
 	"key_triangle": {"model": "key_triangle"},
@@ -57,7 +66,7 @@ const ITEMS := {
 	"leyla_parcel": {"model": "leyla_parcel", "doc": "parcel4"},
 }
 
-const FLAT := ["notebook", "strand_letter", "leyla_photo", "brass_key", "leyla_badge", "index_card", "blank_card",
+const FLAT := ["floor_plan", "frost_sketch", "roll_slips", "staff_print", "notebook", "strand_letter", "leyla_photo", "brass_key", "leyla_badge", "index_card", "blank_card",
 	"request_card", "personnel_file", "emblem_slide", "strand_key", "leyla_key", "locker_key", "key_diamond",
 	"key_triangle", "key_circle", "key_square", "ecg_strip", "strand_letters", "tower_key_1", "tower_key_2",
 	"tower_key_3", "tower_key_4", "strand_log", "strand_last_letter", "leyla_note_1998", "reverse_pawl", "leyla_parcel"]

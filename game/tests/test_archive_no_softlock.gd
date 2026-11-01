@@ -44,6 +44,40 @@ func random_action(l: ArchiveLogic, rng: RandomNumberGenerator) -> void:
 		l.release_echo(ArchiveLogic.ECHOES[rng.randi_range(0, 2)])
 
 
+## Nonsense and real moves of the expansion's puzzles (only for games with exp_ver >= 2).
+func random_exp_action(l: ArchiveLogic, rng: RandomNumberGenerator) -> void:
+	match rng.randi_range(0, 27):
+		0: l.enter_room(ArchiveExpData.ROOMS[rng.randi_range(0, 6)]["id"])
+		1: l.travel_to(ArchiveExpData.ROOMS[rng.randi_range(0, 6)]["id"])
+		2: l.n1_open_panel(rng.randi_range(-1, 3))
+		3: l.n1_dial(rng.randi_range(0, 9))
+		4: l.n2_toggle_valve(rng.randi_range(-1, 6))
+		5: l.n2_tap_pipe(rng.randi_range(-1, 6))
+		6: l.n3_turn_sheet(rng.randi_range(0, 2))
+		7: l.n3_flip_sheet(rng.randi_range(0, 2))
+		8: l.cold_wheel(rng.randi_range(0, 1), [-1, 1][rng.randi_range(0, 1)])
+		9: l.n4_crank(rng.randi_range(0, 4), rng.randi_range(-1, 1))
+		10: l.n5_wipe(rng.randi_range(0, 2))
+		11: l.n6_turn_ring(rng.randi_range(0, 2))
+		12: l.n7_toggle_weight(rng.randi_range(0, 3))
+		13: l.n7_call(rng.randi_range(-1, 1))
+		14: l.pull_wedge()
+		15: l.n8_hang(rng.randi_range(0, 5), rng.randi_range(0, 5))
+		16: l.n8_lift_tag(rng.randi_range(0, 5))
+		17: l.n9_load_strip(rng.randi_range(0, 3))
+		18: l.n9_zoom([-1, 1][rng.randi_range(0, 1)])
+		19: l.n9_focus([-1, 1][rng.randi_range(0, 1)])
+		20: l.n10_turn_wheel(rng.randi_range(0, 3), [-1, 1][rng.randi_range(0, 1)])
+		21: l.take(["pump_mallet", "cell_cloth", "counter_slips", "board_key", "cabinet_lamp"][rng.randi_range(0, 4)])
+		22: l.use_item_on(["projector_lamp", "mallet", "wipe_cloth", "floor_plan"][rng.randi_range(0, 3)],
+			["projector", "deck", "punch", "frost"][rng.randi_range(0, 3)])
+		23: l.try_moment("m2")
+		24: l.select_item(["mallet", "wipe_cloth", "projector_lamp", "floor_plan"][rng.randi_range(0, 3)])
+		25: l.trial_off()
+		26: l.toggle_projector()
+		27: ArchiveSolver.step(l, "leyla_key")
+
+
 func invariants(l: ArchiveLogic) -> String:
 	var s := l.state
 	var seen := {}
@@ -73,6 +107,24 @@ func invariants(l: ArchiveLogic) -> String:
 	var cards := int(l.has_item("blank_card")) + int(l.has_item("request_card")) + int(s["card_in_punch"]) + int(s["canister"] != "")
 	if cards > 1:
 		return "%d request cards in play" % cards
+	if l.exp_active():
+		var lamps := int(l.has_item("projector_lamp")) + int(s["lamp_ok"] and l.exp_stage() >= 2)
+		if s["taken"].get("cabinet_lamp", false) and lamps != 1:
+			return "projector lamp lost or doubled (%d)" % lamps
+		if s["film_seen"] and not s["lamp_ok"]:
+			return "the film ran with a dead lamp"
+		if s["taken"].get("case_crystal_1", false) and not s["crystals_available"]:
+			return "a crystal was taken before the chest opened"
+		var pos: Array = s["aisle_pos"]
+		for j in 4:
+			if int(pos[j]) >= int(pos[j + 1]):
+				return "carriages overlap"
+		if (s["rooms_seen"] as Array).has("cold") and not s["cold_open"]:
+			return "entered the cold store while it was closed"
+		if (s["rooms_seen"] as Array).has("office") and not s["pass_key"]:
+			return "entered the office without the pass key"
+		if s["pass_key"] and not s["board_ok"]:
+			return "pass key without a solved board"
 	if s["vault_unlocked"] and not (s["sign_recorded"] and (s["has_lens"] or s["mark_recorded"])):
 		return "vault unlocked without both images"
 	if s["sign_recorded"] and s["socket"] != "crystal_sign" and not l.has_item("crystal_sign") \
@@ -105,6 +157,36 @@ func test_random_play_never_softlocks() -> void:
 		else:
 			check(false, "seed %d: unsolvable after random play; goal=%s state=%s inv=%s" % [seed, copy.hint_goal(), str(copy.state), str(copy.inventory)])
 	eq(completed, runs, "every random state remains completable")
+
+
+func test_random_play_never_softlocks_the_expansion() -> void:
+	var rng := RandomNumberGenerator.new()
+	var runs := 200
+	var completed := 0
+	for seed in runs:
+		rng.seed = 9000 + seed
+		var l := ArchiveLogic.new_expanded(seed, 1 + seed % 2, {"ch1_lens": "take_lens" if seed % 2 == 0 else "leave_lens", "ch1_shards": seed % 6})
+		if seed % 5 == 0:
+			l.set_mode("trial")
+		var steps := rng.randi_range(80, 1800)
+		var bad := ""
+		for _i in steps:
+			if rng.randi_range(0, 2) == 0:
+				random_exp_action(l, rng)
+			else:
+				random_action(l, rng)
+			bad = invariants(l)
+			if bad != "":
+				break
+		check(bad == "", "expansion seed %d invariant: %s" % [seed, bad])
+		var copy := ArchiveLogic.new()
+		copy.from_dict(JSON.parse_string(JSON.stringify(l.to_dict())))
+		eq(JSON.stringify(copy.to_dict()), JSON.stringify(l.to_dict()), "expansion seed %d save round trip" % seed)
+		if ArchiveSolver.solve(copy, "strand_key" if seed % 3 == 0 else "leyla_key", 1200):
+			completed += 1
+		else:
+			check(false, "expansion seed %d: unsolvable after random play; goal=%s state=%s" % [seed, copy.hint_goal(), str(copy.state)])
+	eq(completed, runs, "every random expansion state remains completable")
 
 
 func test_hint_goals_follow_the_solution() -> void:

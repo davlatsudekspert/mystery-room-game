@@ -1,0 +1,130 @@
+{
+	"chapter": "ch2",
+	"logic": {
+		"inventory": [
+			"leyla_badge",
+			"crystal_lens",
+			"index_card",
+			"personnel_file",
+			"pocket_receiver",
+			"tape_1996",
+			"tape_1997"
+		],
+		"selected": "",
+		"state": {
+			"booth_open": true,
+			"canister": "",
+			"card_in_punch": false,
+			"card_shown": true,
+			"cat_drawer": 4,
+			"cat_group": 1,
+			"ch1_shards": 5,
+			"choice": "",
+			"clicks_heard": [
+				"tape_1996",
+				"tape_1997",
+				"tape_1998"
+			],
+			"complete": false,
+			"deck_speed": 1,
+			"deck_tape": "tape_1998",
+			"dest": 1,
+			"dial_input": "",
+			"echo_guided": false,
+			"echoes": [],
+			"file_delivered": true,
+			"film_seen": false,
+			"focus": 1,
+			"frame": 0,
+			"grille_open": true,
+			"has_lens": true,
+			"hatch_open": true,
+			"last_punch": [
+				1,
+				0,
+				0,
+				1,
+				1,
+				1,
+				0,
+				0
+			],
+			"ledger_open": true,
+			"locker_open": true,
+			"mark_recorded": false,
+			"port_left": "",
+			"port_right": "",
+			"pressure_ok": true,
+			"projector_on": false,
+			"punch_keys": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"reel_on_projector": false,
+			"reel_repaired": false,
+			"request_ok": true,
+			"rot_left": 2,
+			"rot_right": 5,
+			"seed": 777,
+			"sign_recorded": false,
+			"slide_drawer": -1,
+			"slide_drawer_mark": false,
+			"slide_in": false,
+			"slide_on": false,
+			"slide_rot": 1,
+			"socket": "",
+			"splice": [
+				-1,
+				-1,
+				-1,
+				-1
+			],
+			"taken": {
+				"canister_file": true,
+				"canister_key": true,
+				"grille_reel": true,
+				"hatch_reel": true,
+				"index_card": true,
+				"ledger_reel": true,
+				"locker_receiver": true
+			},
+			"v_clicks": [
+				3,
+				9,
+				8
+			],
+			"v_focus": 7,
+			"v_punch": 3,
+			"v_shadows": [
+				1,
+				4,
+				2,
+				3
+			],
+			"v_targets": [
+				8,
+				12
+			],
+			"v_vault": [
+				2,
+				4
+			],
+			"valves": [
+				4,
+				2,
+				4
+			],
+			"vault_open": false,
+			"vault_unlocked": false,
+			"wheel": 0,
+			"zoom_right": 0
+		},
+		"version": 1
+	}
+}

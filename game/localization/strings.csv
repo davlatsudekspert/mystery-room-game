@@ -463,6 +463,150 @@ msg.c2_crystal_blur,The crystal stays clear: the picture on the screen is blurre
 msg.c2_crystal_mixed,The crystal stays clear: two images overlap on the screen.,Кристалл остаётся прозрачным: на экране накладываются два изображения.,Billur tiniqligicha qoldi: ekranda ikki tasvir ustma-ust tushgan.
 msg.c2_crystal_waits,"The crystal stays clear. It waits for one sharp image, alone on the screen.",Кристалл остаётся прозрачным. Он ждёт одно чёткое изображение — одно на всём экране.,Billur tiniqligicha qoldi. U ekranda yolgʻiz turgan bitta aniq tasvirni kutyapti.
 msg.c2_mixed,The slide's light and the film's light cross on the screen.,Свет слайда и свет кинопроектора смешиваются на экране.,Slayd nuri va kinoproyektor nuri ekranda aralashib ketdi.
+item.floor_plan.name,Building plan,План здания,Bino rejasi
+item.floor_plan.desc,"Archive Annex B, floor by floor. Rooms you have entered light up.","Пристройка «Б» архива по этажам. Комнаты, где вы уже были, подсвечены.",Arxivning «B» qoʻshimcha binosi qavatma-qavat. Kirgan xonalaringiz yoritiladi.
+item.mallet.name,Rubber mallet,Резиновый молоток,Rezina bolgʻa
+item.mallet.desc,"For tapping pipes. A full pipe sounds low, an empty one high.","Для простукивания труб. Полная труба звучит низко, пустая — высоко.","Quvurlarga urish uchun. Toʻla quvur past, boʻsh quvur baland jaranglaydi."
+item.wipe_cloth.name,Soft cloth,Мягкая тряпка,Yumshoq latta
+item.wipe_cloth.desc,Leyla's cloth for wiping frost off glass.,Тряпка Лейлы — стирать иней со стекла.,Leylaning latta: oynadagi qirovni artish uchun.
+item.frost_sketch.name,Sketch of three signs,Набросок трёх знаков,Uchta belgi eskizi
+item.frost_sketch.desc,"Three signs from under the frost, left to right.","Три знака из-под инея, слева направо.","Qirov ostidagi uchta belgi, chapdan oʻngga."
+item.roll_slips.name,Roll-call slips,Записки переклички,Roʻyxat varaqchalari
+item.roll_slips.desc,Slips from the Records counter: who hangs where.,Записки со стойки учёта: кто где висит.,Hisob peshtaxtasidan varaqchalar: kim qayerda osilishi.
+item.pass_key.name,Pass key,Ключ-пропуск,Ruxsatnoma kaliti
+item.pass_key.desc,A brass key with a staff-tag head. It opens the Director's door.,Латунный ключ с головкой в виде бирки. Открывает дверь директора.,Boshi yorliq shaklidagi jez kalit. Direktor eshigini ochadi.
+item.staff_print.name,Staff photo,Фото сотрудника,Xodim surati
+item.staff_print.desc,A sharp print. Four digits are pencilled on the back.,Чёткий отпечаток. На обороте карандашом четыре цифры.,Aniq surat. Orqasiga qalamda toʻrt raqam yozilgan.
+item.projector_lamp.name,Projector lamp,Лампа проектора,Proyektor lampasi
+item.projector_lamp.desc,A spare lamp from Strand's cabinet.,Запасная лампа из шкафа Странда.,Strand javonidagi ehtiyot lampa.
+room2x.hall,Archive hall,Зал архива,Arxiv zali
+room2x.pump,Pump Room,Насосная,Nasos xonasi
+room2x.cell,Night Cell,Ночная комната,Tungi xona
+room2x.cold,Cold Store,Холодное хранилище,Sovuq ombor
+room2x.gallery,Reading Gallery,Читальная галерея,Mutolaa galereyasi
+room2x.plate,Plate Room,Фотолаборатория,Fotolaboratoriya
+room2x.office,Director's Office,Кабинет директора,Direktor kabineti
+ui2x.floor_m1,Level -1,Уровень -1,-1-daraja
+ui2x.floor_0,Level 0,Уровень 0,0-daraja
+ui2x.floor_p1,Level +1,Уровень +1,+1-daraja
+thread2x.warm_panel,A warm patch on the east wall,Тёплое место на восточной стене,Sharqiy devordagi iliq joy
+thread2x.blocked_stair,A blocked spiral stair,Заваленная винтовая лестница,Toʻsilgan spiral zina
+thread2x.frozen_door,A frozen door,Примёрзшая дверь,Muzlagan eshik
+thread2x.case_card,A card: kept below,Карточка: хранится внизу,Kartochka: pastda saqlanadi
+thread2x.dead_lamp,A dead projector lamp,Мёртвая лампа проектора,Oʻchgan proyektor lampasi
+thread2x.pass_door,A locked pass door,Запертая дверь с ключом-пропуском,Qulflangan ruxsatnoma eshigi
+thread2x.cabinet_symbol,A symbol on a cabinet,Знак на шкафу,Javondagi belgi
+obj2x.east_wall,East wall by the compressor,Восточная стена у компрессора,Kompressor yonidagi sharqiy devor
+obj2x.panel,Painted wall panel,Крашеная панель,Boʻyalgan devor paneli
+obj2x.door_plate,Brass plate with a dial,Латунная пластина с диском,Diskli jez plastina
+obj2x.manifold,Pipe manifold,Коллектор труб,Quvurlar kollektori
+obj2x.pipe,Pipe,Труба,Quvur
+obj2x.boiler,Boiler,Котёл,Qozon
+obj2x.cell_door,Door to the Night Cell,Дверь в ночную комнату,Tungi xonaga eshik
+obj2x.cot,Cot with a child's drawing,Койка с детским рисунком,Bolalar rasmi bor karavot
+obj2x.kettle,Kettle on a hotplate,Чайник на плитке,Plitkadagi choynak
+obj2x.diary,Diary page,Страница дневника,Kundalik sahifasi
+obj2x.light_table,Light table,Световой стол,Yorugʻlik stoli
+obj2x.sheet,Acetate sheet,Ацетатный лист,Asetat varaq
+obj2x.shelf,Shelf in the Night Cell,Полка в ночной комнате,Tungi xonadagi tokcha
+obj2x.cold_door,Insulated door,Дверь с изоляцией,Izolyatsiyalangan eshik
+obj2x.rail,Carriage rails,Рельсы кареток,Aravacha izlari
+obj2x.rail_end,Plan on the end panel,План на торцевой панели,Chetki paneldagi reja
+obj2x.cans,Film cans,Коробки с плёнкой,Kino qutilari
+obj2x.frost,Frosted window,Заиндевевшее окно,Qirovli oyna
+obj2x.chest,Chest with three rings,Сундук с тремя кольцами,Uch halqali sandiq
+obj2x.lift,Book lift,Книжный лифт,Kitob lifti
+obj2x.counterweight,Counterweight hook,Крюк противовеса,Qarshi tosh ilgagi
+obj2x.stair,Spiral stair,Винтовая лестница,Spiral zina
+obj2x.wedge,Wedged ladder,Заклиненная лестница,Qistirilgan narvon
+obj2x.counter,Records counter,Стойка учёта,Hisob peshtaxtasi
+obj2x.board,Roll-call board,Доска переклички,Roʻyxat doskasi
+obj2x.horn,Old PA horn,Старый рупор,Eski karnay
+obj2x.enlarger,Enlarger,Увеличитель,Kattalashtirgich
+obj2x.strips,Negative strips,Ленты с негативами,Negativ lentalar
+obj2x.cabinet,Strand's cabinet,Шкаф Странда,Strand javoni
+obj2x.tea,Two cups of cold tea,Две чашки остывшего чая,Ikki piyola sovigan choy
+obj2x.case_card,Card in the lens case,Карточка в футляре,Quti ichidagi kartochka
+obj2x.plan,Building plan,План здания,Bino rejasi
+ui2x.plan_title,Building plan,План здания,Bino rejasi
+ui2x.threads_title,Open threads,Незакрытые нити,Ochiq izlar
+ui2x.threads_none,Nothing waits for you right now.,Сейчас ничто не ждёт вас.,Hozircha sizni hech narsa kutmayapti.
+ui2x.go_to,Go to %s,Перейти: %s,%s ga oʻtish
+ui2x.here,You are here,Вы здесь,Siz shu yerdasiz
+ui2x.locked,Locked,Закрыто,Yopiq
+ui2x.new_area,Not visited,Не посещено,Kirilmagan
+ui2x.pending,Something is unfinished here,Здесь есть незаконченное,Bu yerda tugallanmagan ish bor
+ui2x.legacy_note,New areas await in a fresh game.,Новые места ждут в новой игре.,Yangi joylar yangi oʻyinda kutmoqda.
+ui2x.trial_title,Archivist's Trial,Испытание архивариуса,Arxivchi sinovi
+ui2x.trial_desc,Play without hints. A stamp awaits at the end.,Играйте без подсказок. В конце вас ждёт печать.,Maslahatsiz oʻynang. Oxirida muhr kutadi.
+ui2x.trial_offer,Stuck for a while? You can leave the Trial.,Долго не получается? Можно выйти из Испытания.,Uzoq vaqt chiqmayaptimi? Sinovdan chiqishingiz mumkin.
+ui2x.trial_leave,Leave the Trial,Выйти из Испытания,Sinovdan chiqish
+ui2x.trial_stamp,Trial passed,Испытание пройдено,Sinovdan oʻtildi
+ui2x.moments,Eerie moments,Жуткие моменты,Sirli lahzalar
+ui2x.moments_full,Full,Полные,Toʻliq
+ui2x.moments_soft,Soft (no sound sting),Мягкие (без резких звуков),Yumshoq (keskin tovushsiz)
+ui2x.moments_off,Off,Выкл.,Oʻchiq
+ui2x.hands,Hands,Руки,Qoʻllar
+ui2x.on,On,Вкл.,Yoqilgan
+ui2x.off,Off,Выкл.,Oʻchiq
+achv.archivist_trial,Archivist's Trial,Испытание архивариуса,Arxivchi sinovi
+epi2.trial,No one helped you. The archive remembers.,Вам никто не помогал. Архив это помнит.,Sizga hech kim yordam bermadi. Arxiv buni eslab qoladi.
+cap2x.coda,“If you are still listening: my door is where the pipes are warm. The needle will find it. My number opens it.”,"«Если ты ещё слушаешь: моя дверь там, где тёплые трубы. Стрелка её найдёт. Мой номер её откроет.»",«Agar hali tinglayotgan boʻlsangiz: eshigim quvurlar iliq joyda. Mil uni topadi. Raqamim uni ochadi.»
+doc2x.diary,Day 700. The pipes sing at night. I count the names so I do not forget I am a person.,"День 700. По ночам поют трубы. Я считаю имена, чтобы не забыть, что я человек.",700-kun. Kechasi quvurlar kuylaydi. Odam ekanimni unutmaslik uchun ismlarni sanayman.
+doc2x.light_note,Three layers. Only the true one lets the light through.,Три слоя. Свет пропускает только верный.,Uch qatlam. Yorugʻlikni faqat toʻgʻrisi oʻtkazadi.
+doc2x.cold_note,Crystals fog in warm air. I keep them where film keeps.,"Кристаллы мутнеют в тёплом воздухе. Я храню их там, где хранят плёнку.",Billurlar iliq havoda xiralashadi. Ularni kino lentasi saqlanadigan joyda saqlayman.
+doc2x.case_card,"Kept below, where it is cold.","Хранится внизу, где холодно.","Pastda, sovuq joyda saqlanadi."
+doc2x.strand_note,"For L., when she returns. The lamp is in the cabinet.","Л., когда она вернётся. Лампа в шкафу.","L. uchun, u qaytganda. Lampa javonda."
+cap2x.cell_look,"A cot, a kettle still ticking as if cooling, a child's drawing.","Койка, чайник, который всё ещё потрескивает, остывая, детский рисунок.","Karavot, sovib chiqillayotgandek choynak, bolalar rasmi."
+cap2x.panel_opened,A panel swings aside. Behind it: a brass plate with a rotary dial.,Панель откидывается. За ней — латунная пластина с диском.,Panel ochildi. Orqasida diskli jez plastina bor.
+cap2x.panel_cold,Nothing here. The needle stays low.,Здесь ничего. Стрелка почти не двигается.,Bu yerda hech narsa yoʻq. Mil deyarli qimirlamaydi.
+cap2x.n1_dial_wrong,The dial clicks back. Wrong number.,Диск щёлкает и возвращается. Не тот номер.,Disk qaytdi. Raqam notoʻgʻri.
+cap2x.pump_opened,"The door gives. Warm air, and the smell of oil.",Дверь поддаётся. Тёплый воздух и запах масла.,Eshik ochildi. Iliq havo va moy hidi.
+cap2x.pipes_hazard,Pressure leaks toward the hall vent. Close something.,Давление уходит к вентиляции зала. Перекройте что-нибудь.,Bosim zal shamollatgichiga oqyapti. Biror ventilni yoping.
+cap2x.thawed,The coil ticks and begins to warm.,Змеевик тикает и начинает нагреваться.,"Isitgich chiqillab, qiza boshladi."
+cap2x.need_mallet,You need something to tap the pipes with.,Нужно чем-то постучать по трубам.,Quvurlarga urish uchun biror narsa kerak.
+cap2x.valves_locked_n2,The valves are set. Leave them.,Вентили выставлены. Не трогайте.,Ventillar oʻrnatilgan. Tegmang.
+cap2x.tap_full,"A low, full tone: pressure inside.",Низкий полный звук: внутри давление.,"Past, toʻliq tovush: ichida bosim bor."
+cap2x.tap_dead,"A high, hollow tone: empty.",Высокий пустой звук: труба пуста.,"Baland, boʻsh tovush: quvur boʻsh."
+cap2x.tap_cracked,A buzzing rattle: a crack.,Дребезжание: трещина.,Vizillagan shaqirlash: yoriq bor.
+cap2x.light_digits,The light draws two numbers on the glass.,Свет рисует на стекле два числа.,Yorugʻlik oynada ikki raqam chizdi.
+cap2x.sheets_locked,The sheets are set.,Листы выставлены.,Varaqlar oʻrnatilgan.
+cap2x.cold_frozen,"The wheels turn, but the door is frozen shut.","Колёса вращаются, но дверь примёрзла.","Gʻildiraklar aylanadi, lekin eshik muzlab qolgan."
+cap2x.cold_opened,The ice cracks. The insulated door opens.,Лёд трескается. Дверь открывается.,Muz yorildi. Izolyatsiyalangan eshik ochildi.
+cap2x.clunk,Clunk. That carriage will not go that way.,Лязг. Эта каретка так не пойдёт.,Taq. Bu aravacha u tomonga yurmaydi.
+cap2x.aisle_lore,An aisle opens: shelves of old film cans.,Открылся проход: полки со старыми коробками плёнки.,Yoʻlak ochildi: eski kino qutilari javonlari.
+cap2x.aisle_found,At the end of this aisle stands a chest.,В конце прохода стоит сундук.,Yoʻlak oxirida sandiq turibdi.
+cap2x.cranks_locked,The carriages stay where they are.,Каретки остаются на месте.,Aravachalar joyida qoladi.
+cap2x.need_aisle,Shelves are in the way. You cannot reach it yet.,Мешают стеллажи. Пока не добраться.,Javonlar toʻsiqlik qilyapti. Hozircha yetib boʻlmaydi.
+cap2x.need_cloth,The frost is thick. You need a cloth.,Иней толстый. Нужна тряпка.,Qirov qalin. Latta kerak.
+cap2x.band_clear,This band is already clear.,Эта полоса уже чистая.,Bu qism allaqachon tozalangan.
+cap2x.frost_done,"Three signs, written with a finger. You copy them down.","Три знака, написанных пальцем. Вы зарисовываете их.",Barmoq bilan yozilgan uchta belgi. Siz ularni koʻchirib oldingiz.
+cap2x.chest_sealed,The chest is out of reach behind the shelves.,Сундук не достать: мешают стеллажи.,Sandiqqa javonlar orqasidan yetib boʻlmaydi.
+cap2x.chest_opened,The rings click. Two blank crystals lie inside.,Кольца щёлкают. Внутри лежат два чистых кристалла.,Halqalar chiqillaydi. Ichida ikkita boʻsh billur bor.
+cap2x.no_pressure,No pressure. The line is still cold.,Нет давления. Магистраль ещё холодная.,Bosim yoʻq. Liniya hali sovuq.
+cap2x.weights_locked,The counterweight is balanced.,Противовес уравновешен.,Qarshi tosh muvozanatda.
+cap2x.counter_heavy,The counterweight is too heavy.,Противовес слишком тяжёл.,Qarshi tosh juda ogʻir.
+cap2x.counter_light,The counterweight is too light.,Противовес слишком лёгок.,Qarshi tosh juda yengil.
+cap2x.lift_balanced,The cage floats free. The lift will move.,Кабина повисла свободно. Лифт готов ехать.,Kabina erkin osildi. Lift yura oladi.
+cap2x.lift_stuck,The cage will not budge. It is too heavy.,Кабина не двигается: слишком тяжёлая.,Kabina qimirlamaydi: juda ogʻir.
+cap2x.wedge_out,The pin slides out. The ladder falls free.,Штырь выскальзывает. Лестница освобождается.,Mix chiqib ketdi. Narvon boʻshab qoldi.
+cap2x.board_wrong,"All hung, but a slip says otherwise.","Все повешены, но одна записка возражает.","Hammasi osildi, ammo bir varaqcha qarshi."
+cap2x.board_ok,Every slip agrees. A key drops into the tray.,Все записки сходятся. В лоток падает ключ.,Barcha varaqchalar mos. Tokchaga kalit tushdi.
+cap2x.print_other,A sharp print of someone else.,Чёткий снимок кого-то другого.,Boshqa birovning aniq surati.
+cap2x.print_ready,A staff photo. Four digits are pencilled on the back.,Фото сотрудника. На обороте карандашом четыре цифры.,Xodim surati. Orqasiga qalamda toʻrt raqam yozilgan.
+cap2x.cab_opened,The wheels align. Inside: a spare lamp and a neat note.,Колёса совпали. Внутри: запасная лампа и аккуратная записка.,Gʻildiraklar mos tushdi. Ichida ehtiyot lampa va ixcham yozuv bor.
+cap2x.lamp_dead,The lever ticks. The projector lamp is dead.,Рычаг щёлкает. Лампа проектора мертва.,Dasta chiqillaydi. Proyektor lampasi oʻchgan.
+cap2x.lamp_installed,The new lamp glows.,Новая лампа светится.,Yangi lampa yondi.
+cap2x.room_locked,That way is locked.,Туда не пройти.,U yoqqa yoʻl yopiq.
+cap2x.travel_refused,You have not been there yet.,Вы там ещё не были.,Siz u yerda hali boʻlmagansiz.
+cap2x.trial_off,The Trial ends. Hints are back.,Испытание закончено. Подсказки снова доступны.,Sinov tugadi. Maslahatlar qaytdi.
+cap2x.bonus_echo,An echo stays with you.,Эхо остаётся с вами.,Aks-sado siz bilan qoladi.
+cap2x.m1,The lamp sinks to an ember... and flares back.,Лампа тускнеет до уголька и вспыхивает вновь.,Chiroq choʻgʻdek xira tortdi va yana yondi.
+cap2x.m2,Three soft knocks from the other side of the door.,Три тихих стука с той стороны двери.,Eshikning narigi tomonidan uch marta mayin taqillatildi.
+cap2x.m3,A shape passes behind the frost and leaves a finger mark.,За инеем проходит тень и оставляет след пальца.,"Qirov ortidan soya oʻtib, barmoq izini qoldirdi."
+cap2x.m4,An old roll call crackles from the horn... forty... forty-one. Then only hiss.,Из рупора трещит старая перекличка... сорок... сорок один. Потом только шипение.,Karnaydan eski roʻyxat eshitiladi... qirq... qirq bir. Soʻng faqat shitirlash.
+cap2x.m5,Slow footsteps cross the ceiling. Dust drifts down.,По потолку проходят медленные шаги. Сыплется пыль.,Shiftdan sekin qadamlar oʻtdi. Chang yogʻildi.
+cap2x.m6,"At the end of the aisle, a figure turns a can... and fades.",В конце прохода фигура поворачивает коробку... и тает.,Yoʻlak oxirida bir siymo quti aylantirdi va yoʻqoldi.
 sym.sun,sun,солнце,quyosh
 sym.moon,moon,луна,oy
 sym.star,star,звезда,yulduz
@@ -915,6 +1059,54 @@ hint.c2_wheel.3,Tap the wheel three times.,Нажмите на штурвал т
 hint.c2_finale.1,Two keys. You may take only one.,Два ключа. Взять можно только один.,Ikki kalit. Faqat bittasini olish mumkin.
 hint.c2_finale.2,Strand's key opens the Array Hall. Leyla's opens the crystal vaults.,"Ключ Странда открывает Зал Решётки, ключ Лейлы — хранилища кристаллов.","Strandning kaliti Panjara zalini, Leylaniki billur omborlarini ochadi."
 hint.c2_finale.3,Choose.,Выбирайте.,Tanlang.
+hint.c2x_warm.1,Leyla's tape said her door is where the pipes are warm.,"Лейла говорила на плёнке: её дверь там, где тёплые трубы.","Leyla lentada eshigim quvurlar iliq joyda, degan edi."
+hint.c2x_warm.2,Select the receiver and sweep the east wall by the compressor. Watch the needle.,Выберите приёмник и проведите вдоль восточной стены у компрессора. Следите за стрелкой.,"Qabul qilgichni tanlab, kompressor yonidagi sharqiy devor boʻylab yuring. Milga qarang."
+hint.c2x_warm.3,Panel %s hides the plate. Dial %s.,Табличка за панелью %s. Наберите %s.,Plastina %s panel ortida. %s ni tering.
+hint.c2x_pipes.1,The Cold Store door is frozen. Its coil needs warm pipes.,Дверь холодильной камеры вмёрзла. Её змеевику нужны тёплые трубы.,Sovuq ombor eshigi muzlagan. Uning isitgichiga iliq quvurlar kerak.
+hint.c2x_pipes.2,Open valves so the pressure reaches the coil but never the hall vent. Tap pipes with the mallet to hear where it flows.,"Откройте вентили так, чтобы давление дошло до змеевика, но не до вентиляции зала. Стучите молотком по трубам: слышно, где течёт.","Ventillarni bosim isitgichga yetib, zal shamollatgichiga bormaydigan qilib oching. Bolgʻa bilan quvurlarga uring: bosim qayerdaligini eshitasiz."
+hint.c2x_pipes.3,Open valves %s.,Откройте вентили: %s.,Ventillarni oching: %s.
+hint.c2x_light.1,The desk lamp is a light table. Light passes only where nothing blocks it.,"Лампа на столе — световой стол. Свет проходит только там, где ничто не мешает.",Stoldagi chiroq yorugʻlik stoli. Yorugʻlik faqat toʻsiq yoʻq joydan oʻtadi.
+hint.c2x_light.2,Stack all three sheets. Turn or flip each one until the light draws two numbers.,"Сложите все три листа. Вращайте или переворачивайте каждый, пока свет не нарисует два числа.",Uchala varaqni qatlamlang. Yorugʻlik ikki raqam chizguncha har birini aylantiring yoki agʻdaring.
+hint.c2x_light.3,"Sheets (turns, m = mirrored first): %s, %s, %s. The light spells %d%d.","Листы (повороты, m = сначала зеркально): %s, %s, %s. Свет рисует %d%d.","Varaqlar (burilish, m = avval aks ettirilgan): %s, %s, %s. Yorugʻlik %d%d ni yozadi."
+hint.c2x_cold_door.1,The Cold Store door has a wheel lock.,На двери холодильной камеры колёсный замок.,Sovuq ombor eshigida gʻildirakli qulf bor.
+hint.c2x_cold_door.2,Set the wheels to the two numbers from the light table. The coil must be warm too.,Выставьте колёса на два числа со светового стола. Змеевик тоже должен прогреться.,Gʻildiraklarni yorugʻlik stolidagi ikki raqamga qoʻying. Isitgich ham qizigan boʻlishi kerak.
+hint.c2x_cold_door.3,"Wheels: %d, %d.","Колёса: %d, %d.","Gʻildiraklar: %d, %d."
+hint.c2x_aisle.1,The chest stands behind a shelf.,Сундук стоит за стеллажом.,Sandiq javon ortida turibdi.
+hint.c2x_aisle.2,The plan on the end panel shows which carriage hides it. Crank the carriages to open an aisle.,"План на торцевой панели показывает, какая каретка его прячет. Вращайте рукоятки, чтобы открыть проход.",Chetki paneldagi reja sandiqni qaysi aravacha yashirganini koʻrsatadi. Yoʻlak ochish uchun dastalarni aylantiring.
+hint.c2x_aisle.3,"Open the aisle in front of carriage %d: cranks %s (> right, < left).","Откройте проход перед кареткой %d: рукоятки %s (> вправо, < влево).","%d-aravacha oldidagi yoʻlakni oching: dastalar %s (> oʻngga, < chapga)."
+hint.c2x_take_cloth.1,The frosted window needs wiping.,Заиндевевшее окно нужно протереть.,Qirovli oynani artish kerak.
+hint.c2x_take_cloth.2,"A cloth lies in the Night Cell, by the kettle.","Тряпка лежит в ночной комнате, у чайника.","Latta tungi xonada, choynak yonida yotibdi."
+hint.c2x_take_cloth.3,Take the cloth from the shelf in the Night Cell.,Возьмите тряпку с полки в ночной комнате.,Lattani tungi xonadagi tokchadan oling.
+hint.c2x_frost.1,The window is covered in frost.,Окно покрыто инеем.,Oyna qirov bilan qoplangan.
+hint.c2x_frost.2,Wipe each band with the cloth. Each hides a sign.,Протрите каждую полосу тряпкой. Под каждой знак.,Har bir qismni latta bilan arting. Har birida bir belgi bor.
+hint.c2x_frost.3,"The signs, left to right, are %d, %d, %d (counted along a ring).","Знаки слева направо: %d, %d, %d (по порядку на кольце).","Belgilar chapdan oʻngga: %d, %d, %d (halqadagi tartib boʻyicha)."
+hint.c2x_chest.1,The chest works like a gear box: turn one ring and its neighbour follows.,"Сундук как коробка передач: повернёте одно кольцо, и следующее поворачивается за ним.","Sandiq tishli qutiga oʻxshaydi: bir halqani burasangiz, qoʻshnisi ham buriladi."
+hint.c2x_chest.2,Match the three signs from the window. Each turn moves two rings.,Выставьте три знака с окна. Каждый поворот двигает два кольца.,Oynadagi uchta belgini qoʻying. Har burilish ikki halqani siljitadi.
+hint.c2x_chest.3,"Turns: ring 1 x %d, ring 2 x %d, ring 3 x %d.","Поворотов: кольцо 1 x %d, кольцо 2 x %d, кольцо 3 x %d.","Burilishlar: 1-halqa x %d, 2-halqa x %d, 3-halqa x %d."
+hint.c2x_take_crystal.1,The chest held something clear.,В сундуке было что-то прозрачное.,Sandiqda tiniq nimadir bor edi.
+hint.c2x_take_crystal.2,Two crystals lie inside the open chest.,В открытом сундуке лежат два кристалла.,Ochiq sandiq ichida ikkita billur yotibdi.
+hint.c2x_take_crystal.3,Take the blank crystals from the chest.,Возьмите чистые кристаллы из сундука.,Boʻsh billurlarni sandiqdan oling.
+hint.c2x_lift.1,The book lift is heavy. Its cage will not move.,Книжный лифт тяжёл. Кабина не двигается.,Kitob lifti ogʻir. Kabina qimirlamaydi.
+hint.c2x_lift.2,Hang weights on the counterweight hook until it balances the load on the plate.,"Вешайте грузы на крюк противовеса, пока он не уравновесит нагрузку на табличке.",Qarshi tosh ilgagiga yuklarni tabloda koʻrsatilgan yukka tenglashguncha osing.
+hint.c2x_lift.3,Load %d: hang %s.,Нагрузка %d: повесьте %s.,Yuk %d: %s ni osing.
+hint.c2x_board.1,The staff tags are out of order. The slips from the Records counter tell who hangs where.,"Бирки сотрудников перепутаны. Записки со стойки учёта подскажут, кто где висит.",Xodim yorliqlari aralashib ketgan. Hisob peshtaxtasidagi varaqchalar kim qayerda osilishini aytadi.
+hint.c2x_board.2,Start with the slip that fixes one end. Then follow the neighbours.,"Начните с записки, которая определяет край. Потом идите по соседям.",Chetni belgilovchi varaqchadan boshlang. Soʻng qoʻshnilarga oʻting.
+hint.c2x_board.3,Left to right: tags %s.,Слева направо: бирки %s.,Chapdan oʻngga: yorliqlar %s.
+hint.c2x_take_key.1,Something dropped into the tray.,В лоток что-то упало.,Tokchaga nimadir tushdi.
+hint.c2x_take_key.2,Look under the board.,Загляните под доску.,Doska ostiga qarang.
+hint.c2x_take_key.3,Take the pass key.,Возьмите ключ-пропуск.,Ruxsatnoma kalitini oling.
+hint.c2x_print.1,The Plate Room has negative strips and an enlarger. A label on Strand's cabinet names one strip.,В фотолаборатории ленты с негативами и увеличитель. Метка на шкафу Странда называет одну из лент.,Fotolaboratoriyada negativ lentalar va kattalashtirgich bor. Strand javonidagi belgi lentalardan birini koʻrsatadi.
+hint.c2x_print.2,Load the strip whose edge sign matches the cabinet's label. Then size and sharpen the print.,"Вставьте ленту, у которой знак на краю совпадает с меткой шкафа. Затем подберите размер и резкость.",Chetidagi belgisi javon belgisiga mos lentani qoʻying. Soʻng oʻlcham va aniqlikni sozlang.
+hint.c2x_print.3,"Strip %s, zoom %d, focus %d.","Лента %s, увеличение %d, резкость %d.","%s-lenta, kattalashtirish %d, aniqlik %d."
+hint.c2x_cabinet.1,The projector's spare lamp is locked in Strand's cabinet.,Запасная лампа проектора заперта в шкафу Странда.,Proyektorning ehtiyot lampasi Strand javonida qulflangan.
+hint.c2x_cabinet.2,The staff photo shows the number. Set the four wheels to it.,Номер указан на фото сотрудника. Выставьте четыре колеса.,Raqam xodim suratida. Toʻrtta gʻildirakni shunga qoʻying.
+hint.c2x_cabinet.3,"Wheels: %d, %d, %d, %d.","Колёса: %d, %d, %d, %d.","Gʻildiraklar: %d, %d, %d, %d."
+hint.c2x_take_lamp.1,The cabinet is open.,Шкаф открыт.,Javon ochiq.
+hint.c2x_take_lamp.2,"A spare lamp stands inside, beside a note.","Внутри стоит запасная лампа, рядом записка.",Ichida ehtiyot lampa va yozuv turibdi.
+hint.c2x_take_lamp.3,Take the projector lamp.,Возьмите лампу проектора.,Proyektor lampasini oling.
+hint.c2x_install_lamp.1,The booth projector's lamp is dead.,Лампа проектора в кинобудке мертва.,Kinobudka proyektorining lampasi oʻchgan.
+hint.c2x_install_lamp.2,Select the spare lamp and use it on the projector.,Выберите запасную лампу и используйте её на проекторе.,"Ehtiyot lampani tanlab, proyektorda ishlating."
+hint.c2x_install_lamp.3,Use the lamp on the film projector.,Используйте лампу на кинопроекторе.,Lampani kinoproyektorda ishlating.
 hint.c3_interlock.1,Strand's switch room runs on keys. Start with its three cabinets.,Щитовая Странда работает на ключах. Начните с её трёх шкафов.,Strandning uzgichlar xonasi kalitlar bilan ishlaydi. Uning uchta shkafidan boshlang.
 hint.c3_interlock.2,The interlock plate above them shows which key frees which. Each lock shows the shape it takes.,"Табличка блокировки над ними показывает, какой ключ освобождает какой. На каждом замке — форма его ключа.",Ularning tepasidagi blokirovka lavhasi qaysi kalit qaysini boʻshatishini koʻrsatadi. Har bir qulfda oʻz kaliti shakli bor.
 hint.c3_interlock.3,"Diamond into II, triangle into I, circle into III, each turned OFF. The square opens the office.","Ромб — в II, треугольник — в I, круг — в III, каждый выключить. Квадрат открывает кабинет.","Romb — II ga, uchburchak — I ga, doira — III ga, har birini oʻchiring. Kvadrat kabinetni ochadi."
