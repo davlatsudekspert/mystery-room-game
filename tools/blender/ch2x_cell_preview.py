@@ -56,6 +56,9 @@ def main():
             res = (int(w), int(h))
     sel = C.args_shots(ARGS)
     X.begin()
+    X.decal("M_Decal_CellDrawing", "cell_drawing.png")          # decals first: their images must exist before the GLB import
+    Q.alpha_decal("M_Decal_Sheet", "sheet_print.png")
+    Q.alpha_decal("M_Decal_TableMask", "table_mask.png")
     # create the textured preview materials BEFORE the import: a GLB material of the same name would otherwise win and stay untextured
     for glb, _, _ in MODELS + SHEETS:
         pth = C.model_glb(glb)
@@ -70,9 +73,6 @@ def main():
         if h is not None:
             h.rotation_euler = (math.radians(-90.0), 0, math.radians(yaw))
     retex()
-    X.decal("M_Decal_CellDrawing", "cell_drawing.png")
-    Q.alpha_decal("M_Decal_Sheet", "sheet_print.png")
-    Q.alpha_decal("M_Decal_TableMask", "table_mask.png")
     for o in bpy.data.objects:
         if o.type == "MESH":
             for i, m in enumerate(o.data.materials):

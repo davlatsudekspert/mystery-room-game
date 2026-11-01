@@ -66,7 +66,7 @@ gauge needle `needle_src`. `s` = compressor stub (circle + arrow), `t` = Cold St
 
 Build list `tools/blender/build_lists/ch2x_cell.txt`; helpers `tools/blender/lib_ch2x_cell.py`; QA views `tools/blender/ch2x_cell_preview.py`
 (`blender -b --factory-startup -P tools/blender/ch2x_cell_preview.py -- --shots=cell,cell2,desk_light,cot,shelf,door,west`), previews `docs/previews/ch2_expansion/cell_*.jpg` and
-`hall_*.jpg`. Decals/materials: `tools/textures/make_decals_ch2x_cell.py`, `tools/materials/make_ch2x_cell_materials.py` (new slots `M_Decal_CellDrawing`, `M_Decal_FloorPlan`,
+`hall_*.jpg` (packed from the QA PNGs by `tools/blender/ch2x_cell_pack_previews.py <png dir>`). Decals/materials: `tools/textures/make_decals_ch2x_cell.py`, `tools/materials/make_ch2x_cell_materials.py` (new slots `M_Decal_CellDrawing`, `M_Decal_FloorPlan`,
 `M_Decal_Sheet`, `M_Decal_TableMask`; the sheet and mask images are alpha placeholders, the puzzle masks are drawn by code; `M_Decal_FloorPlan` is the same plan the document item uses).
 Identity of the room (the "different from the Pump Room" rule): ochre diamond wallpaper over a walnut wainscot, planked floor with an oval wool rug, cream cast radiator under a
 curtained window, cloth-shaded pendant and table lamp, shelves of jars and books, a coat on the hooks, a blue enamel kettle. No iron, no rivets.

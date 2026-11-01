@@ -106,6 +106,7 @@ def bedding():
         return [(z, y) for z, y in pts][::-1] if False else [(z, y) for z, y in sorted(pts, key=lambda p: p[0])]
     xs = [-0.30 + 1.15 * i / 10 for i in range(11)]
     o.append(Q.drape("sheet", xs, sec_sheet, thick=0.008, mat="M_Linen", folds=0.0))
+    o.append(gcyl("sheet_roll", 0.011, 0.64, (-0.30, ytop + 0.008, -0.32), axis="z", verts=10, mat="M_Linen", bevel=0.0))      # the turned-down edge, hides the cut end
     # wool blanket: over the foot part of the bed and hanging over the front (+Z) edge, soft ripples
     def sec_blank(x):
         z_end = 0.31

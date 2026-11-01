@@ -351,12 +351,13 @@ def dressing():
         o.append(gbox(f"hk{z}", (X0, 1.78, z - 0.012), (X0 + 0.06, 1.795, z + 0.012), BRASS, bevel=0.002))
         o.append(gcyl(f"hkb{z}", 0.010, 0.02, (X0 + 0.06, 1.77, z), axis="x", verts=8, mat=BRASS, bevel=0.002))
     o.append(gbox("hkboard", (X0, 1.74, -0.52), (X0 + 0.016, 1.84, 0.24), WOOD, bevel=0.003))
-    o.append(gbox("coat_b", (X0 + 0.03, 0.70, -0.31), (X0 + 0.17, 1.70, 0.03), "M_Linen", bevel=0.05, seg=2))
-    o.append(gbox("coat_sl", (X0 + 0.04, 0.86, -0.37), (X0 + 0.14, 1.58, -0.30), "M_Linen", bevel=0.03, seg=2))
-    o.append(gbox("coat_sr", (X0 + 0.04, 0.86, 0.02), (X0 + 0.14, 1.58, 0.09), "M_Linen", bevel=0.03, seg=2))
-    o.append(gbox("coat_c", (X0 + 0.03, 1.60, -0.32), (X0 + 0.19, 1.74, 0.04), "M_Fabric", bevel=0.03, seg=2))
+    o.append(gbox("coat_up", (X0 + 0.03, 1.16, -0.29), (X0 + 0.17, 1.70, 0.01), "M_Leather", bevel=0.05, seg=2))
+    o.append(gbox("coat_lo", (X0 + 0.03, 0.66, -0.34), (X0 + 0.19, 1.22, 0.06), "M_Leather", bevel=0.05, seg=2))
+    o.append(gbox("coat_sl", (X0 + 0.04, 0.90, -0.40), (X0 + 0.13, 1.62, -0.32), "M_Leather", bevel=0.03, seg=2))
+    o.append(gbox("coat_sr", (X0 + 0.04, 0.90, 0.04), (X0 + 0.13, 1.62, 0.12), "M_Leather", bevel=0.03, seg=2))
+    o.append(gbox("coat_c", (X0 + 0.03, 1.60, -0.31), (X0 + 0.20, 1.74, 0.03), "M_Fabric", bevel=0.03, seg=2))
     for y in (1.40, 1.24, 1.08):
-        o.append(gcyl(f"coat_bt{y}", 0.012, 0.008, (X0 + 0.17, y, -0.10), axis="x", verts=8, mat="M_Leather", bevel=0.0))
+        o.append(gcyl(f"coat_bt{y}", 0.012, 0.008, (X0 + 0.17, y, -0.14), axis="x", verts=8, mat="M_Brass_Aged", bevel=0.0))
     o.append(Q.gsphere("scarf", 0.14, (X0 + 0.07, 1.50, 0.17), (0.35, 1.0, 0.38), mat=WOOL, segs=9, rings=6))
     # boots + slippers on the rug by the cot
     for z, nm in ((-0.28, "bt_l"), (-0.50, "bt_r")):
