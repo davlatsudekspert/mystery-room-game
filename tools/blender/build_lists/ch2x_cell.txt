@@ -1,0 +1,12 @@
+# Chapter 2 expansion (Stage A), R3 Night Cell and the hall additions. Shared helpers: lib_ch2x.py, lib_ch2x_cell.py. Decals: tools/textures/make_decals_ch2x_cell.py (+ tools/materials/make_ch2x_cell_materials.py)
+cot.py
+kettle_hotplate.py
+light_table.py
+acetate_sheet.py
+cold_door.py
+cell_diary.py
+wipe_cloth.py
+room_cell.py
+service_door.py
+stair_stump.py
+floor_plan_frame.py
