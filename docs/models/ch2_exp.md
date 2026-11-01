@@ -12,7 +12,7 @@ pivot and identity rotation at rest (`docs/models/ch2.md` section 0). QA renders
 |---|---|
 | R2 Pump Room (`room_pump`, `boiler`, `manifold_plate`, `pipe_run`, `book_lift_cage`, `mallet`, `weight_1/2/4/8`) | **built, exported, render-checked** |
 | R3 Night Cell (`room_cell`, `cot`, `light_table`, `acetate_sheet_a/b/c`, `kettle_hotplate`, `cold_door`, `cell_diary`) | **built, exported, render-checked** (section "R3 Night Cell and hall additions") |
-| R4 Cold Store (`room_cold`, `carriage` x5, `frost_window`, `cold_chest`, `film_can` x4) | not built |
+| R4 Cold Store (`room_cold`, `carriage_1..5`, `frost_window`, `cold_chest`, `film_can_1..4`) | **built, exported, render-checked** (section "R4 Cold Store" below) |
 | Hall changes (`service_door`, `stair_stump`, `floor_plan_frame`) | **built, exported, render-checked** (same section) |
 | Stage B (R5 gallery, R6 plate room, R7 office, `roll_board`, `pa_horn`, `balcony_rail`, `enlarger`, `negative_strip`, `strand_cabinet`, `tea_set`, `stair_wedge`, `pass_key`, `projector_lamp`) | not built |
 | Hands (`hand_glove` rig, `wipe_cloth`) | `wipe_cloth` **built** (R3 section); `hand_glove` rig not started (`mallet` is done) |
@@ -153,5 +153,69 @@ or hide it when the stair opens from above); empty `light_stair_top` (0, 2.3, 0)
 
 **floor_plan_frame** (wall-mounted): `floor_plan_frame`, `IA_floor_plan` (plan quad 0.59 x 0.37, origin (0, 1.55, 0.0195), M_Decal_FloorPlan, UV 0..1).
 
+## R4 Cold Store (artist section, `tools/blender/build_lists/ch2x_cold.txt`)
+
+Status: **built, exported, render-checked** (`room_cold`, `carriage_1..5`, `frost_window`, `cold_chest`, `film_can_1..4`). Helpers: `tools/blender/lib_cold.py`
+(on `lib_ch2x.py`). Decals/images (PIL, original, language neutral): `tools/textures/make_decals_cold.py` into `game/assets/textures/decals/ch2x/`.
+Materials: `tools/materials/make_ch2x_materials.py` (R4 block). QA: `blender -b --factory-startup -P tools/blender/ch2x_room_preview.py -- room=cold [--shots=cold,overview,aisle,frost,rail_end,chest,evap,door]`
+(entry in `tools/blender/ch2x_rooms_cold.py`), previews `docs/previews/ch2_expansion/cold_*.jpg` and `prev_cold_*.jpg`.
+
+Identity (vs the other lower rooms): pale blue-grey galvanised zinc and white "ice" enamel, a vaulted ceiling with steel ribs, 7 tube lights (cold white
+`M_Emissive_Cold`), frost and ice everywhere, one red accent (the carriage hand wheels, the door release, the rail stops) and one warm human object (a wool
+parka). Light recipe for the scene: 3 cold-white OmniLights over the carriage bank (6500-7500 K, empties `light_cold_0..2` at y 2.95), one cold fill at the front,
+one pale cyan glow at the window (`light_window_fill`), NO warm lights; fog `shadow_teal` to blue, breath mist from `breath_origin`.
+
+### Measured
+| Model | Tris | Budget | Placement |
+|---|---|---|---|
+| `room_cold.glb` | 6.1k | 16k | origin 0, yaw 0 |
+| `carriage_1..5.glb` | 3.55 / 3.65 / 3.73 / 3.79 / 3.85k (18.6k all five) | 4.8k | origin = slot centre `carriage_slot_i`, yaw 0 |
+| `cold_chest.glb` | 5.9k | 6.0k | `chest_mount_i`, yaw 0 |
+| `frost_window.glb` | 1.4k | 3.2k | `window_mount` (3.845, 1.63, 2.20), **yaw -90** |
+| `film_can_1..4.glb` | 1.03 / 1.23 / 1.26 / 1.29k | 1.8k | held items (origin at the centre, lid axis +Y) |
+Room set total (room + 5 carriages + window + chest, no cans) about 32k tris, well under the 60k target; the carriage is the biggest block, cut candidates are the box/can contents. Materials per model: 2-11 slots (the carriage has 7, joined meshes, one object).
+
+### room_cold nodes (room coordinates)
+Interior x -3.8..3.8, z -3.4..3.4, walls 3.0 at the corners, barrel vault (axis along X) rising to 3.8 at z = 0. Static objects: `floor, wall_n, wall_s, wall_e, wall_w,
+ceiling, ribs, rails, lamps, evaporator, door_frame, strip_curtain, dressing, frost_patches, frost_decals, well, plan_frame`; `window_glow` (emissive plane in the light well),
+`plan_plate` (quad 0.50 x 0.344, slot `M_Decal_PlanPlate`, UV 0..1, centre (3.7875, 1.55, 1.00), faces -X; code draws the variant plan, placeholder `plan_plate.png`).
+Empties: `carriage_slot_0..6` (x = -3 .. +3, z -1.00, y 0), `chest_mount_0..6` (x = slot, z -3.14), `window_mount`, `door_mount` (-3.80, 0, 2.20), `light_cold_0..2`,
+`light_window_fill`, `breath_origin` (0, 1.55, 2.6), `evaporator_mount` (-1.65, 2.8, -2.7). Openings: west door z 1.75..2.65 (y 0..2.15) from the Night Cell (leaf = `cold_door` of the Cell set,
+this room supplies jambs, gasket, threshold, release knob, PVC strip curtain); east window z 1.72..2.68 (y 0.95..2.31) with a light well behind it.
+Carriage bank: 7 slots at 1.00 m pitch, rails (parts of `rails`) at z = -2.20 and +0.20 (top y 0.025), end stops at x = +-3.62. **Gaps**: 5 carriages in 7 slots.
+Back strip z -3.40..-2.60 for the chest. Colliders: `ModelUtil` builds trimesh blockers for the big static meshes; the room's blockers are the walls and `dressing`.
+
+### carriage_N nodes (N = 1..5, same node names; contents seeded by N)
+Origin = floor, footprint centre (0.92 x 3.20 x 2.45), front end panel +Z. Slides along **X** (one slot = 1.00 m per crank). `carriage_body` (static, 7 slots);
+`IA_crank` (pivot (0, 1.15, 1.69), identity rest, turn about +Z; red cast hand wheel with a black spinner knob, 3 spokes); `end_tag` (quad 0.20 x 0.12 at (0, 1.95, 1.6127), slot
+`M_Decal_CarriageTags`, UV already on cell N of the 5-cell atlas: pips N + colour band red/blue/yellow/green/white); `light_carriage` (0, 2.2, 0). Shelf faces are the +X and -X
+sides: 5 deck levels at y 0.32 0.76 1.20 1.64 2.08, 4 bays per side, archive boxes and film-can stacks (no interaction). Tap boxes for the scene: the end panel for the crank
+(`IA_crank`), the shelf faces are blockers only.
+
+### frost_window nodes (origin = pane centre in the glass plane, front +Z = into the room)
+`window_frame` (static), `window_glass` (clear pane, `M_Glass`), `frost_sign_0..2` (quads 0.22 x 0.22 at z +0.004, slot `M_Decal_FrostSign`: the scene sets the texture
+`decals/ch2x/frost_sign_<k>.png` of the variant), `frost_glass` (quad 0.80 x 1.20 at z +0.018, slot `M_Decal_FrostPane` = the wipe-reveal ShaderMaterial), empties `band_0..2` (0, +0.40|0|-0.40, 0.018), `light_window` (0, 0, -0.20).
+**Wipe mask / UV layout**: `frost_glass` UV 0..1 covers the pane exactly (U left to right seen from the room, V 0 = TOP = row 0 of the image). Bands (0.40 high each): band 0 = V 0..1/3, band 1 = 1/3..2/3,
+band 2 = 2/3..1. Sign k is centred in band k, shifted -0.22 / 0 / +0.22 along X (reading left to right = band order). Shader: `game/assets/materials/frost_reveal.gdshader`,
+material `M_Decal_FrostPane.tres`; uniforms `wipe_mask` (R8 texture, white = wiped; paint it in pane UV space, suggested 64 x 96), `reveal` (0..1 global), `frost_tex`, `frost_tint`, `tiling`,
+`edge_softness`. To wipe: update the mask `ImageTexture`, nothing else. Alternative "tap a band" = fill the band's rows of the mask. The plain `M_Frost` stays as a non-shader fallback. The slot is named `M_Decal_...` on
+purpose: the build's world-scale UV pass skips `M_Decal_` slots, which keeps the 0..1 UV.
+Placement in the room: `window_mount`, yaw -90; the wall opening is 0.96 x 1.36, the casing (0.10) covers its edge. The reveal reaches 0.22 behind the pane.
+
+### cold_chest nodes (origin on the floor, footprint centre, front +Z, 0.90 x 0.52 x 0.62)
+`chest_body` (static), `IA_lid` (pivot (0, 0.50, -0.26) hinge axis; open = **-105 deg about +X**), `IA_ring_0..2` (pivots (-0.26|0|+0.26, 0.27, 0.287), turn about +Z; drum symbols in
+`M_Decal_ChestRings`: symbol k at angle 90 - 60 k deg clockwise from the TOP, k: 0 sun, 1 moon, 2 star, 3 triangle, 4 circle, 5 square = the Chapter 3 drum order; a ring shows symbol k at the top
+when rotated by **+60 k deg about +Z** (counter-clockwise seen from the front); step = 60 deg), `crystal_mount_0|1` (-0.14|0.14, 0.31, 0), `note_mount` (0, 0.31, 0.15), `light_chest`
+(0, 0.44, 0). The lid carries the Meridian stencil (`M_Decal_SafeStencil`, alpha) and a blank brass plate (`M_Decal_ChestPlate`); the inscription is code/`tr()`, the model has no text. A fixed red pointer wedge sits
+over every ring (the symbol under it is the selected one).
+
+### film_can_1..4 (held items)
+Single objects, origin at the centre of mass, lid axis +Y, label slots `M_Decal_CanLabel_1..4` (numeral-only labels 35 / 16 / 8 / 9). 1 = big 35 mm can with canvas strap, 2 = 16 mm can with tape,
+3 = small dented can, 4 = tall can with wire handle and paper tag. Diameters 0.30 / 0.20 / 0.13 / 0.20 m.
+
+### Materials added for R4
+`M_Enamel_Ice`, `M_Emissive_Cold`, `M_Decal_ChestRings`, `M_Decal_ChestPlate`, `M_Decal_SafeStencil` (alpha), `M_Decal_CarriageTags`, `M_Decal_PlanPlate`, `M_Decal_CanLabel_1..4`,
+`M_Decal_FrostSign` (alpha), `M_Decal_FrostPatch` (alpha, soft frost blotches), `M_Decal_FrostPane` (ShaderMaterial). `steel_galv` was retuned (paler, half metal) so a closed room does not turn it black.
+
 ## Known gaps
-- Stage-B and hands content is not started; the Cold Store is not started (the cell's `cold_door` is its entrance). See the status table.
+- Stage-B and hands content is not started. Cold Store: no per-carriage lore cans are placed on the shelves (the four `film_can_N` are separate items for the scene to place); the Pump Room refrigerant line only ends at the evaporator (`evaporator_mount`); no sound or particles (breath mist is the scene's job at `breath_origin`). See the status table.
