@@ -1390,6 +1390,7 @@ func _plan_tile(r: Dictionary) -> Button:
 	b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	b.add_theme_font_size_override("font_size", UITheme.size(22)) # three floors must fit one screen on a phone
 	b.custom_minimum_size.y = 0.0
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART # a long room name wraps inside its tile instead of widening it
 	b.disabled = not bool(r["travel"])
 	b.modulate = Color(1, 1, 1, 0.5) if status == "locked" else Color.WHITE
 	var id: String = r["id"]
