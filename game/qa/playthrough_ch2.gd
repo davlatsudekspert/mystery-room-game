@@ -27,6 +27,7 @@ var lens_path := "leave"
 var _continue := true # --no-continue: no quit-and-Continue checks
 var _continue_checks := 0
 var _continue_failed := 0
+var _seen: Array[String] = [] # every logic event since the run began (a tap that only makes a sound is checked by it)
 
 
 func _ready() -> void:
@@ -59,6 +60,7 @@ func _ready() -> void:
 	SaveSystem.profile_path = "user://qa_ch2_profile.json"
 	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens_path == "take" else "leave_lens", "ch1_shards": 5}}
 	GameState.start_new("ch2")
+	GameState.events.connect(func(ev: Array[String]) -> void: _seen.append_array(ev))
 	logic = GameState.logic
 	var al := logic as ArchiveLogic
 	if exp_stage == 0:
@@ -245,7 +247,7 @@ func _rect(n: Node3D, own_only: bool) -> Rect2:
 	var r := Rect2()
 	var first := true
 	for mi in meshes:
-		if not mi.is_visible_in_tree():
+		if not mi.is_visible_in_tree() and not own_only: # an own-bounds part may be invisible and still tappable (dial holes)
 			continue
 		var ab := mi.get_aabb()
 		for k in 8:
@@ -477,14 +479,16 @@ func run() -> void:
 		await shot("deck_" + tape)
 		await _settle(9.0)
 	step("P7 three reels at 4.75 → clicks %s" % ", ".join((s["v_clicks"] as Array).map(func(c: Variant) -> String: return str(int(c)))), (s["clicks_heard"] as Array).size() == 3)
-	# N1-N6 lower floor. TODO(scene): tap the east-wall panel and dial, the manifold, the light table, the cold door,
-	# the carriages, the frost window and the chest rings once their hotspots exist; until then the solver plays them.
+	# N1 Warm Wall, then the Pump Room's N2 by real taps in the scene (hall east wall, service door, mallet, manifold,
+	# pipe board). TODO(scene): N3-N6 (Night Cell, Cold Store) still play at logic level until those rooms are in the scene.
 	if logic.exp_active():
+		await _n1_n2_taps()
 		var guard := 0
 		while not logic.state["chest_open"] and guard < 400:
 			ArchiveSolver.lower_floor(logic)
 			guard += 1
-		step("N1-N6 lower floor (logic level) → chest open, crystals available", logic.state["chest_open"] and logic.state["crystals_available"])
+		step("N3-N6 lower floor (logic level) → chest open, crystals available", logic.state["chest_open"] and logic.state["crystals_available"])
+		await _back_to_hall()
 		await _continue_check("lower")
 		L = logic
 		s = L.state
@@ -526,6 +530,7 @@ func run() -> void:
 			ArchiveSolver.upper_floor(logic)
 			guard2 += 1
 		step("N7-N10 upper floor (logic level) → projector lamp fitted", logic.state["lamp_ok"] and logic.state["print_ok"])
+		await _back_to_hall()
 	# P10 project, focus
 	await view("projector")
 	await use("film_reel")
@@ -705,6 +710,94 @@ func run() -> void:
 	var still := AudioManager.looping_sfx() # the cliffhanger's tape hiss must have stopped with the tape
 	step("No sound effect left looping (%s)" % ("none" if still.is_empty() else ", ".join(still)), still.is_empty())
 	_finish()
+
+
+## Walks the player back into the hall (logic room + scene) after steps that played other rooms at logic level.
+func _back_to_hall() -> void:
+	await wait_idle()
+	if logic.state["room"] != "hall":
+		logic.enter_room("hall")
+		await _settle(0.8)
+		await wait_idle()
+	cam().go("hall", true)
+	await _settle(0.4)
+
+
+## N1 and N2 as a player taps them (docs/CHAPTER2_EXPANSION.md): the receiver at the east wall, the panel that hides the
+## door, the dial, the service door, the Pump Room (mallet, probe tap, the manifold's valves).
+func _n1_n2_taps() -> void:
+	var L := logic
+	var s := L.state
+	var v := int(s["v_panel"])
+	# N1: the receiver in hand, the needle at the east wall, the panel, the dial 0417, the door
+	await use("pocket_receiver")
+	await view("hall")
+	await view("east_south")
+	await shot("n1_east_wall")
+	await view("east_panel_" + "abc"[v])
+	await shot("n1_panel")
+	await act("service_door", "IA_cover_panel", func() -> bool: return s["panel_found"], func() -> void: L.n1_open_panel(v), "panel " + "ABC"[v])
+	L.select_item("")
+	await _settle(1.0)
+	await view("east_dial")
+	await shot("n1_dial")
+	for ch in "0417":
+		var d := int(ch)
+		var n0 := _seen.size()
+		await act("service_door", "IA_dial_hole_%d" % d, func() -> bool: return _seen.slice(n0).any(func(e: String) -> bool: return e.begins_with("dial_n1:")),
+			func() -> void: L.n1_dial(d), "dial %d" % d)
+		await _settle(0.7)
+	step("N1 receiver, panel %s, dial 0417 → service door" % "ABC"[v], s["pump_open"])
+	await _settle(1.2)
+	await shot("n1_door_open")
+	await view("east_south")
+	await act("service_door", "IA_service_door", func() -> bool: return s["room"] == "pump", func() -> void: L.enter_room("pump"), "service door")
+	await _settle(1.0)
+	await wait_idle()
+	await shot("pump_arrival")
+	await _perf("pump")
+	# N2: the mallet from the bench, a probe on a pipe, the manifold's valves
+	await view("bench")
+	await shot("pump_bench")
+	await act("pump_room_pump", "Item_pump_mallet", func() -> bool: return L.has_item("mallet"), func() -> void: L.take("pump_mallet"), "mallet")
+	await view("pipes")
+	await shot("pump_pipes_dead")
+	var n0 := _seen.size()
+	await act("pump_pipe_run", "pipe_edge_0", func() -> bool: return _seen.slice(n0).any(func(e: String) -> bool: return e.begins_with("tap:")),
+		func() -> void: L.n2_tap_pipe(0), "mallet on pipe 1")
+	await view("manifold")
+	await shot("pump_manifold")
+	var sol: Array = L.pipe_solution()
+	for i: int in sol:
+		await act("pump_manifold_plate", "IA_valve_%d" % i, func() -> bool: return int(s["pipes"][i]) == 1 or s["thawed"],
+			func() -> void: L.n2_toggle_valve(i), "valve %d" % (i + 1))
+		await _settle(0.5)
+	await _settle(1.0)
+	await shot("pump_manifold_open")
+	await view("pipes")
+	await shot("pump_pipes_flow")
+	step("N2 valves %s → coil warm (thawed)" % ",".join(sol.map(func(x: Variant) -> String: return str(int(x) + 1))), s["thawed"])
+	# out by the stair
+	await view("pump")
+	var c := cam()
+	c.yaw = 180.0 # turn round to the south wall: the stair up to the hall
+	c.pitch = 0.0
+	c.call("_apply_free_look")
+	await _settle(0.4)
+	var zp: Vector3 = ((room.get("zones") as ArchiveZones).zones["pump"]["root"] as Node3D).global_position + Vector3(-1.7, 1.2, 2.75)
+	var sp := c.unproject_position(zp)
+	_note_hud(sp, "pump stair")
+	room.call("_on_tap", sp)
+	await _settle(1.2)
+	await wait_idle()
+	if s["room"] == "hall":
+		taps_ok += 1
+	else:
+		taps_fallback += 1
+		_log("  fallback: pump stair (hit %s)" % str(room.call("resolve", room.call("raycast", sp))))
+		L.enter_room("hall")
+		await _settle(1.0)
+		await wait_idle()
 
 
 ## The Chapter 3 card has its buttons (the cliffhanger's last beat).

@@ -90,6 +90,7 @@ func bind(r: Node3D) -> void:
 	SaveSystem.saved.connect(_on_saved)
 	_refresh_inventory()
 	_last_progress_ms = Time.get_ticks_msec()
+	_hint_btn.visible = _hints_on()
 
 
 func _on_setting_changed(key: String) -> void:
@@ -894,7 +895,7 @@ func set_busy(b: bool) -> void:
 	_busy = b
 	_inv_panel.visible = not b and _bag_open
 	_bag_btn.visible = not b
-	_hint_btn.visible = not b
+	_hint_btn.visible = not b and _hints_on()
 	_pause_btn.visible = not b
 	_back_btn.visible = not b and _back_wanted
 	_prompt_plate.visible = not b and _prompt.text != ""
@@ -905,8 +906,15 @@ func _on_saved() -> void:
 	pass # autosave is frequent; feedback is shown on pause/quit instead to avoid noise
 
 
+## False in the Archivist's Trial (Chapter 2): no hint button, no hint ladder, no "Next step" line.
+func _hints_on() -> bool:
+	return logic == null or logic.hints_allowed()
+
+
 func _on_events(ev: Array[String]) -> void:
 	for e in ev:
+		if e == "trial_off":
+			_hint_btn.visible = not _busy
 		if e.begins_with("item_added") or e.begins_with("item_removed") or e.begins_with("selected") or e.begins_with("combined"):
 			_refresh_inventory()
 		if e.begins_with("solved:") or e.begins_with("item_added"):
@@ -1058,7 +1066,7 @@ func _above_bar_size() -> Vector2:
 ## goes away at the answer. Asked again about the same goal, the dialog opens at the highest level reached.
 ## "Next step: <place>" for the current hint goal (tr() of the goal's place name), "" when the goal has none.
 func hint_place_text() -> String:
-	if GameState.logic == null:
+	if GameState.logic == null or not GameState.logic.hints_allowed():
 		return ""
 	var key := HintPlaces.place_key(GameState.logic.hint_goal())
 	if key == "":
@@ -1067,6 +1075,8 @@ func hint_place_text() -> String:
 
 
 func show_hint() -> void:
+	if not _hints_on():
+		return
 	_hint_btn.badge = ""
 	var o := _open_overlay(0.55)
 	var d := UITheme.dialog(o, 980, "ui.hint", 46)
@@ -1086,6 +1096,15 @@ func show_hint() -> void:
 	var more := UITheme.button("ui.hint_more", 560) # wide enough for "Show the answer (3/3)"
 	var close := UITheme.button("ui.close", 240)
 	h.add_child(more)
+	# Chapter 2 expansion: a one-line "Go to <room>" when the goal's next step is in another room the player can walk to
+	var go_room: String = logic.call("hint_room", logic.hint_goal()) if logic.has_method("hint_room") else ""
+	if go_room != "":
+		var go := UITheme.button(tr("ui2x.go_to") % tr(_room_name_key(go_room)), 560)
+		go.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		go.pressed.connect(func() -> void:
+			_close_overlay()
+			logic.call("travel_to", go_room))
+		h.add_child(go)
 	h.add_child(close)
 	var shown: Array[Dictionary] = GameState.shown_hints()
 	if shown.is_empty():
@@ -1304,11 +1323,87 @@ func show_inspect(id: String) -> void:
 	row.add_child(close)
 
 
+# ====================================================================== building plan (Chapter 2 expansion)
+func _room_name_key(id: String) -> String:
+	for r: Dictionary in ArchiveExpData.ROOMS:
+		if r["id"] == id:
+			return str(r["name"])
+	return ""
+
+
+## The floor-plan item: floors as three stacked strips (+1, 0, -1), a tile per room (lit when visited, a lock when sealed,
+## a dot when never entered, a mark where something waits), a tap on a lit tile travels there (travel_to: only to rooms
+## already entered); under it the open threads (what was seen and cannot be finished yet; never what to do).
+func show_plan() -> void:
+	if not logic.has_method("plan_data") or not bool(logic.call("exp_active")):
+		return
+	var data: Dictionary = logic.call("plan_data")
+	var o := _open_overlay(0.8)
+	var d := UITheme.dialog(o, 1180, "ui2x.plan_title", 44)
+	var v: VBoxContainer = d["body"]
+	var floors: Array = (data["floors"] as Array).duplicate()
+	floors.reverse() # +1 on top
+	for fl: int in floors:
+		var row := VBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		var cap := UITheme.label("ui2x.floor_%s" % ("m1" if fl < 0 else ("p1" if fl > 0 else "0")), 22, UITheme.MUTED)
+		cap.add_theme_font_override("font", UITheme.caps_font(false, 1))
+		row.add_child(cap)
+		var tiles := HFlowContainer.new()
+		tiles.add_theme_constant_override("h_separation", 14)
+		tiles.add_theme_constant_override("v_separation", 10)
+		row.add_child(tiles)
+		for r: Dictionary in data["rooms"]:
+			if int(r["floor"]) != fl:
+				continue
+			tiles.add_child(_plan_tile(r))
+		v.add_child(row)
+		v.add_child(UIOrnament.header_rule(10.0))
+	var tt := UITheme.label("ui2x.threads_title", 24, UITheme.BRASS_HI)
+	tt.add_theme_font_override("font", UITheme.caps_font(true, 1))
+	v.add_child(tt)
+	var threads: Array = data["threads"]
+	if threads.is_empty():
+		var none := UITheme.label("ui2x.threads_none", 24, UITheme.MUTED)
+		v.add_child(none)
+	for t: Dictionary in threads:
+		var line := UITheme.label("%s  (%s)" % [tr(str(t["name"])), tr(_room_name_key(str(t["room"])))], 24)
+		line.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		v.add_child(line)
+	var close := UITheme.button("ui.close", 280)
+	close.pressed.connect(_close_overlay)
+	(d["footer"] as HFlowContainer).add_child(close)
+
+
+func _plan_tile(r: Dictionary) -> Button:
+	var status: String = r["status"]
+	var sub := ""
+	if bool(r["here"]):
+		sub = tr("ui2x.here")
+	elif status == "locked":
+		sub = tr("ui2x.locked")
+	elif status == "new":
+		sub = tr("ui2x.new_area")
+	elif bool(r["pending"]):
+		sub = tr("ui2x.pending")
+	var b := UITheme.button("%s\n%s" % [tr(str(r["name"])), sub] if sub != "" else tr(str(r["name"])), 230)
+	b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	b.add_theme_font_size_override("font_size", UITheme.size(22)) # three floors must fit one screen on a phone
+	b.custom_minimum_size.y = 0.0
+	b.disabled = not bool(r["travel"])
+	b.modulate = Color(1, 1, 1, 0.5) if status == "locked" else Color.WHITE
+	var id: String = r["id"]
+	b.pressed.connect(func() -> void:
+		_close_overlay()
+		logic.call("travel_to", id))
+	return b
+
+
 # ====================================================================== documents
 ## The documents the reader can open (an item whose document is not listed here has no Read button).
 const DOCUMENTS: Array[String] = ["notebook", "letter", "photo", "evidence", "darkroom_note", "badge", "index_card",
 	"personnel_file", "tape_1996", "tape_1997", "tape_1998", "strand_letters", "strand_note", "growth_log", "poster",
-	"chalkboard", "routing_chart", "log4", "letter4", "watch4", "note4", "parcel4"]
+	"chalkboard", "routing_chart", "floor_plan", "log4", "letter4", "watch4", "note4", "parcel4"]
 
 
 static func has_document(doc: String) -> bool:
@@ -1352,6 +1447,8 @@ func show_document(doc: String) -> void:
 			_show_picture("res://assets/textures/decals/poster_resonance.jpg", tr("obj.poster"))
 		"chalkboard":
 			_show_picture("res://assets/textures/decals/chalkboard.jpg", tr("obj.chalkboard"))
+		"floor_plan":
+			show_plan()
 		"routing_chart":
 			_show_picture("res://assets/textures/decals/ch2/routing_chart.png", tr("obj2.chart"), tr("msg.c2_chart_rule"))
 
@@ -1878,6 +1975,16 @@ func show_chapter_complete() -> void:
 		col.add_child(b)
 		stats.add_child(col)
 	v.add_child(stats)
+	if logic.has_method("exp_active"):
+		# docs/CHAPTER2_EXPANSION.md: the Trial's stamp, and a note on a game saved before the new floors existed
+		if logic.has_method("trial_stamp") and bool(logic.call("trial_stamp")):
+			var stamp := UITheme.label("ui2x.trial_stamp", 26, UITheme.BRASS_HI)
+			stamp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			v.add_child(stamp)
+		if not bool(logic.call("exp_active")):
+			var legacy := UITheme.label("ui2x.legacy_note", 22, UITheme.MUTED)
+			legacy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			v.add_child(legacy)
 	var footer: HFlowContainer = d["footer"]
 	var next_id := Chapters.next_of(GameState.chapter_id)
 	if next_id != "":

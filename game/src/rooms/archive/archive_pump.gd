@@ -30,7 +30,8 @@ const PLACE := {
 const SLOT_S := Vector2(-1.25, 0.9)
 const SLOT_C := Vector2(1.25, 1.4)
 const SLOT_H := Vector2(1.25, 0.4)
-const SLOT_J: Array[Vector2] = [Vector2(-0.45, 1.4), Vector2(-0.45, 0.4), Vector2(0.4, 1.4), Vector2(0.4, 0.4)]
+## (the four boxes the model has, and two more hubs between them)
+const SLOT_J: Array[Vector2] = [Vector2(-0.45, 1.4), Vector2(-0.45, 0.4), Vector2(0.4, 1.4), Vector2(0.4, 0.4), Vector2(-0.45, 0.9), Vector2(0.4, 0.9)]
 const BOARD_Z := 0.105
 const VALVE_OPEN_DEG := 90.0
 const NEEDLE_TICK_DEG := -27.0
@@ -71,6 +72,7 @@ func build() -> void:
 		n.name = "pump_" + id
 		models[id] = n
 		(room.get("_roots") as Dictionary)[n] = "pump_" + id
+		(room.get("models") as Dictionary)["pump_" + id] = n
 		n.set_meta("hotspot", "")
 		room.call("tune_shadows", n)
 	(models.get("manifold_plate") as Node3D).set_meta("hotspot", "pump_manifold")
@@ -96,7 +98,7 @@ func build() -> void:
 func _build_views() -> void:
 	var cam: RoomCamera = room.get("cam")
 	var o := root.position
-	cam.add_view("pump", o + Vector3(-1.7, 1.7, 2.6), o + Vector3(0.4, 1.15, -1.5), 66.0, true)
+	cam.add_view("pump", o + Vector3(-1.3, 1.7, 1.7), o + Vector3(0.4, 1.15, -1.5), 66.0, true)
 	cam.add_view("manifold", o + Vector3(1.85, 1.3, 1.35), o + Vector3(3.5, 1.25, 1.35), 56.0)
 	cam.add_view("boiler", o + Vector3(0.45, 1.45, 1.1), o + Vector3(0.0, 1.0, -1.75), 58.0)
 	cam.add_view("lift_door", o + Vector3(-1.4, 1.45, -1.7), o + Vector3(-4.3, 1.15, -1.9), 58.0)
@@ -106,7 +108,7 @@ func _build_views() -> void:
 
 func _build_exits(shell: Node3D) -> void:
 	# the south stair leads back up to the hall, the east door to the Night Cell
-	room.call("add_tap_area", root, Vector3(1.2, 2.4, 0.9), "pump_stair", "Stair_hall", Vector3(-1.7, 1.2, 2.55))
+	room.call("add_tap_area", root, Vector3(1.2, 2.4, 0.5), "pump_stair", "Stair_hall", Vector3(-1.7, 1.2, 2.75))
 	var door := ModelUtil.find(shell, "IA_door_cell")
 	if door != null:
 		door.set_meta("hotspot", "pump_door")
@@ -194,9 +196,10 @@ func _spawn_mallet(shell: Node3D) -> void:
 static func layout(graph: Array) -> Array[Vector2]:
 	var best: Array[Vector2] = []
 	var best_cost := 1 << 30
-	for a in 4:
-		for b in 4:
-			for c in 4:
+	var n := SLOT_J.size()
+	for a in n:
+		for b in n:
+			for c in n:
 				if a == b or b == c or a == c:
 					continue
 				var pos: Array[Vector2] = [SLOT_S, SLOT_C, SLOT_H, SLOT_J[a], SLOT_J[b], SLOT_J[c]]

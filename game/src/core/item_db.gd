@@ -34,7 +34,7 @@ const ITEMS := {
 	"strand_key": {"model": "key_strand"},
 	"leyla_key": {"model": "key_leyla"},
 	# Chapter 2 expansion (docs/CHAPTER2_EXPANSION.md; models arrive with the new rooms, until then the bag shows the name)
-	"floor_plan": {"model": "floor_plan"},
+	"floor_plan": {"model": "floor_plan", "doc": "floor_plan"},
 	"mallet": {"model": "mallet", "tool": "mallet"}, # worn in hand: a tap with it does what the place does (the pipes ring)
 	"wipe_cloth": {"model": "wipe_cloth", "tool": "cloth"},
 	"frost_sketch": {"model": "frost_sketch"},

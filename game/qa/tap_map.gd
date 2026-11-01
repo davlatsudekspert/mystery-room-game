@@ -87,6 +87,7 @@ func _run() -> void:
 	var until := ""
 	var trust := "leyla" # ch4: the Chapter 3 choice (--trust=strand) and its true-ending flag (--secret)
 	var secret := false
+	var expansion := 0 # --expansion[=1|2]: a NEW Chapter 2 expansion game (docs/CHAPTER2_EXPANSION.md), its rooms in the scene
 	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
@@ -109,6 +110,10 @@ func _run() -> void:
 			trust = a.substr(8)
 		elif a == "--secret":
 			secret = true
+		elif a == "--expansion":
+			expansion = 2
+		elif a.begins_with("--expansion="):
+			expansion = clampi(int(a.substr(12)), 1, 2)
 		elif a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7))
 		elif a.begins_with("--brightness="):
@@ -139,6 +144,10 @@ func _run() -> void:
 		"ch3_trust": trust, "ch3_true_ending": secret}}
 	GameState.start_new(chapter)
 	var logic := GameState.logic
+	if expansion > 0 and logic is ArchiveLogic:
+		(logic as ArchiveLogic).begin_expansion(expansion)
+		logic.setup_from_profile(GameState.profile.get("choices", {}))
+		logic.apply_seed(int(logic.state["seed"]))
 	for _i in steps:
 		_solve_step(chapter, logic)
 	var guard := 0
@@ -272,6 +281,8 @@ static func _solve_step(chapter: String, logic: RoomLogic) -> void:
 			UndergroundSolver.step(logic as UndergroundLogic, "leyla")
 		"ch2":
 			ArchiveSolver.step(logic as ArchiveLogic, "leyla_key")
+			if (logic as ArchiveLogic).exp_active():
+				ArchiveSolver.lower_floor(logic as ArchiveLogic)
 		_:
 			Lab7Solver.step(logic as Lab7Logic, "leave_lens")
 

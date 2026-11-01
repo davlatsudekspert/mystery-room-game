@@ -94,6 +94,7 @@ const BOOTH_VIEWS := ["booth", "projector", "splicer", "slides", "slide_projecto
 const VAULT_VIEWS := ["vault", "vault_ports", "vault_inside", "vault_mouth"]
 
 var visuals: ArchiveVisuals
+var hands: HandLayer
 var zones: ArchiveZones # the expansion's rooms (docs/CHAPTER2_EXPANSION.md): only built and shown in an expansion game
 var teaser: ArchiveTeaser # the cliffhanger after the key choice and the Chapter 3 card
 var _held_frame := -1 # splicer: the loose film strip the player picked up
@@ -135,6 +136,8 @@ func _ready() -> void:
 	teaser.finished.connect(_on_teaser_finished)
 	build_input()
 	build_hud()
+	hands = HandLayer.new(self) # the selected tool in hand (Settings "hands"); a child of the camera
+	cam.add_child(hands)
 	add_child(PerfGuard.new())
 	GameState.events.connect(_on_events)
 	visuals.apply_state(false)

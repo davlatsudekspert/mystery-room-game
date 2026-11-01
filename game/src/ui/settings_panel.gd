@@ -362,7 +362,22 @@ func _section_other() -> Control:
 	return _section("ui.sec_other", [
 		_row("ui.haptics", _toggle("haptics")),
 		_row("ui.safe_graphics", _toggle("safe_graphics"), "ui.safe_graphics_desc"),
+		# Chapter 2 expansion (docs/CHAPTER2_EXPANSION.md sections 11 and 12)
+		_row("ui2x.hands", _toggle("hands")),
+		_stacked_row("ui2x.moments", _moments_control()),
 	])
+
+
+## Eerie moments: Full / Soft (no sound sting) / Off, as the three words under the label.
+func _moments_control() -> Control:
+	var seg := UISegmented.new()
+	seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for m: String in Settings.MOMENT_MODES:
+		seg.add_option("ui2x.moments_" + m, m, true, false)
+	seg.set_stacked(seg.row_width(theme) > _col_w)
+	seg.select(str(Settings.get_value("moments")))
+	seg.chosen.connect(func(m: Variant) -> void: Settings.set_value("moments", str(m)))
+	return seg
 
 
 ## A thin slider with a percentage readout; the row height is the touch target.

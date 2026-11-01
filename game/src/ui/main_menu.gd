@@ -427,6 +427,15 @@ func _show_chapters() -> void:
 			b.pressed.connect(_show_purchase)
 		row.add_child(b)
 		v.add_child(row)
+		# Chapter 2 expansion: the Archivist's Trial (no hints) is chosen when a NEW game starts, never switched on later
+		if can and ch["id"] == "ch2" and ArchiveLogic.EXPANSION_STAGE >= 1 and GameState.saved_chapter() != "ch2":
+			var trial := UITheme.button("ui2x.trial_title", 300)
+			trial.pressed.connect(func() -> void:
+				if GameState.start_new("ch2", {"trial": true}):
+					_play("ch2"))
+			row.add_child(trial)
+			var tdesc := UITheme.label("ui2x.trial_desc", 20, UITheme.MUTED)
+			v.add_child(tdesc)
 	if Premium.paid_ui_enabled(): # the store release mentions no purchase at all
 		var unlock := UITheme.label("ui.unlock_desc", 22, UITheme.MUTED)
 		unlock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

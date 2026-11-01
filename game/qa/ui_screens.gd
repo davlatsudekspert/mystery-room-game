@@ -243,6 +243,42 @@ func _run() -> void:
 		hud.call("_close_overlay")
 		room.queue_free()
 		await _settle(0.5)
+		# --- Chapter 2 expansion: the building plan, the hint's "Go to", the Trial (no hint button), the chapter card
+		GameState.start_new("ch2")
+		var al := GameState.logic as ArchiveLogic
+		al.begin_expansion(2)
+		al.setup_from_profile({})
+		al.apply_seed(7)
+		var guard := 0
+		while not bool(al.state["cell_digits_ok"]) and guard < 400:
+			guard += 1
+			ArchiveSolver.step(al, "leyla_key")
+			ArchiveSolver.lower_floor(al)
+		al.enter_room("pump")
+		al.enter_room("cell")
+		al.enter_room("pump")
+		var room2: Node3D = (load("res://src/rooms/archive/archive.tscn") as PackedScene).instantiate()
+		room2.set("capture_mode", true)
+		get_tree().root.add_child(room2)
+		await _settle(2.0)
+		var hud2: Node = room2.get("hud")
+		await _overlay_shot(hud2, "show_plan", [], "%s_plan" % lang, 0.8)
+		await _overlay_shot(hud2, "show_hint", [], "%s_hint_goto" % lang, 0.8)
+		await _overlay_shot(hud2, "show_pause", [], "%s_pause2" % lang)
+		var sbtn := _find_button(hud2.get("_overlay"), "ui.settings")
+		if sbtn != null:
+			sbtn.emit_signal("pressed")
+			await _settle(0.8)
+			await _shot("%s_pause_settings2" % lang, hud2.get("_overlay"))
+		hud2.call("_close_overlay")
+		al.state["complete"] = true
+		await _overlay_shot(hud2, "show_chapter_complete", [], "%s_chapter2_complete_exp" % lang, 1.6)
+		hud2.call("_close_overlay")
+		al.make_legacy()
+		await _overlay_shot(hud2, "show_chapter_complete", [], "%s_chapter2_complete_legacy" % lang, 1.6)
+		hud2.call("_close_overlay")
+		room2.queue_free()
+		await _settle(0.5)
 		_save_report()
 	SaveSystem.delete_game()
 	_save_report()
