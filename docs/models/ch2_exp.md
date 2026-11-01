@@ -11,11 +11,11 @@ pivot and identity rotation at rest (`docs/models/ch2.md` section 0). QA renders
 | Group | State |
 |---|---|
 | R2 Pump Room (`room_pump`, `boiler`, `manifold_plate`, `pipe_run`, `book_lift_cage`, `mallet`, `weight_1/2/4/8`) | **built, exported, render-checked** |
-| R3 Night Cell (`room_cell`, `cot`, `light_table`, `acetate_sheet_a/b/c`, `kettle_hotplate`, `cold_door`, `cell_diary`) | not built (scripts for `cot` and `kettle_hotplate` were drafted but never saved) |
+| R3 Night Cell (`room_cell`, `cot`, `light_table`, `acetate_sheet_a/b/c`, `kettle_hotplate`, `cold_door`, `cell_diary`) | **built, exported, render-checked** (section "R3 Night Cell and hall additions") |
 | R4 Cold Store (`room_cold`, `carriage` x5, `frost_window`, `cold_chest`, `film_can` x4) | not built |
-| Hall changes (`service_door`, `stair_stump`, `floor_plan_frame`) | not built |
+| Hall changes (`service_door`, `stair_stump`, `floor_plan_frame`) | **built, exported, render-checked** (same section) |
 | Stage B (R5 gallery, R6 plate room, R7 office, `roll_board`, `pa_horn`, `balcony_rail`, `enlarger`, `negative_strip`, `strand_cabinet`, `tea_set`, `stair_wedge`, `pass_key`, `projector_lamp`) | not built |
-| Hands (`hand_glove` rig, `wipe_cloth`) | not built (`mallet` is done) |
+| Hands (`hand_glove` rig, `wipe_cloth`) | `wipe_cloth` **built** (R3 section); `hand_glove` rig not started (`mallet` is done) |
 
 ## Built models (measured)
 
@@ -62,5 +62,96 @@ gauge needle `needle_src`. `s` = compressor stub (circle + arrow), `t` = Cold St
 `M_Iron_Rust` (cast iron with rust bloom), `M_Wallpaper_Cell`, `M_Wool_Knit`, `M_Steel_Galv`, `M_Wallpaper_Office`, `M_Paint_Black`, `M_Frost`, `M_Acetate`, `M_Emissive_Table`,
 `M_Emissive_Safelight`; existing `M_Chequer`, `M_Tile_Glazed` are reused. New decal slots (placeholder images by `tools/textures/make_decals_ch2x.py`, `.tres` written): `M_Decal_PipeDiagram`, `M_Decal_LiftPlate`.
 
+## R3 Night Cell and hall additions (3D artist B)
+
+Build list `tools/blender/build_lists/ch2x_cell.txt`; helpers `tools/blender/lib_ch2x_cell.py`; QA views `tools/blender/ch2x_cell_preview.py`
+(`blender -b --factory-startup -P tools/blender/ch2x_cell_preview.py -- --shots=cell,cell2,desk_light,cot,shelf,door,west`), previews `docs/previews/ch2_expansion/cell_*.jpg` and
+`hall_*.jpg`. Decals/materials: `tools/textures/make_decals_ch2x_cell.py`, `tools/materials/make_ch2x_cell_materials.py` (new slots `M_Decal_CellDrawing`, `M_Decal_FloorPlan`,
+`M_Decal_Sheet`, `M_Decal_TableMask`; the sheet and mask images are alpha placeholders, the puzzle masks are drawn by code; `M_Decal_FloorPlan` is the same plan the document item uses).
+Identity of the room (the "different from the Pump Room" rule): ochre diamond wallpaper over a walnut wainscot, planked floor with an oval wool rug, cream cast radiator under a
+curtained window, cloth-shaded pendant and table lamp, shelves of jars and books, a coat on the hooks, a blue enamel kettle. No iron, no rivets.
+
+### Measured (tris)
+| Model | Tris | Budget set | Notes |
+|---|---|---|---|
+| `room_cell.glb` | 22.2k | 26k | 14 static objects, 28 nodes; about 30 unique materials, merge per material with `ModelUtil.merge_static` |
+| `cot.glb` | 3.2k | 3.6k | |
+| `light_table.glb` | 1.9k | 4.2k | |
+| `acetate_sheet_a/b/c.glb` | 0.28k each | 0.7k | |
+| `kettle_hotplate.glb` | 4.5k | 4.8k | |
+| `cold_door.glb` | 8.9k | 9k | hero prop (each lock drum with numerals 1.1k, ice 1.3k) |
+| `cell_diary.glb` | 1.4k | 1.8k | |
+| `wipe_cloth.glb` | 1.3k | 1.5k | a Cold Store item |
+| **Cell set total** (room + cot + table + 3 sheets + kettle + door + diary) | **43.0k** | 60k goal | |
+| `service_door.glb` | 4.2k | 4.2k | the dial is 1.5k of it (hole liners are tap volumes, hide their meshes) |
+| `stair_stump.glb` | 2.0k | 3.6k | |
+| `floor_plan_frame.glb` | 0.6k | 0.9k | 2 materials, 2 draws |
+| **Hall additions total** | **6.7k** | | hall draw calls: floor plan +2; stair stump +4 (3 materials + the ladder); service door +3 while the cover is closed (only `IA_cover_panel`: green, plaster, walnut rail), +9 once it is opened (show the rest then) |
+
+### Placements (yaw about +Y; yaw -90 makes the model front face -X)
+**Night Cell origin = (6.2, 0, 0) in the Pump Room frame, yaw 0**: the cell's 0.25 m west wall then continues the Pump Room's east wall (a doorway 0.5 m deep). The leaf
+`IA_door_cell` of `room_pump` swings into the cell and ends at cell (-1.85, -1.63); nothing stands there. All rows below are in CELL coordinates (the empties of `room_cell` carry the positions):
+
+| Model | Empty in `room_cell` | Position | Yaw | Notes |
+|---|---|---|---|---|
+| `cot` | `cot_mount` | (-0.75, 0, -1.58) | 0 | head at -X, the long side faces the room |
+| `light_table` | `light_table_mount` | (1.30, 0.76, -1.62) | 0 | on the desk top (y 0.76) |
+| `acetate_sheet_a/b/c` (loose) | `acetate_mount_a/b/c` | a (1.70, 0.76, -1.52), b (-0.30, 0.872, 1.66), c (1.20, 1.652, -1.82) | 0 | as items before pick-up: lay them flat (rotate -90 about X); on the table use `sheet_mount_0..2` of `light_table` |
+| `kettle_hotplate` | `kettle_mount` | (-0.70, 0.86, 1.76) | 180 | on the sideboard, front toward the room (-Z) |
+| `cell_diary` | `diary_mount` | (0.82, 0.76, -1.62) | about 12 | lies flat on the desk (origin = its centre, so use y 0.778) |
+| `cold_door` | `cold_door_mount` | (2.20, 0, 0) | -90 | east wall; local +X then points along world +Z, the hinge side (local -X) is the north side; opens INTO the cell |
+| `wipe_cloth` | (Cold Store) | n/a | | item; origin = centre of mass, front face up |
+
+Hall additions (HALL coordinates; yaw so that the model +Z points into the hall):
+
+| Model | Position | Yaw | Notes |
+|---|---|---|---|
+| `service_door` | (5.0, 0, 2.95) | -90 | east wall south of the compressor panel (z 0.2..1.4) and of the pilaster (z 1.98..2.42); spans z 2.5..3.4; the framed rules notice on the east wall may have to move |
+| `floor_plan_frame` | wall point (x, 0, z) | east wall -90, north 0, west 90, south 180 | origin on the floor at the centre of the back face; the frame centre is at y 1.55 |
+| `stair_stump` | free floor spot of the scene agent's choice | any | origin = the column centre on the floor; footprint radius 0.95; needs 1.0 m clearance; 1.6 m high plus the ladder up to about 3.35 m (jammed against the hall ceiling at 3.6) |
+
+### Node names and pivots (model space; IA parts and all animated parts have identity rotation at rest)
+**room_cell** (room coordinates; interior x -2.2..2.2, z -2.0..2.0, ceiling 2.70; openings: west z -1.55..-0.65 y 0..2.1 doorway, east z -0.45..0.45 y 0..2.1 for the cold door)
+static: `floor, wall_n, wall_e, wall_s, wall_w, ceiling, trim, rug, furniture, radiator, window, dressing`.
+lamps: `lamp_ceiling` (pivot (0, 2.70, 0.20), static, may sway a little), `lamp_ceiling_glow` (bulb, M_Emissive_Warm, origin (0, 2.10, 0.20)), `lamp_desk` (pivot (2.0, 0.76, -1.72)),
+`lamp_desk_glow` (bulb, origin (2.0, 1.10, -1.72)). Lights as empties: `light_lamp_ceiling` (0, 2.02, 0.20) warm 2700 K, `light_lamp_desk` (2.0, 1.10, -1.72), `light_fill` (-1.2, 1.9, 1.2),
+`light_cot_fill` (-0.8, 1.2, -1.2). The room has no IA parts (the doorway leaf belongs to `room_pump`, the interactive things are the placed models).
+Light recipe used in the previews: pendant 120 W-equivalent (amber FFB46B), desk lamp 22, table glow 10 (FFF1D0), fill 14, cot fill 8, cold fill at the door 6 (BFE0FF); world 0.05.
+Suggested views (camera -> target, cell coordinates): `cell` (-2.05, 1.70, 1.80) -> (1.3, 0.70, -1.1); `cell2` (2.10, 1.75, 1.05) -> (-1.1, 0.75, -1.0); `desk_light` (1.25, 1.50, -0.35) -> (1.30, 0.85, -1.70);
+`cot` (-0.15, 1.45, -0.05) -> (-0.85, 0.50, -1.60); `shelf` (-0.45, 1.45, 0.05) -> (-0.70, 1.00, 1.90); `door` (-0.30, 1.45, 0.10) -> (2.20, 1.10, 0.0).
+
+**cot**: `cot_body`; `IA_cot_drawing` (the drawing: a 0.20 x 0.27 card leaning on the pillow, M_Decal_CellDrawing UV 0..1, origin at its centre (-0.74, 0.622, 0.072), tilt baked); empty `light_cot` (-0.55, 1.10, 0.10).
+
+**light_table** (origin on the desk surface at the footprint centre; footprint 0.42 x 0.42; glass top 0.0585; window = 11 columns x 7 rows of 0.022 m = 0.242 x 0.154, centred on the glass at z 0.02):
+`light_table_body`; `table_glow` (opal glass, M_Emissive_Table, origin (0, 0.0585, 0.02); hide or dim = lamp off); `table_mask` (quad 0.242 x 0.154 at y 0.0592, M_Decal_TableMask, UV 0..1, columns left to right = +X,
+row 0 at the BACK edge (-Z); the code draws the lit cells, 7 rows x 11 columns row-major as `ArchiveExpData.glyph_window`); `IA_switch` (rocker on the back panel, pivot (0.145, 0.083, -0.1165), ON = -25 deg about +X);
+`pilot_lamp` (M_Emissive_Warm, origin (0.095, 0.083, -0.1185)); `sheet_mount_0..2` (y 0.0615 + 0.003 k, z 0.02, each rotated -90 about +X so that a sheet model lies flat, front up); `light_table_light` (0, 0.20, 0.02).
+
+**acetate_sheet_a/b/c** (item, built upright in XY, front +Z, origin = centre; 0.26 x 0.26 x 0.0015; edge tape and flip tab colours: a crimson, b cobalt, c amber; one clipped corner = the reference corner, top left when upright,
+and a black wedge at the top edge): `IA_sheet` (root, origin (0, 0, 0); tap = rotate 90 deg CLOCKWISE seen from the front, i.e. -90 deg about its local +Z each tap, matching `ArchiveExpData.sheet_transform`), `sheet_print` (child quad
+0.242 x 0.242 at z +0.001, M_Decal_Sheet alpha, UV 0..1 over the 11 x 11 cells, row 0 at the top; the code supplies the mask; the window rows are 2..8), `IA_flip_tab` (child, origin (0.1475, 0, 0) on the right edge; tap = flip =
+180 deg about the sheet's local +Y, which mirrors left-right like `sheet_transform(flip = 1)`).
+
+**kettle_hotplate** (origin on the support surface at the footprint centre; 0.42 x 0.27; plate top 0.075): `hotplate_body`; `IA_kettle` (pivot at the base (-0.105, 0.0775, 0); lift = +Y); `IA_knob_left` (pivot (-0.105, 0.040, 0.1345)),
+`IA_knob_right` (pivot (0.105, 0.040, 0.1345)): turn about +Z, off = rest (pointer down), full on = -90 deg; `coil_glow` (left ring coils, M_Emissive_Warm, origin (-0.105, 0.0905, 0), hide when off); empty `steam_mount` (-0.255, 0.205, 0).
+
+**cold_door** (origin = centre of the 0.90 x 2.10 opening at floor level on the room-side wall plane; the wall occupies z -0.25..0; front +Z): `cold_door_frame` (liner, architrave, stop with gasket, hinge knuckles, thermal plate x -0.90..-0.60 with the
+serpentine copper coil, feed pipe up to y 2.70, return into the floor); `IA_cold_door` (leaf 0.836 x 2.06 x 0.11, origin = hinge axis (-0.44, 0, 0), opens with a NEGATIVE angle about +Y, -100 deg, toward the cell); children of the leaf:
+`IA_cold_handle` (cam lever, pivot (0.335, 0.86, 0.040), rest up = locked, release = -90 deg about +Z), `IA_wheel_a` (pivot (0.245, 1.28, 0.012)), `IA_wheel_b` (pivot (0.325, 1.28, 0.012)): digit drums with the numerals 0-9,
+digit k in front = rotate +36 deg x k about +X (k + 1 sits above k); `lock_lamp` (jewel, M_Emissive_Red, origin (0.285, 1.375, 0.056)); static extras: `coil_glow` (emissive bands on the coil, origin (-0.70, 1.10, 0.030); show while hot), `door_ice`
+(frost lumps and icicles, M_Frost, origin (0, 1.05, 0.02); hide when thawed), empties `coil_mount` (-0.84, 2.70, 0.03) and `light_cold_door` (0, 2.0, 0.35).
+
+**cell_diary** (item, lies flat, cover +Y, spine at -X, foot (ribbon) at +Z; 0.150 x 0.036 x 0.210): `IA_cell_diary` (origin = centre). **wipe_cloth** (item, flat, 0.15 x 0.11 x 0.02): `wipe_cloth`, empty `grip_mount` (0, 0.0165, 0).
+
+**service_door** (origin = centre of the 0.90 x 2.10 opening at floor level on the hall-side wall plane; the wall occupies z -0.20..0): `service_door_frame` (casing, reveal liners, threshold, shaft with four steps going down); `IA_service_door`
+(leaf, origin = hinge axis (-0.43, 0, -0.04), opens with -100 deg about +Y); child `IA_rotary_dial` (finger wheel, origin = dial centre (0.20, 1.42, 0.0095); hole n at theta = 50 + (n - 1) x 30 deg counter-clockwise from +X seen from the front,
+radius 0.0445, finger stop at -10 deg; dialling n = rotate (theta_n + 10) deg clockwise; the same convention as `booth_door`'s dial) with children `IA_dial_hole_0..9` (liner tubes, origin = hole centre, tap volumes: hide the meshes);
+`service_lamp` (origin (0, 2.175, 0.035), M_Emissive_Red); `IA_cover_panel` (the painted hatch that hides the door, origin = hinge line (0, 2.20, 0.0475), opens -75 deg about +X); empty `light_service` (0, 1.9, 0.5).
+
+**stair_stump**: `stair_stump_body` (column, 8 chequer treads rising 0.18 each, brackets, balustrade, helical handrail, broken landing at y 1.62, rubble); `IA_wedge_ladder` (origin = its lower end on the landing (-0.55, 1.64, -0.05), identity; it leans up to the hall ceiling; slide it
+or hide it when the stair opens from above); empty `light_stair_top` (0, 2.3, 0).
+
+**floor_plan_frame** (wall-mounted): `floor_plan_frame`, `IA_floor_plan` (plan quad 0.59 x 0.37, origin (0, 1.55, 0.0195), M_Decal_FloorPlan, UV 0..1).
+
 ## Known gaps
-- Stage-B and hands content is not started; Cell and Cold Store are not started. See the status table.
+- Stage-B and hands content is not started; the Cold Store is not started (the cell's `cold_door` is its entrance). See the status table.
