@@ -159,7 +159,7 @@ func _build_views() -> void:
 	var o := root.position
 	cam.add_view("cell", o + Vector3(-1.95, 1.62, 1.45), o + Vector3(0.35, 0.92, -0.85), 72.0, true)
 	cam.add_view("cell_desk", o + Vector3(1.12, 1.34, -0.82), o + Vector3(1.12, 0.78, -1.55), 52.0)
-	cam.add_view("light_table", o + Vector3(1.3, 1.36, -1.08), o + Vector3(1.3, 0.8, -1.47), 38.0)
+	cam.add_view("light_table", o + Vector3(1.3, 1.36, -1.13), o + Vector3(1.3, 0.8, -1.51), 38.0)
 	cam.add_view("cot", o + Vector3(-0.15, 1.5, -0.05), o + Vector3(-0.85, 0.5, -1.6), 58.0)
 	cam.add_view("shelf", o + Vector3(-0.45, 1.45, 0.25), o + Vector3(-0.55, 0.95, 1.85), 54.0)
 	cam.add_view("cold_door", o + Vector3(-0.3, 1.45, 0.1), o + Vector3(2.2, 1.1, 0.05), 58.0)
@@ -225,15 +225,16 @@ func _build_table() -> void:
 	# the six controls in front of the box: a turn knob (bakelite) and a flip knob (brass) per sheet, each on a brass escutcheon with
 	# a small stripe in the sheet's tape colour. They stand between the table's two front feet (|x| < 0.2 m), fully in view.
 	for i in 3:
-		var cx := (i - 1) * 0.125
-		_build_button(table, i, "IA_turn_%d" % i, Vector3(cx - 0.032, 0.012, 0.238), true)
-		_build_button(table, i, "IA_flipbtn_%d" % i, Vector3(cx + 0.032, 0.012, 0.238), false)
+		var cx := (i - 1) * 0.135
+		_build_button(table, i, "IA_turn_%d" % i, Vector3(cx - 0.037, 0.012, 0.238), true)
+		_build_button(table, i, "IA_flipbtn_%d" % i, Vector3(cx + 0.037, 0.012, 0.238), false)
 
 
 func _build_button(table: Node3D, i: int, part: String, pos: Vector3, turn: bool) -> void:
 	var holder := Node3D.new()
 	holder.name = part
 	holder.position = pos
+	holder.scale = Vector3.ONE * 1.12 # a thumb-sized knob: with the tap assist it is over the 9 mm minimum on a 20:9 phone
 	table.add_child(holder)
 	var brass := StandardMaterial3D.new()
 	brass.albedo_color = Color("a98a4c")
