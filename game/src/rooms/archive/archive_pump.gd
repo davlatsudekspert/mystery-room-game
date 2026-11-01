@@ -11,11 +11,11 @@ extends RefCounted
 ## - M1 "the lamp that dies" (the work lamp sinks to an ember and flares back) on the first entry;
 ## - the mallet lying on the bench (`take("pump_mallet")`).
 ## The pipe board is drawn from the logic's graph, not from the model's nine fixed segments: the model's IA_pipe_* are
-## hidden (the board, its junction boxes and its lamps stay). The N7 book-lift cage is shown closed; its puzzle is wired
-## with the rest of Stage B (see docs/CHAPTER2_EXPANSION_STATUS.md).
+## hidden (the board, its junction boxes and its lamps stay). The N7 book lift (the cage in the west niche, the weights, the
+## call plate, the ride) is rendered by ArchiveLift (Stage B).
 
-const VIEWS: Array[String] = ["pump", "manifold", "boiler", "lift_door", "pipes", "bench", "cell_door"]
-const HOTSPOT_VIEW := {"pump_manifold": "manifold", "pump_boiler": "boiler", "pump_pipes": "pipes", "pump_lift": "lift_door",
+const VIEWS: Array[String] = ["pump", "manifold", "boiler", "lift_door", "pipes", "bench", "cell_door", "lift_weights", "lift_panel"]
+const HOTSPOT_VIEW := {"pump_manifold": "manifold", "pump_boiler": "boiler", "pump_pipes": "pipes",
 	"pump_bench": "bench", "pump_door": "cell_door", "pump_stair": "pump"}
 const DEEPER := {}
 const CAPTION := {"pump": "room2x.pump", "manifold": "obj2x.manifold", "boiler": "obj2x.boiler", "lift_door": "obj2x.lift",
@@ -53,6 +53,7 @@ var _fire_open := false
 var _item_mallet: Node3D
 var _tweens: Dictionary = {}
 var _boiler_light: OmniLight3D
+var lift: ArchiveLift
 
 
 func _init(r: Node3D, z: ArchiveZones, zone_root: Node3D) -> void:
@@ -78,7 +79,6 @@ func build() -> void:
 	(models.get("manifold_plate") as Node3D).set_meta("hotspot", "pump_manifold")
 	(models.get("boiler") as Node3D).set_meta("hotspot", "pump_boiler")
 	(models.get("pipe_run") as Node3D).set_meta("hotspot", "pump_pipes")
-	(models.get("book_lift_cage") as Node3D).set_meta("hotspot", "pump_lift")
 	var shell: Node3D = models["room_pump"]
 	for mi in ModelUtil.find_meshes(shell):
 		if str(mi.name).begins_with("wall_") or str(mi.name) in ["ceiling", "beams"]:
@@ -92,8 +92,21 @@ func build() -> void:
 	_spawn_mallet(shell)
 	_build_views()
 	zones.register("pump", VIEWS, HOTSPOT_VIEW, DEEPER, CAPTION)
+	_build_lift()
 	_sway_lamp(shell)
 	apply_state(false)
+
+
+## The book lift: the cage in the west niche, the four weights standing in a row on the floor beside it, the call plate on
+## the wall north of the niche.
+func _build_lift() -> void:
+	var cage := models.get("book_lift_cage") as Node3D
+	if cage == null:
+		return
+	lift = ArchiveLift.new(room, zones)
+	ArchiveRig.omni(root, Vector3(-2.6, 2.1, -1.9), Color("ffd2a0"), 0.9, 3.0) # the counterweight stand
+	lift.add_site(-1, "pump", root, cage, {"door": "lift_door", "weights": "lift_weights", "panel": "lift_panel"}, Vector3(-3.35, 0, -2.78),
+		Transform3D(Basis(Vector3.UP, deg_to_rad(90.0)), Vector3(-3.5, 1.3, -2.62)))
 
 
 func _build_views() -> void:
@@ -103,6 +116,8 @@ func _build_views() -> void:
 	cam.add_view("manifold", o + Vector3(1.85, 1.3, 1.35), o + Vector3(3.5, 1.25, 1.35), 56.0)
 	cam.add_view("boiler", o + Vector3(0.45, 1.45, 1.1), o + Vector3(0.0, 1.0, -1.75), 58.0)
 	cam.add_view("lift_door", o + Vector3(-1.4, 1.45, -1.7), o + Vector3(-4.3, 1.15, -1.9), 58.0)
+	cam.add_view("lift_weights", o + Vector3(-1.5, 1.55, -0.55), o + Vector3(-2.75, 0.8, -2.5), 58.0)
+	cam.add_view("lift_panel", o + Vector3(-2.2, 1.45, -1.55), o + Vector3(-4.7, 1.3, -1.7), 50.0)
 	cam.add_view("pipes", o + Vector3(-1.2, 0.98, 1.05), o + Vector3(-3.5, 0.95, 1.05), 54.0)
 	cam.add_view("bench", o + Vector3(1.55, 1.5, 1.45), o + Vector3(1.6, 0.9, 2.6), 46.0)
 	cam.add_view("cell_door", o + Vector3(1.3, 1.5, 0.4), o + Vector3(3.45, 1.1, -1.1), 54.0)
@@ -550,6 +565,8 @@ func apply_state(animated: bool) -> void:
 	# the cell door stands open once the player went through it
 	var door := ModelUtil.find(models["room_pump"], "IA_door_cell")
 	_rot(door, Vector3.UP, 95.0 if zones != null and logic.room_seen("cell") else 0.0, animated, 0.6)
+	if lift != null:
+		lift.apply_state(animated)
 
 
 func _lamp(n: Node3D, on: bool, color: Color) -> void:
@@ -599,6 +616,8 @@ func on_view(view: String) -> void:
 func interact(hs: String, part: String) -> bool:
 	var cam: RoomCamera = room.get("cam")
 	var cur := cam.current()
+	if lift != null and hs.begins_with("lift_") and lift.interact(hs, part):
+		return true
 	match hs:
 		"pump_manifold":
 			if part == "Plate_diagram":
@@ -633,12 +652,6 @@ func interact(hs: String, part: String) -> bool:
 			else:
 				_say("obj2x.boiler")
 			return true
-		"pump_lift":
-			if cur != "lift_door":
-				cam.go("lift_door")
-			else:
-				_say("obj2x.lift")
-			return true
 		"pump_bench":
 			if cur != "bench":
 				cam.go("bench")
@@ -666,6 +679,8 @@ func _say(key: String) -> void:
 
 ## Event feedback (the room's _on_events calls this for every event). -> true when the event was one of ours.
 func feedback(e: String) -> bool:
+	if lift != null and lift.feedback(e):
+		return true
 	var name := e.get_slice(":", 0)
 	match name:
 		"pipe":

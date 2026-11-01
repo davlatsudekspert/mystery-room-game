@@ -41,6 +41,9 @@ const BUILDERS := {
 	"pump": "res://src/rooms/archive/archive_pump.gd",
 	"cell": "res://src/rooms/archive/archive_cell.gd",
 	"cold": "res://src/rooms/archive/archive_cold.gd",
+	"gallery": "res://src/rooms/archive/archive_gallery.gd",
+	"plate": "res://src/rooms/archive/archive_plate.gd",
+	"office": "res://src/rooms/archive/archive_office.gd",
 }
 
 ## Audio cue id -> sound ids (docs/AUDIO_CH2X.md): the first that exists is played, the rest are fallbacks.
@@ -133,6 +136,9 @@ static func zone_views() -> Dictionary:
 		"pump": ArchivePump.VIEWS,
 		"cell": ArchiveCell.VIEWS,
 		"cold": ArchiveCold.VIEWS,
+		"gallery": ArchiveGallery.VIEWS,
+		"plate": ArchivePlate.VIEWS,
+		"office": ArchiveOffice.VIEWS,
 	}
 
 
@@ -191,7 +197,12 @@ func ensure(room_id: String) -> Node3D:
 
 
 func activate(room_id: String) -> void:
+	var left := current
 	current = room_id
+	if left != room_id: # a zone may stop what it started (the Plate Room's enlarger fan)
+		var lb := builder(left)
+		if lb != null and lb.has_method("on_exit"):
+			lb.call("on_exit")
 	for id: String in zones:
 		var on: bool = id == room_id
 		var root: Node3D = zones[id]["root"]

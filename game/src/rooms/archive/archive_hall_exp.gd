@@ -318,8 +318,11 @@ func interact(hs: String, part: String) -> bool:
 		"stair_stump":
 			if cur != "stair":
 				cam.go("stair")
+			elif logic.state["wedge_out"]: # the ladder fell free from above: the spiral stair is a second way up to the Gallery
+				ArchiveZones.cue("stair_steps")
+				logic.enter_room("gallery")
 			else:
-				_say("obj2x.wedge" if not logic.state["wedge_out"] else "obj2x.stair")
+				_say("obj2x.wedge")
 			return true
 		"plan_wall":
 			if cur != "plan":
@@ -351,5 +354,11 @@ func feedback(e: String) -> bool:
 			return true
 		"pump_opened":
 			ArchiveZones.cue("svc_door_open")
+			return true
+		"lamp_dead": # G2: the projector's lever only ticks until the spare lamp is in
+			ArchiveZones.cue("lamp_dead")
+			return true
+		"lamp_installed":
+			ArchiveZones.cue("lamp_fit")
 			return true
 	return false

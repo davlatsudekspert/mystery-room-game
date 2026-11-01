@@ -1404,7 +1404,7 @@ func _plan_tile(r: Dictionary) -> Button:
 ## The documents the reader can open (an item whose document is not listed here has no Read button).
 const DOCUMENTS: Array[String] = ["notebook", "letter", "photo", "evidence", "darkroom_note", "badge", "index_card",
 	"personnel_file", "tape_1996", "tape_1997", "tape_1998", "strand_letters", "strand_note", "growth_log", "poster",
-	"chalkboard", "routing_chart", "floor_plan", "log4", "letter4", "watch4", "note4", "parcel4"]
+	"chalkboard", "routing_chart", "floor_plan", "roll_slips", "staff_print", "log4", "letter4", "watch4", "note4", "parcel4"]
 
 
 static func has_document(doc: String) -> bool:
@@ -1450,6 +1450,13 @@ func show_document(doc: String) -> void:
 			_show_picture("res://assets/textures/decals/chalkboard.jpg", tr("obj.chalkboard"))
 		"floor_plan":
 			show_plan()
+		# Chapter 2 expansion, upper floor: the clue slips of the roll-call board (pictograms) and the staff print with its pencilled digits
+		"roll_slips":
+			if logic.has_method("board_slips"):
+				_show_zoom(ArchiveUpperArt.slips_sheet(logic.call("board_slips"), logic.call("board_slip_status")), _doc_title(doc))
+		"staff_print":
+			if logic.has_method("cabinet_digits"):
+				_show_zoom(ArchiveUpperArt.staff_print(int(logic.call("cabinet_label")), logic.call("cabinet_digits")), _doc_title(doc))
 		"routing_chart":
 			_show_picture("res://assets/textures/decals/ch2/routing_chart.png", tr("obj2.chart"), tr("msg.c2_chart_rule"))
 

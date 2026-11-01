@@ -523,13 +523,10 @@ func run() -> void:
 	await shot("splicer_done")
 	await act("film_splicer", "Item_splicer_reel", func() -> bool: return L.has_item("film_reel"), func() -> void: L.take("splicer_reel"), "take film reel")
 	step("P9 splice %s → reel" % " ".join(L.splice_order().map(func(f: Variant) -> String: return "f%d" % int(f))), L.has_item("film_reel"))
-	# N7-N10 upper floor and the projector lamp (G2). TODO(scene): lift, board, Plate Room, Director's Office taps.
+	# N7-N10 upper floor and the projector lamp (G2): by taps through the book lift, the Gallery, the Plate Room, the Office
 	if logic.exp_stage() >= 2:
-		var guard2 := 0
-		while not logic.state["lamp_ok"] and guard2 < 400:
-			ArchiveSolver.upper_floor(logic)
-			guard2 += 1
-		step("N7-N10 upper floor (logic level) → projector lamp fitted", logic.state["lamp_ok"] and logic.state["print_ok"])
+		await _n7_n10_taps()
+		step("N7-N10 upper floor (taps) → projector lamp fitted", logic.state["lamp_ok"] and logic.state["print_ok"] and logic.state["cab_open"])
 		await _back_to_hall()
 	# P10 project, focus
 	await view("projector")
@@ -710,6 +707,207 @@ func run() -> void:
 	var still := AudioManager.looping_sfx() # the cliffhanger's tape hiss must have stopped with the tape
 	step("No sound effect left looping (%s)" % ("none" if still.is_empty() else ", ".join(still)), still.is_empty())
 	_finish()
+
+
+## Turn the free-look camera (a drag, as a player does) until a part is near the middle of the screen: the doors of the new
+## rooms are on the side walls of the root views.
+func face_part(model: String, part: String) -> void:
+	var n := node_of(model, part)
+	if n == null or not n is MeshInstance3D:
+		return
+	var mi := n as MeshInstance3D
+	var target := mi.global_transform * mi.get_aabb().get_center()
+	var c := cam()
+	var centre := get_viewport().get_visible_rect().size * 0.5
+	var best := INF
+	var best_yaw := c.yaw
+	var best_pitch := c.pitch
+	for yaw in range(-180, 180, 10):
+		for pitch in [-20.0, -10.0, 0.0, 10.0, 20.0]:
+			c.yaw = float(yaw)
+			c.pitch = pitch
+			c.call("_apply_free_look")
+			if c.is_position_behind(target):
+				continue
+			var d := c.unproject_position(target).distance_to(centre)
+			if d < best:
+				best = d
+				best_yaw = float(yaw)
+				best_pitch = pitch
+	c.yaw = best_yaw
+	c.pitch = best_pitch
+	c.call("_apply_free_look")
+	await _settle(0.4)
+
+
+## Tap a part and wait up to `secs` for `cond` (a ride, a door that swings before the room changes); else fall back.
+func act_wait(model: String, part: String, cond: Callable, fallback: Callable, label: String, secs: float = 4.0, frac: Vector2 = Vector2.ZERO) -> void:
+	if not cond.call():
+		await tap(model, part, frac)
+		var t := 0.0
+		while t < secs and not cond.call():
+			await _settle(0.25)
+			t += 0.25
+	if cond.call():
+		taps_ok += 1
+	else:
+		var why := _hit(model, part, frac)
+		fallback.call()
+		taps_fallback += 1
+		_log("  fallback: %s (%s/%s, view %s, hit %s)" % [label, model, part, cam().current(), why])
+		await _settle(1.0)
+
+
+## A tap at a point in the 3D scene (a tap volume that has no mesh: a hook on the board).
+func tap_world(pos: Vector3, label: String, cond: Callable, fallback: Callable) -> void:
+	var sp := cam().unproject_position(pos)
+	if not cond.call():
+		_note_hud(sp, label)
+		room.call("_on_tap", sp)
+		await _settle(0.5)
+	if cond.call():
+		taps_ok += 1
+	else:
+		fallback.call()
+		taps_fallback += 1
+		_log("  fallback: %s (view %s, hit %s)" % [label, cam().current(), str(room.call("resolve", room.call("raycast", sp)))])
+
+
+func _zone_pos(room_id: String, local: Vector3) -> Vector3:
+	return ((room.get("zones") as ArchiveZones).zones[room_id]["root"] as Node3D).global_position + local
+
+
+## N7 to N10 and G2 as a player taps them (docs/CHAPTER2_EXPANSION.md): the Pump Room's weights and the book lift, the Gallery
+## (the wedge, the counter's slips, the roll-call board, the key), the Plate Room (strip, zoom, focus), the Director's Office
+## (the cabinet's wheels, the lamp), the spiral stair down, and the lamp fitted to the booth projector (dead before).
+func _n7_n10_taps() -> void:
+	var L := logic
+	var s := L.state
+	var gal := room.get("zones") as ArchiveZones
+	# the Pump Room by the hall's east door
+	await view("hall")
+	await view("east_south")
+	await act_wait("service_door", "IA_service_door", func() -> bool: return s["room"] == "pump", func() -> void: L.enter_room("pump"), "service door")
+	await wait_idle()
+	await _settle(0.6)
+	# N7: hang the weights that balance the plate, look at the gauge, press the lamp button in the cage
+	await view("lift_door")
+	await shot("n7_lift_door")
+	await view("lift_weights")
+	await shot("n7_weights_empty")
+	var want := ArchiveExpData.weights_for(L.lift_load())
+	for i in 4:
+		if int(want[i]) == 1:
+			await act("lift_weight_%d" % i, "", func() -> bool: return int(s["weights"][i]) == 1 or s["lift_ok"], func() -> void: L.n7_toggle_weight(i), "weight %d" % ArchiveExpData.WEIGHTS[i])
+			await _settle(0.6)
+	await shot("n7_weights_hung")
+	step("N7 weights %s → balanced at load %d" % [str(want), L.lift_load()], s["lift_ok"])
+	await view("lift_panel")
+	await shot("n7_lift_panel")
+	await act_wait("pump_book_lift_cage", "IA_btn_lamp", func() -> bool: return s["room"] == "gallery", func() -> void: L.n7_call(1); L.enter_room("gallery"), "lamp button", 8.0)
+	await wait_idle()
+	await _settle(1.0)
+	await shot("gallery_arrival")
+	await _perf("gallery")
+	# the wedge: pull the pin, the ladder falls, the spiral stair is open
+	await view("wedge")
+	await shot("gallery_wedge")
+	await act("gallery_stair_wedge", "IA_wedge_pin", func() -> bool: return s["wedge_out"], func() -> void: L.pull_wedge(), "wedge pin")
+	await _settle(2.4)
+	await shot("gallery_wedge_out")
+	# the counter: open the middle drawer, take the slips (they are pinned on the board)
+	await view("gallery")
+	await view("counter")
+	await act("gallery_room_gallery", "IA_counter_drawer_1", func() -> bool: return bool(gal.builder("gallery").get("_drawer_open")[1]), func() -> void: gal.builder("gallery").get("_drawer_open")[1] = true, "slips drawer")
+	await _settle(0.6)
+	await shot("gallery_drawer")
+	await act("gallery_room_gallery", "Item_counter_slips", func() -> bool: return L.has_item("roll_slips"), func() -> void: L.take("counter_slips"), "take slips")
+	# N8: hang every tag where this game's slips put it (tap the tag, then its hook)
+	await view("gallery")
+	await view("board")
+	await shot("gallery_board_slips")
+	var board_root := (room.get("models") as Dictionary)["gallery_roll_call_board"] as Node3D
+	for h in 6:
+		var t := int(s["v_board"][h])
+		await act("gallery_roll_call_board", "IA_tag_%d" % t, func() -> bool: return int(gal.builder("gallery").get("_held")) == t or (s["board"] as Array).find(t) == h, func() -> void: gal.builder("gallery").set("_held", t), "tag %d" % t)
+		await tap_world(board_root.global_position + Vector3(-1.0 + 0.4 * h, 1.72, 0.05), "hook %d" % (h + 1), func() -> bool: return int(s["board"][h]) == t, func() -> void: L.n8_hang(t, h))
+		await _settle(0.4)
+	await _settle(1.0)
+	await shot("gallery_board_done")
+	step("N8 board %s → every slip agrees" % str(s["v_board"]), s["board_ok"])
+	await act("gallery_roll_call_board", "Item_board_key", func() -> bool: return L.has_item("pass_key"), func() -> void: L.take("board_key"), "take pass key")
+	# the Plate Room (plain door), N9: the strip, zoom and focus
+	await view("gallery")
+	await face_part("gallery_room_gallery", "IA_door_plate")
+	await act_wait("gallery_room_gallery", "IA_door_plate", func() -> bool: return s["room"] == "plate", func() -> void: L.enter_room("plate"), "plate door")
+	await wait_idle()
+	await _settle(0.8)
+	await shot("plate_arrival")
+	await view("enlarger")
+	await shot("plate_enlarger")
+	var strip_i := int(s["v_strip"])
+	await act("plate_strip_%d" % strip_i, "", func() -> bool: return int(s["en_strip"]) == strip_i, func() -> void: L.n9_load_strip(strip_i), "strip %d" % (strip_i + 1))
+	await _settle(0.6)
+	for _g in 8:
+		if int(s["en_zoom"]) == int(s["v_zoom"]):
+			break
+		var z0 := int(s["en_zoom"])
+		await act("plate_enlarger", "IA_zoom_knob", func() -> bool: return int(s["en_zoom"]) != z0, func() -> void: L.n9_zoom(1), "zoom knob")
+	await shot("plate_print_blurred")
+	for _g in 12:
+		if int(s["en_focus"]) == int(s["v_pfocus"]):
+			break
+		var f0 := int(s["en_focus"])
+		await act("plate_enlarger", "IA_focus_ring", func() -> bool: return int(s["en_focus"]) != f0, func() -> void: L.n9_focus(1), "focus ring")
+	await _settle(0.8)
+	await shot("plate_print_sharp")
+	step("N9 strip %d, zoom %d, focus %d → staff print" % [strip_i + 1, int(s["v_zoom"]) + 1, int(s["v_pfocus"]) + 1], s["print_ok"] and L.has_item("staff_print"))
+	# the Gallery again, and the Office door with the key
+	await view("plate")
+	await face_part("plate_room_plate", "IA_door_gallery")
+	await act_wait("plate_room_plate", "IA_door_gallery", func() -> bool: return s["room"] == "gallery", func() -> void: L.enter_room("gallery"), "plate door back")
+	await wait_idle()
+	await _settle(0.6)
+	await view("gallery")
+	await face_part("gallery_room_gallery", "IA_door_office")
+	await act_wait("gallery_room_gallery", "IA_door_office", func() -> bool: return s["room"] == "office", func() -> void: L.enter_room("office"), "office door (pass key)")
+	await wait_idle()
+	await _settle(0.8)
+	await shot("office_arrival")
+	# N10: the four wheels, the doors, the lamp
+	await view("cabinet")
+	await shot("office_cabinet")
+	for i in 4:
+		for _g in 10:
+			if int(s["cab_wheels"][i]) == int(s["v_digits"][i]) or s["cab_open"]:
+				break
+			var w0 := int(s["cab_wheels"][i])
+			await act("office_strand_cabinet", "IA_digit_%d" % i, func() -> bool: return int(s["cab_wheels"][i]) != w0 or s["cab_open"], func() -> void: L.n10_turn_wheel(i), "wheel %d" % (i + 1))
+	await _settle(1.2)
+	await shot("office_cabinet_open")
+	step("N10 wheels %s → cabinet open" % "".join(L.cabinet_digits().map(func(d: Variant) -> String: return str(int(d)))), s["cab_open"])
+	await act("office_strand_cabinet", "Item_cabinet_lamp", func() -> bool: return L.has_item("projector_lamp"), func() -> void: L.take("cabinet_lamp"), "take lamp")
+	# back down the spiral stair (the wedge is out): the Office door, the Gallery, the stairwell
+	await view("office")
+	await face_part("office_room_office", "IA_door_gallery")
+	await act_wait("office_room_office", "IA_door_gallery", func() -> bool: return s["room"] == "gallery", func() -> void: L.enter_room("gallery"), "office door back")
+	await wait_idle()
+	await _settle(0.6)
+	await view("wedge")
+	await act_wait("gallery_room_gallery", "stair_in", func() -> bool: return s["room"] == "hall", func() -> void: L.enter_room("hall"), "spiral stair down", 6.0)
+	await wait_idle()
+	await _settle(0.6)
+	# G2: the projector's lamp is dead until the spare is fitted
+	await view("booth")
+	await view("projector")
+	var n0 := _seen.size()
+	await act("film_projector", "IA_run_lever", func() -> bool: return _seen.slice(n0).has("lamp_dead"), func() -> void: L.toggle_projector(), "lever with a dead lamp")
+	await shot("projector_lamp_dead")
+	await use("projector_lamp")
+	await act("film_projector", "IA_run_lever", func() -> bool: return s["lamp_ok"], func() -> void: L.use_item_on("projector_lamp", "projector"), "fit the lamp")
+	await _settle(1.0)
+	await shot("projector_lamp_fitted")
+	step("G2 dead lamp, then the spare fitted", s["lamp_ok"])
 
 
 ## Walks the player back into the hall (logic room + scene) after steps that played other rooms at logic level.
