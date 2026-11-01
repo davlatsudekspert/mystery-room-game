@@ -33,6 +33,13 @@ ROOMS = {
 }
 
 
+try:  # R4 Cold Store entry lives in its own file (no merge conflicts with the other rooms)
+    import ch2x_rooms_cold as _cold
+    ROOMS["cold"] = _cold.ROOMS_COLD
+except ImportError:
+    pass
+
+
 def retex():
     """Swap the plain imported materials for the textured preview materials of mrlib (same slot names)."""
     for o in bpy.data.objects:
@@ -56,6 +63,8 @@ def main():
     sel = C.args_shots(ARGS)
     spec = ROOMS[room]
     X.begin()
+    if spec.get("pre"):
+        spec["pre"]()
     for glb, pos, yaw in spec["models"]:
         C.qa_import(C.model_glb(glb), pos, yaw)
     retex()

@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Enamel_Ice"
+albedo_color = Color(0.7765, 0.8392, 0.8863, 1.0)
+roughness = 0.45
+metallic = 0.15
+metallic_specular = 0.5

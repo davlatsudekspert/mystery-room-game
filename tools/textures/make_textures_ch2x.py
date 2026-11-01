@@ -185,7 +185,7 @@ def steel_galv():
     dist, cid = voronoi(N, 16, 5)
     spangle = 0.72 + 0.28 * cid
     edge = smooth(0.0, 0.05, dist * 0.0 + 1.0)  # no edge darkening: soft crystals
-    base = hexf("#8e9ca4")
+    base = hexf("#b7c6cf")          # pale cold zinc; the Cold Store reads blue-white
     c = np.ones((N, N, 3)) * base * spangle[..., None]
     c *= (0.9 + 0.2 * fbm(N, 6, 13))[..., None]
     # fine directional scratches
@@ -196,7 +196,7 @@ def steel_galv():
     c = c * (1 - wear[..., None] * 0.25) + hexf("#6e6a60") * wear[..., None] * 0.25
     h = cid * 0.25 + sc * 0.05
     rough = np.clip(0.42 + wear * 0.3 + (1 - spangle) * 0.2, 0, 1)
-    save("steel_galv", c, h, rough, np.full((N, N), 0.85) - wear * 0.2, np.ones((N, N)), 0.6)
+    save("steel_galv", c, h, rough, np.full((N, N), 0.55) - wear * 0.2, np.ones((N, N)), 0.6)   # half-metal: lit by the room, not black in a closed room
     _ = edge
 
 

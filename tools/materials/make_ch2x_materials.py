@@ -55,4 +55,29 @@ D2X = TX + "decals/ch2x/"
 for nm, f in (("M_Decal_PipeDiagram", "pipe_diagram.png"), ("M_Decal_LiftPlate", "lift_plate.png")):
     lines = ['[gd_resource type="StandardMaterial3D" load_steps=2 format=3]', "", f'[ext_resource type="Texture2D" path="{D2X}{f}" id="1"]', "", "[resource]", f'resource_name = "{nm}"', 'albedo_texture = ExtResource("1")', "roughness = 0.35", "metallic_specular = 0.6"]
     write(nm, lines)
+
+# ---- R4 Cold Store (tools/textures/make_decals_cold.py writes the images) ----
+std("M_Enamel_Ice", {"albedo_color": hexc("C6D6E2"), "roughness": 0.45, "metallic": 0.15, "metallic_specular": 0.5})
+std("M_Emissive_Cold", {"albedo_color": hexc("D8EEFF"), "roughness": 0.4, "emission_enabled": "true",
+    "emission": hexc("D8EEFF"), "emission_energy_multiplier": 1.5})
+COLD_DECALS = (("M_Decal_ChestRings", "chest_ring.png", {}), ("M_Decal_ChestPlate", "chest_plate.png", {"metallic": 0.6}),
+               ("M_Decal_CarriageTags", "carriage_tags.png", {}), ("M_Decal_PlanPlate", "plan_plate.png", {}),
+               ("M_Decal_CanLabel_1", "can_label_1.png", {}), ("M_Decal_CanLabel_2", "can_label_2.png", {}),
+               ("M_Decal_CanLabel_3", "can_label_3.png", {}), ("M_Decal_CanLabel_4", "can_label_4.png", {}))
+for nm, f, extra in COLD_DECALS:
+    lines = ['[gd_resource type="StandardMaterial3D" load_steps=2 format=3]', "", f'[ext_resource type="Texture2D" path="{D2X}{f}" id="1"]', "", "[resource]",
+             f'resource_name = "{nm}"', 'albedo_texture = ExtResource("1")', "roughness = 0.4", "metallic_specular = 0.6"] + [f"{k} = {v}" for k, v in extra.items()]
+    write(nm, lines)
+# alpha decals: stencil paint, finger-writing under the frost, hoar-frost patches on walls and floor (alpha blend, no shadows)
+for nm, f, rough in (("M_Decal_SafeStencil", "meridian_stencil.png", 0.85), ("M_Decal_FrostSign", "frost_sign_0.png", 0.8),
+                     ("M_Decal_FrostPatch", "frost_patch.png", 0.9)):
+    lines = ['[gd_resource type="StandardMaterial3D" load_steps=2 format=3]', "", f'[ext_resource type="Texture2D" path="{D2X}{f}" id="1"]', "", "[resource]",
+             f'resource_name = "{nm}"', "transparency = 1", "cull_mode = 2", "shading_mode = 1" if nm == "M_Decal_FrostSign" else "shading_mode = 1",
+             'albedo_texture = ExtResource("1")', f"roughness = {rough}"]
+    write(nm, lines)
+# the wipe-reveal frost pane (N5): ShaderMaterial, see game/assets/materials/frost_reveal.gdshader for the uniforms
+write("M_Decal_FrostPane", ['[gd_resource type="ShaderMaterial" load_steps=3 format=3]', "",
+      '[ext_resource type="Shader" path="res://assets/materials/frost_reveal.gdshader" id="1"]',
+      f'[ext_resource type="Texture2D" path="{D2X}frost_tex.png" id="2"]', "", "[resource]", 'resource_name = "M_Decal_FrostPane"',
+      'shader = ExtResource("1")', 'shader_parameter/frost_tex = ExtResource("2")'])
 print("ch2x materials written to", OUT)

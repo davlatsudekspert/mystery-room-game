@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" load_steps=1 format=3]
+
+[resource]
+resource_name = "M_Emissive_Cold"
+albedo_color = Color(0.8471, 0.9333, 1.0000, 1.0)
+roughness = 0.4
+emission_enabled = true
+emission = Color(0.8471, 0.9333, 1.0000, 1.0)
+emission_energy_multiplier = 1.5
