@@ -1,0 +1,8 @@
+# Chapter 2 expansion (Stage A), R2 Pump Room and its props. Shared helpers: lib_ch2x.py. Textures: tools/textures/make_textures_ch2x.py
+mallet.py
+manifold_plate.py
+boiler.py
+pipe_run.py
+weights.py
+book_lift_cage.py
+room_pump.py
