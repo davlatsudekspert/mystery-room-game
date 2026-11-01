@@ -2,6 +2,10 @@
 
 How the work is organised (from 2026-10-09): the main session is the game director. Helper agents run in parallel; their results are reviewed and committed to `main`. If a session stops, the next one continues from this file, `DEVELOPMENT_STATUS.md`, `docs/GAMEPLAY_QA.md` and `docs/QUALITY_REPORT.md`.
 
+**State on 2026-11-01 (update 1.1 = Chapter 2 expansion ON):**
+- `ArchiveLogic.EXPANSION_STAGE = 2`: new Chapter 2 games are the 7-room expansion (N1-N10, G1+G2, plan, moments, Trial start option); old saves play the 1.0 flow. Version 1.1 in `export_presets.cfg` (codes set by CI). Polish pass and QA numbers: `docs/CHAPTER2_EXPANSION_STATUS.md` ("Update 1.1").
+- Open: hands phase 2 (glove rig, cloth stroke, receiver needle in hand); native RU/UZ review of the new strings; 5 human playtests (the store text stays "about an hour"); project.godot `config/version` is still 0.1.0; a real-device check of the new light-table knobs and the frost shader; the build and upload of 1.1 (owner approval).
+
 **State on 2026-11-01 (Chapter 2 expansion, logic done):**
 - The owner decided to ship the whole expansion in update 1.1 (`docs/CHAPTER2_EXPANSION.md` section 17). The logic is merged and tested; the scene work is next: rooms and hotspots for N1-N10, the plan overlay (`ArchiveLogic.plan_data()`), moments (`ArchiveLogic.try_moment`, events `moment:<id>`), hands, audio. API list in the logic agent's report and in the doc.
 - **Switch-on step:** set `ArchiveLogic.EXPANSION_STAGE := 2` once the scene has the new rooms and hotspots, set `EXPANSION_SCENE_READY := true` in `qa/playthrough_ch2.gd`, replace its logic-level N-steps (marked `TODO(scene)`) by taps, then run the Ch2 playthrough on seeds 777, 6143, 8216 in EN/RU/UZ, both lens paths, and the chaos run.

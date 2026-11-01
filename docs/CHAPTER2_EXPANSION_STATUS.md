@@ -2,8 +2,7 @@
 
 Owner: the Godot scene engineer. Spec: `docs/CHAPTER2_EXPANSION.md`. Logic: `game/src/rooms/archive/archive_logic.gd`,
 `archive_exp_data.gd`. Models: `docs/models/ch2_exp.md`. Audio: `docs/AUDIO_CH2X.md`.
-`ArchiveLogic.EXPANSION_STAGE` is **0** and must stay 0 until ALL rooms are playable in the scene (a build from `main` must not
-start a game it cannot finish). Every expansion node in the scene is built only when `logic.exp_active()`.
+**Update 1.1 (2026-11-01): `ArchiveLogic.EXPANSION_STAGE` is now 2** and `EXPANSION_SCENE_READY` is true in `qa/playthrough_ch2.gd`: every room is playable in the scene. Every expansion node in the scene is built only when `logic.exp_active()`.
 
 ## Done (scene)
 
@@ -95,3 +94,18 @@ start a game it cannot finish). Every expansion node in the scene is built only 
 - Hands: glove, poses, cloth wipe stroke, receiver needle in hand (phase 2).
 - Flip `ArchiveLogic.EXPANSION_STAGE` to 2 and `EXPANSION_SCENE_READY` in `qa/playthrough_ch2.gd` when everything is playable.
 - Audio hooks: N7-N10 events, the enlarger fan loop and the stair steps are wired (`archive_lift/gallery/plate/office/hall_exp`); the ids in `docs/AUDIO_CH2X.md` for any other expansion event are the other rooms' job.
+
+## Update 1.1: switch-on and polish (2026-11-01)
+
+- `EXPANSION_STAGE = 2`; Trial start button shows on the Chapter 2 row for a new game; old saves (fixtures `tests/fixtures/ch2_legacy_*.json`) load into the legacy flow (tests pass); the chapter card counts `puzzle_ids()`. Legacy 1.0 tests now build their game with `ArchiveLogic.new_legacy()`.
+- Version name / short version 1.1 in `export_presets.cfg` (codes untouched).
+- QA harness: every QA scene saves to a per-pid file and `tools/qa_run.sh` gives each run its own `XDG_DATA_HOME` (`docs/GAMEPLAY_QA.md`). `tap_map --views=all` now includes the expansion's rooms.
+- Polish, each with before / after shots in `docs/previews/ch2_expansion/polish_1_1/` (`before_*.png`, `after_*.png`; the enlarger "after" shot was taken with a tighter camera that was reverted, so only its digit strip applies; after_pipes is at fov 48, shipped 51):
+  light table controls (bakelite turn knob + brass flip knob per sheet on a brass escutcheon with a tape-colour stripe, between the table's feet, 1.12 scale); procedural non-repeating frost (`frost_reveal.gdshader`, wipe mask unchanged); "Pinch to zoom." once ever (`Settings zoom_tip_seen`); Pump pipes view (lift cage culled while it is up, fov 51); counterweight rack (iron uprights, hooks with lips, plank shelf, numbered label strip, work lamp) and a calm painted `iron_rust` wall (texture regenerated, metallic 0.7); models `roll_slips`, `staff_print`; enlarger print: digits 5 px blocks on a pale strip (tap the print for the zoom reader).
+- Not changed: the enlarger camera stays wide (the zoom knob and focus ring must be in view); the print is read in the zoom overlay.
+
+## Open after 1.1
+- Hands phase 2 (glove rig, cloth wipe stroke in hand, receiver needle in hand).
+- Native RU / UZ review of the new strings (all 16 hint goals, moments, Trial texts).
+- Human playtests (5): they decide the length claim ("about an hour" until then).
+- Cold Store cloth hold-to-wipe, kettle tick, chest lid tap, lift hall door (see "Left to do" above; those lines are historic).
