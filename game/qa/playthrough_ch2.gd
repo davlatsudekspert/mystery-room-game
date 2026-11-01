@@ -860,7 +860,10 @@ func _n7_n10_taps() -> void:
 	step("N9 strip %d, zoom %d, focus %d → staff print" % [strip_i + 1, int(s["v_zoom"]) + 1, int(s["v_pfocus"]) + 1], s["print_ok"] and L.has_item("staff_print"))
 	# the Gallery again, and the Office door with the key
 	await view("plate")
+	await _settle(1.0) # the camera must have arrived before the door is aimed at
 	await face_part("plate_room_plate", "IA_door_gallery")
+	await _settle(0.5)
+	await face_part("plate_room_plate", "IA_door_gallery") # aimed again once the first turn has settled
 	await act_wait("plate_room_plate", "IA_door_gallery", func() -> bool: return s["room"] == "gallery", func() -> void: L.enter_room("gallery"), "plate door back")
 	await wait_idle()
 	await _settle(0.6)
