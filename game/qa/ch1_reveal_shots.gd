@@ -21,7 +21,7 @@ func _ready() -> void:
 		if a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7))
 	DirAccess.make_dir_recursive_absolute(out_dir)
-	SaveSystem.save_path = "user://qa_ch1_reveals_save.json"
+	SaveSystem.save_path = "user://qa_ch1_reveals_save_%d.json" % OS.get_process_id()
 	GameState.start_new("ch1")
 	logic = GameState.logic
 	# up to the radio signal: the bookcase is the next beat

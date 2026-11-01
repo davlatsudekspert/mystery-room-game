@@ -23,7 +23,7 @@ func _run() -> void:
 			for n in a.substr(7).split(",", false):
 				only.append(int(n))
 	DirAccess.make_dir_recursive_absolute(out_dir)
-	SaveSystem.save_path = "user://qa_probe_save.json"
+	SaveSystem.save_path = "user://qa_probe_save_%d.json" % OS.get_process_id()
 	var failed := 0
 	for n in Lab7Logic.PANEL_POOL.size():
 		if not only.is_empty() and not only.has(n):

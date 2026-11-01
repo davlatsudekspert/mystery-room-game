@@ -31,7 +31,7 @@ func _run() -> void:
 		elif a.begins_with("--select="):
 			select = a.substr(9)
 	DirAccess.make_dir_recursive_absolute(out_dir)
-	SaveSystem.save_path = "user://qa_probe_save.json"
+	SaveSystem.save_path = "user://qa_probe_save_%d.json" % OS.get_process_id()
 	GameState.start_new("ch1")
 	var logic := GameState.logic as Lab7Logic
 	var guard := 0

@@ -36,8 +36,8 @@ func _ready() -> void:
 		if a.begins_with("--only="):
 			_only = a.substr(7).split(",")
 	DirAccess.make_dir_recursive_absolute(out_dir)
-	SaveSystem.save_path = "user://qa_review_save.json"
-	SaveSystem.profile_path = "user://qa_review_profile.json"
+	SaveSystem.save_path = "user://qa_review_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_review_profile_%d.json" % OS.get_process_id()
 	SaveSystem.delete_game()
 	GameState.profile = {}
 	Loc.apply(lang)

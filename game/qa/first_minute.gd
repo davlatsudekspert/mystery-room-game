@@ -46,7 +46,7 @@ func _run() -> void:
 	get_window().size = win
 	await _settle(0.3)
 	Settings.set("emulate", {"size": Vector2i(2340, 1080), "dpi": 400.0, "safe": Rect2i(120, 0, 2220, 1080)})
-	SaveSystem.save_path = "user://qa_first_minute.json"
+	SaveSystem.save_path = "user://qa_first_minute_%d.json" % OS.get_process_id()
 	SaveSystem.delete_game()
 	TranslationServer.set_locale(lang)
 	Settings.values["reduce_motion"] = reduce

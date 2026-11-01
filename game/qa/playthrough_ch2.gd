@@ -56,8 +56,8 @@ func _ready() -> void:
 	if exp_stage < 0:
 		exp_stage = 0
 	DirAccess.make_dir_recursive_absolute(out_dir)
-	SaveSystem.save_path = "user://qa_ch2_save.json"
-	SaveSystem.profile_path = "user://qa_ch2_profile.json"
+	SaveSystem.save_path = "user://qa_ch2_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_ch2_profile_%d.json" % OS.get_process_id()
 	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens_path == "take" else "leave_lens", "ch1_shards": 5}}
 	GameState.start_new("ch2")
 	GameState.events.connect(func(ev: Array[String]) -> void: _seen.append_array(ev))

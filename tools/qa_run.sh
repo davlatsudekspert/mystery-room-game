@@ -60,8 +60,17 @@ kill_tree() {
 	kill "$1" 2>/dev/null
 }
 
+# Private save directory per run: Godot's user:// lives under $XDG_DATA_HOME, so every run (and every retry) gets a fresh one and
+# can never load another run's save, profile or settings. QA_SAVE_DIR=<dir> picks the directory; QA_SHARED_SAVE=1 keeps the
+# caller's environment (the old behaviour).
+if [ -z "${QA_SHARED_SAVE:-}" ]; then
+	SAVE_ROOT="${QA_SAVE_DIR:-$(mktemp -d /tmp/qa_save.XXXXXX)}"
+	trap 'rm -f "$TICKET"; [ -n "${QA_SAVE_DIR:-}" ] || rm -rf "$SAVE_ROOT"' EXIT
+fi
+
 for attempt in 1 2 3; do
 	: > "$LOG"
+	[ -z "${QA_SHARED_SAVE:-}" ] && export XDG_DATA_HOME="$SAVE_ROOT/attempt$attempt" && mkdir -p "$XDG_DATA_HOME"
 	# 9>&-: only this script holds the slot lock; an Xvfb or Godot left behind by a killed run must not keep it
 	# QA_XVFB_ARGS (optional): Xvfb server args, e.g. "-screen 0 2600x1300x24" for previews wider than the default 1280 px
 	xvfb-run -a ${QA_XVFB_ARGS:+-s "$QA_XVFB_ARGS"} godot --path "$ROOT/game" "$@" > "$LOG" 2>&1 9>&- &

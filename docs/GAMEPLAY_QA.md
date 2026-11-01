@@ -126,6 +126,13 @@ Checks (2026-10-10, after the changes):
 
 ---
 
+### Private save directory per run (2026-11-01)
+Every QA scene that saves (`playthrough`, `playthrough_ch2/3/4`, `player_review*`, `chaos`, `tap_map`, `exp_shots`, `feedback_audit`, ...) now writes
+`user://qa_<name>_save_<pid>.json` (and profile / settings with the pid), and `tools/qa_run.sh` (so `tools/chaos_run.sh` too) gives each attempt of each
+run its own `XDG_DATA_HOME` temp directory, removed afterwards. Concurrent runs can never load each other's save. This is the likely cause of the one-off
+`continue p6: state DIFFERS` of 2026-10-24 (two runs shared `user://qa_save.json`). `QA_SAVE_DIR=<dir>` picks the directory, `QA_SHARED_SAVE=1` restores
+the old shared behaviour. A bare `xvfb-run godot ...` still gets per-pid file names.
+
 ## Chapter 2 — The Missing Scientist (the Archive)
 
 ### Tools

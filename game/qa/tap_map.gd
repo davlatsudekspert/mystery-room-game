@@ -137,8 +137,8 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if _screen_name != "":
 		await _apply_screen(_screen_name)
-	SaveSystem.save_path = "user://qa_tapmap_save.json"
-	SaveSystem.profile_path = "user://qa_tapmap_profile.json"
+	SaveSystem.save_path = "user://qa_tapmap_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_tapmap_profile_%d.json" % OS.get_process_id()
 	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens == "take" else "leave_lens", "ch1_shards": 5,
 		"ch2_key": key + "_key", "ch2_echoes": 3,
 		"ch3_trust": trust, "ch3_true_ending": secret}}

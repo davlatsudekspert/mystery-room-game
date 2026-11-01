@@ -35,8 +35,8 @@ func _ready() -> void:
 			keep = a.substr(7)
 		if a.begins_with("--lang="):
 			TranslationServer.set_locale(a.substr(7))
-	SaveSystem.save_path = "user://qa_promo_save.json"
-	SaveSystem.profile_path = "user://qa_promo_profile.json"
+	SaveSystem.save_path = "user://qa_promo_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_promo_profile_%d.json" % OS.get_process_id()
 	GameState.qa_no_tips = true
 	if room_name == "lab":
 		GameState.start_new("ch1")

@@ -42,9 +42,9 @@ func _ready() -> void:
 			out_dir = a.substr(6)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	# QA-only files: the player's own save, profile and settings are never touched
-	SaveSystem.save_path = "user://qa_review_ch2_save.json"
-	SaveSystem.profile_path = "user://qa_review_ch2_profile.json"
-	Settings.path = "user://qa_review_ch2_settings.cfg"
+	SaveSystem.save_path = "user://qa_review_ch2_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_review_ch2_profile_%d.json" % OS.get_process_id()
+	Settings.path = "user://qa_review_ch2_settings_%d.cfg" % OS.get_process_id()
 	Settings.values = Settings.DEFAULTS.duplicate()
 	Settings.values["language"] = "en"
 	SaveSystem.delete_game()

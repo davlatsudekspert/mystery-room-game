@@ -116,8 +116,8 @@ func _run() -> void:
 	await _apply_screen()
 	if mobile:
 		Settings.emulate["mobile"] = true
-	SaveSystem.save_path = "user://qa_ui_save.json"
-	Premium.path = "user://qa_ui_entitlements.cfg" # nothing owned: the chapter list offers Unlock
+	SaveSystem.save_path = "user://qa_ui_save_%d.json" % OS.get_process_id()
+	Premium.path = "user://qa_ui_entitlements_%d.cfg" % OS.get_process_id() # nothing owned: the chapter list offers Unlock
 	Premium.revoke_all_for_tests()
 	if saved:
 		GameState.start_new("ch1") # saves: the menu offers Continue

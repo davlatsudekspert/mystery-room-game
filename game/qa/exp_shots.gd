@@ -71,8 +71,8 @@ func _run() -> void:
 		elif a == "--bag":
 			bag = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
-	SaveSystem.save_path = "user://qa_exp_save.json"
-	SaveSystem.profile_path = "user://qa_exp_profile.json"
+	SaveSystem.save_path = "user://qa_exp_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_exp_profile_%d.json" % OS.get_process_id()
 	GameState.profile = {"choices": {"ch1_lens": "leave_lens", "ch1_shards": 5}}
 	GameState.start_new("ch2")
 	var l := GameState.logic as ArchiveLogic

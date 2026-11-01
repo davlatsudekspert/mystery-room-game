@@ -38,8 +38,8 @@ start a game it cannot finish). Every expansion node in the scene is built only 
 - Draw calls with the HUD (`tap_map --perf --screen=phone20`): Gallery 23-60, Plate Room 18-39, Office 27-38, Pump Room views 34-67 (the
   lift views 34-58). The most expensive new view is the Gallery root view (60).
 - Screenshots of every new view: `docs/previews/ch2_expansion/scene_*.jpg`.
-- Run QA tools that save games (`playthrough_ch2`, `player_review*`) with a private `XDG_DATA_HOME` when another run may be going: they share
-  `user://qa_ch2_save.json`, and a continue check then loads the other run's game.
+- QA tools that save games use a private save directory per run since 2026-11-01 (they used to share
+  `user://qa_ch2_save.json`).
 
 ## Deviations from the model contract
 

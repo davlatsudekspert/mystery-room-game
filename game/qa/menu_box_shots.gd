@@ -40,7 +40,7 @@ func _run() -> void:
 	get_window().size = win
 	await _settle(0.3)
 	Settings.set("emulate", {"size": Vector2i(2340, 1080), "dpi": 400.0, "safe": Rect2i(120, 0, 2220, 1080)})
-	SaveSystem.save_path = "user://qa_menu_box_save.json"
+	SaveSystem.save_path = "user://qa_menu_box_save_%d.json" % OS.get_process_id()
 	GameState.start_new("ch1") # a save: the menu offers Continue
 	TranslationServer.set_locale(lang)
 	for m in mode.split(",", false):

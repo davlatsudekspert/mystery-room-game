@@ -43,8 +43,8 @@ func _ready() -> void:
 		if a.begins_with("--seed="):
 			seed = int(a.substr(7))
 	GameState.variant_seed = seed
-	SaveSystem.save_path = "user://qa_transition_save.json"
-	SaveSystem.profile_path = "user://qa_transition_profile.json"
+	SaveSystem.save_path = "user://qa_transition_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_transition_profile_%d.json" % OS.get_process_id()
 	SaveSystem.delete_game()
 	GameState.profile = {}
 	SaveSystem.save_profile(GameState.profile)

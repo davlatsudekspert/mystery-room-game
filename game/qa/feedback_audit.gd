@@ -126,8 +126,8 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if DisplayServer.get_name() == "headless":
 		get_window().size = Vector2i(1280, 720) # headless has no window and would project onto a square viewport
-	SaveSystem.save_path = "user://qa_feedback_save.json"
-	SaveSystem.profile_path = "user://qa_feedback_profile.json"
+	SaveSystem.save_path = "user://qa_feedback_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_feedback_profile_%d.json" % OS.get_process_id()
 	GameState.profile = {"choices": {"ch1_lens": "leave_lens", "ch1_shards": 5}}
 	GameState.start_new(chapter)
 	logic = GameState.logic

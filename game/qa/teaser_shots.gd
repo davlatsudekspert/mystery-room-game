@@ -31,8 +31,8 @@ func _ready() -> void:
 		if a.begins_with("--lang="):
 			TranslationServer.set_locale(a.substr(7))
 	DirAccess.make_dir_recursive_absolute(out_dir)
-	SaveSystem.save_path = "user://qa_teaser_save.json"
-	SaveSystem.profile_path = "user://qa_teaser_profile.json"
+	SaveSystem.save_path = "user://qa_teaser_save_%d.json" % OS.get_process_id()
+	SaveSystem.profile_path = "user://qa_teaser_profile_%d.json" % OS.get_process_id()
 	GameState.profile = {"choices": {"ch1_lens": "take_lens" if lens == "take" else "leave_lens", "ch1_shards": 5}}
 	GameState.start_new("ch2")
 	logic = GameState.logic
