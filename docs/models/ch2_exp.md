@@ -14,7 +14,7 @@ pivot and identity rotation at rest (`docs/models/ch2.md` section 0). QA renders
 | R3 Night Cell (`room_cell`, `cot`, `light_table`, `acetate_sheet_a/b/c`, `kettle_hotplate`, `cold_door`, `cell_diary`) | **built, exported, render-checked** (section "R3 Night Cell and hall additions") |
 | R4 Cold Store (`room_cold`, `carriage_1..5`, `frost_window`, `cold_chest`, `film_can_1..4`) | **built, exported, render-checked** (section "R4 Cold Store" below) |
 | Hall changes (`service_door`, `stair_stump`, `floor_plan_frame`) | **built, exported, render-checked** (same section) |
-| Stage B (R5 gallery, R6 plate room, R7 office, `roll_board`, `pa_horn`, `balcony_rail`, `enlarger`, `negative_strip`, `strand_cabinet`, `tea_set`, `stair_wedge`, `pass_key`, `projector_lamp`) | not built |
+| Stage B (R5 `room_gallery`, `balcony_rail`, `roll_call_board`, `pa_horn`, `stair_wedge`; R6 `room_plate`, `enlarger`, `negative_strip`; R7 `room_office`, `strand_cabinet`, `tea_set`, `pass_key`, `projector_lamp`) | **built, exported, render-checked** (section "R5 Reading Gallery, R6 Plate Room, R7 Director's Office" below; the board is `roll_call_board`, not `roll_board`) |
 | Hands (`hand_glove` rig, `wipe_cloth`) | `wipe_cloth` **built** (R3 section); `hand_glove` rig not started (`mallet` is done) |
 
 ## Built models (measured)
@@ -224,3 +224,75 @@ Single objects, origin at the centre of mass, lid axis +Y, label slots `M_Decal_
 
 ## Known gaps
 - Stage-B and hands content is not started. Cold Store: no per-carriage lore cans are placed on the shelves (the four `film_can_N` are separate items for the scene to place); the Pump Room refrigerant line only ends at the evaporator (`evaporator_mount`); no sound or particles (breath mist is the scene's job at `breath_origin`). See the status table.
+
+## R5 Reading Gallery, R6 Plate Room, R7 Director's Office (3D artist C, upper floor)
+
+Build list `tools/blender/build_lists/ch2x_upper.txt`; helpers `tools/blender/lib_ch2x_upper.py` (on `lib_ch2x.py`: arched windows, wall boxes, bookcases,
+banker lamp, chairs, framed busts); QA views `tools/blender/ch2x_upper_preview.py`
+(`blender -b --factory-startup -P tools/blender/ch2x_upper_preview.py -- room=gallery|plate|office [--shots=a,b]`), previews are packed by
+`tools/blender/ch2x_upper_pack.py` into `docs/previews/ch2_expansion/` (`gallery_*`, `plate_*`, `office_*`, and the cross-room
+`room_identity_sheet.jpg` made by `tools/blender/ch2x_identity_sheet.py`). Decals: `tools/textures/make_decals_ch2x_upper.py`; materials:
+`tools/materials/make_ch2x_upper_materials.py` (new slots `M_Decal_RollTags`, `M_Decal_CabinetLabel`, `M_Decal_Negatives`, `M_Decal_Prints`; all images are placeholders,
+the variant images are swapped by code).
+**Name change:** the Gallery board is `roll_call_board.glb`, not `roll_board.glb` (that name is the Chapter 4 Watch Room board and must not be overwritten).
+Identity of the rooms (no two share a dominant colour and a prop type): **Gallery** = sepia daylight through tall arched windows, wood, green leather inlays and green lamp
+shades, a double-height void with the hall below, a records counter with a brass grille; **Plate Room** = black walls over pale tile, deep red safelights, glass plates in
+wooden racks, a steel sink with three trays, an enlarger bench, prints on a line; **Office** = bottle-green watered wallpaper, mahogany and leather, a marble fireplace, brass,
+a green desk lamp, original silhouette portraits, a pale ghost circle where a clock used to hang (no clock in the room).
+
+### Measured (tris)
+| Model | Tris | Budget set | Suggested placement (position, yaw) |
+|---|---|---|---|
+| `room_gallery.glb` | 33.8k | 60k | origin 0, yaw 0 |
+| `balcony_rail.glb` | 4.9k | 6k | (0, 0, 1.60), 0 (`rail_mount`) |
+| `roll_call_board.glb` | 4.0k | 5k | (-1.0, 0, -3.0), 0 (`board_mount`) |
+| `pa_horn.glb` | 3.7k | 4k | (-4.5, 3.35, 0.15), +90 (`horn_mount`) |
+| `stair_wedge.glb` | 1.2k | 3.5k | (3.15, 0, 1.00), 0 (`wedge_mount`) |
+| `room_plate.glb` | 19.1k | 40k | origin 0, yaw 0 |
+| `enlarger.glb` | 4.4k | 6k | (0.20, 0.90, -2.20), 0 (`enlarger_mount`) |
+| `negative_strip.glb` x4 | 22 | 400 | on `strip_mount_0..3` of the plate room, flat |
+| `room_office.glb` | 40.8k | 50k | origin 0, yaw 0 |
+| `strand_cabinet.glb` | 5.1k | 12k | (2.67, 0, 0.30), -90 (`cabinet_mount`) |
+| `tea_set.glb` | 4.3k | 6k | (-0.55, 0.606, 0.95), 0 (`tea_mount`) |
+| `pass_key.glb` (item) | 0.8k | 1.5k | on the desk; item origin = centre of mass, lies flat |
+| `projector_lamp.glb` (item) | 1.1k | 1.8k | in the cabinet at `lamp_mount` (the lamp stands upright, its centre is 0.062 above `lamp_mount`) |
+Room sets: Gallery 33.8 + 4.9 + 4.0 + 3.7 + 1.2 = 47.6k. Plate Room 19.1 + 4.4 + 4 x 0.02 = 23.6k. Office 40.8 + 5.1 + 4.3 + 1.9 = 52.1k (the glass-front bookcases with books
+are the cost: about 14k; drop the book rows into one decal if a phone budget needs it). All under the ~60k goal. Draw calls are not measured (no scene yet).
+
+### Node names and pivots (Godot axes; origin = pivot, identity at rest)
+**room_gallery** (interior x -4.5..4.5, z -3..3, ceiling 4.2; the floor ends at the balcony edge z = 1.6, the void drops to the hall floor y = -4.2)
+static: `floor, wall_n, wall_e, wall_s, wall_w, ceiling, beams, windows, sky_cards, counter, tables, chairs, lamps, bookcases, stair_in, hall_below, dressing`.
+Interactive: `IA_door_plate` (north wall, pivot (-4.1, 0, -2.955), +95 deg about +Y opens into the Plate Room), `IA_door_office` (east wall, pivot (4.455, 0, -2.4), +95 deg opens into
+the office; carries the tag-shaped brass keyhole plate at (4.41, 1.12, -1.62)), `IA_counter_drawer_0..2` (pivots (-3.78, 0.54, -1.0 / -0.2 / 0.6), slide +0.35 along +X),
+`IA_tube_hatch` (pivot (-4.328, 1.35, 1.30), the tube terminal hotspot, swing about +Y or slide +0.04 along +X). Empties `board_mount`, `horn_mount`, `wedge_mount`, `rail_mount`,
+`tube_mount`, `light_window_n`, `light_window_s`, `light_table_a`, `light_table_b`. `sky_cards` are bright emissive cards outside the windows (the daylight seen through them; they do not light the room,
+the scene adds a warm sepia DirectionalLight/OmniLights). `hall_below` (hall floor, far wall, two enamel pendants with bulbs) is baked geometry, hide it with the zone.
+**balcony_rail**: `rail_main`. **pa_horn**: `horn_body`, `horn_lamp` (pivot (0, 0.135, 0.20), M_Emissive_Warm pilot lamp), empty `light_origin_horn` (0, 0, 1.05).
+**stair_wedge**: `wedge_body`, `IA_wedge_chock` (pivot (0, 0, 0.17), slide +0.35 along +Z after the pin is out), `IA_wedge_pin` (pivot (0, 0.215, 0.17), pull +0.22 along +Y),
+`IA_wedge_ladder` (pivot (0, 0.02, 0), topples about +X 0 -> -78 deg, the top falls toward -Z over the stairwell).
+**roll_call_board** (six hooks, six tags, 6 slip clips; board 2.50 x 1.36, x +-1.25, y 0.90..2.26): `roll_call_board_body`, `IA_tag_0..5` with pivot = hole centre of tag k hanging on hook k at rest
+(-1.00 + 0.40 k, 1.85, 0.056); move tag to hook j by translating ((j-k) * 0.40, 0, 0). Tag 0.30 x 0.225 x 0.012. Empties `hook_0..5` (same points), `slip_mount_0..5` (-1.00 + 0.40 k, 1.30, 0.034), `light_origin_board`.
+Portraits: quad `photo<k>` on each tag, slot `M_Decal_RollTags` (3 x 2 atlas, cell k, row 0 on top); the pip rows under the hooks (1..6 dots) are geometry, no text.
+
+**room_plate** (interior x -3..3, z -2.6..2.6, ceiling 3.0): static `floor, wall_n/_e/_s/_w, ceiling, beams, bench, plate_racks, sink_bench, trays, drying_table, print_line, curtain, fan, safelights, dressing`;
+`IA_door_gallery` (south wall, pivot (-1.7, 0, 2.555), +95 deg about +Y opens OUT to +Z). `safelights` are the red emissive lenses (M_Emissive_Safelight), the scene adds the red OmniLights at
+`light_safelight_a` (-1.2, 2.7, -0.4), `_b` (1.3, 2.7, 0.9), `_c` (2.80, 2.1, -0.3) and a warm `light_enlarger` (0.25, 1.5, -2.1). Empties `enlarger_mount` (0.20, 0.90, -2.20), `paper_mount`,
+`strip_mount_0..3` ((-1.62, 0.902, 0.10 + 0.09 k), strips lie along X). `print_line` has six peg-hung print quads, slot `M_Decal_Prints`.
+**enlarger** (origin on the baseboard bottom centre): `enlarger_body`, `IA_head` (pivot = optical axis at the carrier (0.05, 0.70, 0.10); ZOOM: slide +Y 0.04 per step, 5 steps = 0.16),
+`IA_zoom_knob` (pivot (-0.33, 0.74, -0.19), about +X, child of IA_head), `IA_focus_ring` (pivot (0.05, 0.375, 0.10), about +Y, 9 ticks every 40 deg, child of IA_head), empties `strip_slot`
+(0.05, 0.6745, 0.10: the strip lies here, along X), `light_origin_enlarger` (0.05, 0.40, 0.10); quad `projected_image` (centre (0.05, 0.0345, 0.10), 0.20 x 0.15, slot `M_Decal_Prints`).
+**negative_strip**: `strip_body` (M_Film), `strip_frames` (quad, slot `M_Decal_Negatives`, UV 0..1; the right-most 6 percent is the edge-symbol window). 0.200 x 0.045 x 0.0012, flat, centre = origin.
+
+**room_office** (interior x -2.9..2.9, z -2.4..2.4, ceiling 3.2): static `floor, wall_n/_e/_s/_w, ceiling, window, sky_card, curtains, desk, chairs, tea_table, rug, fireplace, bookcases, portraits, dressing`;
+`IA_door_gallery` (west wall, pivot (-2.855, 0, -0.70), +95 deg opens OUT to -X; the same tag-shaped keyhole on its inner face), `IA_desk_drawer` (centre drawer, pivot (0.4, 0.59, -0.83), slide +0.30 along +Z).
+Empties `cabinet_mount` (2.67, 0, 0.30), `tea_mount` (-0.55, 0.606, 0.95), `light_desk_lamp` (0.05, 1.12, -1.25), `light_window_n`, `light_fire` (-0.5, 0.5, 2.1). The desk lamp is built into `desk` (green glass shade).
+**strand_cabinet** (1.04 w x 0.46 d x 1.92 h, origin on the floor at the footprint centre): `cabinet_body`, `IA_door_l` (pivot (-0.485, 1.16, 0.243), -100 deg about +Y), `IA_door_r` (pivot (0.485, 1.16, 0.243), +100 deg),
+`IA_wheel_0..3` (pivots (-0.105 / -0.035 / 0.035 / 0.105, 1.64, 0.244), about +X, +36 deg per digit, slot `M_Decal_DrawerDigits`), quad `cabinet_label` (centre (-0.33, 1.64, 0.2742), 0.115 x 0.082, slot
+`M_Decal_CabinetLabel`), empties `lamp_mount` (0, 0.952, 0), `light_origin_cabinet` (0, 1.0, 0.30). The lock plate and label sit on a fixed transom above the doors, so the doors open freely.
+**tea_set**: `tea_body`, `IA_cup_a` (pivot (-0.12, 0.02, 0.07)), `IA_cup_b` (pivot (0.12, 0.02, 0.07)), optional lift +0.06 along +Y. **pass_key**: `pass_key_body` (bow = the roll-call tag shape).
+**projector_lamp**: `projector_lamp_body` (upright, base down).
+
+### Known gaps / notes
+- The previews use QA lights only; the scene must add its own lights (listed above). Gallery windows rely on the `sky_cards` for the daylight look.
+- The tags' portrait atlas, strip image, cabinet label symbol and print are placeholders (see decals above).
+- `tools/blender/build_all.sh` rebuilds every repository model and rewrites tracked GLBs byte-wise; build only the list you need (`tools/blender/models/<name>.py -- --no-render`).

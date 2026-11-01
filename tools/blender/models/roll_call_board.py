@@ -47,8 +47,8 @@ def build():
     # frame: oak, with a rounded outer moulding; baize field
     b.append(gbox("frame_l", (-BW / 2, BY0, 0.0), (-BW / 2 + 0.10, BY1, 0.045), OAK, bevel=0.01, seg=2))
     b.append(gbox("frame_r", (BW / 2 - 0.10, BY0, 0.0), (BW / 2, BY1, 0.045), OAK, bevel=0.01, seg=2))
-    b.append(gbox("frame_b", (-BW / 2, BY0, 0.0), (BW / 2, BY0 + 0.10, 0.045), OAK, bevel=0.01, seg=2))
-    b.append(gbox("frame_t", (-BW / 2, BY1 - 0.10, 0.0), (BW / 2, BY1, 0.045), OAK, bevel=0.01, seg=2))
+    b.append(gbox("frame_b", (-BW / 2 + 0.10, BY0, 0.0), (BW / 2 - 0.10, BY0 + 0.10, 0.045), OAK, bevel=0.01, seg=2))
+    b.append(gbox("frame_t", (-BW / 2 + 0.10, BY1 - 0.10, 0.0), (BW / 2 - 0.10, BY1, 0.045), OAK, bevel=0.01, seg=2))
     b.append(gbox("baize", (-BW / 2 + 0.10, BY0 + 0.10, 0.0), (BW / 2 - 0.10, BY1 - 0.10, 0.018), "M_Felt", bevel=0.0))
     b.append(gbox("inner_bead", (-BW / 2 + 0.10, BY0 + 0.10, 0.018), (BW / 2 - 0.10, BY1 - 0.10, 0.026), BRASS, bevel=0.0))
     b.append(gbox("baize2", (-BW / 2 + 0.115, BY0 + 0.115, 0.018), (BW / 2 - 0.115, BY1 - 0.115, 0.027), "M_Felt", bevel=0.0))

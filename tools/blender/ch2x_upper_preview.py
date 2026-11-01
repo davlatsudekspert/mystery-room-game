@@ -18,6 +18,8 @@ import lib_ch2x as X  # noqa: E402
 from lib_ch2x import C  # noqa: E402
 
 ARGS = M.main_guard()
+DECAL_FILES = {"M_Decal_RollTags": "roll_tags.png", "M_Decal_CabinetLabel": "cabinet_label.png", "M_Decal_Negatives": "negatives.png",
+               "M_Decal_Prints": "print_proj.png"}
 SEPIA, GREENLAMP, WARM, RED, COOL = "FFD59A", "D6F2A0", "FFC27A", "FF1E10", "BFD8FF"
 
 ROOMS = {
@@ -32,8 +34,8 @@ ROOMS = {
                    ("lamp_c", "POINT", (-2.5, 1.12, 0.58), 14, GREENLAMP, 0.05, None), ("lamp_d", "POINT", (-0.85, 1.12, 0.58), 14, GREENLAMP, 0.05, None),
                    ("pend_a", "POINT", (-1.6, 2.65, 2.3), 60, WARM, 0.08, None), ("pend_b", "POINT", (1.6, 2.65, 2.3), 60, WARM, 0.08, None),
                    ("fill", "POINT", (0.0, 3.3, -0.5), 120, "FFE0B8", 0.3, None)],
-        "shots": {"gallery": ((-4.15, 1.75, -2.3), (1.0, 1.3, 0.7), 66), "balcony": ((0.2, 1.75, 0.9), (0.4, -0.9, 3.0), 72),
-                  "board": ((-1.0, 1.7, 0.4), (-1.0, 1.65, -3.0), 52), "counter": ((-0.8, 1.7, 0.2), (-4.5, 1.3, 0.0), 60),
+        "shots": {"gallery": ((-3.55, 1.7, -2.3), (1.0, 1.3, 0.7), 68), "balcony": ((0.4, 1.7, 0.1), (0.2, -0.4, 3.0), 76),
+                  "board": ((-1.0, 1.7, 0.4), (-1.0, 1.65, -3.0), 52), "void": ((0.4, 1.65, 1.2), (0.2, -2.4, 2.6), 82), "counter": ((-0.8, 1.7, 0.2), (-4.5, 1.3, 0.0), 60),
                   "stair": ((0.8, 1.8, -1.8), (3.3, 0.2, 0.9), 66), "horn": ((0.6, 2.2, 0.6), (-4.5, 3.3, 0.15), 55),
                   "east": ((-3.0, 1.7, 0.5), (4.5, 1.3, -1.6), 64)},
     },
@@ -67,7 +69,9 @@ def retex():
             if m is None:
                 continue
             base = m.name.split(".")[0]
-            if base.startswith("M_"):
+            if base in DECAL_FILES:                                            # the GLBs carry no images: attach the decal image
+                o.data.materials[i] = M.material(base + "_img", color="DCCFB2", image=os.path.join(X.DECALS, DECAL_FILES[base]))
+            elif base.startswith("M_"):
                 o.data.materials[i] = M.material(base)
 
 
