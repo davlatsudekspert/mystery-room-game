@@ -48,7 +48,7 @@ func load_profile() -> Dictionary:
 	var d := _read_json(profile_path)
 	if d.is_empty():
 		d = _read_json(profile_path + ".bak")
-	var out := {"choices": {}, "completed": [], "achievements": [], "hints_used": 0}
+	var out := {"choices": {}, "completed": [], "achievements": [], "hints_used": 0, "started": []}
 	for k: String in out:
 		if d.has(k) and typeof(d[k]) == typeof(out[k]):
 			out[k] = d[k]

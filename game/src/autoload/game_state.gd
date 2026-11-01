@@ -54,6 +54,10 @@ func start_new(id: String) -> bool:
 	if l == null:
 		return false
 	l.setup_from_profile(profile.get("choices", {}))
+	var started: Array = profile.get("started", [])
+	if not started.has(id):
+		started.append(id) # in memory; saved with the next profile save
+		profile["started"] = started
 	l.apply_seed(variant_seed if variant_seed >= 0 else randi_range(1, 2147483646))
 	_attach(id, l)
 	play_time = 0.0
@@ -120,7 +124,10 @@ func _on_chapter_complete() -> void:
 		completed.append(chapter_id)
 	profile["completed"] = completed
 	var choices: Dictionary = profile.get("choices", {})
-	choices.merge(logic.profile_choices(), true)
+	var fresh: Dictionary = logic.profile_choices()
+	if is_chapter_locked_in(chapter_id):
+		fresh = {} # a replay must not move a later chapter's entry (docs/CHAPTER2_EXPANSION.md section 10.6)
+	choices.merge(fresh, true)
 	profile["choices"] = choices
 	var c: Array = logic.collectibles()
 	if int(c[1]) > 0 and int(c[0]) >= int(c[1]):
@@ -137,6 +144,17 @@ func unlock_achievement(id: String) -> void:
 		a.append(id)
 		profile["achievements"] = a
 		SaveSystem.save_profile(profile)
+
+
+## True when a replay of this chapter must keep the choices already recorded. Only Chapter 2 is protected: its
+## ch2_key / ch2_echoes pick Chapter 3's entry wing, which never changes once Chapter 3 was started or completed
+## (owner decision 2026-11-01, docs/CHAPTER2_EXPANSION.md section 10.6).
+func is_chapter_locked_in(id: String) -> bool:
+	if id != "ch2":
+		return false
+	var started: Array = profile.get("started", [])
+	var done: Array = profile.get("completed", [])
+	return started.has("ch3") or done.has("ch3")
 
 
 func is_chapter_completed(id: String) -> bool:
