@@ -105,7 +105,7 @@ func _build_views() -> void:
 	var cam: RoomCamera = room.get("cam")
 	var o := root.position
 	cam.add_view("plate", o + Vector3(-0.9, 1.65, 2.1), o + Vector3(0.6, 1.1, -1.4), 68.0, true)
-	cam.add_view("enlarger", o + Vector3(0.1, 1.42, -0.95), o + Vector3(0.1, 1.1, -2.2), 46.0)
+	cam.add_view("enlarger", o + Vector3(0.0, 1.5, -0.55), o + Vector3(0.0, 1.25, -2.2), 64.0)
 	cam.add_view("trays", o + Vector3(1.0, 1.7, 0.5), o + Vector3(2.6, 0.8, -0.4), 56.0)
 
 

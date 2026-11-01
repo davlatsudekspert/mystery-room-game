@@ -175,6 +175,11 @@ func _run() -> void:
 		cam.add_view(f[0], Vector3(float(p[0]), float(p[1]), float(p[2])), Vector3(float(t[0]), float(t[1]), float(t[2])), float(f[3]))
 	if views.size() == 1 and views[0] == "all":
 		views = PackedStringArray(cam.views.keys())
+		if logic is ArchiveLogic and (logic as ArchiveLogic).exp_active(): # also the views of the expansion's rooms (built on first use)
+			for zone_views: Array in ArchiveZones.zone_views().values():
+				for zv: String in zone_views:
+					if not views.has(zv):
+						views.append(zv)
 	var user_args := OS.get_cmdline_user_args()
 	if views.is_empty() and (user_args.has("--hud-check") or user_args.has("--perf") or user_args.has("--tap-size")):
 		# a check of no views passes by saying nothing: "hud-check: 0 controls in 0 views, 0 failures" is not a pass
