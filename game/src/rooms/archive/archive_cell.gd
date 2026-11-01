@@ -195,6 +195,9 @@ func _build_table() -> void:
 		ArchiveKit.rename_part(tab, "IA_flip_tab_%d" % i)
 		_sheet.append(body)
 		_tab.append(tab)
+		if i < 2: # the stack takes a tap on its top sheet only: the lower two are worked by their own buttons
+			ArchiveKit.drop_colliders(body)
+			ArchiveKit.drop_colliders(tab)
 		var pr := ModelUtil.find(s, "sheet_print") as MeshInstance3D
 		ArchiveKit.drop_colliders(pr)
 		var tex := ImageTexture.create_from_image(_print_image(i))
@@ -367,8 +370,10 @@ static func _soft_dot() -> GradientTexture2D:
 func _build_door() -> void:
 	var d: Node3D = models["cold_door"]
 	# open, the doorway takes the tap that walks through it (the closed leaf is its own tap target)
-	var doorway := room.call("add_tap_area", d, Vector3(0.9, 2.0, 0.7), "cell_cold_door", "Doorway", Vector3(0, 1.05, 0.25)) as StaticBody3D
+	var doorway := Node3D.new() # (a holder: set_present() switches the colliders below a node, not the node itself)
 	doorway.name = "DoorwayTap"
+	d.add_child(doorway)
+	room.call("add_tap_area", doorway, Vector3(0.9, 2.0, 0.5), "cell_cold_door", "Doorway", Vector3(0, 1.05, 0.15))
 	# the digit drums are polished brass: with no reflections in the room that reads black, so they get a matte brass
 	var brass := StandardMaterial3D.new()
 	brass.albedo_color = Color("c9a45a")
@@ -530,7 +535,7 @@ func interact(hs: String, part: String) -> bool:
 			elif part.begins_with("IA_flip_tab_"):
 				logic.n3_flip_sheet(int(part.get_slice("_", 3)))
 			elif part.begins_with("IA_flipbtn_"):
-				logic.n3_flip_sheet(int(part.get_slice("_", 1)))
+				logic.n3_flip_sheet(int(part.get_slice("_", 2)))
 			elif part == "IA_switch":
 				_toggle_table()
 			else:
@@ -581,7 +586,10 @@ func interact(hs: String, part: String) -> bool:
 				else:
 					logic.cold_wheel(0 if part.ends_with("_a") else 1, 1)
 			elif part == "IA_cold_handle" or part == "IA_cold_door":
-				_try_handle()
+				if cur == "cold_door" and _tap_near_lock():
+					cam.go("cold_wheels") # a tap by the lock steps in to the wheels, a tap elsewhere tries the frozen handle
+				else:
+					_try_handle()
 			else:
 				_say("obj2x.cold_door")
 			return true
@@ -589,6 +597,19 @@ func interact(hs: String, part: String) -> bool:
 			logic.enter_room("pump")
 			return true
 	return false
+
+
+## True when the last tap landed within reach of the digit wheels on screen (the wheels sit in a recess the leaf's mesh covers).
+func _tap_near_lock() -> bool:
+	var cam: RoomCamera = room.get("cam")
+	var d: Node3D = models["cold_door"]
+	var a := ModelUtil.find(d, "IA_wheel_a")
+	var b := ModelUtil.find(d, "IA_wheel_b")
+	if a == null or b == null:
+		return false
+	var mid := (cam.unproject_position(a.global_position) + cam.unproject_position(b.global_position)) * 0.5
+	var tap: Vector2 = room.get("tap_pos")
+	return tap.distance_to(mid) < room.get_viewport().get_visible_rect().size.y * 0.16
 
 
 func _try_handle() -> void:

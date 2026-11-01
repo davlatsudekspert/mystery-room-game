@@ -10,3 +10,4 @@ room_cell.py
 service_door.py
 stair_stump.py
 floor_plan_frame.py
+floor_plan.py

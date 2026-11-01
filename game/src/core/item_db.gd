@@ -37,7 +37,7 @@ const ITEMS := {
 	"floor_plan": {"model": "floor_plan", "doc": "floor_plan"},
 	"mallet": {"model": "mallet", "tool": "mallet"}, # worn in hand: a tap with it does what the place does (the pipes ring)
 	"wipe_cloth": {"model": "wipe_cloth", "tool": "cloth"},
-	"frost_sketch": {"model": "frost_sketch"},
+	"frost_sketch": {"model": "frost_sketch", "doc": "frost_sketch"},
 	"roll_slips": {"model": "roll_slips", "doc": "roll_slips"},
 	"pass_key": {"model": "pass_key"},
 	"staff_print": {"model": "staff_print", "doc": "staff_print"},

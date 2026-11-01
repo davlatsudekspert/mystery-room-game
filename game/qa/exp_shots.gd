@@ -26,8 +26,10 @@ func _run() -> void:
 	var to_room := ""
 	var perf := false
 	var plan := false
+	var bag := false
 	var select := ""
 	var probe := ""
+	var tapat := ""
 	var cams: Array[String] = []
 	GameState.variant_seed = 0
 	for a in OS.get_cmdline_user_args():
@@ -58,12 +60,16 @@ func _run() -> void:
 			Settings.values["moments"] = a.substr(10)
 		elif a.begins_with("--cam="):
 			cams.append(a.substr(6)) # name:x,y,z:tx,ty,tz:fov (a view added for this run)
+		elif a.begins_with("--tapat="):
+			tapat = a.substr(8) # x,y,z in the zone of --room: after the last view, what a tap on that point would hit
 		elif a.begins_with("--probe="):
 			probe = a.substr(8) # x0,x1,y,z0,z1: rays along x at 0.2 m steps in z (what a tap there would hit)
 		elif a == "--perf":
 			perf = true
 		elif a == "--plan":
 			plan = true
+		elif a == "--bag":
+			bag = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	SaveSystem.save_path = "user://qa_exp_save.json"
 	SaveSystem.profile_path = "user://qa_exp_profile.json"
@@ -118,6 +124,14 @@ func _run() -> void:
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
 				RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)])
+	if tapat != "" and zones.zones.has(to_room):
+		var tf := tapat.split(",")
+		var zo := (zones.zones[to_room]["root"] as Node3D).global_position
+		var sp := cam.unproject_position(zo + Vector3(float(tf[0]), float(tf[1]), float(tf[2])))
+		var th: Dictionary = room.call("raycast", sp)
+		var pk: Dictionary = room.call("pick", sp)
+		lines.append("tapat %s -> screen %d,%d; ray %s; pick %s" % [tapat, int(sp.x), int(sp.y),
+			str(room.call("resolve", th)) if not th.is_empty() else "nothing", str(room.call("resolve", pk)) if not pk.is_empty() else "nothing"])
 	if probe != "":
 		var f := probe.split(",")
 		var space := room.get_world_3d().direct_space_state
@@ -130,6 +144,12 @@ func _run() -> void:
 				var col: Node = h["collider"]
 				lines.append("probe z=%.2f: x=%.2f %s part=%s" % [z, (h["position"] as Vector3).x, col.get_parent().get_path(), str(col.get_meta("part", ""))])
 			z += float(f[5]) if f.size() > 5 else 0.2
+	if bag: # the bag open: every item's icon (a model that is missing shows its name and warns)
+		(room.get("hud") as Node).call("set_bag_open", true)
+		await _settle(3.0)
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("%s/bag.png" % out_dir)
+		lines.append("shot bag.png")
 	if plan:
 		(room.get("hud") as Node).call("show_plan")
 		await _settle(1.0)

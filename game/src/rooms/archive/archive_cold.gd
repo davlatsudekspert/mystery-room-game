@@ -27,14 +27,14 @@ const CARRIAGE_Z := -1.0
 const CHEST_Z := -3.14
 const CRANK_Y := 1.15
 const END_Z := 0.69 # the carriages' front end panels
-const CAM_Z_MAX := 3.2 # the camera never leaves the room (its walls are solid boxes seen from outside)
+const CAM_Z_MAX := 5.2 # the cranks camera backs off through the south wall, which is hidden (and not tappable) while it is there
 const PLAN_SHIFT := -0.085 # the plan plate moves along the wall, clear of the pilaster at z 1.2 that covers its right edge
 const MASK_W := 64
 const MASK_H := 96
 const BAND_ROWS := 32
 const BRUSH_M := 0.075 # finger wipe radius on the pane
 const PANE := Vector2(0.8, 1.2)
-const BAND_DONE := 0.55 # share of a band that must be clear for a stroke to count
+const BAND_DONE := 0.7 # share of a band's patches that must be clear for a stroke to count
 const LID_OPEN_DEG := -105.0
 const INSIDE_LIFT := 0.16 # the open chest's floor lies near its rim, above the model's crystal and note mounts
 const ROLL_DELAY := 0.5
@@ -76,6 +76,7 @@ var _plan_tex: ImageTexture
 var _silhouette: MeshInstance3D
 var _echo: Node3D
 var _fitted_aisle := -1
+var _wall_s: Node3D
 
 
 func _init(r: Node3D, z: ArchiveZones, zone_root: Node3D) -> void:
@@ -98,6 +99,7 @@ func build() -> void:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			ArchiveKit.drop_colliders(mi) # frost decals and the strip curtain are not things: no taps, no blocked rays
 	room.call("tune_shadows", _window)
+	_wall_s = ModelUtil.find(shell, "wall_s")
 	for k in ArchiveExpData.CARRIAGES:
 		var c := ModelUtil.spawn("carriage_%d" % (k + 1), root, Transform3D(Basis.IDENTITY, Vector3(_slot_x(int(logic.state["aisle_pos"][k])), 0, CARRIAGE_Z)), "parts")
 		_register("carriage_%d" % (k + 1), c, "cold_cranks")
@@ -267,13 +269,25 @@ func _paint(uv: Vector2) -> void:
 					_mask.set_pixel(x, y, Color(v, v, v, 1))
 
 
+## How much of a band a finger has cleared: the share of its 8 x 8 px patches (8 columns, 4 rows) that hold some clear frost, so
+## a zig-zag with gaps between the passes counts as much as a full scrub.
 func _band_clear_share(b: int) -> float:
-	var n := 0
-	for y in range(b * BAND_ROWS, (b + 1) * BAND_ROWS):
-		for x in MASK_W:
-			if _mask.get_pixel(x, y).r >= 0.5:
-				n += 1
-	return float(n) / float(MASK_W * BAND_ROWS)
+	var touched := 0
+	var cols := MASK_W / 8
+	var rows := BAND_ROWS / 8
+	for gy in rows:
+		for gx in cols:
+			var hit := false
+			for y in range(b * BAND_ROWS + gy * 8, b * BAND_ROWS + gy * 8 + 8):
+				for x in range(gx * 8, gx * 8 + 8):
+					if _mask.get_pixel(x, y).r >= 0.5:
+						hit = true
+						break
+				if hit:
+					break
+			if hit:
+				touched += 1
+	return float(touched) / float(cols * rows)
 
 
 ## Makes a band's rows fully clear, sweeping left to right when `animated`.
@@ -363,11 +377,40 @@ static func plan_image(bay: int) -> Image:
 	var cx := ax
 	var cy := ty + th + 168
 	img.fill_rect(Rect2i(cx - 34, cy - 4, 68, 34), Color("7a4f2a"))
-	ArchiveKit.ring(img, Vector2(cx, cy - 4), 34.0, 8.0, Color("5a3a1e"), PI, TAU)
+	for dy in 18: # a domed lid: rows of a half ellipse over the body
+		var half := 34.0 * sqrt(1.0 - pow(float(dy) / 18.0, 2.0))
+		img.fill_rect(Rect2i(int(cx - half), cy - 4 - dy, int(half * 2.0), 1), Color("5a3a1e"))
+	img.fill_rect(Rect2i(cx - 34, cy - 6, 68, 4), Color("3a2412"))
+	img.fill_rect(Rect2i(cx - 5, cy - 8, 10, 12), Color("d8b660"))
 	for dx in [-17, 0, 17]:
-		ArchiveKit.disc(img, Vector2(cx + dx, cy + 14), 6.0, Color("d8b660"))
+		ArchiveKit.disc(img, Vector2(cx + dx, cy + 15), 6.0, Color("d8b660"))
 	ArchiveKit.line(img, Vector2(30, 322), Vector2(482, 322), 3.0, ink) # the back wall
 	return img
+
+
+## The sketch item's page: this game's three signs, left to right, pencilled on squared paper (the bag shows it again).
+static func sketch_texture(symbols: Array) -> ImageTexture:
+	var img := Image.create(420, 190, false, Image.FORMAT_RGBA8)
+	img.fill(Color("e4dcc4"))
+	for gx in range(0, 420, 14): # squared paper
+		img.fill_rect(Rect2i(gx, 0, 1, 190), Color(0.55, 0.62, 0.7, 0.35))
+	for gy in range(0, 190, 14):
+		img.fill_rect(Rect2i(0, gy, 420, 1), Color(0.55, 0.62, 0.7, 0.35))
+	for k in mini(3, symbols.size()):
+		var tex := load("res://assets/textures/decals/ch2x/frost_sign_%d.png" % int(symbols[k])) as Texture2D
+		if tex == null:
+			continue
+		var sign := tex.get_image()
+		if sign.is_compressed():
+			sign.decompress()
+		sign.convert(Image.FORMAT_RGBA8)
+		sign.resize(124, 124, Image.INTERPOLATE_BILINEAR)
+		for y in 124: # the frost-white strokes become pencil
+			for x in 124:
+				var a := sign.get_pixel(x, y).a
+				sign.set_pixel(x, y, Color(0.16, 0.16, 0.2, a * 0.92))
+		img.blend_rect(sign, Rect2i(0, 0, 124, 124), Vector2i(14 + k * 134, 33))
+	return ImageTexture.create_from_image(img)
 
 
 # ---------------------------------------------------------------------- the chest and the cans
@@ -585,9 +628,17 @@ func on_enter() -> void:
 	_define_views()
 	apply_state(false)
 	_breath.emitting = true
+	_south_wall(false)
+
+
+## The south wall is a solid box: for the cranks' wide view the camera stands behind it, so the wall steps aside.
+func _south_wall(away: bool) -> void:
+	if _wall_s != null:
+		room.call("set_present", _wall_s, not away)
 
 
 func on_view(view: String) -> void:
+	_south_wall(view == "cranks")
 	_breath.emitting = view == "cold"
 	if view in ["cranks", "chest"]:
 		_define_views() # the framing follows where the carriages stand now (the camera has already started; refresh settles it)
@@ -799,13 +850,13 @@ func moment_m6(seconds: float, _sting: bool) -> void:
 	var x := _slot_x(_chest_slot)
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://src/fx/echo.gdshader")
-	_echo = ModelUtil.spawn("echo_archivist", root, Transform3D(Basis(Vector3.UP, deg_to_rad(8.0)), Vector3(x, 0, -2.15)), "none")
+	_echo = ModelUtil.spawn("echo_archivist", root, Transform3D(Basis(Vector3.UP, deg_to_rad(8.0)), Vector3(x, 0, -3.3)), "none")
 	if _echo == null:
 		return
 	for mi in ModelUtil.find_meshes(_echo):
 		mi.material_override = mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var can := ModelUtil.spawn("film_can_2", root, Transform3D(Basis.IDENTITY, Vector3(x + 0.18, 1.02, -1.95)), "none")
+	var can := ModelUtil.spawn("film_can_2", root, Transform3D(Basis.IDENTITY, Vector3(x + 0.16, 1.05, -3.12)), "none")
 	if can != null:
 		for mi in ModelUtil.find_meshes(can):
 			mi.material_override = mat

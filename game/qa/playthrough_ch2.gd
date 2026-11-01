@@ -479,15 +479,12 @@ func run() -> void:
 		await shot("deck_" + tape)
 		await _settle(9.0)
 	step("P7 three reels at 4.75 → clicks %s" % ", ".join((s["v_clicks"] as Array).map(func(c: Variant) -> String: return str(int(c)))), (s["clicks_heard"] as Array).size() == 3)
-	# N1 Warm Wall, then the Pump Room's N2 by real taps in the scene (hall east wall, service door, mallet, manifold,
-	# pipe board). TODO(scene): N3-N6 (Night Cell, Cold Store) still play at logic level until those rooms are in the scene.
+	# N1 Warm Wall, the Pump Room's N2, the Night Cell's N3 and the Cold Store's N4-N6 by real taps in the scene (hall east wall,
+	# service door, mallet, manifold, pipe board, cell door, light table, cold door, cranks, frost window, chest).
 	if logic.exp_active():
 		await _n1_n2_taps()
-		var guard := 0
-		while not logic.state["chest_open"] and guard < 400:
-			ArchiveSolver.lower_floor(logic)
-			guard += 1
-		step("N3-N6 lower floor (logic level) → chest open, crystals available", logic.state["chest_open"] and logic.state["crystals_available"])
+		await _n3_n6_taps()
+		step("N3-N6 lower floor by taps → chest open, crystals taken", logic.state["chest_open"] and L.has_item("crystal_blank_1") and L.has_item("crystal_blank_2"))
 		await _back_to_hall()
 		await _continue_check("lower")
 		L = logic
@@ -553,9 +550,8 @@ func run() -> void:
 	await _settle(0.8)
 	await shot("lens_case_open")
 	if L.exp_active():
-		# the new game's crystals are in the Cold Store chest, not in the case. TODO(scene): tap them in the chest.
-		L.take("case_crystal_1")
-		L.take("case_crystal_2")
+		# the new game's crystals came from the Cold Store chest (tapped in _n3_n6_taps), not from this case
+		step("crystals from the Cold Store chest in the bag", L.has_item("crystal_blank_1") and L.has_item("crystal_blank_2"))
 	else:
 		await act("lens_case", "Item_case_crystal_1", func() -> bool: return L.has_item("crystal_blank_1"), func() -> void: L.take("case_crystal_1"), "crystal 1")
 		await act("lens_case", "Item_case_crystal_2", func() -> bool: return L.has_item("crystal_blank_2"), func() -> void: L.take("case_crystal_2"), "crystal 2")
@@ -975,7 +971,249 @@ func _n1_n2_taps() -> void:
 	await view("pipes")
 	await shot("pump_pipes_flow")
 	step("N2 valves %s → coil warm (thawed)" % ",".join(sol.map(func(x: Variant) -> String: return str(int(x) + 1))), s["thawed"])
-	# out by the stair
+
+
+## Aims the camera at a point of a room (a temporary root view of that room) so a point-tap can reach it. In zone coordinates.
+func _aim(room_id: String, from: Vector3, to: Vector3, fov: float = 62.0) -> void:
+	var zones: ArchiveZones = room.get("zones")
+	zones.register(room_id, ["qa_aim"], {}, {}, {})
+	var o := (zones.zones[room_id]["root"] as Node3D).global_position
+	cam().add_view("qa_aim", o + from, o + to, fov, true)
+	cam().go("qa_aim", true)
+	await _settle(0.5)
+
+
+## Taps a point in a room (zone coordinates) the way the stair was tapped: project it and send the tap to the room.
+func _tap_at(room_id: String, at: Vector3, label: String) -> void:
+	var zones: ArchiveZones = room.get("zones")
+	var o := (zones.zones[room_id]["root"] as Node3D).global_position
+	var guard := 0
+	while cam().transitioning and guard < 30: # a tap during a camera move is ignored, as for a player
+		guard += 1
+		await _settle(0.1)
+	var sp := cam().unproject_position(o + at)
+	_note_hud(sp, label)
+	room.call("_on_tap", sp)
+	await _settle(0.5)
+
+
+## Ends a stroll through a zone's exits: taps the exit door of `room_id` and waits for the fade to the next room.
+func _leave(room_id: String, from: Vector3, to: Vector3, at: Vector3, want_room: String, label: String) -> void:
+	var L := logic
+	await wait_idle()
+	await _aim(room_id, from, to)
+	await _tap_at(room_id, at, label)
+	await _settle(0.8)
+	await wait_idle()
+	if L.state["room"] == want_room:
+		taps_ok += 1
+	else:
+		taps_fallback += 1
+		_log("  fallback: %s (hit %s)" % [label, str(room.call("resolve", room.call("raycast", cam().unproject_position(cam().global_position))))])
+		L.enter_room(want_room)
+		await _settle(1.0)
+		await wait_idle()
+
+
+## N3 to N6 as a player taps them: the Cell door (M2), the cloth, the light table (buttons, tabs, a sheet drag), the cold door's
+## wheels, the Cold Store's cranks (the carriages roll), the plan, the frost window (a finger wipe and band taps), the chest rings,
+## the two crystals; then back out through the Cell and the Pump Room to the hall.
+func _n3_n6_taps() -> void:
+	var L := logic
+	var s := L.state
+	var zones: ArchiveZones = room.get("zones")
+	var hud: Node = room.get("hud")
+	# the Cell door: the first look (moment M2), then in
+	await view("pump")
+	await act("pump_room_pump", "IA_door_cell", func() -> bool: return cam().current() == "cell_door", func() -> void: cam().go("cell_door"), "Cell door view")
+	await _settle(1.5)
+	await shot("pump_cell_door")
+	await wait_idle()
+	await act("pump_room_pump", "IA_door_cell", func() -> bool: return s["room"] == "cell", func() -> void: L.enter_room("cell"), "Cell door")
+	await _settle(1.0)
+	await wait_idle()
+	await shot("cell_arrival")
+	await _perf("cell")
+	# the diary and the slip on the desk, read and closed again
+	await view("desk")
+	await shot("cell_desk")
+	await tap("cell_cell_diary", "IA_cell_diary")
+	await _settle(0.5)
+	await shot("cell_diary_read")
+	hud.call("consume_back")
+	await _settle(0.3)
+	# the cloth by the kettle
+	await view("shelf")
+	await shot("cell_shelf")
+	await act("cell_wipe_cloth", "", func() -> bool: return L.has_item("wipe_cloth"), func() -> void: L.take("cell_cloth"), "cloth")
+	# N3: flips first (the flip buttons), then quarter turns (the turn buttons); one sheet also by its tab and a drag
+	await view("light_table")
+	await shot("cell_light_table_start")
+	await _perf("light_table")
+	var tgt: Array = s["v_sheet_target"]
+	for i in 3:
+		var before := int(s["sheets"][2 * i + 1])
+		if before != int(tgt[2 * i + 1]):
+			if i == 2:
+				await act("cell_acetate_sheet_c", "IA_flip_tab_2", func() -> bool: return int(s["sheets"][5]) != before, func() -> void: L.n3_flip_sheet(2), "flip tab of sheet 3")
+			else:
+				await act("cell_light_table", "IA_flipbtn_%d" % i, func() -> bool: return int(s["sheets"][2 * i + 1]) != before, func() -> void: L.n3_flip_sheet(i), "flip button %d" % i)
+	for i in 3:
+		var guard := 0
+		while int(s["sheets"][2 * i]) != int(tgt[2 * i]) and guard < 4 and not s["cell_digits_ok"]:
+			guard += 1
+			var r0 := int(s["sheets"][2 * i])
+			if i == 2 and guard == 1:
+				# a drag sideways on sheet 3 turns it (the room's drag hook, with the finger inside the sheet)
+				var spd: Vector2 = _tap_point("cell_acetate_sheet_c", "IA_sheet_2", Vector2.ZERO)
+				room.set("drag_pos", spd)
+				var cap := bool(room.call("drag_part_started", "IA_sheet_2"))
+				room.call("drag_part", Vector2(40, 0))
+				room.call("drag_part", Vector2(40, 0))
+				await _settle(0.5)
+				if cap and int(s["sheets"][4]) != r0:
+					taps_ok += 1
+					continue
+				taps_fallback += 1
+				_log("  fallback: sheet 3 drag (captured %s)" % str(cap))
+				L.n3_turn_sheet(2)
+				continue
+			await act("cell_light_table", "IA_turn_%d" % i, func() -> bool: return int(s["sheets"][2 * i]) != r0, func() -> void: L.n3_turn_sheet(i), "turn button %d" % i)
+	await _settle(2.2)
+	await shot("cell_light_table_solved")
+	step("N3 light table → digits %d%d" % [int(s["v_glyph"][0]), int(s["v_glyph"][1])], s["cell_digits_ok"])
+	# the cold door: the wheels (a first tap steps in to them), then the handle and the doorway
+	await view("cold_door")
+	await shot("cell_cold_door_closed")
+	for i in 2:
+		var want := int(s["v_glyph"][i])
+		var guard := 0
+		while int(s["cold_wheels"][i]) != want and guard < 10:
+			guard += 1
+			var w0 := int(s["cold_wheels"][i])
+			await act("cell_cold_door", "IA_wheel_" + "ab"[i], func() -> bool: return int(s["cold_wheels"][i]) != w0 or cam().current() == "cold_wheels" and guard == 1 and i == 0,
+				func() -> void: L.cold_wheel(i), "cold wheel %d" % (i + 1))
+			await _settle(0.3)
+		if i == 0:
+			await shot("cell_cold_wheels")
+	await _settle(2.0)
+	await shot("cell_cold_door_open")
+	step("N3 wheels %d%d → the cold door opens (the coil is warm)" % [int(s["v_glyph"][0]), int(s["v_glyph"][1])], s["cold_open"])
+	await view("cold_door")
+	await _tap_at("cell", Vector3(2.15, 1.0, 0.0), "cold doorway")
+	await _settle(1.2)
+	await wait_idle()
+	if s["room"] == "cold":
+		taps_ok += 1
+	else:
+		taps_fallback += 1
+		_log("  fallback: cold doorway (view %s)" % cam().current())
+		L.enter_room("cold")
+		await _settle(1.0)
+		await wait_idle()
+	await shot("cold_arrival")
+	await _perf("cold")
+	# N4: the plan, then the cranks until the aisle opens
+	await view("plan")
+	await shot("cold_plan")
+	await _tap_at("cold", Vector3(3.74, 1.55, 0.915), "plan plate")
+	await _settle(0.6)
+	await shot("cold_plan_zoom")
+	hud.call("consume_back")
+	await _settle(0.3)
+	await view("cranks")
+	await shot("cold_cranks_start")
+	await _perf("cranks")
+	var steps_done := 0
+	while not s["aisle"] and steps_done < 12:
+		var route := L.aisle_route_from_here()
+		if route.is_empty():
+			break
+		steps_done += 1
+		var k := int(route[0][0])
+		var want_slot := int((s["aisle_pos"] as Array)[k]) + int(route[0][1])
+		var tries := 0
+		while int((s["aisle_pos"] as Array)[k]) != want_slot and tries < 3 and not s["aisle"]:
+			tries += 1 # a crank that clunks turns the other way on the next tap (docs/CHAPTER2_EXPANSION.md N4)
+			await tap("cold_carriage_%d" % (k + 1), "IA_crank_%d" % k)
+			await _settle(0.4)
+		if int((s["aisle_pos"] as Array)[k]) == want_slot or s["aisle"]:
+			taps_ok += 1
+		else:
+			taps_fallback += 1
+			_log("  fallback: crank %d (view %s, hit %s)" % [k + 1, cam().current(), _hit("cold_carriage_%d" % (k + 1), "IA_crank_%d" % k, Vector2.ZERO)])
+			L.n4_crank(k, int(route[0][1]))
+		await _wait_rolled()
+		if steps_done == 1:
+			await shot("cold_cranks_rolling")
+	await _wait_rolled()
+	await wait_idle()
+	await _settle(2.0)
+	await shot("cold_aisle_open")
+	step("N4 cranks (%d) → the aisle opens, the chest stands in it" % steps_done, s["aisle"])
+	# N5: a finger wipe over the first band (drag hook), band taps for the other two
+	await view("frost")
+	await shot("cold_frost_start")
+	await _perf("frost")
+	var win: Node3D = node_of("cold_frost_window", "")
+	var band_pts: Array[Vector2] = []
+	for y: float in [0.4, 0.0, -0.4]:
+		band_pts.append(cam().unproject_position(win.to_global(Vector3(0, y, 0.02))))
+	var left := cam().unproject_position(win.to_global(Vector3(-0.3, 0.4, 0.02)))
+	var right := cam().unproject_position(win.to_global(Vector3(0.3, 0.4, 0.02)))
+	room.set("drag_pos", left)
+	var captured := bool(room.call("drag_part_started", "IA_frost"))
+	for pass_i in 6: # back and forth, as a finger would
+		for t in 10:
+			var p := left.lerp(right, float(t) / 9.0) if pass_i % 2 == 0 else right.lerp(left, float(t) / 9.0)
+			p.y += (pass_i - 2.5) * 16.0
+			room.set("drag_pos", p)
+			room.call("drag_part", Vector2(12, 0))
+			await get_tree().process_frame
+	await _settle(0.8)
+	await shot("cold_frost_wiped_band0")
+	if captured and int(s["wiped"][0]) == 1:
+		taps_ok += 1
+	else:
+		taps_fallback += 1
+		_log("  fallback: frost finger wipe (captured %s, band share %s)" % [str(captured), str(zones.builder("cold").call("_band_clear_share", 0))])
+		L.n5_wipe(0)
+	for b in [1, 2]:
+		var bb: int = b
+		var sp: Vector2 = band_pts[bb]
+		_note_hud(sp, "frost band %d" % bb)
+		room.call("_on_tap", sp)
+		await _settle(0.8)
+		if int(s["wiped"][bb]) == 1:
+			taps_ok += 1
+		else:
+			taps_fallback += 1
+			_log("  fallback: frost band %d tap" % bb)
+			L.n5_wipe(bb)
+	await _settle(1.5)
+	await shot("cold_frost_done")
+	step("N5 frost wiped (drag + taps) → signs %s" % ",".join((s["v_symbols"] as Array).map(func(v: Variant) -> String: return str(int(v)))), s["frost_seen"] and L.has_item("frost_sketch"))
+	# N6: the rings by their shortest route, the lid, the two crystals
+	await view("chest")
+	await shot("cold_chest_closed")
+	await _perf("chest")
+	var presses := ArchiveExpData.ring_route(s["rings"], L.chest_target())
+	for ring_i: int in presses:
+		var rv := int(s["rings"][ring_i])
+		await act("cold_cold_chest", "IA_ring_%d" % ring_i, func() -> bool: return int(s["rings"][ring_i]) != rv or s["chest_open"],
+			func() -> void: L.n6_turn_ring(ring_i), "ring %d" % (ring_i + 1))
+		await _settle(0.35)
+	await _settle(1.8)
+	await shot("cold_chest_open")
+	step("N6 rings (%d presses) → the chest opens" % presses.size(), s["chest_open"])
+	for k in 2:
+		var spot := "case_crystal_%d" % (k + 1)
+		var item := "crystal_blank_%d" % (k + 1)
+		await act("cold_cold_chest", "Item_" + spot, func() -> bool: return L.has_item(item), func() -> void: L.take(spot), "crystal %d" % (k + 1))
+	await shot("cold_chest_empty")
+	# back out: the Cold Store door, the Cell's doorway, the Pump Room's stair
+	await _leave("cold", Vector3(0.0, 1.5, 2.2), Vector3(-3.72, 1.1, 2.2), Vector3(-3.72, 1.1, 2.2), "cell", "cold exit")
+	await _leave("cell", Vector3(0.0, 1.5, -1.1), Vector3(-2.15, 1.05, -1.1), Vector3(-2.15, 1.05, -1.1), "pump", "cell exit")
 	await view("pump")
 	var c := cam()
 	c.yaw = 180.0 # turn round to the south wall: the stair up to the hall
@@ -996,6 +1234,15 @@ func _n1_n2_taps() -> void:
 		L.enter_room("hall")
 		await _settle(1.0)
 		await wait_idle()
+
+
+## Waits until every carriage of the Cold Store has come to rest.
+func _wait_rolled() -> void:
+	var b: Object = (room.get("zones") as ArchiveZones).builder("cold")
+	var t := 0.0
+	while b != null and int(b.get("_rolling")) > 0 and t < 12.0:
+		await _settle(0.25)
+		t += 0.25
 
 
 ## The Chapter 3 card has its buttons (the cliffhanger's last beat).
