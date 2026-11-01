@@ -94,6 +94,7 @@ const BOOTH_VIEWS := ["booth", "projector", "splicer", "slides", "slide_projecto
 const VAULT_VIEWS := ["vault", "vault_ports", "vault_inside", "vault_mouth"]
 
 var visuals: ArchiveVisuals
+var zones: ArchiveZones # the expansion's rooms (docs/CHAPTER2_EXPANSION.md): only built and shown in an expansion game
 var teaser: ArchiveTeaser # the cliffhanger after the key choice and the Chapter 3 card
 var _held_frame := -1 # splicer: the loose film strip the player picked up
 var _cinematic := false
@@ -122,6 +123,11 @@ func _ready() -> void:
 	_build_lights()
 	build_camera()
 	_build_views()
+	zones = ArchiveZones.new(self)
+	add_child(zones)
+	if (logic as ArchiveLogic).exp_active():
+		zones.hall_exp = ArchiveHallExp.new(self, zones)
+		zones.hall_exp.build()
 	visuals = ArchiveVisuals.new(self)
 	add_child(visuals)
 	teaser = ArchiveTeaser.new(self)
@@ -132,9 +138,15 @@ func _ready() -> void:
 	add_child(PerfGuard.new())
 	GameState.events.connect(_on_events)
 	visuals.apply_state(false)
+	zones.apply_state(false)
 	DecalLoc.apply(self)
 	Loc.language_changed.connect(_on_language_changed)
-	cam.go("hall", true)
+	var start_room := str(logic.state["room"]) if (logic as ArchiveLogic).exp_active() else "hall"
+	if start_room != "hall" and logic.room_open(start_room):
+		zones.jump(start_room) # a save made inside the expansion's rooms opens there
+		zones.apply_state(false)
+	else:
+		cam.go("hall", true)
 	AudioManager.music("music_archive", 4.0)
 	AudioManager.ambience("amb_archive", true, -4.0)
 	if not capture_mode and _fresh_start():
@@ -173,6 +185,7 @@ func _exit_tree() -> void:
 
 ## Views whose camera depends on the state are framed here first (used by the room and by QA tools).
 func prepare_view(id: String) -> void:
+	zones.prepare_view(id)
 	var s := (logic as ArchiveLogic).state
 	if id == "cat_drawer":
 		visuals.frame_cat_drawer(maxi(0, int(s["cat_drawer"])))
@@ -490,16 +503,20 @@ func _build_views() -> void:
 
 # ====================================================================== hooks
 func main_root() -> String:
-	return "hall"
+	return str(ArchiveZones.ROOT_VIEW.get(zones.current, "hall")) if zones != null else "hall"
 
 
 func hotspot_view(hs: String) -> String:
 	if hs in ["projector", "splicer", "slides", "slide_projector", "lens_case"] and cam.current() == "hall":
 		return "booth" if logic.state["booth_open"] else "booth_door"
-	return HOTSPOT_VIEW.get(hs, "")
+	return HOTSPOT_VIEW.get(hs, zones.hotspot_view(hs) if zones != null else "")
 
 
 func deeper_views() -> Dictionary:
+	if zones != null and not zones.deeper_views().is_empty():
+		var all := DEEPER.duplicate()
+		all.merge(zones.deeper_views())
+		return all
 	return DEEPER
 
 
@@ -509,7 +526,7 @@ func view_caption(id: String) -> String:
 		return "obj2.vault_open"
 	if id == "booth_door" and s["booth_open"]:
 		return "obj2.booth"
-	return CAPTION.get(id, "")
+	return CAPTION.get(id, zones.caption_for(id) if zones != null else "")
 
 
 func use_target(hs: String, p: String) -> String:
@@ -744,7 +761,7 @@ func interact(hs: String, p: String, r: Dictionary) -> void:
 		"vault":
 			_interact_vault(p)
 		_:
-			pass
+			zones.interact(hs, p)
 
 
 func _interact_catalogue(p: String, _r: Dictionary) -> void:
@@ -1069,6 +1086,7 @@ func _process(_delta: float) -> void:
 
 # ====================================================================== events → feedback
 func view_changed_hook(id: String) -> void:
+	zones.prepare_view(id) # a camera jump (QA tools, a loaded save) keeps the zone in step with the view
 	var fill: OmniLight3D = lights["focus_fill"]
 	var e := 0.0 if cam.is_root() else (1.3 if id in ["catalogue", "cat_drawer", "grille", "hatch", "locker9", "ledger", "lens_case", "slides"] else 0.9)
 	if id == "cat_section":
@@ -1106,9 +1124,11 @@ func _on_events(ev: Array[String]) -> void:
 	var film := false
 	for e in ev:
 		_feedback(e)
+		_expansion_event(e)
 		if e == "film_played":
 			film = true
 	visuals.apply_state(true)
+	zones.apply_state(true)
 	hud.call("set_caption", view_caption(cam.current()))
 	if film:
 		_play_film(ev.has("secret_reel"), ev.has("leyla_echo"))
@@ -1131,6 +1151,24 @@ func _explain_blank_crystal() -> void:
 	elif img.begins_with("film:") and not l.is_sharp():
 		key = "msg.c2_crystal_blur"
 	hud.call("message", tr(key))
+
+
+## The expansion's events: room changes (fade, switch), reaction moments, captions, and each room's own feedback.
+func _expansion_event(e: String) -> void:
+	var l := logic as ArchiveLogic
+	if not l.exp_active():
+		return
+	var name := e.get_slice(":", 0)
+	if name == "room":
+		zones.transition(e.substr(5))
+		return
+	if name == "moment":
+		zones.on_moment(e.substr(7))
+		return
+	zones.feedback(e)
+	var key := l.caption_key(e)
+	if key != "":
+		hud.call("caption", tr(key), 3.5)
 
 
 func _feedback(e: String) -> void:
