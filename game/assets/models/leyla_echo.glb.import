@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bif7db2edc2sq"
-path="res://.godot/imported/echo_leyla_sitting.glb-9d41de031f13003592be34e5b6980088.scn"
+uid="uid://bgylbdbxghr4d"
+path="res://.godot/imported/leyla_echo.glb-48bbc05daf4138475f981dec5bd1c55f.scn"
 
 [deps]
 
-source_file="res://assets/models/echo_leyla_sitting.glb"
-dest_files=["res://.godot/imported/echo_leyla_sitting.glb-9d41de031f13003592be34e5b6980088.scn"]
+source_file="res://assets/models/leyla_echo.glb"
+dest_files=["res://.godot/imported/leyla_echo.glb-48bbc05daf4138475f981dec5bd1c55f.scn"]
 
 [params]
 

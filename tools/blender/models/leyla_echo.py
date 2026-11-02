@@ -1,6 +1,9 @@
-"""Light echo: Dr. Leyla Rahimova, 1979, seated at her desk writing (Chapter 1 finale).
+"""Light echo (v2): Dr. Leyla Rahimova, 1979, seated at her desk writing (Chapter 1 finale).
 
-Output: game/assets/models/echo_leyla_sitting.glb
+Replaces echo_leyla_sitting (which read as a mannequin): fuller swept-back hair with a high bun, narrower waist, a
+knee-length dress under the lab coat, coat cuffs, and ~3x the triangle budget (smooth silhouette). Same rig contract.
+
+Output: game/assets/models/leyla_echo.glb
   echo_body  origin = floor below the seat centre (0, 0, 0). Seat top 0.46 m (no chair in the mesh).
   echo_head  head + neck + hair + bun, child of echo_body, origin = neck pivot (base of the neck,
              inside the coat collar). Rotate it about its local vertical axis (Godot +Y) to turn
@@ -9,7 +12,7 @@ Facing: the desk is in front of her = Blender +Y = Godot -Z. Desk top 0.78 m; de
 assumed 0.39 m in front of the seat centre (chair/desk placement in ROOM_LAYOUT.md).
 Material: one slot, M_Echo (replaced in Godot by the additive light-echo shader).
 
-Run: blender -b --factory-startup -P tools/blender/models/echo_leyla_sitting.py [-- --no-render]
+Run: blender -b --factory-startup -P tools/blender/models/leyla_echo.py [-- --no-render]
 """
 import math
 import os
@@ -24,13 +27,13 @@ import lib_echo as E  # noqa: E402
 import mrlib  # noqa: E402
 from lib_echo import ik2, rot_x, rot_z, vec  # noqa: E402
 
-NAME = "echo_leyla_sitting"
+NAME = "leyla_echo"
 ARGS = mrlib.main_guard()
 RENDER = "--no-render" not in ARGS
 DEV = "--dev" in ARGS  # extra close-up renders into the scratch dir given after --dev
 
 SEAT, DESK, DESK_EDGE_Y = 0.46, 0.78, 0.39
-BODY_TRIS, HEAD_TRIS = 6150, 2650
+BODY_TRIS, HEAD_TRIS = 14500, 7500
 HEAD_VG, BODY_VG = 0.002, 0.002  # decimation detail bias (cost += edge_len * factor)
 
 # ------------------------------------------------------------------ skeleton (Blender, metres)
@@ -53,9 +56,9 @@ def torso():
         (-0.050, 0.468, 0.156, 0.096, 0.094),
         (-0.048, 0.512, 0.184, 0.108, 0.118),
         (-0.040, 0.585, 0.178, 0.103, 0.108),
-        (-0.022, 0.680, 0.146, 0.090, 0.090),
-        (0.004, 0.770, 0.146, 0.096, 0.088),
-        (0.038, 0.850, 0.157, 0.110, 0.088),
+        (-0.022, 0.680, 0.134, 0.084, 0.086),
+        (0.004, 0.770, 0.128, 0.088, 0.084),
+        (0.038, 0.850, 0.148, 0.112, 0.086),
         (0.068, 0.918, 0.163, 0.110, 0.086),
         (0.094, 0.970, 0.166, 0.094, 0.082),
         (0.108, 1.008, 0.146, 0.076, 0.074),
@@ -95,8 +98,8 @@ def arms():
         parts.append(E.limb(f"upperarm{s}", sh, el, [0.052, 0.051, 0.048, 0.046], seg=20,
                             side=(0, 0, 1)))
         parts.append(E.ellipsoid(f"elbow{s}", el, (0.045, 0.045, 0.045), seg=18, rings=10))
-        parts.append(E.limb(f"forearm{s}", el, cuff, [0.045, 0.045, 0.043, 0.041, 0.044, 0.044],
-                            ts=[0, 0.3, 0.65, 0.84, 0.88, 1.0], seg=20, side=(0, 0, 1), cap1=0.2))
+        parts.append(E.limb(f"forearm{s}", el, cuff, [0.045, 0.045, 0.042, 0.040, 0.049, 0.047],
+                            ts=[0, 0.3, 0.62, 0.80, 0.88, 1.0], seg=20, side=(0, 0, 1), cap1=0.2))
         parts.append(E.limb(f"wrist{s}", cuff - fdir * 0.03, wr, [(0.025, 0.019), (0.024, 0.018)],
                             seg=14, side=(0, 0, 1)))
     return parts
@@ -173,16 +176,25 @@ def legs():
                             [(0.011, 0.011, 0.058, 0.050), (0.012, 0.012, 0.072, 0.056),
                              (0.012, 0.012, 0.068, 0.056), (0.011, 0.011, 0.046, 0.042)],
                             side=(1, 0, 0), seg=16, sub=3, cap0=0.5, cap1=0.5))
+    # knee-length dress: soft skirt over each thigh, hem just below the knee (shin and shoe stay bare)
+    for s in (1, -1):
+        hp, kn = HIP[s], KNEE[s]
+        a = hp + Vector((0, 0.02, 0.03))
+        b = kn + Vector((0, 0.03, -0.045))
+        parts.append(E.limb(f"skirt{s}", a, b, [(0.100, 0.092), (0.092, 0.084), (0.074, 0.066), (0.066, 0.060)],
+                            side=(1, 0, 0), seg=28, cap0=0.4, cap1=0.2))
     return parts
 
 
 def build_body():
     t = torso()
     tree = E.bvh(t)
-    parts = [t] + coat_details(tree) + arms() + legs()
+    bust = [E.ellipsoid(f"bust{sx}", (sx * 0.052, 0.148, 0.905), (0.058, 0.052, 0.058), seg=24, rings=14)
+            for sx in (1, -1)]
+    parts = [t] + bust + coat_details(tree) + arms() + legs()
     hp, pen = hands()
     parts += hp
-    body = E.union_remesh(parts, "body_tmp", 0.0034)
+    body = E.union_remesh(parts, "body_tmp", 0.0027)
     hand_c = [WRIST[1] + Vector((-0.02, 0.05, -0.01)), WRIST[-1] + Vector((0.01, 0.06, -0.01))]
 
     def hands_w(co):
@@ -223,9 +235,9 @@ def hair_disp(co, nrm):
     x, y, z = co[:, 0], co[:, 1], co[:, 2]
     deg = np.degrees(np.abs(np.arctan2(x, y + 0.01)))
     h = np.interp(deg, [0, 30, 55, 72, 88, 105, 140, 180],
-                  [0.064, 0.057, 0.038, 0.016, 0.016, -0.004, -0.050, -0.072])
-    m = E.smoothstep(h - 0.002, h + 0.007, z)
-    thick = np.interp(deg, [0, 40, 80, 120, 180], [0.0065, 0.010, 0.0155, 0.014, 0.012])
+                  [0.066, 0.062, 0.046, 0.024, 0.006, -0.020, -0.056, -0.076])
+    m = E.smoothstep(h - 0.010, h + 0.022, z)
+    thick = np.interp(deg, [0, 40, 80, 120, 180], [0.0085, 0.013, 0.020, 0.019, 0.015])
     thick = thick + 0.004 * E.smoothstep(0.05, 0.11, z) * np.interp(deg, [0, 60, 180], [0.6, 1.0, 0.5])
     psi = np.arctan2(z - 0.005, x)
     g = 1.0 - 0.22 * (0.5 - 0.5 * np.cos(22 * psi)) * E.smoothstep(-0.03, 0.02, y)
@@ -240,30 +252,63 @@ def head_matrix():
     return Matrix.Translation(atlas - Rh @ atlas_local) @ Rh.to_4x4(), atlas_local, nd
 
 
+def hair_strands():
+    """Swept-back locks: ribbons from the hairline over the crown into the bun, converging on it (no face-side locks:
+    they read as a headset in the additive look)."""
+    out = []
+    ctr = np.array([0.0, -0.046, 0.040])
+    rad = np.array([0.0845, 0.1035, 0.0995])
+    for i, a_deg in enumerate((-58, -42, -26, -10, 10, 26, 42, 58)):
+        pts, rads = [], []
+        for k in range(9):
+            u = k / 8
+            ph = math.radians(48 + 122 * u)
+            a = math.radians(a_deg) * (1 - 0.72 * u)
+            d = np.array([math.sin(a), math.cos(a) * math.cos(ph), math.cos(a) * math.sin(ph)])
+            d /= np.linalg.norm(d)
+            pts.append(tuple(ctr + rad * d))
+            rads.append((0.0105 * (1 - 0.45 * u), 0.0042))
+        out.append(E.loft(f"h_lock{i}", pts, rads, side=(1, 0, 0), seg=14, sub=2, cap0=0.6, cap1=0.6))
+    return out
+
+
 def build_head(no_decimate=False):
-    P = E.FEMALE
+    P = dict(E.FEMALE, jaw=0.95, brow=0.45, nose=0.85, chin=1.0, lips=1.15, cheek=1.25)
     Mh, atlas_local, nd = head_matrix()
     Mi = Mh.inverted()
     parts = E.face_parts("h", P)
+    keep = []
+    for o in parts:  # soft form only: lips and jaw ridges read as a headset in light
+        if o.name.startswith(("h_lipU", "h_lipL", "h_jaw")):
+            bpy.data.objects.remove(o, do_unlink=True)
+        else:
+            keep.append(o)
+    parts = keep
+    parts.append(E.ellipsoid("h_hairvol", (0, -0.046, 0.040), (0.079, 0.098, 0.094), seg=36, rings=20))
     nb = Mi @ (PIVOT - nd * 0.045)
     nm = Mi @ (PIVOT + nd * 0.05)
     nt = atlas_local + Vector((0, 0.012, 0.03))
     parts.append(E.loft("h_neck", [nb, nm, nt], [(0.052, 0.054), (0.048, 0.050), (0.050, 0.050)],
                         side=(1, 0, 0), seg=24, sub=3, cap0=0.3, cap1=0.6))
-    head = E.union_remesh(parts, "head_tmp", 0.0016)
+    parts += hair_strands()
+    head = E.union_remesh(parts, "head_tmp", 0.0013)
     E.taubin(head, 4)
     E.fill_concave(head, 10)
     E.displace_fn(head, hair_disp)
     E.taubin(head, 2)
     extra = E.ear_parts("h", P)
-    bun_c = vec((0, -0.121, 0.006))
-    extra.append(E.ellipsoid("h_bun", bun_c, (0.038, 0.030, 0.033), seg=24, rings=14))
-    extra.append(E.torus_obj("h_bun_coil", bun_c + Vector((0, -0.006, 0)), 0.025, 0.0135,
-                             rot=rot_x(90), seg=28, mseg=12))
-    head = E.union_remesh([head] + extra, "head_tmp2", 0.0016)
+    bun_c = vec((0, -0.178, 0.040))
+    extra.append(E.ellipsoid("h_bun", bun_c, (0.058, 0.048, 0.052), seg=32, rings=18))
+    extra.append(E.torus_obj("h_bun_coil", bun_c + Vector((0, -0.010, 0)), 0.036, 0.020,
+                             rot=rot_x(90), seg=36, mseg=14))
+    head = E.union_remesh([head] + extra, "head_tmp2", 0.0013)
     E.taubin(head, 3)
     E.fill_concave(head, 6)
-    E.sculpt(head, E.face_kernels(P))
+    kern = E.face_kernels(P)
+    for kk in kern[:-4]:
+        kk["a"] *= 0.3  # soft form only: the echo is light, not a photo
+    E.sculpt(head, kern)
+    E.taubin(head, 3)
     if no_decimate:
         return head, Mh
     # plain quadric collapse: the vgroup-weighted variant starves the cranium in Blender 5.2 and collapses

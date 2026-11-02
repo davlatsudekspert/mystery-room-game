@@ -159,12 +159,16 @@ The beam is pitched up by 14.04°. The magnification |C−L| / |S−L| is 1.68 /
 
 **Placement at the Lab 7 chalkboard:** origin at (−2.458, 0, 0.95), yaw 90. The chalk then touches the slate at (−2.978, 1.60, 0.82). Use z = 0.95 rather than 1.18 so that his left side clears `lumen_projector` at (−2.3, 0, 1.6).
 
-## echo_leyla_sitting.glb (rebuilt: 9,054 tris)
-The head decimation is fixed: the old export had collapsed the skull and bun into a cone.
-- **Cause:** `lib_echo.decimate`'s vertex-group weighting starves the cranium in Blender 5.2.
-- **Fix:** the head now uses plain quadric collapse.
-
-Parts and pivots are unchanged; see the script docstring.
+## leyla_echo.glb (22,2k tris; replaces echo_leyla_sitting.glb)
+Leyla Rahimova, 1979, seated at the desk writing (Chapter 1 finale). Script `tools/blender/models/leyla_echo.py`.
+- **Parts:** `echo_body` (coat, knee-length dress, arms, hands, pen, legs; ~14.7k tris) and `echo_head` (head, neck, swept-back
+  hair with locks, bun; ~7.5k tris, origin = neck pivot). Rotate `echo_head` about Godot +Y to turn her toward the player.
+- **Look:** soft face (no lips/jaw ridges, brow and eye hollows at 30%), voluminous hair with a clearly visible bun, bust and
+  narrower waist, coat cuffs. Same rig contract as the old model.
+- **Shader:** `src/fx/echo_leyla.gdshader` + depth pre-pass `echo_leyla_depth.gdshader` (set up in `lab7_room.gd`). Only the
+  front-most surface glows, so no back faces or seams show. Drift and motes are frozen with Settings "reduce_motion".
+- **Placement:** the desk lamp now stands at (-0.26, 0.78, -2.30) (right end of the desk), so it never overlaps her head from
+  the finale camera or the store banner camera.
 
 ---
 

@@ -882,7 +882,7 @@ Follow `docs/models/devices.md` "Inventory items" exactly:
 | `key_leyla.glb` | Slender steel key, 0.11 long, with **Leyla's sign** (crescent + three dots) pierced in the bow | — |
 
 ## 7. Group E — echoes
-Use `lib_echo` and follow `echo_leyla_sitting.py` and `echo_strand_standing.py`:
+Use `lib_echo` and follow `leyla_echo.py` and `echo_strand_standing.py`:
 - the same pipeline, material `M_Echo`, proportions, quality bar and QA ghost renders;
 - each figure is one smooth mesh, except where a part must move.
 

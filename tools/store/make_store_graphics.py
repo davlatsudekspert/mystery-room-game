@@ -175,7 +175,8 @@ def icon() -> None:
 # (warm lamp, Leyla's light-echo at her desk turned toward the player, her hidden darkroom open behind the
 # wardrobe). Chapter 1 art only, so it shows what every store build offers. HUD hidden, 3072x1500 (3x the final):
 #   tools/qa_run.sh -- --resolution 3072x1500 res://qa/view_probe.tscn -- --out=<R>/fg_probe --from=p13 \
-#       --seed=4242 --echo "--cam=leyla:1.1,1.3,0.05:-2.4,0.85,-1.7:48"
+#       --seed=4242 --echo --headyaw=-70 --hide=cc_bust \
+#       "--cam=leyla:2.5,1.5,-0.5:-0.4,1.1,-0.65:32"
 FEATURE_SRC = os.path.join("fg_probe", "cam_leyla.png")
 FEATURE_LOGO_H = 392 # logo height in the 1024x500 canvas; the wordmark and eye are downscaled from 1448x1086, so crisp
 FEATURE_LOGO_X = 22

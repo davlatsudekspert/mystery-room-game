@@ -597,4 +597,6 @@ func fade_echo(echo: Node3D, from: float, to: float, dur: float) -> void:
 		for mi in meshes:
 			var m := mi.material_override as ShaderMaterial
 			if m:
+				if m.next_pass is ShaderMaterial: # Leyla's echo: depth pre-pass + glow pass
+					m = m.next_pass as ShaderMaterial
 				m.set_shader_parameter("intensity", v), from, to, dur)

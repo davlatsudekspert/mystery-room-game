@@ -1,7 +1,7 @@
 extends Node
 ## QA: renders camera views of the real Lab 7 scene without playing (for framing/lighting work).
 ## Run: xvfb-run -a godot --path game res://qa/view_probe.tscn -- --out=<dir> [--from=p9]
-##        [--views=coat,radiator] [--cam=name:x,y,z:tx,ty,tz:fov ...] [--select=uv_lamp]
+##        [--echo [--headyaw=-55]] [--hide=cc_bust] [--views=coat,radiator] [--cam=name:x,y,z:tx,ty,tz:fov ...] [--select=uv_lamp]
 ## --from=pN lets the solver play the puzzles before N first (e.g. to see the open bookcase).
 
 var out_dir := "/tmp"
@@ -16,6 +16,8 @@ func _run() -> void:
 	var cams: Array[String] = []
 	var from := 1
 	var select := ""
+	var head_yaw := -55.0 # --headyaw=N: how far Leyla turns her head (the finale turns her -55)
+	var hide_models: PackedStringArray = [] # --hide=cc_bust,...: model ids hidden for a cleaner frame (store art)
 	var echo_on := false # --echo: the Chapter 1 finale's 1979 flashback look (warm room, Leyla's echo at the desk)
 	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
@@ -29,6 +31,10 @@ func _run() -> void:
 			from = int(a.substr(8))
 		elif a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7))
+		elif a.begins_with("--hide="):
+			hide_models = a.substr(7).split(",", false)
+		elif a.begins_with("--headyaw="):
+			head_yaw = float(a.substr(10))
 		elif a == "--echo":
 			echo_on = true
 		elif a.begins_with("--select="):
@@ -48,8 +54,12 @@ func _run() -> void:
 	if select != "":
 		logic.select_item(select)
 	var cam: RoomCamera = room.get("cam")
+	for h in hide_models:
+		var hm: Node3D = room.get("models").get(h)
+		if hm:
+			hm.visible = false
 	if echo_on:
-		_flashback(room)
+		_flashback(room, head_yaw)
 		await _settle(0.6)
 	for v in views:
 		cam.go(v, true)
@@ -71,7 +81,7 @@ func _run() -> void:
 	get_tree().quit()
 
 
-func _flashback(room: Node3D) -> void:
+func _flashback(room: Node3D, head_yaw: float = -55.0) -> void:
 	var env: Environment = room.get("env")
 	env.ambient_light_color = Color("6a5034")
 	env.ambient_light_energy = 1.1
@@ -82,12 +92,14 @@ func _flashback(room: Node3D) -> void:
 	echo.visible = true
 	var head := ModelUtil.find(echo, "echo_head")
 	if head:
-		head.rotation.y = deg_to_rad(-55.0) # she turns to look at the player
+		head.rotation.y = deg_to_rad(head_yaw) # she turns to look at the player
 	var hud: Node = room.get("hud")
 	if hud is CanvasItem or hud is CanvasLayer:
 		hud.set("visible", false) # clean frames for store art
 	for mi in ModelUtil.find_meshes(echo):
 		var m := mi.material_override as ShaderMaterial
+		if m and m.next_pass is ShaderMaterial:
+			m = m.next_pass as ShaderMaterial
 		if m:
 			m.set_shader_parameter("intensity", 1.0)
 
@@ -115,4 +127,4 @@ func _shot(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var p := "%s/%s.png" % [out_dir, name]
 	get_viewport().get_texture().get_image().save_png(p)
-	print("shot ", p)
+	print("shot ", p, "  draw calls ", RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME))

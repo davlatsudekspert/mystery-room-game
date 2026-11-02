@@ -13,7 +13,7 @@ const LAYOUT := {
 	"chair": [Vector3(-0.35, 0, -1.3), 168.0, "", "parts"],
 	"flip_clock": [Vector3(-1.0, 0.78, -2.25), 8.0, "clock", "parts"],
 	"notebook": [Vector3(-0.28, 0.7934, -1.98), -12.0, "notebook", "parts"],
-	"desk_lamp": [Vector3(-1.18, 0.78, -2.32), 25.0, "desk", "parts"],
+	"desk_lamp": [Vector3(-0.26, 0.78, -2.30), 25.0, "desk", "parts"],
 	"filing_cabinet": [Vector3(-2.6, 0, -2.2), 0.0, "filing", "parts"],
 	"bookshelf": [Vector3(-3.1, 0, -1.15), 90.0, "bookshelf", "parts"],
 	"gear_box": [Vector3(-1.85, 0.545, -2.18), 0.0, "gearbox", "parts"],
@@ -203,12 +203,20 @@ func _build_models() -> void:
 		var e: Array = EXTRA[id]
 		_spawn(id, e[0], e[1], e[2], e[3], "parts" if e[3] != "" else "none")
 	# echo figure (finale only)
-	var echo := _spawn("echo_leyla", "echo_leyla_sitting", Vector3(-0.4, 0, -1.33), 0.0, "", "none")
+	var echo := _spawn("echo_leyla", "leyla_echo", Vector3(-0.4, 0, -1.33), 0.0, "", "none")
 	if echo:
+		# Leyla's light echo: a depth-only pre-pass (next_pass order: depth first, then the additive glow) so only the
+		# front-most surface glows. No back faces or arm-over-torso seams show through (no hollow plastic shell).
+		var depth := ShaderMaterial.new()
+		depth.shader = load("res://src/fx/echo_leyla_depth.gdshader")
+		depth.render_priority = -1
 		var mat := ShaderMaterial.new()
-		mat.shader = load("res://src/fx/echo.gdshader")
+		mat.shader = load("res://src/fx/echo_leyla.gdshader")
+		mat.set_shader_parameter("animate", 0.0 if bool(Settings.get_value("reduce_motion")) else 1.0)
+		mat.set_shader_parameter("lamp_pos", Vector3(-0.26, 1.2, -2.2))
+		depth.next_pass = mat
 		for mi in ModelUtil.find_meshes(echo):
-			mi.material_override = mat
+			mi.material_override = depth
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		echo.visible = false
 	_build_backdrop()
