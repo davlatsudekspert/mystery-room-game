@@ -7,7 +7,7 @@ no prices, no screenshots, no icon, no releases, no pricing, no app content.
 Files (repository davlatsudekspert/mystery-room-game, folder docs/store/google_play/):
   - feature_graphic_en-US.jpg  (1024x500, JPG)  -> default / en-US listing
   - feature_graphic_ru-RU.jpg  (1024x500, JPG)  -> ru-RU translation
-  - feature_graphic_preview_2x.jpg is a preview for the owner only: DO NOT upload it.
+  - feature_graphic_src_<locale>.png (ChatGPT source, 1774x887) is a preview for the owner only: DO NOT upload it.
 Ask the owner to place the two files on the computer (or download them from the repository) if they are not there.
 
 Steps:
