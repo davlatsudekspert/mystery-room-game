@@ -35,6 +35,13 @@ What is missing / below professional quality (please read):
   the voices, the recorder and every later-chapter card are not used.
 * Disk of the build container is small (~1 GB free): intermediates are re-encoded and deleted as they are made.
 
+## Revision 2026-11-02 (owner decision)
+The narration lines S4 and R8, the subtitles and the shorts cover no longer say that the chapters are free (S4 "Can you solve it?", R8
+"Mystery Room. Lost Institute."; Uzbek name in texts is "Mystery Room: Unutilgan institut"). All voice lines were re-synthesized, the source clips
+were re-rendered with `PROMO_WORK=/tmp/promo_work_v10 promo/build_clips.sh` and all nine videos plus the .srt files were rebuilt.
+The loudness figures in the table above are from the first build; the rebuilt files measure about -14 / -16.6 / -15.9 LUFS (video 1 / 2 / 3).
+The rebuilt voice was again checked only by measurement, not by ear.
+
 ## Source clips (all real game scenes, `game/qa/promo_capture.tscn`, rendered by `build_clips.sh` -> `render_clip.sh`)
 
 Command shape (per clip; the exact steps are in `build_clips.sh`, the executed commands and wall times in `render_log.txt`):

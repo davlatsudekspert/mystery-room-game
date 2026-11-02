@@ -1,16 +1,16 @@
 1
-00:00:00,400 --> 00:00:03,886
+00:00:00,400 --> 00:00:04,095
 Qulflangan tortma. Toʻrtta jim gʻildirak.
 
 2
-00:00:04,600 --> 00:00:07,532
+00:00:04,600 --> 00:00:07,509
 Faqat ultrabinafsha nur oʻqiy oladigan siyoh.
 
 3
-00:00:10,800 --> 00:00:13,093
+00:00:10,800 --> 00:00:13,209
 Quvvati qaytishini kutayotgan panel.
 
 4
-00:00:25,000 --> 00:00:29,636
-Yecha olasanmi? Ikki bob — bepul.
+00:00:25,000 --> 00:00:26,318
+Yecha olasanmi?
 

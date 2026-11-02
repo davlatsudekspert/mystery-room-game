@@ -44,9 +44,9 @@ LINES = {
     "S3": ("A panel that needs its power back.",
            "Щиток, которому нужно вернуть питание.",
            "Quvvati qaytishini kutayotgan panel."),
-    "S4": ("Can you solve it? Two chapters, free to play.",
-           "Сможешь решить? Две главы — бесплатно.",
-           "Yecha olasanmi? Ikki bob — bepul."),
+    "S4": ("Can you solve it?",
+           "Сможешь решить?",
+           "Yecha olasanmi?"),
     "R1": ("The Institute was lost. Its secrets were not.",
            "Институт был потерян. Его тайны — нет.",
            "Institut yoʻqolgan edi. Sirlari esa yoʻq."),
@@ -68,9 +68,9 @@ LINES = {
     "R7": ("And something below is... listening.",
            "И что-то внизу... слушает.",
            "Va pastda nimadir... quloq solmoqda."),
-    "R8": ("Mystery Room. Lost Institute. Two chapters, free to play.",
-           "Mystery Room: Забытый институт. Две главы — бесплатно.",
-           "Mystery Room: Sirli institut. Ikki bob — bepul."),
+    "R8": ("Mystery Room. Lost Institute.",
+           "Mystery Room: Забытый институт.",
+           "Mystery Room: Unutilgan institut."),
 }
 
 HOOK = {"en": "CAN YOU SOLVE IT?", "ru": "СМОЖЕШЬ РЕШИТЬ?", "uz": "YECHA OLASANMI?"}

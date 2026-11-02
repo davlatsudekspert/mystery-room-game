@@ -2,7 +2,7 @@
 
 For Reels and Stories: video 1 (teaser, 20 s) and video 2 ("Can You Solve It?", 30 s), both 9:16. Video 3 (60 s, 16:9) goes to the feed or YouTube.
 
-Rules for every post: Chapters 1 and 2 are free (the first release). No prices, no purchase talk, no store links until the game is live. After release, replace `[LINK IN BIO]` with the real store links in the bio. Never post a puzzle solution.
+Rules for every post: No prices, no purchase talk, no store links until the game is live. After release, replace `[LINK IN BIO]` with the real store links in the bio. Never post a puzzle solution.
 
 Cover text for Reels (on the cover image): `MYSTERY ROOM`.
 
@@ -16,7 +16,7 @@ Forty-one people never came home.
 One lamp. One note. One room that remembers.
 
 Mystery Room: Lost Institute. A 3D escape-room mystery.
-Chapters 1 and 2 are free. No ads. Works offline.
+No ads. Works offline.
 Play it in English, Russian or Uzbek. 🔦
 
 [LINK IN BIO]
@@ -29,7 +29,7 @@ Play it in English, Russian or Uzbek. 🔦
 Одна лампа. Одна записка. Одна комната, которая помнит.
 
 Mystery Room: Забытый институт. 3D-головоломка-побег.
-Главы 1 и 2 бесплатны. Без рекламы. Работает без интернета.
+Без рекламы. Работает без интернета.
 Играйте на английском, русском или узбекском. 🔦
 
 [ССЫЛКА В ПРОФИЛЕ]
@@ -41,8 +41,8 @@ Barcha soatlar 03:17 da toʻxtadi. 🕰️
 Qirq bir kishi uyiga qaytmadi.
 Bitta chiroq. Bitta xat. Eslab qoladigan bitta xona.
 
-Mystery Room: Sirli institut. 3D sirli qochish oʻyini.
-1- va 2-boblar bepul. Reklamasiz. Internetsiz ishlaydi.
+Mystery Room: Unutilgan institut. 3D sirli qochish oʻyini.
+Reklamasiz. Internetsiz ishlaydi.
 Ingliz, rus va oʻzbek tillarida. 🔦
 
 [BIO’DAGI HAVOLA]
@@ -59,7 +59,7 @@ Drawers, hidden ink, brass dials, a lamp that shows what the dark hides.
 Most answers change in every new game, so no walkthrough can solve it for you.
 
 Can you find what the light remembers?
-Mystery Room: Lost Institute. Chapters 1 and 2 are free. 💡
+Mystery Room: Lost Institute. 💡
 
 Tell me in the comments: which puzzle would stump you first?
 
@@ -73,7 +73,7 @@ Tell me in the comments: which puzzle would stump you first?
 В каждой новой игре большинство ответов другие, поэтому прохождение из интернета не поможет.
 
 Сможете найти то, что помнит свет?
-Mystery Room: Забытый институт. Главы 1 и 2 бесплатны. 💡
+Mystery Room: Забытый институт. 💡
 
 Напишите в комментариях: какая головоломка остановила бы вас первой?
 
@@ -87,7 +87,7 @@ Tortmalar, koʻrinmas siyoh, jez dastaklar va qorongʻu yashirganini koʻrsatadi
 Har yangi oʻyinda javoblarning aksariyati oʻzgaradi, internetdagi yechim sizga yordam bermaydi.
 
 Yorugʻlik nimani eslab qolganini topa olasizmi?
-Mystery Room: Sirli institut. 1- va 2-boblar bepul. 💡
+Mystery Room: Unutilgan institut. 💡
 
 Izohda yozing: qaysi jumboq sizni birinchi toʻxtatadi?
 
@@ -104,7 +104,6 @@ Laboratory 7 is waiting. 🔦
 Explore a 1979 research institute built room by room: walnut panels, brass mechanisms, a darkroom glowing red.
 One finger is all you need: tap to look closer, drag to turn a dial or sweep a lamp.
 
-Chapters 1 and 2 are free to play in full.
 No ads. No data collected. Works offline.
 English, Russian, Uzbek.
 
@@ -117,7 +116,6 @@ English, Russian, Uzbek.
 Исследуйте научный институт 1979 года: ореховые панели, латунные механизмы, фотолаборатория в красном свете.
 Хватит одного пальца: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой.
 
-Главы 1 и 2 бесплатны целиком.
 Без рекламы и сбора данных. Работает без интернета.
 Английский, русский, узбекский.
 
@@ -130,7 +128,6 @@ English, Russian, Uzbek.
 1979-yildagi ilmiy institutni oʻrganing: yongʻoq panellar, jez mexanizmlar, qizil nurli fotolaboratoriya.
 Bitta barmoq yetarli: yaqindan koʻrish uchun bosing, dastakni burash yoki chiroq bilan yoritish uchun suring.
 
-1- va 2-boblar toʻliq bepul.
 Reklamasiz, maʼlumot yigʻilmaydi. Internetsiz ishlaydi.
 Ingliz, rus, oʻzbek tillarida.
 

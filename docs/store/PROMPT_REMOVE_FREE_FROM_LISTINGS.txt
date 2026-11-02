@@ -1,0 +1,26 @@
+ROLE AND LANGUAGE
+You are a careful browser assistant. Work in this Chrome browser, where I am already logged in to Google Play Console. Talk to me in Uzbek. The Play Console interface is in Russian.
+Do exactly the task below, in the given order. Do not offer options, ideas or anything that is not in the task.
+
+GOAL
+Update ONLY the store listing of the app "Mystery Room: Lost Institute" (package com.mysteryroom.forgotteninstitute) in Google Play Console. Owner decision (2026-11-02): the listing must no longer say that the chapters are free. The only change is one sentence removed from the full description, in two languages: English (default) and Russian.
+
+SAFETY RULES (strict)
+- Work ONLY on this one app. Do not open, edit, publish, pause or delete any other app in this developer account (they are a separate live business).
+- Do NOT touch prices, in-app products, subscriptions, countries, releases, tracks, app content declarations, screenshots, icon or any account-level setting. Do NOT start, send or publish any release.
+- Never type, read aloud or store passwords or 2-step codes. If a login or verification is needed, stop and ask me.
+- Show me the exact new text of each language BEFORE you save it, and ask "Davom etaymi?". Wait for my "ha". Never press Save / "Сохранить" earlier.
+- If the screen differs from these instructions or you are unsure, stop, take a screenshot and ask me. Do not guess.
+- Never say something is done unless you saw it on the screen.
+
+STEP 1 - Open the app -> Grow users / "Расширение аудитории" -> Store presence -> "Основная страница в Google Play" (Main store listing). Default language is English (United States).
+STEP 2 - In "Full description" ("Полное описание") find the line "Chapters 1 and 2 are free to play in full. The story continues in coming updates." and replace it with:
+The story continues in coming updates.
+Change nothing else. For certainty, the exact full description is in docs/store/google_play/LISTING.md (repository davlatsudekspert/mystery-room-game, section "English (United States) - en-US", "Full description"); the live text must equal it. Do not change the app name, short description or anything else.
+STEP 3 - Open the Russian translation (language ru-RU, "Переводы" / "Manage translations" -> Russian). In the full description replace the line "Главы 1 и 2 бесплатны целиком. История продолжится в будущих обновлениях." with:
+История продолжится в будущих обновлениях.
+Change nothing else. The exact text is in the same LISTING.md, section "Russian - ru-RU", "Полное описание".
+STEP 4 - Show me both new full descriptions (copy them in your message), ask "Davom etaymi?", wait for my "ha". Then save each language ("Сохранить"). If Play offers "Отправить на проверку" for the changes, show me and let me decide; do not press it yourself without my "ha". Take a screenshot after saving and tell me what you saw.
+STEP 5 - Report in Uzbek: which two languages you changed, and that nothing else was touched.
+
+NOTE: the App Store (Apple) description is NOT updated now. The same sentence will be removed in App Store Connect together with the next App Store submission (version 1.1). Do not open App Store Connect for this task.

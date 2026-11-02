@@ -21,7 +21,7 @@ Style: calm, low, slow, a little breathy, nothing dramatic; leave the pause mark
 | S1 | 0.4 | 3.2 | A locked drawer. Four silent wheels. | Запертый ящик. Четыре молчаливых колеса. | Qulflangan tortma. Toʻrtta jim gʻildirak. |
 | S2 | 4.6 | 2.7 | Ink that only ultraviolet light can read. | Чернила, которые читаются только в ультрафиолете. | Faqat ultrabinafsha nur oʻqiy oladigan siyoh. |
 | S3 | 10.8 | 2.0 | A panel that needs its power back. | Щиток, которому нужно вернуть питание. | Quvvati qaytishini kutayotgan panel. |
-| S4 | 25.0 | 4.4 | Can you solve it? Two chapters, free to play. | Сможешь решить? Две главы — бесплатно. | Yecha olasanmi? Ikki bob — bepul. |
+| S4 | 25.0 | 1.1 | Can you solve it? | Сможешь решить? | Yecha olasanmi? |
 
 ## Video 3: Official Gameplay Trailer (60 s)
 
@@ -34,5 +34,5 @@ Style: calm, low, slow, a little breathy, nothing dramatic; leave the pause mark
 | R5 | 35.0 | 2.0 | Follow the light, and bend the beam. | Следуй за светом и направь луч. | Nur izidan bor va nurni burib yoʻnalt. |
 | R6 | 40.0 | 2.7 | Beneath the archive, a vault is waiting. | Под архивом ждёт хранилище. | Arxiv ostida seyfxona kutmoqda. |
 | R7 | 50.0 | 2.1 | And something below is... listening. | И что-то внизу... слушает. | Va pastda nimadir... quloq solmoqda. |
-| R8 | 53.6 | 6.1 | Mystery Room. Lost Institute. Two chapters, free to play. | Mystery Room: Забытый институт. Две главы — бесплатно. | Mystery Room: Sirli institut. Ikki bob — bepul. |
+| R8 | 53.6 | 2.8 | Mystery Room. Lost Institute. | Mystery Room: Забытый институт. | Mystery Room: Unutilgan institut.  |
 

@@ -20,7 +20,7 @@ Russian letters take 2 bytes each in UTF-8, so the RU keyword list is short on p
 
 The full rationale, the Uzbek version and the fact check are in `../google_play/LISTING.md`.
 
-The first release ships Chapters 1 and 2 free only (owner, 2026-10-17); store builds show Chapters 3–4 as "Coming soon" and contain no purchase UI. So the business-model sentence says the story continues in coming updates and gives no price. The texts describe only what the build does (App Review Guideline 2.3). Promotional text, keywords and subtitle carry no price wording (Guideline 2.3.7).
+The first release ships Chapters 1 and 2 only (owner, 2026-10-17; 2026-11-02: no text says the chapters are free); store builds show Chapters 3–4 as "Coming soon" and contain no purchase UI. So the business-model sentence says the story continues in coming updates and gives no price. The texts describe only what the build does (App Review Guideline 2.3). Promotional text, keywords and subtitle carry no price wording (Guideline 2.3.7).
 
 ---
 
@@ -58,7 +58,7 @@ Laboratory 7. Please finish what I could not. — L.
 
 ◆ ——— ◆
 
-Chapters 1 and 2 are free to play in full. The story continues in coming updates.
+The story continues in coming updates.
 
 • Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
 • One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
@@ -103,7 +103,7 @@ Mystery Room: Забытый институт
 
 ◆ ——— ◆
 
-Главы 1 и 2 бесплатны целиком. История продолжится в будущих обновлениях.
+История продолжится в будущих обновлениях.
 
 • Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
 • Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой

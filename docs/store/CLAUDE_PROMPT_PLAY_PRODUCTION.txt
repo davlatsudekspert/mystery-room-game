@@ -20,7 +20,7 @@ STEP 0 — Look first, change nothing: open the app and tell me the state of:
 STEP 1 — Store listing check (Основная страница, default language en-US). Compare with the texts below and fix only what differs:
   - Icon 512x512 must be the NEW icon (dark navy, brass-and-light emblem). If it is an older look, ask me for icon_512.png (file docs/store/google_play/icon_512.png in the repository, or I send it) and replace it.
   - Feature graphic 1024x500, phone screenshots (8): files from docs/store/google_play/screenshots/en-US (01_desk_lamp.jpg … 08_cliffhanger_pit.jpg) and ru-RU for the Russian translation. If the current ones already show the new look, leave them.
-  - Texts: use the TEXTS section below. Chapters 1 and 2 are free; the description must NOT mention a price or purchase.
+  - Texts: use the TEXTS section below. The description must NOT mention a price, a purchase, or that chapters are free.
   - Category Game → Puzzle. Contact email: the support email (ask me). Privacy policy URL: https://sites.google.com/view/mysteryroom-privacy
   - Save.
 
@@ -32,10 +32,10 @@ STEP 3 — Create the production release (Рабочая версия → Соз
   - Release name: 1.0
   - Release notes (use these exact texts):
     <en-US>
-    Mystery Room: Lost Institute, version 1.0. Chapters 1 and 2 are free to play in full. Every new game has its own puzzle answers. Fully playable in English, Russian and Uzbek, offline, no ads.
+    Mystery Room: Lost Institute, version 1.0. Every new game has its own puzzle answers. Fully playable in English, Russian and Uzbek, offline, no ads.
     </en-US>
     <ru-RU>
-    Mystery Room: Забытый институт, версия 1.0. Главы 1 и 2 бесплатны целиком. В каждой новой игре свои ответы на головоломки. Полностью на английском, русском и узбекском, без интернета и рекламы.
+    Mystery Room: Забытый институт, версия 1.0. В каждой новой игре свои ответы на головоломки. Полностью на английском, русском и узбекском, без интернета и рекламы.
     </ru-RU>
   - Save, then "Далее" / "Проверить релиз". Do NOT send yet.
 
@@ -61,7 +61,7 @@ Laboratory 7. Please finish what I could not. — L.
 
 ◆ ——— ◆
 
-Chapters 1 and 2 are free to play in full. The story continues in coming updates.
+The story continues in coming updates.
 
 • Realistic 3D rooms from 1979: walnut panels, brass mechanisms and a darkroom glowing red
 • One-finger touch controls: tap to look closer, drag to turn a dial or sweep a lamp
@@ -82,7 +82,7 @@ Full description:
 
 ◆ ——— ◆
 
-Главы 1 и 2 бесплатны целиком. История продолжится в будущих обновлениях.
+История продолжится в будущих обновлениях.
 
 • Реалистичные 3D-комнаты 1979 года: ореховые панели, латунные механизмы и фотолаборатория в красном свете
 • Управление одним пальцем: нажмите, чтобы рассмотреть, проведите, чтобы повернуть ручку или посветить лампой
