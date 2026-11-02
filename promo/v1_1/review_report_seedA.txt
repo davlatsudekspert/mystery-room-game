@@ -1,0 +1,47 @@
+scene load+build: 12225 ms (software renderer; phones differ)
+path: Ch1 lens leave, shards 5; chapter flow: expansion stage 2 (new floors at logic level)
+perf[hall]: draw calls 108, primitives 94680, objects 136
+✓ P1 catalogue 04 / 1– / 17 → index card
+✓ P2 valves 1-0-2 → pressure
+✓ P3 punch 10011100 → request card
+✓ P4 dispatch → file + locker key
+✓ P5 locker 9 → receiver
+✓ P6 receiver hunt → 3 reels
+✓ P7 three reels at 4.75 → clicks 7, 4, 3
+✓ N1 receiver, panel B, dial 0417 → service door
+perf[pump]: draw calls 61, primitives 36704, objects 147
+✓ N2 valves 1,3,4,5 → coil warm (thawed)
+perf[cell]: draw calls 88, primitives 40176, objects 206
+perf[light_table]: draw calls 71, primitives 30084, objects 171
+✓ N3 light table → digits 11
+✓ N3 wheels 11 → the cold door opens (the coil is warm)
+perf[cold]: draw calls 57, primitives 34032, objects 73
+perf[cranks]: draw calls 61, primitives 35246, objects 85
+✓ N4 cranks (3) → the aisle opens, the chest stands in it
+perf[frost]: draw calls 23, primitives 7152, objects 47
+✓ N5 frost wiped (drag + taps) → signs 3,2,1
+perf[chest]: draw calls 44, primitives 28992, objects 281
+✓ N6 rings (6 presses) → the chest opens
+✓ N3-N6 lower floor by taps → chest open, crystals taken
+✓ P8 dial 743 → booth open
+✓ P9 splice f3 f1 f0 f2 → reel
+✓ N7 weights [0, 1, 1, 0] → balanced at load 6
+perf[gallery]: draw calls 56, primitives 50136, objects 213
+✓ N8 board [2, 4, 3, 1, 0, 5] → every slip agrees
+✓ N9 strip 2, zoom 4, focus 4 → staff print
+✓ N10 wheels 4076 → cabinet open
+✓ G2 dead lamp, then the spare fitted
+✓ N7-N10 upper floor (taps) → projector lamp fitted
+✓ P10 film seen, focus 7
+✓ crystals from the Cold Store chest in the bag
+✓ P11 sign recorded
+✓ P11b mark recorded
+✓ P12 overlay → vault unlocked
+✓ Finale: leyla_key → chapter complete
+perf[pit]: draw calls 23, primitives 11012, objects 96
+✓ Cliffhanger: lift shaft, recorder, Chapter 3 card (soon)
+✓ Chapter 3 card → chapter card
+✓ No sound effect left looping (none)
+taps through the 3D scene: 177, logic fallbacks: 0
+taps under a HUD control: 0 (window 1920x1080)
+continue checks: 0, failed 0 (--no-continue)

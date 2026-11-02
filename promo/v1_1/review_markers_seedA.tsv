@@ -1,0 +1,304 @@
+62	shot	hall_start
+114	shot	west_root
+157	shot	catalogue
+157	tap	card_catalogue/IA_cat_drawer_4
+203	tap	card_catalogue/IA_divider_1
+249	shot	catalogue_drawer_open
+249	tap	card_catalogue/IA_card_7
+270	tap	card_catalogue/IA_card_7
+291	step	OK P1 catalogue 04 / 1– / 17 → index card
+371	shot	compressor_rest
+371	tap	compressor_panel/IA_valve_a
+392	tap	compressor_panel/IA_valve_c
+413	tap	compressor_panel/IA_valve_c
+474	shot	compressor_pressure_ok
+474	step	OK P2 valves 1-0-2 → pressure
+536	tap	tube_station/IA_card_tray
+615	tap	card_punch/IA_punch_slot
+636	tap	card_punch/IA_punch_key_0
+657	tap	card_punch/IA_punch_key_3
+678	tap	card_punch/IA_punch_key_4
+699	tap	card_punch/IA_punch_key_5
+729	shot	punch_keys
+729	tap	card_punch/IA_punch_lever
+750	step	OK P3 punch 10011100 → request card
+829	tap	tube_station/IA_send_port
+850	tap	tube_station/IA_dest_dial
+880	shot	station_ready
+880	tap	tube_station/IA_send_lever
+970	shot	canister_flight
+1042	tap	tube_station/IA_receive_tray
+1088	shot	station_file
+1088	tap	tube_station/Item_canister_file
+1109	tap	tube_station/Item_canister_key
+1130	step	OK P4 dispatch → file + locker key
+1203	tap	lockers/IA_locker_9
+1280	shot	locker9_open
+1280	tap	lockers/Item_locker_receiver
+1301	step	OK P5 locker 9 → receiver
+1349	shot	receiver_hall
+1432	shot	receiver_grille
+1432	tap	vent_grille/IA_grille
+1478	tap	vent_grille/Item_grille_reel
+1607	tap	stacks_shelving/IA_ledger
+1665	shot	ledger_open
+1665	tap	stacks_shelving/Item_ledger_reel
+1754	tap	floor_hatch/IA_hatch
+1820	shot	hatch_open
+1820	tap	floor_hatch/Item_hatch_reel
+1841	step	OK P6 receiver hunt → 3 reels
+1934	tap	tape_deck/IA_speed
+1955	tap	tape_deck/IA_speed
+1981	tap	tape_deck/
+2002	tap	tape_deck/IA_play
+2123	shot	deck_tape_1996
+2399	tap	tape_deck/
+2420	tap	tape_deck/IA_play
+2541	shot	deck_tape_1997
+2817	tap	tape_deck/
+2838	tap	tape_deck/IA_play
+2959	shot	deck_tape_1998
+3230	step	OK P7 three reels at 4.75 → clicks 7, 4, 3
+3309	shot	n1_east_wall
+3349	shot	n1_panel
+3349	tap	service_door/IA_cover_panel
+3438	shot	n1_dial
+3438	tap	service_door/IA_dial_hole_0
+3480	tap	service_door/IA_dial_hole_4
+3522	tap	service_door/IA_dial_hole_1
+3564	tap	service_door/IA_dial_hole_7
+3606	step	OK N1 receiver, panel B, dial 0417 → service door
+3651	shot	n1_door_open
+3682	tap	service_door/IA_service_door
+3743	shot	pump_arrival
+3802	shot	pump_bench
+3802	tap	pump_room_pump/Item_pump_mallet
+3866	shot	pump_pipes_dead
+3866	tap	pump_pipe_run/pipe_edge_0
+3930	shot	pump_manifold
+3930	tap	pump_manifold_plate/IA_valve_0
+3967	tap	pump_manifold_plate/IA_valve_2
+4004	tap	pump_manifold_plate/IA_valve_3
+4041	tap	pump_manifold_plate/IA_valve_4
+4118	shot	pump_manifold_open
+4161	shot	pump_pipes_flow
+4161	step	OK N2 valves 1,3,4,5 → coil warm (thawed)
+4189	tap	pump_room_pump/IA_door_cell
+4264	shot	pump_cell_door
+4264	tap	pump_room_pump/IA_door_cell
+4325	shot	cell_arrival
+4387	shot	cell_desk
+4387	tap	cell_cell_diary/IA_cell_diary
+4425	shot	cell_diary_read
+4474	shot	cell_shelf
+4474	tap	cell_wipe_cloth/
+4535	shot	cell_light_table_start
+4551	tap	cell_light_table/IA_turn_0
+4572	tap	cell_light_table/IA_turn_1
+4593	tap	cell_light_table/IA_turn_1
+4614	tap	cell_light_table/IA_turn_1
+4651	tap	cell_light_table/IA_turn_2
+4672	tap	cell_light_table/IA_turn_2
+4768	shot	cell_light_table_solved
+4768	step	OK N3 light table → digits 11
+4808	shot	cell_cold_door_closed
+4808	tap	cell_cold_door/IA_wheel_a
+4838	tap	cell_cold_door/IA_wheel_a
+4877	shot	cell_cold_wheels
+4877	tap	cell_cold_door/IA_wheel_b
+4976	shot	cell_cold_door_open
+4976	step	OK N3 wheels 11 → the cold door opens (the coil is warm)
+5007	tap	cold doorway
+5068	shot	cold_arrival
+5130	shot	cold_plan
+5130	tap	plan plate
+5173	shot	cold_plan_zoom
+5234	shot	cold_cranks_start
+5250	tap	cold_carriage_2/IA_crank_1
+5276	tap	cold_carriage_2/IA_crank_1
+5383	shot	cold_cranks_rolling
+5383	tap	cold_carriage_3/IA_crank_2
+5409	tap	cold_carriage_3/IA_crank_2
+5435	tap	cold_carriage_3/IA_crank_2
+5533	tap	cold_carriage_4/IA_crank_3
+5559	tap	cold_carriage_4/IA_crank_3
+5585	tap	cold_carriage_4/IA_crank_3
+5752	shot	cold_aisle_open
+5752	step	OK N4 cranks (3) → the aisle opens, the chest stands in it
+5798	shot	cold_frost_start
+5908	shot	cold_frost_wiped_band0
+6012	shot	cold_frost_done
+6012	step	OK N5 frost wiped (drag + taps) → signs 3,2,1
+6058	shot	cold_chest_closed
+6074	tap	cold_cold_chest/IA_ring_0
+6106	tap	cold_cold_chest/IA_ring_1
+6138	tap	cold_cold_chest/IA_ring_2
+6170	tap	cold_cold_chest/IA_ring_2
+6202	tap	cold_cold_chest/IA_ring_2
+6234	tap	cold_cold_chest/IA_ring_2
+6329	shot	cold_chest_open
+6329	step	OK N6 rings (6 presses) → the chest opens
+6329	tap	cold_cold_chest/Item_case_crystal_1
+6350	tap	cold_cold_chest/Item_case_crystal_2
+6380	shot	cold_chest_empty
+6396	tap	cold exit
+6461	tap	cell exit
+6591	step	OK N3-N6 lower floor by taps → chest open, crystals taken
+6700	shot	dial
+6700	tap	booth_door/IA_dial_hole_7
+6749	tap	booth_door/IA_dial_hole_4
+6798	tap	booth_door/IA_dial_hole_3
+6880	shot	booth_open
+6880	step	OK P8 dial 743 → booth open
+6905	shot	booth_root
+6945	shot	splicer_loose
+6945	tap	film_splicer/IA_frame_3
+6966	tap	film_splicer/IA_slot_0
+6987	tap	film_splicer/IA_frame_1
+7008	tap	film_splicer/IA_slot_1
+7029	tap	film_splicer/IA_frame_0
+7050	tap	film_splicer/IA_slot_2
+7071	tap	film_splicer/IA_frame_2
+7092	tap	film_splicer/IA_slot_3
+7147	shot	splicer_done
+7147	tap	film_splicer/Item_splicer_reel
+7168	step	OK P9 splice f3 f1 f0 f2 → reel
+7236	tap	service_door/IA_service_door
+7345	shot	n7_lift_door
+7382	shot	n7_weights_empty
+7382	tap	lift_weight_1/
+7421	tap	lift_weight_2/
+7469	shot	n7_weights_hung
+7469	step	OK N7 weights [0, 1, 1, 0] → balanced at load 6
+7506	shot	n7_lift_panel
+7506	tap	pump_book_lift_cage/IA_btn_lamp
+7647	shot	gallery_arrival
+7715	shot	gallery_wedge
+7715	tap	gallery_stair_wedge/IA_wedge_pin
+7817	shot	gallery_wedge_out
+7891	tap	gallery_room_gallery/IA_counter_drawer_1
+7939	shot	gallery_drawer
+7939	tap	gallery_room_gallery/Item_counter_slips
+8034	shot	gallery_board_slips
+8034	tap	gallery_roll_call_board/IA_tag_2
+8084	tap	gallery_roll_call_board/IA_tag_4
+8134	tap	gallery_roll_call_board/IA_tag_3
+8184	tap	gallery_roll_call_board/IA_tag_1
+8234	tap	gallery_roll_call_board/IA_tag_0
+8284	tap	gallery_roll_call_board/IA_tag_5
+8374	shot	gallery_board_done
+8374	step	OK N8 board [2, 4, 3, 1, 0, 5] → every slip agrees
+8374	tap	gallery_roll_call_board/Item_board_key
+8442	tap	gallery_room_gallery/IA_door_plate
+8521	shot	plate_arrival
+8564	shot	plate_enlarger
+8564	tap	plate_strip_1/
+8603	tap	plate_enlarger/IA_zoom_knob
+8624	tap	plate_enlarger/IA_zoom_knob
+8645	tap	plate_enlarger/IA_zoom_knob
+8675	shot	plate_print_blurred
+8675	tap	plate_enlarger/IA_focus_ring
+8696	tap	plate_enlarger/IA_focus_ring
+8717	tap	plate_enlarger/IA_focus_ring
+8772	shot	plate_print_sharp
+8772	step	OK N9 strip 2, zoom 4, focus 4 → staff print
+8819	tap	plate_room_plate/IA_door_gallery
+8911	tap	gallery_room_gallery/IA_door_office
+8998	shot	office_arrival
+9044	shot	office_cabinet
+9044	tap	office_strand_cabinet/IA_digit_0
+9065	tap	office_strand_cabinet/IA_digit_0
+9086	tap	office_strand_cabinet/IA_digit_0
+9107	tap	office_strand_cabinet/IA_digit_0
+9128	tap	office_strand_cabinet/IA_digit_2
+9149	tap	office_strand_cabinet/IA_digit_2
+9170	tap	office_strand_cabinet/IA_digit_2
+9191	tap	office_strand_cabinet/IA_digit_2
+9212	tap	office_strand_cabinet/IA_digit_2
+9233	tap	office_strand_cabinet/IA_digit_2
+9254	tap	office_strand_cabinet/IA_digit_2
+9275	tap	office_strand_cabinet/IA_digit_3
+9296	tap	office_strand_cabinet/IA_digit_3
+9317	tap	office_strand_cabinet/IA_digit_3
+9338	tap	office_strand_cabinet/IA_digit_3
+9359	tap	office_strand_cabinet/IA_digit_3
+9380	tap	office_strand_cabinet/IA_digit_3
+9446	shot	office_cabinet_open
+9446	step	OK N10 wheels 4076 → cabinet open
+9446	tap	office_strand_cabinet/Item_cabinet_lamp
+9517	tap	office_room_office/IA_door_gallery
+9631	tap	gallery_room_gallery/stair_in
+9770	tap	film_projector/IA_run_lever
+9800	shot	projector_lamp_dead
+9805	tap	film_projector/IA_run_lever
+9866	shot	projector_lamp_fitted
+9866	step	OK G2 dead lamp, then the spare fitted
+9866	step	OK N7-N10 upper floor (taps) → projector lamp fitted
+9927	tap	film_projector/IA_run_lever
+9948	tap	film_projector/IA_run_lever
+10099	shot	film_frame
+10529	shot	film_sign_blurred
+11033	tap	film_projector/IA_focus_ring
+11054	tap	film_projector/IA_focus_ring
+11075	tap	film_projector/IA_focus_ring
+11096	tap	film_projector/IA_focus_ring
+11117	tap	film_projector/IA_focus_ring
+11138	tap	film_projector/IA_focus_ring
+11159	step	OK P10 film seen, focus 7
+11215	tap	lens_case/IA_case_lid
+11270	shot	lens_case_open
+11270	step	OK crystals from the Cold Store chest in the bag
+11393	shot	screen_sign_sharp
+11429	tap	projection_screen/IA_screen_socket
+11490	shot	socket_recorded
+11490	tap	projection_screen/IA_screen_socket
+11511	step	OK P11 sign recorded
+11653	tap	film_projector/IA_run_lever
+11705	tap	slide_cabinet/IA_slide_drawer_2
+11753	shot	slides_drawer_open
+11753	tap	slide_cabinet/Item_slide_mark
+11810	tap	slide_projector/IA_slide_gate
+11831	tap	slide_projector/IA_slide_rot
+11852	tap	slide_projector/IA_slide_lamp
+11996	shot	screen_mark
+12032	tap	projection_screen/IA_screen_socket
+12053	tap	projection_screen/IA_screen_socket
+12074	step	OK P11b mark recorded
+12174	shot	echo_stacks
+12174	tap	echo_stacks/
+12220	shot	echo_catalogue
+12220	tap	echo_catalogue/
+12330	shot	vault_closed
+12363	tap	vault_door/IA_port_left
+12389	tap	vault_door/IA_port_right
+12419	shot	vault_ports_filled
+12419	tap	vault_door/IA_collar_left
+12440	tap	vault_door/IA_collar_left
+12461	tap	vault_door/IA_collar_right
+12482	tap	vault_door/IA_collar_right
+12503	tap	vault_door/IA_collar_right
+12524	tap	vault_door/IA_collar_right
+12545	tap	vault_door/IA_collar_right
+12566	tap	vault_door/IA_zoom_right
+12638	shot	vault_overlay_locked_in
+12638	step	OK P12 overlay → vault unlocked
+12666	tap	vault_door/IA_vault_handle
+12705	tap	vault_door/IA_vault_handle
+12744	tap	vault_door/IA_vault_handle
+12898	shot	vault_opening
+13051	shot	vault_reel
+13220	shot	vault_reel_42nd
+13317	shot	finale_choice
+13317	step	OK Finale: leyla_key → chapter complete
+13620	shot	cliffhanger_shaft
+14293	shot	cliffhanger_recorder
+14696	shot	cliffhanger_pit_fade
+14793	shot	cliffhanger_pit_figure
+14881	shot	cliffhanger_pit_second
+15109	shot	cliffhanger_pit_out
+15246	shot	cliffhanger_ch3_card
+15246	step	OK Cliffhanger: lift shaft, recorder, Chapter 3 card (soon)
+15330	shot	chapter_complete
+15330	step	OK Chapter 3 card → chapter card
+15330	step	OK No sound effect left looping (none)
+15330	end	
