@@ -525,6 +525,8 @@ func _map(view_id: String) -> void:
 			continue
 		var mi := b.get_parent() as MeshInstance3D
 		var r := _screen_rect(cam, mi) if mi != null and mi.mesh != null else Rect2()
+		if mi == null and _is_control(part): # a bare tap box (the light table's knobs): its box is the part's area
+			r = _screen_rect_box(cam, b)
 		if r.size == Vector2.ZERO or not rect.intersects(r):
 			continue
 		# sample the part's own screen area like a player tapping what they see
@@ -552,7 +554,7 @@ func _map(view_id: String) -> void:
 			continue
 		# a far part hidden behind walls or furniture is simply not in view: skip it, so the report lists only
 		# parts a player could aim at (a near part blocked by scenery is still reported)
-		if hits == 0 and others.keys() == [""] and cam.global_position.distance_to(mi.global_position) > 1.2:
+		if hits == 0 and others.keys() == [""] and cam.global_position.distance_to(b.global_position) > 1.2:
 			continue
 		var pos := centroid / hits if hits > 0 else r.get_center()
 		var top := ""
@@ -562,7 +564,7 @@ func _map(view_id: String) -> void:
 				best = int(others[k])
 				top = k
 		# parts that carry a 3D label (card tabs, divider tabs): the label is where a player taps
-		for lbl in mi.find_children("*", "Label3D", false, false):
+		for lbl in (mi.find_children("*", "Label3D", false, false) if mi != null else []):
 			var lp := (lbl as Node3D).global_position
 			if cam.is_position_behind(lp) or not rect.has_point(cam.unproject_position(lp)):
 				continue
@@ -895,6 +897,24 @@ func _banner_rects(hud: CanvasLayer) -> Array[Dictionary]:
 			var txt := b.title_label.text if b.title_label.text != "" else b.subtitle_label.text
 			out.append({"rect": b.get_global_rect(), "name": "banner «%s»" % tr(txt).left(40)})
 	return out
+
+
+## The screen rectangle of a tap volume's box (parts that are only a collider, without a mesh of their own).
+func _screen_rect_box(cam: Camera3D, b: StaticBody3D) -> Rect2:
+	var r := Rect2()
+	var first := true
+	for ch in b.get_children():
+		if not (ch is CollisionShape3D and (ch as CollisionShape3D).shape is BoxShape3D):
+			continue
+		var sz := ((ch as CollisionShape3D).shape as BoxShape3D).size
+		for k in 8:
+			var wp := (ch as CollisionShape3D).global_transform * ((Vector3(k & 1, (k >> 1) & 1, (k >> 2) & 1) - Vector3(0.5, 0.5, 0.5)) * sz)
+			if cam.is_position_behind(wp):
+				return Rect2()
+			var sp := cam.unproject_position(wp)
+			r = Rect2(sp, Vector2.ZERO) if first else r.expand(sp)
+			first = false
+	return r
 
 
 func _screen_rect(cam: Camera3D, mi: MeshInstance3D) -> Rect2:

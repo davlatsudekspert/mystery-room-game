@@ -133,95 +133,181 @@ func _centre(b: StaticBody3D) -> Vector3:
 	if p is MeshInstance3D:
 		var mi := p as MeshInstance3D
 		return mi.global_transform * mi.get_aabb().get_center()
+	for ch in b.get_children(): # a bare tap volume: the middle of its box (the body's own origin can lie elsewhere)
+		if ch is CollisionShape3D:
+			return (ch as CollisionShape3D).global_position
 	return b.global_position
 
 
 func _body(hotspot: String, part: String) -> StaticBody3D:
+	var all := _bodies(hotspot, part)
+	return all[0] if not all.is_empty() else null
+
+
+func _bodies(hotspot: String, part: String) -> Array[StaticBody3D]:
+	var out: Array[StaticBody3D] = []
 	for n in room.find_children("*", "StaticBody3D", true, false):
 		var b := n as StaticBody3D
 		if b.collision_layer == 0 or not b.is_visible_in_tree():
 			continue
-		if str(b.get_meta("hotspot", "")) != hotspot and str((b.get_parent() as Node).get_meta("hotspot", "")) != hotspot:
+		var r: Dictionary = room.call("resolve", {"collider": b, "position": Vector3.ZERO})
+		if str(r["hotspot"]) != hotspot:
 			continue
-		if part == "" or str(b.get_meta("part", "")) == part:
-			return b
-	return null
+		if part == "" or str(r["part"]) == part:
+			out.append(b)
+	return out
 
 
-## Look round to the part (a drag), then tap it.
-func _tap(hotspot: String, part: String = "") -> void:
+## A screen point where a finger on the part is read by the room as that hotspot / part: the middle of the part's mesh
+## (or its tap volume), else the nearest of a 9 x 9 grid over its bounds. Vector2(-1, -1) when none.
+func _tap_point(b: StaticBody3D, hotspot: String, part: String) -> Vector2:
+	var c := cam()
+	var vs := get_viewport().get_visible_rect().size
+	var mi: MeshInstance3D = b.get_parent() as MeshInstance3D if b.get_parent() is MeshInstance3D else null
+	var rect := Rect2()
+	var first := true
+	var corners: Array[Vector3] = []
+	if mi != null:
+		for k in 8:
+			corners.append(mi.global_transform * mi.get_aabb().get_endpoint(k))
+	else:
+		for ch in b.get_children():
+			if ch is CollisionShape3D and (ch as CollisionShape3D).shape is BoxShape3D:
+				var sz := ((ch as CollisionShape3D).shape as BoxShape3D).size
+				for k in 8:
+					corners.append((ch as CollisionShape3D).global_transform * ((Vector3(k & 1, (k >> 1) & 1, (k >> 2) & 1) - Vector3(0.5, 0.5, 0.5)) * sz))
+	for w in corners:
+		if c.is_position_behind(w):
+			continue
+		var sp := c.unproject_position(w)
+		rect = Rect2(sp, Vector2.ZERO) if first else rect.expand(sp)
+		first = false
+	if first:
+		return Vector2(-1, -1)
+	var best := Vector2(-1, -1)
+	var best_d := INF
+	for gy in 9:
+		for gx in 9:
+			var p := rect.position + rect.size * Vector2(0.1 + 0.8 * gx / 8.0, 0.1 + 0.8 * gy / 8.0)
+			if p.x < 20 or p.y < 20 or p.x > vs.x - 20 or p.y > vs.y - 20:
+				continue
+			var hit: Dictionary = room.call("raycast", p)
+			if hit.is_empty():
+				continue
+			var r: Dictionary = room.call("resolve", hit)
+			if str(r["hotspot"]) == hotspot and (part == "" or str(r["part"]) == part):
+				var d := p.distance_to(rect.get_center())
+				if d < best_d:
+					best_d = d
+					best = p
+	return best
+
+
+## Look round to the part (a drag), then tap it. -> true when a tap point was found.
+func _tap(hotspot: String, part: String = "") -> bool:
 	await _idle()
 	if cam().is_root():
 		var a := _aim_for(hotspot, part)
 		await _drag(wrapf(a.x - cam().yaw, -180.0, 180.0), a.y - cam().pitch, 0.9)
 		await _wait(0.5)
-	var b := _body(hotspot, part)
-	if b == null:
+	var bodies := _bodies(hotspot, part)
+	if bodies.is_empty():
 		print("nav_demo: no tap body for ", hotspot, "/", part)
-		return
-	var sp := cam().unproject_position(_centre(b))
+		return false
+	var sp := Vector2(-1, -1)
+	for b in bodies:
+		sp = _tap_point(b, hotspot, part)
+		if sp.x >= 0.0:
+			break
+	if sp.x < 0.0:
+		print("nav_demo: no tap point for ", hotspot, "/", part, " in view ", cam().current())
+		return false
 	room.call("_on_tap", sp)
 	await _wait(0.1)
+	return true
+
+
+## Waits for the room change; a tap that did not make it (the demo's own aim) is replaced by the logic call, and said so.
+func _expect(room_id: String) -> void:
+	var al := GameState.logic as ArchiveLogic
+	var t := 0.0
+	while str(al.state["room"]) != room_id and t < 2.0:
+		await _wait(0.1)
+		t += 0.1
+	if str(al.state["room"]) != room_id:
+		print("nav_demo: FALLBACK to ", room_id, " (the tap did not change the room)")
+		al.enter_room(room_id)
+	await _wait(0.2)
 
 
 func _script() -> void:
 	var al := GameState.logic as ArchiveLogic
 	await _shot("hall_start")
-	# 1. look around the hall (a one-finger drag, eased back to nothing by the swipe's glide)
+	# 1. look around the hall (a one-finger drag, the swipe's glide carries it on a little and it settles)
 	await _drag(-28.0, 3.0, 0.8)
-	await _wait(0.4)
+	await _wait(0.3)
 	await _drag(52.0, -3.0, 1.2)
-	await _wait(0.4)
-	# 2. tap the service door: the camera glides to it, a second tap walks through the doorway
+	await _wait(0.3)
+	# 2. tap the service door: the camera glides to it, a second tap opens it and walks through the doorway
 	await _tap("east_wall", "IA_service_door")
 	await _idle()
 	await _shot("hall_door_view")
 	await _tap("east_wall", "IA_service_door")
 	await _wait(0.45)
 	await _shot("door_walk_mid")
+	await _expect("pump")
 	await _idle()
-	await _wait(0.3)
 	await _shot("pump_arrived")
-	# 3. look around the Pump Room
+	# 3. look around the Pump Room, then up the stair to the hall
 	await _drag(40.0, 0.0, 1.0)
-	await _wait(0.3)
-	await _drag(-55.0, 4.0, 1.2)
-	await _wait(0.3)
-	# 4. the stair back up to the hall
+	await _wait(0.2)
 	await _tap("pump_stair")
 	await _wait(0.5)
 	await _shot("stair_mid")
+	await _expect("hall")
 	await _idle()
+	await _wait(0.3)
+	# 4. back down through the service door, then the book lift up to the Gallery
+	await _tap("east_wall", "IA_service_door")
+	await _idle()
+	await _tap("east_wall", "IA_service_door")
+	await _expect("pump")
+	await _idle()
+	await _wait(0.2)
+	var p: Object = zones().builder("pump")
+	if p != null and p.get("lift") != null:
+		(p.get("lift") as ArchiveLift).press(1, "IA_btn_lamp")
+	var t := 0.0
+	while str(al.state["room"]) != "gallery" and t < 8.0:
+		await _wait(0.1)
+		t += 0.1
 	await _wait(0.4)
-	# 5. the stair stump: a glide to it, then the climb to the Gallery
-	await _tap("stair_stump")
-	await _idle()
-	await _tap("stair_stump")
+	await _shot("lift_mid")
+	await _expect("gallery")
 	await _idle()
 	await _wait(0.3)
 	await _shot("gallery_arrived")
-	# 6. the Plate Room door and back
-	await _tap("gal_door_plate")
+	# 5. the Plate Room door: through it and back
+	await _tap("gal_door_plate", "IA_door_plate")
 	await _wait(0.5)
 	await _shot("gallery_door_walk")
+	await _expect("plate")
 	await _idle()
-	await _wait(0.5)
-	await _tap("plate_door")
+	await _wait(0.2)
+	await _tap("plate_door", "IA_door_gallery")
+	await _expect("gallery")
 	await _idle()
-	await _wait(0.3)
-	# 7. the book lift down to the Pump Room
-	var g: Object = zones().builder("gallery")
-	if g != null and g.get("lift") != null:
-		(g.get("lift") as ArchiveLift).press(-1, "IA_btn_flask")
-	var t := 0.0
-	while al.state["room"] != "pump" and t < 8.0:
-		await _wait(0.1)
-		t += 0.1
+	await _wait(0.2)
+	# 6. the spiral stair down to the hall: a glide to the stairwell, then the descent
+	await _tap("gal_stair")
+	await _idle()
+	await _tap("gal_stair")
 	await _wait(0.5)
-	await _shot("lift_mid")
+	await _shot("stair_down_mid")
+	await _expect("hall")
 	await _idle()
 	await _wait(0.8)
-	await _shot("pump_after_lift")
+	await _shot("hall_end")
 
 
 ## The enlarger print as the zoom reader shows it (tap the projected image): the four digits must read at once.
@@ -246,7 +332,8 @@ func _zoom_reader() -> void:
 ## the playthrough does), tap the middle of the door and report what the tap resolves to.
 func _aim_check() -> void:
 	var rows := [["plate", "plate_door", "IA_door_gallery"], ["gallery", "gal_door_plate", "IA_door_plate"],
-		["gallery", "gal_door_office", "IA_door_office"], ["office", "off_door", "IA_door_gallery"], ["pump", "pump_door", "IA_door_cell"]]
+		["gallery", "gal_door_office", "IA_door_office"], ["office", "off_door", "IA_door_gallery"], ["pump", "pump_door", "IA_door_cell"], ["pump", "pump_stair", ""],
+		["hall", "stair_stump", ""], ["gallery", "gal_stair", ""]]
 	var bad := 0
 	for r: Array in rows:
 		zones().jump(r[0])
@@ -257,6 +344,13 @@ func _aim_check() -> void:
 		cam().call("_apply_free_look")
 		await _wait(0.3)
 		var b := _body(r[1], r[2])
+		var all := _bodies(r[1], r[2])
+		var tp := Vector2(-1, -1)
+		for bb in all:
+			tp = _tap_point(bb, r[1], r[2])
+			if tp.x >= 0.0:
+				break
+		print("aimcheck   %s: %d bodies, first at %s, tap point %s, view %s" % [r[1], all.size(), str(b.global_position) if b != null else "-", str(tp), cam().current()])
 		var sp := cam().unproject_position(_centre(b)) if b != null else Vector2(-1, -1)
 		var hit: Dictionary = room.call("raycast", sp)
 		var res: Dictionary = room.call("resolve", hit) if not hit.is_empty() else {}

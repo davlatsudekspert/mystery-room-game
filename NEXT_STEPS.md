@@ -146,3 +146,5 @@ To fix with the next content update (needs a new build and a gate run, so not be
 3. "Pinch to zoom." tip shows on views that need no zoom and overlaps the title strip; the first-item tip shares the strip with scene captions (Ch1 locked drawer).
 4. Notebook overlay leaves the caption under it half visible.
 5. Cosmetic: faint corridor caption (Ch1 finale), "Lumen shard 5/5" toast, black blobs in Ch1 vials / Ch2 key choice, Ch2 end-card stat labels wrap in RU/UZ.
+
+**State on 2026-11-02 (navigation 1.1):** glides with bob and steps, tap-to-skip, door / stair / lift walk-throughs in the Chapter 2 rooms are in and verified under software Vulkan (numbers in `docs/CHAPTER2_EXPANSION_STATUS.md`). Open: a feel check of the bob, steps and walk-through length on a real phone (and by ear); the hall-side lift stop and the plan / hint "Go to" travel still use the quick fade; look-around limits (+-35 / +-10 degrees) deliberately not applied, say if you still want them; Chapters 1, 3, 4 get the glides and skip but have no door walk-throughs (their rooms are single-room).

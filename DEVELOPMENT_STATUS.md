@@ -135,3 +135,5 @@ Budget: ≤ 150 draw calls (OK). Primitives are about 20% over the 150k target. 
 - There is no macOS here. The iOS archive, signing and upload were verified on GitHub macOS runners (runs 37920931317 and 37941801214).
 - No physical Android or iOS device has been tested yet.
 - Under heavy CPU load (several Blender builds at once), software Vulkan under Xvfb sometimes deadlocks or hangs on exit. Headless runs of the same scenes do not, so this is the container, not the game. Run QA scenes through `tools/qa_run.sh`, which uses the `QA_DONE` marker and restarts stalled runs.
+
+- **Navigation 1.1 (2026-11-02):** smooth glides (0.55-1.2 s) with head-bob and soft steps in every chapter, a tap skips them, reduce motion = short and still; Chapter 2 room changes walk through the tapped door, stair or lift cage with a short crossfade; free look unchanged (already 360 degrees on every root view). Light-table knobs measured 10.5-14.5 mm on a 20:9 phone; enlarger print digits checked. Details and QA numbers: `docs/CHAPTER2_EXPANSION_STATUS.md` ("Update 1.1 navigation"); video `docs/previews/ch2_expansion/nav_demo.mp4`.
