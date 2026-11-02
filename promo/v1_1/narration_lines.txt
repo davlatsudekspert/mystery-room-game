@@ -11,9 +11,9 @@ V10|A book lift to balance.
 V11|Above, a reading gallery. A board of names. A darkroom to focus.
 V12|The Director's office keeps one last lock.
 V13|No chase. No hurry. Just you, and the building.
-V14|Mystery Room. Lost Institute. Chapters one and two are free to play.
+V14|Mystery Room. Lost Institute.
 S1|Chapter Two just grew three floors.
 S2|Find the warm wall. Open the hidden door.
 S3|Pipes. Light tables. Frozen doors.
 S4|Seven rooms. Ten new puzzles.
-S5|Mystery Room. Lost Institute. Chapters one and two are free.
+S5|Mystery Room. Lost Institute.

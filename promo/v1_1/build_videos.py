@@ -30,7 +30,7 @@ os.makedirs(TMP, exist_ok=True)
 LANGS = ["en", "ru", "uz"]
 SEARCH = "Search: Mystery Room: Lost Institute"  # no store link exists yet; none is invented
 SUB = {"en": "Version 1.1  -  New floors", "ru": "Версия 1.1  -  новые этажи", "uz": "1.1-versiya  -  yangi qavatlar"}
-FREE = {"en": "Chapters 1 and 2 are free", "ru": "Главы 1 и 2 бесплатны", "uz": "1- va 2-bob bepul"}
+FREE = {"en": "", "ru": "", "uz": ""}  # owner 2026-11-02: no "free" line on the end card
 
 
 def start_offset(clip):
@@ -247,7 +247,8 @@ def build_video(key, lang):
     n += 1
     text("MYSTERY ROOM", big, 0.22 if portrait else 0.22, cf, e0 + 0.2, e1 + 1, 0.8)
     text("LOST INSTITUTE", mid, 0.30 if portrait else 0.40, cf, e0 + 0.4, e1 + 1, 0.8)
-    text(FREE[lang], sm + 8, 0.40 if portrait else 0.58, nf, e0 + 1.4, e1 + 1, 0.8)
+    if FREE[lang]:
+        text(FREE[lang], sm + 8, 0.40 if portrait else 0.58, nf, e0 + 1.4, e1 + 1, 0.8)
     text(SEARCH, sm - 4 if portrait else sm, 0.46 if portrait else 0.66, nf, e0 + 1.8, e1 + 1, 0.8)
     ass = write_ass(spec, lang, voice)
     chains.append("[%s]ass='%s':fontsdir='%s'[vout]" % (last, ass, FONTS))

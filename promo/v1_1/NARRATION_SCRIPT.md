@@ -22,7 +22,7 @@ subtitles and `.srt` files; the picture, the voice and the music are the same in
 | 1:09.3 | Reading Gallery, roll-call board, balcony; Plate Room enlarger | Above, a reading gallery. A board of names. A darkroom to focus. | Наверху — читальная галерея, доска имён и фотолаборатория, где нужно навести резкость. | Tepada — mutolaa galereyasi, ismlar taxtasi va fokusni sozlash kerak boʻlgan fotolaboratoriya. |
 | 1:26.3 | Director's Office, the cabinet | The Director's office keeps one last lock. | В кабинете директора — последний замок. | Direktor kabinetida yana bitta qulf bor. |
 | 1:29.7 | Office, the tea table | No chase. No hurry. Just you, and the building. | Без погонь. Без спешки. Только ты и здание. | Quvish yoʻq. Shoshilish yoʻq. Faqat sen va bino. |
-| 1:35.7 | End card: MYSTERY ROOM / LOST INSTITUTE / Chapters 1 and 2 are free / Search: Mystery Room: Lost Institute | Mystery Room. Lost Institute. Chapters one and two are free to play. | Mystery Room: Забытый институт. Первая и вторая главы бесплатны. | Mystery Room: Unutilgan institut. Birinchi va ikkinchi bob bepul. |
+| 1:35.7 | End card: MYSTERY ROOM / LOST INSTITUTE / Search: Mystery Room: Lost Institute | Mystery Room. Lost Institute. | Mystery Room: Забытый институт. | Mystery Room: Unutilgan institut. |
 
 ## Short "Chapter Two just grew three floors" (44.1 s, 1080x1920)
 
@@ -33,7 +33,7 @@ subtitles and `.srt` files; the picture, the voice and the music are the same in
 | 0:05.7 | The east wall hatches, the door opens, walk into the Pump Room | Find the warm wall. Open the hidden door. | Найди тёплую стену. Открой скрытую дверь. | Iliq devorni top. Yashirin eshikni och. |
 | 0:12.5 | Pump Room, Night Cell light table | Pipes. Light tables. Frozen doors. | Трубы. Световые столы. Замёрзшие двери. | Quvurlar. Yorugʻlik stollari. Muzlagan eshiklar. |
 | 0:23.9 | Cold Store, Reading Gallery, Plate Room | Seven rooms. Ten new puzzles. | Семь комнат. Десять новых головоломок. | Yetti xona. Oʻnta yangi jumboq. |
-| 0:39.7 | End card | Mystery Room. Lost Institute. Chapters one and two are free. | Mystery Room: Забытый институт. Первая и вторая главы бесплатны. | Mystery Room: Unutilgan institut. Birinchi va ikkinchi bob bepul. |
+| 0:39.7 | End card | Mystery Room. Lost Institute. | Mystery Room: Забытый институт. | Mystery Room: Unutilgan institut. |
 
 Notes
 * "Ten new puzzles" and "seven rooms / three floors" are the counts of `docs/CHAPTER2_EXPANSION.md` (N1-N10; the hall plus six new rooms).

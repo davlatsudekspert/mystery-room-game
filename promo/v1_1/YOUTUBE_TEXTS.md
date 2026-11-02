@@ -19,7 +19,7 @@ What version 1.1 adds
 - A few quiet surprises along the way (they can be switched off in Settings).
 - Every game gets its own answers, so a guide from another player will not match yours.
 
-Chapters 1 and 2 are free to play. Chapter 2 takes about an hour (our estimate). English, Russian and Uzbek.
+Chapter 2 takes about an hour (our estimate). English, Russian and Uzbek.
 Calm, fair puzzles: no chase, no hurry.
 
 Get it: [STORE LINKS]
@@ -32,7 +32,7 @@ Chapters:
 1:01 Book lift and Reading Gallery
 1:18 Plate Room and the Director's Office
 
-**Tags (under 500 characters):** Mystery Room, Lost Institute, escape room game, puzzle game, mystery game, point and click, room escape, adventure puzzle, hidden objects, logic puzzles, atmospheric game, archive, investigation, new update, version 1.1, free to play
+**Tags (under 500 characters):** Mystery Room, Lost Institute, escape room game, puzzle game, mystery game, point and click, room escape, adventure puzzle, hidden objects, logic puzzles, atmospheric game, archive, investigation, new update, version 1.1
 
 **Hashtags:** #MysteryRoom #LostInstitute #PuzzleGame #EscapeRoom #Update
 
@@ -49,7 +49,7 @@ Chapters:
 - Несколько тихих сюрпризов по пути (их можно отключить в настройках).
 - В каждой игре свои ответы, поэтому чужое прохождение вам не подойдёт.
 
-Главы 1 и 2 бесплатны. Вторая глава занимает около часа (наша оценка). Английский, русский и узбекский языки.
+Вторая глава занимает около часа (наша оценка). Английский, русский и узбекский языки.
 Спокойные честные загадки: без погонь и без спешки.
 
 Где найти: [STORE LINKS]
@@ -62,7 +62,7 @@ Chapters:
 1:01 Книжный лифт и читальная галерея
 1:18 Фотолаборатория и кабинет директора
 
-**Теги:** Mystery Room, Забытый институт, игра-головоломка, квест, комната-загадка, детектив, атмосферная игра, логические задачи, архив, расследование, обновление 1.1, бесплатная игра, Lost Institute
+**Теги:** Mystery Room, Забытый институт, игра-головоломка, квест, комната-загадка, детектив, атмосферная игра, логические задачи, архив, расследование, обновление 1.1, Lost Institute
 
 **Хэштеги:** #MysteryRoom #ЗабытыйИнститут #Головоломки #Квест #Обновление
 
@@ -79,7 +79,7 @@ Mystery Room: Unutilgan institut oʻyinining ikkinchi bobi endi butun bir bino.
 - Yoʻlda bir nechta sokin kutilmagan holatlar (ularni sozlamalarda oʻchirib qoʻyish mumkin).
 - Har bir oʻyinning javoblari alohida, shuning uchun boshqaning qoʻllanmasi sizga mos kelmaydi.
 
-1- va 2-bob bepul. Ikkinchi bob taxminan bir soat oladi (bizning bahomiz). Ingliz, rus va oʻzbek tillari.
+Ikkinchi bob taxminan bir soat oladi (bizning bahomiz). Ingliz, rus va oʻzbek tillari.
 Xotirjam, adolatli jumboqlar: quvish ham, shoshilish ham yoʻq.
 
 Yuklab olish: [STORE LINKS]
@@ -92,7 +92,7 @@ Boblar:
 1:01 Kitob lifti va mutolaa galereyasi
 1:18 Fotolaboratoriya va direktor kabineti
 
-**Teglar:** Mystery Room, Unutilgan institut, jumboq oʻyini, topishmoq, detektiv oʻyin, sirli xona, mantiqiy oʻyin, arxiv, tergov, yangilanish 1.1, bepul oʻyin, Lost Institute
+**Teglar:** Mystery Room, Unutilgan institut, jumboq oʻyini, topishmoq, detektiv oʻyin, sirli xona, mantiqiy oʻyin, arxiv, tergov, yangilanish 1.1, Lost Institute
 
 **Heshteglar:** #MysteryRoom #SirliInstitut #Jumboq #Oyin #Yangilanish
 
@@ -102,11 +102,11 @@ Boblar:
 **Title (71):** Chapter 2 just grew three floors | Mystery Room: Lost Institute #Shorts
 
 **Description:**
-Version 1.1 turns Chapter Two into a whole building: three floors, seven rooms, ten new puzzles. Chapters 1 and 2 are free to play.
+Version 1.1 turns Chapter Two into a whole building: three floors, seven rooms, ten new puzzles.
 Get it: [STORE LINKS]
 Or search: Mystery Room: Lost Institute
 
-**Tags:** Mystery Room, Lost Institute, puzzle game, escape room, mystery game, shorts, new update, free to play
+**Tags:** Mystery Room, Lost Institute, puzzle game, escape room, mystery game, shorts, new update
 
 **Hashtags:** #Shorts #MysteryRoom #PuzzleGame #EscapeRoom
 
@@ -114,11 +114,11 @@ Or search: Mystery Room: Lost Institute
 **Название (72):** Во второй главе три новых этажа | Mystery Room: Забытый институт #Shorts
 
 **Описание:**
-Версия 1.1 превращает вторую главу в целое здание: три этажа, семь комнат, десять новых головоломок. Главы 1 и 2 бесплатны.
+Версия 1.1 превращает вторую главу в целое здание: три этажа, семь комнат, десять новых головоломок.
 Где найти: [STORE LINKS]
 Или найдите по названию: Mystery Room: Забытый институт
 
-**Теги:** Mystery Room, Забытый институт, игра-головоломка, квест, детектив, shorts, обновление, бесплатная игра
+**Теги:** Mystery Room, Забытый институт, игра-головоломка, квест, детектив, shorts, обновление
 
 **Хэштеги:** #Shorts #MysteryRoom #Головоломки #Квест
 
@@ -126,10 +126,10 @@ Or search: Mystery Room: Lost Institute
 **Sarlavha (69):** Ikkinchi bobda uch yangi qavat | Mystery Room: Unutilgan institut #Shorts
 
 **Tavsif:**
-1.1 versiya ikkinchi bobni butun bir binoga aylantiradi: uch qavat, yetti xona, oʻnta yangi jumboq. 1- va 2-bob bepul.
+1.1 versiya ikkinchi bobni butun bir binoga aylantiradi: uch qavat, yetti xona, oʻnta yangi jumboq.
 Yuklab olish: [STORE LINKS]
 Yoki qidiring: Mystery Room: Unutilgan institut
 
-**Teglar:** Mystery Room, Unutilgan institut, jumboq oʻyini, topishmoq, detektiv, shorts, yangilanish, bepul oʻyin
+**Teglar:** Mystery Room, Unutilgan institut, jumboq oʻyini, topishmoq, detektiv, shorts, yangilanish
 
 **Heshteglar:** #Shorts #MysteryRoom #Jumboq #Oyin
