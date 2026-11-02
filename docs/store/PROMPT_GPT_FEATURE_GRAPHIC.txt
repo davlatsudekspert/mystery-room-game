@@ -1,0 +1,34 @@
+PROMPT FOR CHATGPT (image generation) — Google Play feature graphic for "Mystery Room: Lost Institute"
+Paste everything below the line into ChatGPT. Attach 2-3 real screenshots from the game as style references
+(docs/store/google_play/screenshots/en-US/01_desk_lamp.jpg, 04_darkroom.jpg, 08_cliffhanger_pit.jpg) and the logo/icon (docs/store/google_play/icon_512.png).
+--------------------------------------------------------------------------------
+
+Create a premium Google Play feature graphic (banner) for my 3D mystery escape-room game "Mystery Room: Lost Institute".
+
+FORMAT
+- Exactly 1024 x 500 pixels, landscape, JPG, no transparency. Render it very sharp and detailed (no blur, no noise, no compression artefacts).
+- Keep the title and Leyla's face away from the outer 10% edges (Google may crop them) and not exactly in the centre (a play button may cover the centre).
+
+SCENE (must match the attached real game screenshots: same era, colours and objects)
+- A Soviet-era scientific institute in 1979: Laboratory 7 at night. Walnut wall panels, brass mechanisms, an old desk lamp with warm light, a chalkboard, a wall clock stopped at 03:17. Dark, atmospheric, cinematic lighting, warm amber lamp light against deep blue-green shadows. Realistic 3D look like the screenshots, not cartoon, not anime.
+- LEYLA (Leyla Rahimova, the scientist who disappeared): a woman in her mid-thirties in a 1979 lab coat over a simple dark dress, dark hair tied back, calm and serious face. She appears as a translucent figure made of soft white-blue light ("a light echo"), sitting at the desk writing in her notebook, and turning her head to look at the viewer. Place her on the left third of the image. She must look mysterious, not scary: no blood, no monster, no horror face.
+- Small details: her old lab badge on the desk, a notebook with a hand-drawn sign (a crescent with three dots), dust in the lamp light.
+
+TEXT (spell exactly, nothing else)
+- Right third of the image: the logo emblem from the attached icon (brass-and-light eye emblem), and under it the title in an elegant engraved serif, brass/gold colour:
+  MYSTERY ROOM
+  LOST INSTITUTE
+- Do NOT write "free", prices, ratings, "download", "new", or any other words. Do NOT add any other logos, buttons or badges.
+
+STYLE
+- High-end mobile game key art, cinematic, moody, sharp focus on Leyla's face and the title, rich detail.
+
+Also make a second version identical except the subtitle text reads: ЗАБЫТЫЙ ИНСТИТУТ (for the Russian store page). The first line stays MYSTERY ROOM.
+
+--------------------------------------------------------------------------------
+NOTES FOR THE OWNER (not for ChatGPT)
+1. Check the spelling of the text letter by letter; image generators often misspell. If it is wrong, ask ChatGPT to fix only the text, or I can put the text on top of the picture myself with the game's fonts (send me the picture without text).
+2. The picture must look like the real game (Google may reject or users may complain if the banner promises something the game does not have). Compare it with the screenshots.
+3. This picture is AI-generated, like the icon and logo. It is already disclosed in docs/ASSET_LICENSES.md for the icon; tell me and I will add the banner there too.
+4. Size: if ChatGPT gives another size, send it to me and I will crop and resize it to exactly 1024 x 500 for both languages.
+5. Upload: Play Console -> Mystery Room -> Main store listing -> Feature graphic (en-US) and the Russian translation (ru-RU). Then Save. Only the picture changes; nothing goes for a new app review except the listing check.
