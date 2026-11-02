@@ -16,6 +16,7 @@ func _run() -> void:
 	var cams: Array[String] = []
 	var from := 1
 	var select := ""
+	var echo_on := false # --echo: the Chapter 1 finale's 1979 flashback look (warm room, Leyla's echo at the desk)
 	GameState.variant_seed = 0 # canonical answers unless --seed=N (players get a random seed per game)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
@@ -28,6 +29,8 @@ func _run() -> void:
 			from = int(a.substr(8))
 		elif a.begins_with("--seed="):
 			GameState.variant_seed = int(a.substr(7))
+		elif a == "--echo":
+			echo_on = true
 		elif a.begins_with("--select="):
 			select = a.substr(9)
 	DirAccess.make_dir_recursive_absolute(out_dir)
@@ -45,6 +48,9 @@ func _run() -> void:
 	if select != "":
 		logic.select_item(select)
 	var cam: RoomCamera = room.get("cam")
+	if echo_on:
+		_flashback(room)
+		await _settle(0.6)
 	for v in views:
 		cam.go(v, true)
 		await _settle(0.8)
@@ -63,6 +69,27 @@ func _run() -> void:
 	SaveSystem.delete_game()
 	print("QA_DONE exit=0") # tools/qa_run.sh: the run finished even if the process then hangs on exit
 	get_tree().quit()
+
+
+func _flashback(room: Node3D) -> void:
+	var env: Environment = room.get("env")
+	env.ambient_light_color = Color("6a5034")
+	env.ambient_light_energy = 1.1
+	var lights: Dictionary = room.get("lights")
+	lights["desk_lamp"].light_energy = 2.6
+	room.get("visuals").call("flashback_1979", true)
+	var echo: Node3D = room.get("models").get("echo_leyla")
+	echo.visible = true
+	var head := ModelUtil.find(echo, "echo_head")
+	if head:
+		head.rotation.y = deg_to_rad(-55.0) # she turns to look at the player
+	var hud: Node = room.get("hud")
+	if hud is CanvasItem or hud is CanvasLayer:
+		hud.set("visible", false) # clean frames for store art
+	for mi in ModelUtil.find_meshes(echo):
+		var m := mi.material_override as ShaderMaterial
+		if m:
+			m.set_shader_parameter("intensity", 1.0)
 
 
 func _reached(l: Lab7Logic, k: int) -> bool:

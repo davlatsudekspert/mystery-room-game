@@ -26,8 +26,8 @@
 | Store field | File(s) | Notes |
 |---|---|---|
 | Play → Main store listing → App icon | `google_play/icon_512.png` | 512×512, 32-bit PNG (RGBA, opaque), < 1024 KB [P1] |
-| Play → Feature graphic (en-US) | `google_play/feature_graphic_en-US.jpg` | 1024×500 JPEG, no alpha [P1]. Logo kept out of the edge zones |
-| Play → Feature graphic (ru-RU translation) | `google_play/feature_graphic_ru-RU.jpg` | Same art, the Russian logo subtitle |
+| Play → Feature graphic (en-US) | `google_play/feature_graphic_en-US.jpg` | 1024×500 JPEG, no alpha, < 1 MB [P1]. Logo and Leyla kept off the edges and the exact centre. 2x preview for review: `google_play/feature_graphic_preview_2x.jpg` (not for upload) |
+| Play → Feature graphic (ru-RU translation) | `google_play/feature_graphic_ru-RU.jpg` | Same art, subtitle ЗАБЫТЫЙ ИНСТИТУТ |
 | Play → Phone screenshots (en-US) | `google_play/screenshots/en-US/01…08_*.jpg` | 2560×1440 (16:9) JPEG. Max side ≤ 3840 and ≤ 2× the short side. Three or more 16:9 shots ≥ 1920×1080 make a game eligible for recommendations [P1] |
 | Play → 7-inch and 10-inch tablet screenshots | `google_play/tablet_01_gear_box_no_caption.jpg` + `screenshots/en-US/02…08` | Large screens: 1,080–7,680 px, 16:9 landscape, at least 4, and "exclude additional text that is not part of your core app experience" [P1]. Hence the hero without its caption band |
 | Play → screenshots (ru-RU translation) | `google_play/screenshots/ru-RU/` | The game UI and the caption in Russian. Without them Play shows the en-US ones |
@@ -69,7 +69,7 @@ Smaller sizes are scaled from the larger ones. Upload 6.9" and 6.3", plus 6.5" i
   - Play: 2560×1440.
   - iPhone: 2868×1320, scaled down by 6–9 % to 6.5" and 6.3", cropping at most 10 px. All three are the same ≈2.17:1 shape, so the HUD layout is identical.
   - iPad: 2752×2064.
-- **Feature graphic.** A `qa/view_probe.tscn` frame of the lit Laboratory 7 with the Lumen beam on, plus the owner's logo (`game/assets/ui/logo/logo_en.png` / `logo_ru.png`, made from `docs/brand/logo_source.png`). It uses Chapter 1 art only, for the same reason as above.
+- **Feature graphic (rebuilt 2026-11-02, replaces the blurry one that still said THE FORGOTTEN INSTITUTE).** The Chapter 1 finale's 1979 flashback rendered from the real Laboratory 7 scene at 3072×1500 (`qa/view_probe.tscn --echo`): Leyla's light-echo sits at her desk under the lamp, turned toward the player, her hidden darkroom open behind the wardrobe. The game has no portrait of Leyla, so she is shown as her in-game echo (the glowing figure the story calls Leyla, 1979), not a new character design. The frame is downscaled 3× with Lanczos and lightly sharpened. The owner's logo (`docs/brand/logo_source.png`, emblem and MYSTERY ROOM wordmark) is scaled down from 1448 px, and the baked subtitle is replaced by text drawn at final size in Cormorant Garamond Bold (OFL): `LOST INSTITUTE` / `ЗАБЫТЫЙ ИНСТИТУТ`. No price, no 'free', no badges. Chapter 1 art only. Rebuild: `python3 tools/store/make_store_graphics.py --renders=<R> --feature-only` (render command in the script).
 - **Rebuild:** run the renders listed in `tools/store/make_store_graphics.py`, then `python3 tools/store/make_store_graphics.py --renders=<dir>`. Check the texts with `--check-text`.
 
 | # | File name | Chapter | Moment |
@@ -86,7 +86,7 @@ Smaller sizes are scaled from the larger ones. Upload 6.9" and 6.3", plus 6.5" i
 ## Alt text (Play asks for ≤ 140 characters per graphic)
 | File | EN | RU |
 |---|---|---|
-| feature graphic | Mystery Room logo over a 1970s laboratory where a beam of light crosses the room from a brass projector. | Логотип Mystery Room на фоне лаборатории 1970-х, через которую идёт луч света из латунного проектора. |
+| feature graphic | Mystery Room: Lost Institute logo beside the glowing echo of Leyla, a scientist sitting at her desk in a 1970s laboratory. | Логотип Mystery Room: Забытый институт рядом со светящимся эхом Лейлы за рабочим столом в лаборатории 1970-х. |
 | 01 | A wooden box with brass gears and knobs on a dark desk; caption: Every clock stopped at 03:17. | Деревянная шкатулка с латунными шестернями в темноте; подпись: Все часы остановились в 03:17. |
 | 02 | A dim 1970s laboratory with a desk, filing cabinet and window, lit by a desk lamp. | Полутёмная лаборатория 1970-х: стол, картотека и окно в свете настольной лампы. |
 | 03 | A brass projector on a tripod sends a white beam across the lab. | Латунный проектор на треноге посылает белый луч через лабораторию. |

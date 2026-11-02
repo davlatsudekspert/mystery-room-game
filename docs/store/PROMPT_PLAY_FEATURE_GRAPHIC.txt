@@ -1,0 +1,29 @@
+TASK FOR THE BROWSER HELPER (talk to the owner in Uzbek; this prompt is in English)
+
+Goal: replace ONLY the feature graphic of the "Mystery Room: Lost Institute" listing in Google Play Console,
+for the default language (en-US) and for the ru-RU translation. Change nothing else: no other apps, no texts,
+no prices, no screenshots, no icon, no releases, no pricing, no app content.
+
+Files (repository davlatsudekspert/mystery-room-game, folder docs/store/google_play/):
+  - feature_graphic_en-US.jpg  (1024x500, JPG)  -> default / en-US listing
+  - feature_graphic_ru-RU.jpg  (1024x500, JPG)  -> ru-RU translation
+  - feature_graphic_preview_2x.jpg is a preview for the owner only: DO NOT upload it.
+Ask the owner to place the two files on the computer (or download them from the repository) if they are not there.
+
+Steps:
+ 1. Open Play Console -> select the app "Mystery Room: Lost Institute" (check the name; if several apps look
+    similar, ask the owner which one). Never open or change any other app.
+ 2. Grow users -> Store presence -> Main store listing (default language en-US).
+ 3. In "Graphics" find "Feature graphic". Show the owner the current image and the new
+    feature_graphic_en-US.jpg, and ask "Almashtiraymi?" Wait for a clear yes.
+ 4. Upload feature_graphic_en-US.jpg in place of the old one. Check that the preview shows the new image with the
+    title "Mystery Room / LOST INSTITUTE" and a glowing figure (Leyla) at a desk. Show the owner. Click Save (draft)
+    only after the owner agrees.
+ 5. Switch to the Russian translation (ru-RU) of the main store listing. Upload feature_graphic_ru-RU.jpg as its
+    feature graphic (subtitle "ЗАБЫТЫЙ ИНСТИТУТ"), show the owner, and save after the owner agrees.
+ 6. Do NOT touch any other field (name, short/full description, icon, screenshots, video, category, contact).
+    Do NOT click "Send changes for review" / "Publish" unless the owner says so explicitly after seeing the page that
+    lists the pending changes; if Play shows other pending changes that are not yours, tell the owner and stop.
+ 7. If Play rejects the file (size, format, dimensions), do not edit or resize it; report the exact message to the owner.
+ 8. Finish by telling the owner (in Uzbek) what was replaced (en-US, ru-RU) and what state it is in (saved draft or
+    sent for review).

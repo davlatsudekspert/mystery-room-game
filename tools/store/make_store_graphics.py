@@ -56,6 +56,7 @@ HERO = ("01_gear_box", "cam_hero_gearbox")
 HERO_CAPTION = {"en": "Every clock stopped at 03:17", "ru": "Все часы остановились в 03:17"}
 HERO_BAND = 0.13 # band height as a share of the image height (Play: taglines ≤ 20% of the image)
 BRASS, BRASS_HI, INK = (201, 163, 94), (227, 194, 122), (14, 15, 18) # game/src/ui/ui_theme.gd
+FONT_BOLD = os.path.join(ROOT, "game", "assets", "fonts", "CormorantGaramond-Bold.ttf")
 FONT_TITLE = os.path.join(ROOT, "game", "assets", "fonts", "CormorantGaramond-SemiBold.ttf")
 
 # App Store sizes (landscape) and the render shape each one is made from. 6.5" and 6.3" are downscaled from the
@@ -170,39 +171,113 @@ def icon() -> None:
     im.resize((512, 512), Image.LANCZOS).save(path, optimize=True)
 
 
-# Feature graphic background: a view_probe frame of the lit lab with the Lumen beam on (Chapter 1, so the graphic
-# shows only content every store build offers), rendered at 2868x1320:
-#   tools/qa_run.sh -- --resolution 2868x1320 res://qa/view_probe.tscn -- --out=<R>/fg_probe --from=p12 \
-#       --seed=4242 "--cam=beamwide:0.6,1.7,-1.6:-0.6,1.15,1.6:55"
-# The crop box (x0, y0, width) keeps clear of the HUD: the ceiling lamp ends at y≈110, the hint plate starts at y≈1058.
-FEATURE_SRC = os.path.join("fg_probe", "cam_beamwide.png")
-FEATURE_BOX = (600, 112, 1921)
-FEATURE_LOGO_H = 360
-FEATURE_LOGO_CX = 440
+# Feature graphic background: the Chapter 1 finale's 1979 flashback, rendered from the real Laboratory 7 scene
+# (warm lamp, Leyla's light-echo at her desk turned toward the player, her hidden darkroom open behind the
+# wardrobe). Chapter 1 art only, so it shows what every store build offers. HUD hidden, 3072x1500 (3x the final):
+#   tools/qa_run.sh -- --resolution 3072x1500 res://qa/view_probe.tscn -- --out=<R>/fg_probe --from=p13 \
+#       --seed=4242 --echo "--cam=leyla:1.1,1.3,0.05:-2.4,0.85,-1.7:48"
+FEATURE_SRC = os.path.join("fg_probe", "cam_leyla.png")
+FEATURE_LOGO_H = 392 # logo height in the 1024x500 canvas; the wordmark and eye are downscaled from 1448x1086, so crisp
+FEATURE_LOGO_X = 22
+FEATURE_SUB = {"en": "LOST INSTITUTE", "ru": "ЗАБЫТЫЙ ИНСТИТУТ"}
+LOGO_BAND = (312, 836, 1132, 882) # the baked "THE FORGOTTEN INSTITUTE" band in logo_source.png (tools/ui/make_logo_variants.py)
+
+
+def _erase_band(im: Image.Image) -> Image.Image:
+    """Repaint the subtitle band from the rows just above and below it (same method as make_logo_variants.py)."""
+    import numpy as np
+    a = np.asarray(im).astype(np.float32)
+    x0, y0, x1, y1 = LOGO_BAND
+    above = a[y0 - 9:y0 - 1, x0:x1].mean(axis=0)
+    below = a[y1 + 1:y1 + 9, x0:x1].mean(axis=0)
+    rng = np.random.default_rng(3)
+    for y in range(y0, y1):
+        t = (y - y0) / max(1, y1 - y0 - 1)
+        row = above * (1 - t) + below * t
+        row[:, :3] += rng.normal(0.0, 3.0, (x1 - x0, 1))
+        a[y, x0:x1] = row
+    out = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA")
+    band = out.crop((x0, y0 - 2, x1, y1 + 2)).filter(ImageFilter.GaussianBlur(1.2))
+    out.paste(band, (x0, y0 - 2))
+    return out
+
+
+def _subtitle(canvas: Image.Image, text: str, box: tuple[float, float, float, float], S: int = 1) -> None:
+    """Gold spaced capitals drawn at the final pixel size (not upscaled) in the logo's banner, with a soft shadow."""
+    x0, y0, x1, y1 = [round(v) for v in box]
+    w, h = x1 - x0, y1 - y0
+    size, tracking = 22 * S, 0.28
+    font = ImageFont.truetype(FONT_BOLD, size)
+    total = sum(font.getlength(c) for c in text) + size * tracking * (len(text) - 1)
+    while total > w * 0.94 and size > 10 * S:
+        size -= 1
+        font = ImageFont.truetype(FONT_BOLD, size)
+        total = sum(font.getlength(c) for c in text) + size * tracking * (len(text) - 1)
+    mask = Image.new("L", (w, h), 0)
+    d = ImageDraw.Draw(mask)
+    x = (w - total) / 2
+    asc, desc = font.getmetrics()
+    y = (h - (asc + desc)) / 2 + 1
+    for c in text:
+        d.text((x, y), c, font=font, fill=255)
+        x += font.getlength(c) + size * tracking
+    grad = Image.new("RGB", (w, h))
+    gd = ImageDraw.Draw(grad)
+    for j in range(h):
+        t = j / max(1, h - 1)
+        gd.line((0, j, w, j), fill=(round(248 - 60 * t), round(228 - 96 * t), round(176 - 118 * t)))
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow.putalpha(mask.filter(ImageFilter.GaussianBlur(1.0 * S)).point(lambda v: round(v * 0.9)))
+    canvas.alpha_composite(shadow, (x0, y0 + S))
+    gold = grad.convert("RGBA")
+    gold.putalpha(mask)
+    canvas.alpha_composite(gold, (x0, y0))
+
+
+def _compose(src: Image.Image, lang: str, S: int) -> Image.Image:
+    """The feature graphic at S times 1024x500 (S=1 is the store file, S=2 the owner's preview). Everything, the
+    subtitle included, is drawn at the final pixel size of that scale."""
+    import numpy as np
+    W, H = 1024 * S, 500 * S
+    bg = src.resize((W, H), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=1.1 * S, percent=60, threshold=2))
+    # darken the left for the logo and a little at the top and bottom edges (smooth gradients, dithered)
+    a = np.asarray(bg).astype(np.float32)
+    xs = np.linspace(0, 1, W)[None, :, None]
+    ys = np.linspace(0, 1, H)[:, None, None]
+    shade = 0.62 * np.clip(1 - xs / 0.62, 0, 1) ** 1.4 + 0.30 * np.clip((ys - 0.78) / 0.22, 0, 1) + 0.22 * np.clip(1 - ys / 0.18, 0, 1)
+    shade = np.clip(shade, 0, 0.8)
+    a = a * (1 - shade) + np.array([10, 13, 16], np.float32) * shade
+    a += np.random.default_rng(5).normal(0, 0.6, a.shape)
+    out = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    logo = _erase_band(Image.open(os.path.join(ROOT, "docs", "brand", "logo_source.png")).convert("RGBA"))
+    lh = FEATURE_LOGO_H * S
+    k = lh / logo.height
+    lw = round(logo.width * k)
+    logo = logo.resize((lw, lh), Image.LANCZOS)
+    x, y = FEATURE_LOGO_X * S, (H - lh) // 2
+    # soft dark halo behind the logo so the gold reads on the lit wall
+    halo = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(halo).ellipse((x - 10 * S, y + 20 * S, x + lw + 10 * S, y + lh - 10 * S), fill=150)
+    halo = halo.filter(ImageFilter.GaussianBlur(36 * S))
+    out = Image.composite(Image.new("RGBA", out.size, (10, 13, 16, 255)), out, halo)
+    out.alpha_composite(logo, (x, y))
+    bx0, by0, bx1, by1 = LOGO_BAND
+    _subtitle(out, FEATURE_SUB[lang], (x + bx0 * k, y + by0 * k, x + bx1 * k, y + by1 * k), S)
+    return out.convert("RGB")
 
 
 def feature(renders: str, lang: str) -> None:
-    """1024x500, no alpha: a real game frame, the localized logo left of centre, the beam and projector beside it."""
+    """1024x500, no alpha. A 3072x1500 game render (Leyla's echo at her desk) is downscaled 3x with Lanczos and
+    lightly sharpened. The logo (emblem and MYSTERY ROOM wordmark) sits left; its baked subtitle is replaced by the
+    store name's second line. Title and Leyla stay clear of the exact centre and the edges."""
     src = Image.open(os.path.join(renders, FEATURE_SRC)).convert("RGB")
-    x0, y0, w = FEATURE_BOX
-    h = w * 500 / 1024
-    bg = src.crop((x0, y0, x0 + w, round(y0 + h))).resize((1024, 500), Image.LANCZOS)
-    logo_file = {"en": "logo_en.png", "ru": "logo_ru.png"}[lang]
-    logo = Image.open(os.path.join(ROOT, "game", "assets", "ui", "logo", logo_file)).convert("RGBA")
-    k = FEATURE_LOGO_H / logo.height
-    logo = logo.resize((round(logo.width * k), FEATURE_LOGO_H), Image.LANCZOS)
-    x = round(FEATURE_LOGO_CX - logo.width / 2)
-    y = (500 - logo.height) // 2
-    # a soft dark halo behind the logo only, so the gold lettering reads on the lit wall
-    shade = Image.new("L", (1024, 500), 0)
-    ImageDraw.Draw(shade).ellipse((x - 20, y, x + logo.width + 20, y + logo.height), fill=140)
-    shade = shade.filter(ImageFilter.GaussianBlur(50))
-    bg = Image.composite(Image.new("RGB", bg.size, (14, 18, 22)), bg, shade)
-    out = bg.convert("RGBA")
-    out.alpha_composite(logo, (x, y))
-    path = os.path.join(OUT, "google_play", "feature_graphic_%s.jpg" % LOCALES[lang]["play"])
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    out.convert("RGB").save(path, "JPEG", quality=93, optimize=True, subsampling="4:4:4")
+    gp = os.path.join(OUT, "google_play")
+    os.makedirs(gp, exist_ok=True)
+    _compose(src, lang, 1).save(os.path.join(gp, "feature_graphic_%s.jpg" % LOCALES[lang]["play"]),
+        "JPEG", quality=94, optimize=True, subsampling="4:4:4")
+    if lang == "en": # 2x preview for the owner: a true 2x composition (2048x1000), not an upscale
+        _compose(src, lang, 2).save(os.path.join(gp, "feature_graphic_preview_2x.jpg"),
+            "JPEG", quality=92, optimize=True, subsampling="4:4:4")
 
 
 # ====================================================================== contact sheet
@@ -340,6 +415,7 @@ def main() -> int:
     ap.add_argument("--table", action="store_true", help="print the README file table")
     ap.add_argument("--screenshots-only", action="store_true",
         help="rewrite only the gameplay screenshots (new HUD); keep the icon, feature graphic and hero frame")
+    ap.add_argument("--feature-only", action="store_true", help="rewrite only the feature graphics (EN, RU) and the 2x preview")
     a = ap.parse_args()
     if a.check_text:
         return 0 if check_text() else 1
@@ -349,6 +425,10 @@ def main() -> int:
     if not a.renders:
         ap.error("--renders is required")
     langs = a.langs.split(",")
+    if a.feature_only:
+        for lang in langs:
+            feature(a.renders, lang)
+        return 0
     if not a.screenshots_only:
         icon()
         for lang in langs:
