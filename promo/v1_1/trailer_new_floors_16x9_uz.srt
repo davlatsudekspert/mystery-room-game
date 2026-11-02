@@ -52,5 +52,5 @@ Quvish yoʻq. Shoshilish yoʻq. Faqat sen va bino.
 
 14
 00:01:35,700 --> 00:01:42,109
-Mystery Room: Sirli institut. Birinchi va ikkinchi bob bepul.
+Mystery Room: Unutilgan institut. Birinchi va ikkinchi bob bepul.
 

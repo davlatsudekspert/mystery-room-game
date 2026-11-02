@@ -42,7 +42,7 @@ LINES = {
             "Quvish yoʻq. Shoshilish yoʻq. Faqat sen va bino."),
     "V14": ("Mystery Room. Lost Institute. Chapters one and two are free to play.",
             "Mystery Room: Забытый институт. Первая и вторая главы бесплатны.",
-            "Mystery Room: Sirli institut. Birinchi va ikkinchi bob bepul."),
+            "Mystery Room: Unutilgan institut. Birinchi va ikkinchi bob bepul."),
     "S1": ("Chapter Two just grew three floors.",
            "Во второй главе появились три этажа.",
            "Ikkinchi bobda uch qavat paydo boʻldi."),
@@ -57,5 +57,5 @@ LINES = {
            "Yetti xona. Oʻnta yangi jumboq."),
     "S5": ("Mystery Room. Lost Institute. Chapters one and two are free.",
            "Mystery Room: Забытый институт. Первая и вторая главы бесплатны.",
-           "Mystery Room: Sirli institut. Birinchi va ikkinchi bob bepul."),
+           "Mystery Room: Unutilgan institut. Birinchi va ikkinchi bob bepul."),
 }

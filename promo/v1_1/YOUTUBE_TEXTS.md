@@ -67,10 +67,10 @@ Chapters:
 **Хэштеги:** #MysteryRoom #ЗабытыйИнститут #Головоломки #Квест #Обновление
 
 ### O'zbekcha
-**Sarlavha (59):** Mystery Room: Sirli institut 1.1 — yangi qavatlar (treyler)
+**Sarlavha (59):** Mystery Room: Unutilgan institut 1.1 — yangi qavatlar (treyler)
 
 **Tavsif:**
-Mystery Room: Sirli institut oʻyinining ikkinchi bobi endi butun bir bino.
+Mystery Room: Unutilgan institut oʻyinining ikkinchi bobi endi butun bir bino.
 
 1.1 versiyada nimalar bor
 - Uch qavat va yetti xona: arxiv zali, nasos xonasi, tungi xona, sovuq ombor, mutolaa galereyasi, fotolaboratoriya va direktor kabineti.
@@ -83,7 +83,7 @@ Mystery Room: Sirli institut oʻyinining ikkinchi bobi endi butun bir bino.
 Xotirjam, adolatli jumboqlar: quvish ham, shoshilish ham yoʻq.
 
 Yuklab olish: [STORE LINKS]
-Yoki qidiring: Mystery Room: Sirli institut
+Yoki qidiring: Mystery Room: Unutilgan institut
 
 Boblar:
 0:00 Kirish va bino rejasi
@@ -92,7 +92,7 @@ Boblar:
 1:01 Kitob lifti va mutolaa galereyasi
 1:18 Fotolaboratoriya va direktor kabineti
 
-**Teglar:** Mystery Room, Sirli institut, jumboq oʻyini, topishmoq, detektiv oʻyin, sirli xona, mantiqiy oʻyin, arxiv, tergov, yangilanish 1.1, bepul oʻyin, Lost Institute
+**Teglar:** Mystery Room, Unutilgan institut, jumboq oʻyini, topishmoq, detektiv oʻyin, sirli xona, mantiqiy oʻyin, arxiv, tergov, yangilanish 1.1, bepul oʻyin, Lost Institute
 
 **Heshteglar:** #MysteryRoom #SirliInstitut #Jumboq #Oyin #Yangilanish
 
@@ -123,13 +123,13 @@ Or search: Mystery Room: Lost Institute
 **Хэштеги:** #Shorts #MysteryRoom #Головоломки #Квест
 
 ### O'zbekcha
-**Sarlavha (69):** Ikkinchi bobda uch yangi qavat | Mystery Room: Sirli institut #Shorts
+**Sarlavha (69):** Ikkinchi bobda uch yangi qavat | Mystery Room: Unutilgan institut #Shorts
 
 **Tavsif:**
 1.1 versiya ikkinchi bobni butun bir binoga aylantiradi: uch qavat, yetti xona, oʻnta yangi jumboq. 1- va 2-bob bepul.
 Yuklab olish: [STORE LINKS]
-Yoki qidiring: Mystery Room: Sirli institut
+Yoki qidiring: Mystery Room: Unutilgan institut
 
-**Teglar:** Mystery Room, Sirli institut, jumboq oʻyini, topishmoq, detektiv, shorts, yangilanish, bepul oʻyin
+**Teglar:** Mystery Room, Unutilgan institut, jumboq oʻyini, topishmoq, detektiv, shorts, yangilanish, bepul oʻyin
 
 **Heshteglar:** #Shorts #MysteryRoom #Jumboq #Oyin

@@ -102,7 +102,7 @@ cut-off title and a distorted close-up.
 ## Honest status: what is missing
 * **The narration was not heard by a human.** Nobody here can listen: only levels, ducking, clipping and sync were checked by measurement. Listen before publishing; if it is wrong, record the lines of `NARRATION_SCRIPT.md` and rebuild.
 * The game audio in the clips is the real in-game mix but the music is added in the edit; effects/ambience crossfades are 0.3 s dips at the cuts. The audio balance was not judged by ear.
-* **Russian and Uzbek subtitle texts are not natively reviewed.** The Uzbek game name "Sirli institut" follows the owner (the game's own string is "Unutilgan institut").
+* **Russian and Uzbek subtitle texts are not natively reviewed.** The Uzbek game name "Unutilgan institut" follows the owner (the game's own string is "Unutilgan institut").
 * The thumbnail and the Shorts cover exist in English only.
 * One Short only (44 s), not a series. Footage is software-rendered (llvmpipe) game footage, not a phone recording; no hands/touch indicator in the YouTube videos.
 * The Building plan screen is shown as the game draws it (dim; most rooms "locked" at that state): honest, but small text. The door walk-through into the Plate Room was not captured (L_door2 failed).
