@@ -219,7 +219,17 @@ func cam() -> RoomCamera:
 
 func view(id: String) -> void:
 	cam().go(id)
-	await _settle(0.9)
+	await _settle(0.3)
+	await _arrived() # a root view is aimed (face_part) only once the camera has stopped: the move would overwrite the aim
+
+
+## Waits until the camera move (a glide takes up to 1.2 s) and a room change are over.
+func _arrived(limit: float = 4.0) -> void:
+	var t := 0.0
+	while (cam().transitioning or (room.get("zones") != null and bool((room.get("zones") as ArchiveZones).moving))) and t < limit:
+		await _settle(0.1)
+		t += 0.1
+	await _settle(0.2)
 
 
 func busy() -> bool:

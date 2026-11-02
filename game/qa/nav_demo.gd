@@ -7,12 +7,15 @@ var room: Node3D
 var out_dir := ""
 var shots := 0
 var zoom_only := false
+var aim_only := false
 
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
+		if a == "--aimcheck":
+			aim_only = true
 		if a == "--zoom":
 			zoom_only = true
 		if a == "--calm":
@@ -34,7 +37,9 @@ func _ready() -> void:
 	room.set("capture_mode", true)
 	get_tree().root.add_child.call_deferred(room)
 	await _wait(1.5)
-	if zoom_only:
+	if aim_only:
+		await _aim_check()
+	elif zoom_only:
 		await _zoom_reader()
 	else:
 		await _script()
@@ -98,6 +103,7 @@ func _aim_for(hotspot: String, part: String) -> Vector2:
 	var b := _body(hotspot, part)
 	if b == null:
 		return Vector2(cam().yaw, cam().pitch)
+	var target := _centre(b)
 	var c := cam()
 	var y0 := c.yaw
 	var p0 := c.pitch
@@ -109,9 +115,9 @@ func _aim_for(hotspot: String, part: String) -> Vector2:
 			c.yaw = float(yaw)
 			c.pitch = pitch
 			c.call("_apply_free_look")
-			if c.is_position_behind(b.global_position):
+			if c.is_position_behind(target):
 				continue
-			var d := c.unproject_position(b.global_position).distance_to(centre)
+			var d := c.unproject_position(target).distance_to(centre)
 			if d < best:
 				best = d
 				out = Vector2(yaw, pitch)
@@ -119,6 +125,15 @@ func _aim_for(hotspot: String, part: String) -> Vector2:
 	c.pitch = p0
 	c.call("_apply_free_look")
 	return out
+
+
+## Where a tap on the part lands: the middle of its mesh when the collider hangs under one (a door's origin is its hinge).
+func _centre(b: StaticBody3D) -> Vector3:
+	var p := b.get_parent()
+	if p is MeshInstance3D:
+		var mi := p as MeshInstance3D
+		return mi.global_transform * mi.get_aabb().get_center()
+	return b.global_position
 
 
 func _body(hotspot: String, part: String) -> StaticBody3D:
@@ -144,7 +159,7 @@ func _tap(hotspot: String, part: String = "") -> void:
 	if b == null:
 		print("nav_demo: no tap body for ", hotspot, "/", part)
 		return
-	var sp := cam().unproject_position(b.global_position)
+	var sp := cam().unproject_position(_centre(b))
 	room.call("_on_tap", sp)
 	await _wait(0.1)
 
@@ -225,3 +240,27 @@ func _zoom_reader() -> void:
 	room.get("hud").call("_show_zoom", tex, room.tr("obj2x.enlarger"))
 	await _wait(0.8)
 	await _shot("enlarger_zoom_reader")
+
+
+## Does one aim at a door reach it? For each door: jump to the room's root view, aim (the nearest of a 10 degree yaw grid, as
+## the playthrough does), tap the middle of the door and report what the tap resolves to.
+func _aim_check() -> void:
+	var rows := [["plate", "plate_door", "IA_door_gallery"], ["gallery", "gal_door_plate", "IA_door_plate"],
+		["gallery", "gal_door_office", "IA_door_office"], ["office", "off_door", "IA_door_gallery"], ["pump", "pump_door", "IA_door_cell"]]
+	var bad := 0
+	for r: Array in rows:
+		zones().jump(r[0])
+		await _wait(0.4)
+		var a := _aim_for(r[1], r[2])
+		cam().yaw = a.x
+		cam().pitch = a.y
+		cam().call("_apply_free_look")
+		await _wait(0.3)
+		var b := _body(r[1], r[2])
+		var sp := cam().unproject_position(_centre(b)) if b != null else Vector2(-1, -1)
+		var hit: Dictionary = room.call("raycast", sp)
+		var res: Dictionary = room.call("resolve", hit) if not hit.is_empty() else {}
+		var ok: bool = (not res.is_empty()) and str(res["hotspot"]) == str(r[1])
+		bad += 0 if ok else 1
+		print("aimcheck %s/%s: yaw %d pitch %d, screen %s, fov %.0f, hit %s -> %s" % [r[0], r[2], a.x, a.y, str(sp), cam().fov, str(res.get("hotspot", "nothing")) + "/" + str(res.get("part", "")), "OK" if ok else "MISS"])
+	print("aimcheck: %d misses" % bad)
