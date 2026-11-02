@@ -197,7 +197,10 @@ Other Kenney files were auditioned by spectrogram and rejected: `doorClose_4`, `
 | `sfx/c2x_sheet_flip.ogg` | 0.70 s | no | peak -1.1 dBFS | 9 KB | synth | A sheet is flipped over by its tab: a soft flap of acetate, then two taps on the glass |
 | `sfx/c2x_sheet_slide.ogg` | 0.79 s | no | peak -1.1 dBFS | 10 KB | synth | An acetate sheet slides across the glass of the light table: smooth plastic friction and a tiny flex |
 | `sfx/c2x_sheet_turn.ogg` | 0.58 s | no | peak -1.1 dBFS | 9 KB | synth | A sheet is turned a quarter: a short slide and a soft plastic tick as it seats |
+| `sfx/c2x_stair_climb.ogg` | 2.43 s | no | peak -0.9 dBFS | 20 KB | synth | A short climb on the iron stair (camera travel): five quick steps on steel treads, each with a faint ring |
 | `sfx/c2x_stair_steps.ogg` | 4.08 s | no | peak -1.1 dBFS | 32 KB | synth | Climbing the iron spiral stair: six slow footsteps on steel treads, each with a soft ring |
+| `sfx/c2x_step_soft_a.ogg` | 1.48 s | no | peak -1.0 dBFS | 9 KB | synth | One soft footstep on the old floor (camera travel, left foot): a dull low thud and a quiet scuff of the sole |
+| `sfx/c2x_step_soft_b.ogg` | 1.47 s | no | peak -1.1 dBFS | 9 KB | synth | One soft footstep on the old floor (camera travel, right foot): slightly lighter and a little higher than the left |
 | `sfx/c2x_strip_load.ogg` | 0.72 s | no | peak -0.8 dBFS | 10 KB | synth | A negative strip is slid into the carrier: a smooth film slide and a small click as the carrier closes |
 | `sfx/c2x_tag_hook.ogg` | 0.59 s | no | peak -1.0 dBFS | 8 KB | synth | A staff tag is hung on a board hook: a brass hook tick and the tag swinging against wood |
 | `sfx/c2x_tag_lift.ogg` | 0.36 s | no | peak -1.2 dBFS | 7 KB | synth | A staff tag is lifted off its hook: a light tick and a small slide |

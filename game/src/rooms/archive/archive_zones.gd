@@ -7,8 +7,11 @@ extends Node
 ## player is elsewhere). This class owns
 ## - the zone registry, lazy building (a zone class per room, ArchivePump so far; a marked placeholder for the rooms whose
 ##   models are not in yet, never shown while ArchiveLogic.EXPANSION_STAGE is 0),
-## - transitions: any `room:<id>` event of the logic (enter_room, travel_to, from a door, the plan or a hint) fades to
-##   black, switches zone, environment and camera, and fades back (0.4 s in all, shorter with reduce motion),
+## - transitions: any `room:<id>` event of the logic (enter_room, travel_to, from a door, the plan or a hint) switches
+##   zone, environment and camera. From a tapped door the leaf opens and the camera walks through the doorway (head-bob,
+##   soft steps), up or down a stair (steps on the iron treads) or rides the book lift's cage; a short crossfade at the
+##   threshold hides the cut and the camera glides in on the other side (1.1 s all told, a tap skips it, reduce motion
+##   makes it short and still). Without a tapped door (the plan, a hint) it is the old quick fade (0.4 s),
 ## - the hooks the room asks for per view / hotspot (zones register their own tables),
 ## - the reaction moments (section 11) as the scene plays them, honouring Settings "moments" (full / soft / off) and
 ##   waiting for the caption strip,
@@ -61,6 +64,12 @@ const MOMENT_SOUND := {"m1": "lamp_dip", "m2": "knocks", "m3": "frost_steps", "m
 const AMBIENCE := {"hall": "amb_archive", "pump": "amb_c2x_pump", "cell": "amb_c2x_cell", "cold": "amb_c2x_cold",
 	"gallery": "amb_c2x_gallery", "plate": "amb_c2x_plate", "office": "amb_c2x_office"}
 ## Events that only say "no" (docs/AUDIO_CH2X.md).
+## The hotspots whose taps walk through a door; the leaf (a part named IA_door*) opens first.
+const DOOR_WALK := ["pump_door", "cell_cold_door", "cell_exit", "cold_exit", "gal_door_plate", "gal_door_office", "plate_door",
+	"off_door", "east_wall"]
+## The stairs: how far the camera climbs (m; a descent only dips, the floor is in the way).
+const STAIR_RISE := {"pump_stair": 1.1, "gal_stair": -0.4, "stair_stump": 1.1}
+const DOOR_OPEN_DEG := 95.0
 const REFUSED := ["valves_locked_n2", "need_mallet", "sheets_locked", "cranks_locked", "need_aisle", "need_cloth", "no_pressure",
 	"weights_locked", "room_locked", "travel_refused"]
 
@@ -70,6 +79,10 @@ var zones: Dictionary = {} # room id -> {"root": Node3D, "builder": Object}
 var hall_exp: ArchiveHallExp # what the new game adds to the hall (null in a 1.0 game)
 var current := "hall"
 var moving := false
+## A caller that knows how the player travels sets it before enter_room (the book lift: {"kind": "lift", "rise": m}).
+var walk_hint: Dictionary = {}
+var _tweens: Array[Tween] = []
+var _skipped := false
 var _fade_layer: CanvasLayer
 var _fade: ColorRect
 var _view_room: Dictionary = {} # view id -> room id (the zone views the builders registered)
@@ -266,31 +279,162 @@ func feedback(e: String) -> void:
 
 
 # ====================================================================== transitions
-## The scene's reaction to the logic's `room:<id>` event: fade, switch, fade back. Taps are ignored meanwhile.
+## The scene's reaction to the logic's `room:<id>` event: a walk through the tapped door / stair / lift (or, without one,
+## a quick fade), then the switch and the arrival. Taps skip it; input is locked meanwhile.
 func transition(room_id: String) -> void:
 	if moving or room_id == current:
 		return
 	moving = true
+	_skipped = false
+	_tweens.clear()
 	var hud: Node = room.get("hud")
 	hud.call("set_busy", true)
+	var cam: RoomCamera = room.get("cam")
+	cam.transitioning = true # QA tools and the room wait on it until the arrival is over
 	var calm := bool(Settings.get_value("reduce_motion"))
-	var t_out := 0.12 if calm else 0.2
-	await _fade_to(1.0, t_out)
+	var plan := _walk_plan()
+	var leaf: Node3D = null
+	var leaf_rest := Transform3D.IDENTITY
 	var from := current
+	if plan.is_empty():
+		await _fade_to(1.0, 0.12 if calm else 0.2)
+	else:
+		if plan["kind"] == "door":
+			var opened := _open_leaf(str(plan.get("part", "")))
+			if not opened.is_empty():
+				leaf = opened["leaf"]
+				leaf_rest = opened["rest"]
+		await _walk_out(plan, cam, calm)
+	if leaf != null:
+		leaf.transform = leaf_rest # shut again; the room's state (apply_state below) opens it for good where it should stay open
 	ensure(room_id)
 	activate(room_id)
-	var cam: RoomCamera = room.get("cam")
 	cam.go(str(ROOT_VIEW.get(room_id, "hall")), true)
+	cam.transitioning = true
 	if from != room_id:
-		_cue("room_step")
+		if plan.is_empty():
+			_cue("room_step")
 		_set_ambience(room_id)
-	await _fade_to(0.0, 0.0 if calm else 0.2)
+	if plan.is_empty() or calm or _skipped:
+		await _fade_to(0.0, 0.0 if calm else (0.1 if _skipped else 0.2))
+	else:
+		await _walk_in(plan, cam)
+	cam.end_walk()
 	hud.call("set_busy", false)
 	moving = false
 	var visuals: Node = room.get("visuals")
 	if visuals != null:
 		visuals.call("apply_state", false)
 	_after_enter(room_id)
+
+
+## How the player gets to the next room: {} (fade), or {"kind": "door" / "stairs" / "lift", ...}. The last tapped door or
+## stair says (taps older than 1.5 s do not count), or a caller's walk_hint.
+func _walk_plan() -> Dictionary:
+	if not walk_hint.is_empty():
+		var h := walk_hint
+		walk_hint = {}
+		return h
+	var lt: Dictionary = room.get("last_tap")
+	if lt.is_empty() or Time.get_ticks_msec() - int(lt["ms"]) > 1500:
+		return {}
+	var hs := str(lt["hotspot"])
+	room.set("last_tap", {})
+	if STAIR_RISE.has(hs):
+		return {"kind": "stairs", "pos": lt["pos"], "rise": float(STAIR_RISE[hs])}
+	if DOOR_WALK.has(hs) or hs.begins_with("zone_back_"):
+		return {"kind": "door", "pos": lt["pos"], "part": lt["part"]}
+	return {}
+
+
+## The door leaf (a part named IA_door* of the current zone) swings open. -> {"leaf", "rest"} or {}.
+func _open_leaf(part: String) -> Dictionary:
+	if not part.begins_with("IA_door") or not zones.has(current):
+		return {}
+	var leaf := (zones[current]["root"] as Node).find_child(part, true, false) as Node3D
+	if leaf == null:
+		return {}
+	if not leaf.has_meta("rest"):
+		leaf.set_meta("rest", leaf.transform)
+	var rest: Transform3D = leaf.get_meta("rest")
+	var open := Transform3D(rest.basis * Basis(Vector3.UP, deg_to_rad(DOOR_OPEN_DEG)), rest.origin)
+	var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var from_t := leaf.transform
+	tw.tween_method(func(k: float) -> void:
+		leaf.transform = Transform3D(from_t.basis.slerp(open.basis, k), from_t.origin.lerp(open.origin, k)), 0.0, 1.0,
+		0.12 if bool(Settings.get_value("reduce_motion")) else 0.45)
+	_tweens.append(tw)
+	return {"leaf": leaf, "rest": rest}
+
+
+## The walk out of the current room: through the doorway, up or down the stair, or in the cage of the lift. The fade to
+## black starts in the last quarter second, so the cut is at the threshold.
+func _walk_out(plan: Dictionary, cam: RoomCamera, calm: bool) -> void:
+	var kind := str(plan["kind"])
+	var cp := cam.global_position
+	var fwd := -cam.global_basis.z
+	fwd.y = 0.0
+	if plan.has("pos"):
+		var d: Vector3 = (plan["pos"] as Vector3) - cp
+		d.y = 0.0
+		if d.length() > 0.05:
+			fwd = d
+	fwd = fwd.normalized() if fwd.length() > 0.001 else Vector3.FORWARD
+	var rise := float(plan.get("rise", 0.0))
+	var end := cp
+	var dur := 1.0
+	var steps := 0
+	match kind:
+		"door":
+			var p: Vector3 = plan["pos"]
+			end = Vector3(p.x, cp.y, p.z) + fwd * 0.9
+			var dist := cp.distance_to(end)
+			dur = clampf(0.55 + dist * 0.1, 0.7, 1.05)
+			steps = clampi(roundi(dist / RoomCamera.STRIDE_M), 2, 6)
+			_cue("room_step")
+		"stairs":
+			var p: Vector3 = plan["pos"]
+			end = Vector3(p.x, cp.y + rise, p.z) + fwd * 0.5
+			dur = 1.1
+			steps = 5
+			_cue("c2x_stair_climb")
+		"lift":
+			end = cp + fwd * 0.8 + Vector3.UP * rise
+			dur = 1.1
+	var look := Basis.looking_at(fwd, Vector3.UP)
+	if kind == "stairs" and rise > 0.0:
+		look = look * Basis(Vector3.RIGHT, deg_to_rad(8.0))
+	var total := minf(dur * (0.5 if calm else 1.0), RoomCamera.TRAVEL_MAX_S)
+	_fade_in_at(total - (0.12 if calm else 0.25), 0.12 if calm else 0.25)
+	if kind == "lift":
+		# two moves in one: a step into the cage, then the ride (no bob)
+		var mid := Transform3D(look, cp + fwd * 0.8)
+		var t1 := cam.walk(mid, total * 0.4, 0 if calm else 1)
+		await t1.finished
+		if not _skipped:
+			await cam.walk(Transform3D(look, end), total * 0.6, 0, Tween.EASE_IN_OUT).finished
+	else:
+		await cam.walk(Transform3D(look, end), dur, steps, Tween.EASE_IN_OUT).finished
+	await _fade_wait()
+
+
+## On the other side: the camera comes in through the doorway (a short glide into the room's view) while the black lifts.
+func _walk_in(plan: Dictionary, cam: RoomCamera) -> void:
+	var fin := cam.global_transform
+	var back := -fin.basis.z
+	back.y = 0.0
+	back = back.normalized() if back.length() > 0.001 else Vector3.BACK
+	var start := fin
+	start.origin = fin.origin - back * 0.7
+	if str(plan["kind"]) == "stairs":
+		start.origin.y -= 0.3 * signf(float(plan.get("rise", 1.0)))
+	elif str(plan["kind"]) == "lift":
+		start.origin = fin.origin
+		start.origin.y += 0.25 * signf(float(plan.get("rise", 1.0)))
+	cam.global_transform = start
+	_fade_to_async(0.0, 0.3)
+	await cam.walk(fin, 0.6, 0 if str(plan["kind"]) == "lift" else 1, Tween.EASE_OUT).finished
+	await _fade_wait()
 
 
 func _after_enter(room_id: String) -> void:
@@ -319,13 +463,52 @@ func _moment_room(m: String) -> String:
 	return {"m1": "pump", "m2": "pump", "m3": "cold", "m4": "gallery", "m5": "cold", "m6": "cold"}.get(m, "")
 
 
+var _fade_tw: Tween
+
+
 func _fade_to(a: float, seconds: float) -> void:
-	if seconds <= 0.0:
+	_fade_to_async(a, seconds)
+	await _fade_wait()
+
+
+## Starts a fade without waiting for it.
+func _fade_to_async(a: float, seconds: float, delay: float = 0.0) -> void:
+	if _fade_tw != null and _fade_tw.is_valid():
+		_fade_tw.kill()
+	if seconds <= 0.0 and delay <= 0.0:
 		_fade.color.a = a
+		_fade_tw = null
 		return
-	var tw := create_tween()
-	tw.tween_property(_fade, "color:a", a, seconds)
-	await tw.finished
+	_fade_tw = create_tween()
+	if delay > 0.0:
+		_fade_tw.tween_interval(delay)
+	_fade_tw.tween_property(_fade, "color:a", a, maxf(seconds, 0.001))
+	_tweens.append(_fade_tw)
+
+
+func _fade_in_at(delay: float, seconds: float) -> void:
+	_fade_to_async(1.0, seconds, maxf(delay, 0.0))
+
+
+func _fade_wait() -> void:
+	if _fade_tw != null and _fade_tw.is_valid() and _fade_tw.is_running():
+		await _fade_tw.finished
+
+
+## A tap while the room change is on (the touch input is off then): jump to the end of the walk and the fades.
+func _unhandled_input(event: InputEvent) -> void:
+	if not moving or _skipped:
+		return
+	if (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed) \
+			or (event is InputEventMouseButton and (event as InputEventMouseButton).pressed):
+		_skipped = true
+		var cam: RoomCamera = room.get("cam")
+		cam.skip_travel()
+		for tw in _tweens:
+			if tw != null and tw.is_valid() and tw.is_running():
+				tw.custom_step(30.0)
+		_tweens.clear()
+		get_viewport().set_input_as_handled()
 
 
 ## Starts the scene's current room at once (a loaded save, QA tools): no fade.

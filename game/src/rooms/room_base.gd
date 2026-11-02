@@ -202,6 +202,8 @@ func go_back() -> void:
 
 # ====================================================================== input
 var _drag_captured := false
+## The last tap that hit something: {"hotspot", "part", "pos" (world), "ms"}. A door or stair tap tells the walk-through where to go.
+var last_tap: Dictionary = {}
 
 
 func _on_drag_started(pos: Vector2) -> void:
@@ -318,7 +320,10 @@ func resolve(hit: Dictionary) -> Dictionary:
 
 
 func _on_tap(screen: Vector2) -> void:
-	if cam.transitioning or _ending:
+	if cam.transitioning:
+		cam.skip_travel() # a tap during a long camera move jumps to its end; the tap does nothing else
+		return
+	if _ending:
 		return
 	tap_pos = screen
 	var hit := pick(screen)
@@ -327,6 +332,7 @@ func _on_tap(screen: Vector2) -> void:
 	if hit.get("assisted", false):
 		assisted_taps += 1
 	var r := resolve(hit)
+	last_tap = {"hotspot": r["hotspot"], "part": r["part"], "pos": r["pos"], "ms": Time.get_ticks_msec()}
 	var p: String = r["part"]
 	var hs: String = r["hotspot"]
 	if tap_special(p, r):

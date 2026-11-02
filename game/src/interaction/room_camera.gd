@@ -16,6 +16,11 @@ const FOV_MIN := 32.0
 const FOV_MAX := 72.0
 const FOLLOW := 16.0 # 1/s: how quickly the view follows the finger (higher = snappier)
 const GLIDE_DAMP := 5.0 # 1/s: how quickly a released swipe slows down
+const TRAVEL_MIN_M := 1.5 # a move at least this long is a walk: head-bob and soft footsteps
+const STRIDE_M := 0.8
+const BOB_DIP := 0.022 # metres the eye dips at each footfall
+const BOB_SWAY := 0.008
+const TRAVEL_MAX_S := 1.2 # no glide is ever longer than this
 const MAG_MAX := 2.5 # close-ups: how far a pinch magnifies (owner, 2026-10-11: Panel 7 read too small on a phone)
 
 var views: Dictionary = {} # id -> {pos: Vector3, target: Vector3, fov: float, root: bool}
@@ -36,6 +41,10 @@ var _mag := 1.0 # close-up magnification goal and the camera's slide along its o
 var _pan := Vector2.ZERO
 var _mag_now := 1.0
 var _pan_now := Vector2.ZERO
+var _steps_total := 0
+var _steps_done := 0
+var _foot := 0
+var _skipping := false
 
 
 func add_view(id: String, pos: Vector3, target: Vector3, view_fov: float = 50.0, root: bool = false) -> void:
@@ -286,17 +295,88 @@ func _move_to(t: Transform3D, target_fov: float, instant: bool) -> void:
 	var from_fov := fov
 	var dist := from.origin.distance_to(t.origin)
 	var calm := bool(Settings.get_value("reduce_motion"))
-	# longer moves take a little longer, and ease back along the destination's view axis on the way (an arc,
-	# through the open space the destination looks across) instead of sliding in a straight line
-	var dur := 0.25 if calm else clampf(0.5 + dist * 0.1, 0.55, 0.9)
+	# longer moves take a little longer (never over TRAVEL_MAX_S), and ease back along the destination's view axis on
+	# the way (an arc, through the open space the destination looks across) instead of sliding in a straight line
+	var dur := 0.25 if calm else clampf(0.5 + dist * 0.12, 0.55, TRAVEL_MAX_S)
 	var arc := 0.0 if calm else minf(dist * 0.08, 0.22)
 	var back := t.basis.z
+	# a long move is a walk: the eye dips at each footfall (not with reduce_motion) and a soft step sounds
+	_steps_total = 0
+	if dist >= TRAVEL_MIN_M:
+		_steps_total = 1 if calm else clampi(roundi(dist / STRIDE_M), 2, 6)
+	_steps_done = 0
+	var steps := _steps_total
 	_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	_tween.tween_method(func(k: float) -> void:
 		var o := from.origin.lerp(t.origin, k) + back * arc * sin(PI * k)
-		global_transform = Transform3D(Basis(from_q.slerp(to_q, k)), o)
-		fov = lerpf(from_fov, target_fov, k), 0.0, 1.0, dur)
+		var b := Basis(from_q.slerp(to_q, k))
+		if steps > 0 and not calm:
+			o += bob_offset(k, steps, b)
+		global_transform = Transform3D(b, o)
+		fov = lerpf(from_fov, target_fov, k)
+		_footsteps(k), 0.0, 1.0, dur)
 	_tween.tween_callback(func() -> void: transitioning = false)
+
+
+## The head-bob of a walk at progress `k` (0..1) with `steps` footfalls, in world space for a camera with basis `b`:
+## an eye dip at each footfall and a small sway to the side, both zero at the start and the end, so a walk lands
+## exactly on its view.
+static func bob_offset(k: float, steps: int, b: Basis) -> Vector3:
+	var env := minf(1.0, minf(k, 1.0 - k) * 6.0)
+	var dip := -BOB_DIP * absf(sin(PI * steps * k)) * env
+	var sway := BOB_SWAY * sin(PI * steps * k) * env
+	return Vector3.UP * dip + b.x * sway
+
+
+## Soft footsteps at the bottom of each dip, left and right foot alternating (silent while a walk is skipped).
+func _footsteps(k: float) -> void:
+	while _steps_done < _steps_total and k >= (float(_steps_done) + 0.5) / float(_steps_total):
+		_steps_done += 1
+		if _skipping:
+			continue
+		_foot = 1 - _foot
+		AudioManager.sfx("c2x_step_soft_a" if _foot == 0 else "c2x_step_soft_b", -10.0, randf_range(0.94, 1.06))
+
+
+## A scripted walk (a door, stairs, the book lift): the camera goes on to `to` in `dur` seconds (a calm setting
+## shortens it) with the same bob and steps as a long move. `steps` = 0 gives a glide (the lift cage). Returns the
+## tween (finished when the walk is over); `transitioning` stays true until the caller says `end_walk()`.
+func walk(to: Transform3D, dur: float, steps: int, ease_type: Tween.EaseType = Tween.EASE_IN_OUT) -> Tween:
+	if _tween != null and _tween.is_valid():
+		_tween.kill()
+	_reset_magnify()
+	transitioning = true
+	var calm := bool(Settings.get_value("reduce_motion"))
+	var from := global_transform
+	var from_q := from.basis.get_rotation_quaternion()
+	var to_q := to.basis.get_rotation_quaternion()
+	var n := (1 if calm else steps) if steps > 0 else 0
+	_steps_total = n
+	_steps_done = 0
+	_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(ease_type)
+	_tween.tween_method(func(k: float) -> void:
+		var b := Basis(from_q.slerp(to_q, k))
+		var o := from.origin.lerp(to.origin, k)
+		if n > 0 and not calm:
+			o += bob_offset(k, n, b)
+		global_transform = Transform3D(b, o)
+		_footsteps(k), 0.0, 1.0, minf(dur * (0.5 if calm else 1.0), TRAVEL_MAX_S))
+	return _tween
+
+
+func end_walk() -> void:
+	transitioning = false
+
+
+## A tap while the camera travels: it jumps to the end of the move at once (a move can always be skipped).
+## -> true when there was a move to skip.
+func skip_travel() -> bool:
+	if not transitioning or _tween == null or not _tween.is_valid() or not _tween.is_running():
+		return false
+	_skipping = true
+	_tween.custom_step(30.0)
+	_skipping = false
+	return true
 
 
 ## Root views follow the finger smoothly; focus views get a small handheld sway (disabled by reduce_motion).

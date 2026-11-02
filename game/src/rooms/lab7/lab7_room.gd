@@ -798,7 +798,10 @@ func _resolve(hit: Dictionary) -> Dictionary:
 
 
 func _on_tap(screen: Vector2) -> void:
-	if cam.transitioning or _ending:
+	if cam.transitioning:
+		cam.skip_travel() # a tap during a long camera move jumps to its end
+		return
+	if _ending:
 		return
 	if logic.selected == "uv_lamp":
 		_uv_aim = screen

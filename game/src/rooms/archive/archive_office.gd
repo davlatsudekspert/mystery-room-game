@@ -178,13 +178,7 @@ func interact(hs: String, part: String) -> bool:
 				_say("obj2x.tea")
 			return true
 		"off_door":
-			var door := ModelUtil.find(models["room_office"], "IA_door_gallery")
-			rig.rot(door, Vector3.UP, 95.0, true, 0.5)
-			ArchiveZones.cue("room_step")
-			room.get_tree().create_timer(0.45).timeout.connect(func() -> void:
-				if is_instance_valid(room):
-					rig.rot(door, Vector3.UP, 0.0, false)
-					logic.enter_room("gallery"))
+			logic.enter_room("gallery") # ArchiveZones opens the leaf and walks the camera through
 			return true
 	return false
 

@@ -476,6 +476,37 @@ def c2x_stair_steps(rng):
     return _room(out, "corridor", 0.25)
 
 
+# ---- walking (version 1.1: camera travel) ------------------------------------------------------------
+
+def _footstep(rng, body, scuff_hi):
+    """One soft shoe step on old floor: a dull low thud and a short, quiet scuff of the sole."""
+    thud = _lp(kit.thump(body, body * 0.55, 0.16, 0.07, glide=0.02, harm=0.15), 700)
+    scuff = _bp(_band_noise(rng, 0.09, 500, scuff_hi), 500, scuff_hi) * env.curve([(0, 0), (0.008, 1), (0.09, 0)], n_of(0.09), "lin")
+    return _mix(0.2, [(_nrm(thud), 0.0, 0.85), (_nrm(scuff), 0.004, 0.22)])
+
+
+@sound("c2x_step_soft_a", "sfx", "One soft footstep on the old floor (camera travel, left foot): a dull low thud and a quiet scuff of the sole")
+def c2x_step_soft_a(rng):
+    return _room(_footstep(rng, 120, 2600), "corridor", 0.1)
+
+
+@sound("c2x_step_soft_b", "sfx", "One soft footstep on the old floor (camera travel, right foot): slightly lighter and a little higher than the left")
+def c2x_step_soft_b(rng):
+    return _room(_footstep(rng, 142, 3200), "corridor", 0.1)
+
+
+@sound("c2x_stair_climb", "sfx", "A short climb on the iron stair (camera travel): five quick steps on steel treads, each with a faint ring")
+def c2x_stair_climb(rng):
+    out = np.zeros(n_of(1.4))
+    for k in range(5):
+        thud = _lp(kit.thump(150, 90, 0.12, 0.05), 600)
+        ring = modal.strike(_iron(rng.uniform(320, 520), 0.25, rng, 4), 0.35, 0.001, rng, noise=0.3)
+        t0 = 0.05 + 0.2 * k + rng.uniform(-0.01, 0.01)
+        add_at(out, _nrm(thud), t0, 0.8)
+        add_at(out, _nrm(ring), t0, 0.2)
+    return _room(out, "corridor", 0.2)
+
+
 # ---- N8 roll-call board ----------------------------------------------------------------------------
 
 @sound("c2x_tag_hook", "sfx", "A staff tag is hung on a board hook: a brass hook tick and the tag swinging against wood")

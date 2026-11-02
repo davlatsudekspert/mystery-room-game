@@ -359,8 +359,7 @@ func interact(hs: String, part: String) -> bool:
 			if cur != "wedge":
 				cam.go("wedge")
 			elif logic.state["wedge_out"]:
-				ArchiveZones.cue("stair_steps")
-				logic.enter_room("hall")
+				logic.enter_room("hall") # the zones walk down the stair (steps on the iron treads)
 			else:
 				_say("obj2x.wedge")
 			return true
@@ -372,13 +371,9 @@ func _say(key: String) -> void:
 	AudioManager.ui("ui_tap")
 
 
-func _open_door(room_id: String, part_name: String) -> void:
-	var door := ModelUtil.find(models["room_gallery"], part_name)
-	rig.rot(door, Vector3.UP, DOOR_OPEN_DEG, true, 0.5)
-	ArchiveZones.cue("room_step")
-	room.get_tree().create_timer(0.45).timeout.connect(func() -> void:
-		if is_instance_valid(room):
-			logic.enter_room(room_id))
+## The tap goes through the door: ArchiveZones.transition opens the leaf, walks the camera through the doorway and shows the next room.
+func _open_door(room_id: String, _part_name: String) -> void:
+	logic.enter_room(room_id)
 
 
 func _office_door() -> void:

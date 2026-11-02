@@ -62,3 +62,27 @@ func test_aiming_snaps_and_back_faces_the_last_look() -> void:
 	check(not cam.transitioning, "the move back finishes")
 	check((-cam.global_basis.z).distance_to(facing) < 0.01, "back in the room view, facing where the player looked")
 	cam.free()
+
+
+func test_walk_bob_lands_on_the_view_and_skip_finishes() -> void:
+	# the head-bob is zero at both ends, so a walk lands exactly on its view, and dips at each footfall
+	for steps in [2, 3, 5]:
+		check(RoomCamera.bob_offset(0.0, steps, Basis.IDENTITY).length() < 1e-6, "no bob at the start (%d steps)" % steps)
+		check(RoomCamera.bob_offset(1.0, steps, Basis.IDENTITY).length() < 1e-6, "no bob at the end (%d steps)" % steps)
+		var mid := RoomCamera.bob_offset((0.5 / steps) + 0.0, steps, Basis.IDENTITY)
+		check(mid.y < 0.0 and mid.y >= -RoomCamera.BOB_DIP - 1e-6, "the eye dips at the first footfall (%.4f)" % mid.y)
+	var cam := _cam()
+	cam.go("desk")
+	check(cam.transitioning, "a move to a view is under way")
+	check(cam.skip_travel(), "a tap skips it")
+	check(not cam.transitioning, "and it has finished")
+	check(cam.global_position.distance_to(Vector3(1, 1.2, 0.5)) < 0.01, "on the view, not short of it")
+	check(not cam.skip_travel(), "nothing to skip when still")
+	# a long move is never longer than the glide limit
+	cam.go("room")
+	var t0 := Time.get_ticks_msec()
+	while cam.transitioning and Time.get_ticks_msec() - t0 < 3000:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var t := (Time.get_ticks_msec() - t0) / 1000.0
+	check(t <= RoomCamera.TRAVEL_MAX_S + 0.3, "a glide takes at most %.1f s (took %.2f)" % [RoomCamera.TRAVEL_MAX_S, t])
+	cam.free()

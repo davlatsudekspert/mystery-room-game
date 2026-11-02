@@ -445,4 +445,9 @@ func _ride(k: int) -> void:
 	await room.get_tree().create_timer(1.5).timeout
 	hud.call("set_busy", false)
 	if is_instance_valid(room) and logic.room_open(str(FLOOR_ROOM[k])):
+		var from_k := -9 # the cage carries the camera up or down to the next floor
+		for f: int in FLOOR_ROOM:
+			if FLOOR_ROOM[f] == zones.current:
+				from_k = f
+		zones.walk_hint = {"kind": "lift", "rise": 1.6 if k > from_k else -0.7}
 		logic.enter_room(str(FLOOR_ROOM[k]))

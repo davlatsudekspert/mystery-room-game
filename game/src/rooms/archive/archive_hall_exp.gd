@@ -319,8 +319,7 @@ func interact(hs: String, part: String) -> bool:
 			if cur != "stair":
 				cam.go("stair")
 			elif logic.state["wedge_out"]: # the ladder fell free from above: the spiral stair is a second way up to the Gallery
-				ArchiveZones.cue("stair_steps")
-				logic.enter_room("gallery")
+				logic.enter_room("gallery") # the zones climb the stair (steps on the iron treads)
 			else:
 				_say("obj2x.wedge")
 			return true

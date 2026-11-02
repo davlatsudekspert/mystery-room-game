@@ -1,6 +1,6 @@
 # Chapter 2 expansion audio ("The Whole Building")
 
-88 sounds for the expansion in `docs/CHAPTER2_EXPANSION.md`: six room ambiences, puzzle and object sounds for N1-N10, the
+91 sounds for the expansion in `docs/CHAPTER2_EXPANSION.md`: six room ambiences, puzzle and object sounds for N1-N10, the
 six reaction-moment cues in Full and Soft, and hand-held item foley. Everything is original, synthesised by the modules
 `tools/audio/sounds/c2x_amb.py`, `c2x_sfx.py`, `c2x_moments.py`, `c2x_hands.py` (registered in `tools/audio/synth_all.py`),
 deterministic (a re-run gave byte-identical OGG for the 63 files compared). No recordings, no third-party material.
@@ -103,7 +103,9 @@ Puzzle and object events (`ArchiveLogic._emit` names; `:` parts are arguments). 
 | `lift_stuck` | `c2x_lift_stuck` |
 | `lift_moved:f` | `c2x_lift_move`, then `c2x_lift_bell` 3.6 s later (arrival) |
 | `wedge_out` | `c2x_wedge_pull` |
-| travelling by the spiral stair | `c2x_stair_steps`; stairwell and lift-hall doors `c2x_door_service` |
+| travelling by the spiral stair | `c2x_stair_climb` (version 1.1 walk, five quick steps, played by `ArchiveZones.transition`; the long `c2x_stair_steps` stays in the catalogue); stairwell and lift-hall doors `c2x_door_service` |
+| camera travel over 1.5 m (any chapter) | `c2x_step_soft_a` / `c2x_step_soft_b` at the bottom of each head-bob dip, -10 dB, pitch 0.94-1.06 (`RoomCamera`) |
+| walking through a tapped door (Chapter 2 rooms) | `c2x_door_service` at the start, then the same steps |
 | `tag_hung:t:h` / `tag_lifted:h` | `c2x_tag_hook` / `c2x_tag_lift` |
 | `board_wrong` / `board_ok` | `c2x_board_wrong` / `c2x_board_ok`; opening the gallery pass door with the key `c2x_door_pass` |
 | `strip_loaded:i` | `c2x_strip_load` |
@@ -172,6 +174,9 @@ Level is peak (one-shots) or integrated loudness (ambiences). "length" includes 
 | `c2x_lift_bell` | `sfx/c2x_lift_bell.ogg` | 2.07 s | peak -1.0 dBFS | -60 | no | Lift bell: a small brass arrival bell, one clear ding with a short ring |
 | `c2x_lift_move` | `sfx/c2x_lift_move.ogg` | 4.91 s | peak -1.1 dBFS | -37 | no | The book lift travels one floor: a motor hum rising, cable and weight clanks passing, a settling clunk (3.6 s) |
 | `c2x_wedge_pull` | `sfx/c2x_wedge_pull.ogg` | 2.59 s | peak -1.1 dBFS | -25 | no | The wedge pin is pulled from the blocked spiral stair: wood squeals out of a tight fit, a knock, a clatter down the steps |
+| `c2x_step_soft_a` | `sfx/c2x_step_soft_a.ogg` | 1.48 s | peak -1.0 dBFS | n/a | no | One soft footstep on the old floor (camera travel, left foot): a dull low thud and a quiet scuff of the sole |
+| `c2x_step_soft_b` | `sfx/c2x_step_soft_b.ogg` | 1.47 s | peak -1.1 dBFS | n/a | no | One soft footstep on the old floor (camera travel, right foot): slightly lighter and a little higher than the left |
+| `c2x_stair_climb` | `sfx/c2x_stair_climb.ogg` | 2.43 s | peak -0.9 dBFS | n/a | no | A short climb on the iron stair (camera travel): five quick steps on steel treads, each with a faint ring |
 | `c2x_stair_steps` | `sfx/c2x_stair_steps.ogg` | 4.08 s | peak -1.1 dBFS | -28 | no | Climbing the iron spiral stair: six slow footsteps on steel treads, each with a soft ring |
 | `c2x_tag_hook` | `sfx/c2x_tag_hook.ogg` | 0.59 s | peak -1.0 dBFS | -16 | no | A staff tag is hung on a board hook: a brass hook tick and the tag swinging against wood |
 | `c2x_tag_lift` | `sfx/c2x_tag_lift.ogg` | 0.36 s | peak -1.2 dBFS | -9 | no | A staff tag is lifted off its hook: a light tick and a small slide |
